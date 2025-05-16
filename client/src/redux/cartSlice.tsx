@@ -1,16 +1,16 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { CartItem, Product } from "shared-ts";
 
-interface BasketState {
+interface CartState {
     items: CartItem[]
 }
 
-const initialState: BasketState = {
+const initialState: CartState = {
     items: []
 };
 
-const basketSlice = createSlice({
-    name: "basket",
+const cartSlice = createSlice({
+    name: "cart",
     initialState,
     reducers: {
         add(state, action: PayloadAction<Product>) {
@@ -23,14 +23,17 @@ const basketSlice = createSlice({
         },
         remove(state, action: PayloadAction<number>) {
             state.items.splice(action.payload, 1);
+        },
+        clear(state) {
+            state.items = [];
         }
     }
 });
 
-export const { add, remove } = basketSlice.actions;
-export const basketReducer = basketSlice.reducer;
+export const { add, remove, clear } = cartSlice.actions;
+export const cartReducer = cartSlice.reducer;
 
-export const selectBasketItems = (state: { basket: BasketState }) => state.basket.items;
-export const selectTotalPrice = (state: { basket: BasketState }) => {
-    return state.basket.items.reduce((total, item) => total + item.product.price * item.quantity, 0);
+export const selectCartItems = (state: { cart: CartState }) => state.cart.items;
+export const selectTotalPrice = (state: { cart: CartState }) => {
+    return state.cart.items.reduce((total, item) => total + item.product.price * item.quantity, 0);
 }

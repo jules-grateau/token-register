@@ -5,16 +5,18 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "ts-node src/server.ts"
+    "start": "ts-node src/server.ts",
+    "flush-db": "ts-node src/db/scripts/flushDb.ts"
   },
   "author": "Jules Grateau",
   "license": "ISC",
   "dependencies": {
+    "body-parse": "^0.1.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "shared-ts": "file:../shared-ts",
     "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7",
-    "shared-ts": "file:../shared-ts"
+    "sqlite3": "^5.1.7"
   },
   "devDependencies": {
     "@types/cors": "^2.8.18",

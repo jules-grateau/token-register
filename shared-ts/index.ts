@@ -8,3 +8,9 @@ export type CartItem = {
   product: Product; // Product details
   quantity: number; // Quantity of the product in the cart
 }
+
+export type Order = {
+  id: number; // Order ID
+  date: number; // Order date
+  items: CartItem[]; // List of items in the order
+}

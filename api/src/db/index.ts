@@ -12,7 +12,8 @@ export async function openDb() {
     driver: sqlite3.Database
   });
 
-   // Create a simple table if it doesn't exist
+  console.log('Initializing database...');
+
   await db.exec(`
     CREATE TABLE IF NOT EXISTS products (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -21,16 +22,40 @@ export async function openDb() {
     )
   `);
 
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date INTEGER NOT NULL
+    )
+  `);
+
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS order_items (
+      order_id INTEGER NOT NULL,
+      product_id INTEGER NOT NULL,
+      quantity INTEGER NOT NULL,
+      FOREIGN KEY (order_id) REFERENCES orders (id),
+      FOREIGN KEY (product_id) REFERENCES products (id),
+      PRIMARY KEY (order_id, product_id)
+    -- Note: The primary key is a composite key of order_id and product_id
+    )
+  `);
+
   const count = await db.get('SELECT COUNT(*) as count FROM products'); 
   if (count.count > 0) {
     return db; // If there are already products, don't insert again
   }
   await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Bière', 3]);
-  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Soda', 2]);
-  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Jus de fruit', 2]);
+  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Soda/Jus de fruit', 2]);
   await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Eau', 1]);
-  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Café', 1]);
-  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Thé', 1]);
+  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Café/Thé', 1]);
+  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Sandwich Jambon beurre', 3]);
+  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Sandwich Rilette poulet', 3]);
+  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Sandwich Camembert', 3]);
+  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Croque Monsieur', 2]);
+  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Chips', 1]);
+  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Dessert', 2]);
+  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Crêpes', 2]);
 
   return db;
 }

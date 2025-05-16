@@ -3,15 +3,18 @@ import type { Product } from 'shared-ts';
 
 const API_URL = 'http://localhost:3001/products';
 
-export const productApi = createApi({
-  reducerPath: 'productApi',
+export const productsApi = createApi({
+  reducerPath: 'productsApi',
   baseQuery: fetchBaseQuery({ baseUrl: API_URL }),
-  endpoints : (builder) => ({
-    getProducts: builder.query<Product[], void>({
-      query: () => '/',
+  endpoints : (build) => ({
+    getProducts: build.query<Product[], void>({
+      query: () => ({
+        url: '',
+        method: 'GET',
+      }),
       transformResponse: (response: Product[]) => response,
     }),
   }),
 })
 
-export const { useGetProductsQuery } = productApi;
+export const { useGetProductsQuery } = productsApi;
