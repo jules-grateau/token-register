@@ -1,0 +1,26 @@
+{
+  "name": "backend",
+  "version": "0.0.1",
+  "description": "Simple and cashless Register software",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "ts-node src/server.ts"
+  },
+  "author": "Jules Grateau",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "shared-ts": "file:../shared-ts"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.18",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.15.18",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}

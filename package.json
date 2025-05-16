@@ -1,0 +1,12 @@
+{
+  "name": "token-register",
+  "private": true,
+  "workspaces": [
+    "client",
+    "api",
+    "shared-ts"
+  ],
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
