@@ -1,0 +1,96 @@
+.cartContainer {
+  width: 20%;
+  min-width: 280px; /* Minimum width to ensure usability */
+  max-width: 400px; /* Optional: max width if 20% becomes too large on very wide screens */
+  padding: 20px;
+  background-color: #e9ecef; /* Slightly different background */
+  border-right: 1px solid #ced4da;
+  display: flex;
+  flex-direction: column; /* Stack title, list, total vertically */
+  overflow-y: auto; /* Enable scrolling for cart items */
+}
+
+.areaTitle {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 1.8em;
+  border-bottom: 2px solid #d0d0d0;
+  padding-bottom: 10px;
+}
+
+.emptyCartMessage {
+  text-align: center;
+  color: #6c757d; /* Muted color for empty message */
+  margin-top: 30px;
+  font-style: italic;
+}
+
+.cartList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1; /* Allows list to take available space before total */
+}
+
+.checkoutContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 2px solid #d0d0d0;
+  gap: 10px; /* Space between items */
+}
+.cartTotal {
+  margin-top: auto; /* Pushes total to the bottom */
+  text-align: left;
+  font-size: 1.3em;
+  color: #212529;
+  font-weight: bold;
+}
+
+.checkoutButton {
+  /* Core Styling */
+  display: block; /* Or inline-block if you want to control width more explicitly and center with text-align on parent */
+  width: 50%;    /* Takes full width of its parent flex item */
+  height: 100%;;
+  padding: 12px 20px;
+  font-size: 1.1em; /* Or adjust as needed */
+  font-weight: bold;
+  color: #ffffff;
+  background-color: #28a745; /* A common 'success' or 'go' green */
+  border: none;
+  border-radius: 6px;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  /* Optional: Add an icon (using ::before or an inline SVG/icon font) */
+  /* Example with FontAwesome (ensure FontAwesome is included)
+  &::after {
+    content: "\f061"; // Example: arrow-right icon
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-left: 10px;
+  }
+  */
+}
+
+.checkout-button:hover {
+  background-color: #218838; /* Darker green on hover */
+}
+
+.checkout-button:active {
+  background-color: #1e7e34; /* Even darker on click */
+  transform: translateY(1px); /* Slight press effect */
+}
+
+.checkout-button:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  box-shadow: none;
+}

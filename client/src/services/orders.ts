@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { CartItem, Order } from 'shared-ts';
+import type { CartItemType, OrderType } from 'shared-ts';
 import { remove } from '../redux/cartSlice';
 
 const API_URL = 'http://localhost:3001/orders';
@@ -12,8 +12,8 @@ export const ordersApi = createApi({
       return headers;
     }}),
   endpoints: (build) => ({
-    addOrder: build.mutation<void,CartItem[]>({
-      query: (cart : CartItem[]) => ({
+    addOrder: build.mutation<void,CartItemType[]>({
+      query: (cart : CartItemType[]) => ({
         url: '',
         method: 'POST',
         body: cart,
@@ -26,7 +26,7 @@ export const ordersApi = createApi({
         method: 'DELETE',
       }),
     }),
-    getOrders: build.query<Order[], void>({
+    getOrders: build.query<OrderType[], void>({
       query: () => ({
         url: '',
         method: 'GET',

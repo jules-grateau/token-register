@@ -1,0 +1,25 @@
+.productAreaContainer {
+  flex-grow: 1; /* Takes up remaining 80% of the width */
+  padding: 20px;
+  background-color: #f8f9fa; /* Light background */
+  overflow-y: auto; /* Enable scrolling if content overflows */
+  display: flex;
+  flex-direction: column;
+}
+
+.areaTitle {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 1.8em;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 10px;
+}
+
+.productList {
+  display: grid;
+  /* Adjust minmax for desired button size and responsiveness */
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 15px; /* Space between product cards */
+  flex-grow: 1; /* Allows the grid to expand if needed */
+}

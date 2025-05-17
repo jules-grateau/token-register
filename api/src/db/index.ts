@@ -56,6 +56,8 @@ export async function openDb() {
   await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Chips', 1]);
   await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Dessert', 2]);
   await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Crêpes', 2]);
+  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Eco-cup', 1]);
+  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Retour Eco-cup', -1]);
 
   return db;
 }

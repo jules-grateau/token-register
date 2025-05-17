@@ -1,0 +1,71 @@
+.cartItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 5px; /* More padding */
+  border-bottom: 1px solid #d1d5db; /* Softer border */
+  background-color: #fff; /* White background for items */
+  margin-bottom: 8px; /* Space between items */
+  border-radius: 6px; /* Rounded corners for items */
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.cartItem:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.itemDetails {
+  display: flex;
+  flex-direction: column; /* Stack name and price */
+  flex-grow: 1; /* Allow details to take up space */
+}
+
+.itemName {
+  font-weight: 600; /* Slightly bolder */
+  font-size: 1em;
+  color: #343a40;
+}
+
+.itemPrice {
+  font-size: 0.85em;
+  color: #495057;
+  margin-top: 2px;
+}
+
+.itemQuantity {
+  margin-left: 8px; /* Space between price and quantity */
+  font-weight: 500;
+  color: #007bff; /* Or a color of your choice */
+  background-color: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+.removeButton {
+  background-color: #dc3545; /* Red for remove */
+  color: white;
+  border: none;
+  border-radius: 50%; /* Circular button */
+  width: 28px;
+  height: 28px;
+  font-size: 1.2em; /* Larger 'x' */
+  font-weight: bold;
+  line-height: 1; /* Ensure 'x' is centered */
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0; /* Remove default padding */
+  margin-left: 10px; /* Space from item details */
+}
+
+.removeButton:hover {
+  background-color: #c82333; /* Darker red on hover */
+}
+
+.removeButton:active {
+  background-color: #bd2130;
+}
