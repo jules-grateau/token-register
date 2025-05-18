@@ -1,6 +1,7 @@
 .cartContainer {
   width: 20%;
-  min-width: 280px;
+  height: 100%;
+  min-width: 200px;
   max-width: 400px;
   background-color: var(--color-secondary-bg);
   color: var(--color-secondary-text);
@@ -35,6 +36,7 @@
   padding: 0;
   margin: 0;
   flex-grow: 1; 
+  overflow: auto;
 }
 
 .checkoutContainer {
@@ -50,6 +52,6 @@
 .cartTotal {
   margin-top: auto;
   text-align: left;
-  font-size: 1.3em;
+  font-size: 1.15em;
   font-weight: bold;
 }

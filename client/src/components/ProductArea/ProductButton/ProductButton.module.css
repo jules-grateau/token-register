@@ -10,7 +10,6 @@
   flex-direction: column;
   justify-content: center; 
   align-items: center;
-  min-height: 100px; 
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   color: #333;
   font-family: inherit;

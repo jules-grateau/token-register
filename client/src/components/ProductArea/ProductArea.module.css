@@ -1,11 +1,17 @@
 .productAreaContainer {
-  flex-grow: 1; 
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
   padding: 20px;
   background-color: var(--color-secondary-bg);
   color: var(--color-secondary-text);
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
+
+.areaHeader {
+  display: flex;;
 }
 
 .areaTitle {
@@ -21,4 +27,8 @@
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 15px;
   flex-grow: 1;
+}
+
+.productArea {
+  overflow: auto;
 }
