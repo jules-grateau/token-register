@@ -24,7 +24,7 @@ app.get("/products", async (req: Request, res: Response) => {
 app.get("/orders", async (req: Request, res: Response) => {
   // Return all orders from the database
   const db = await openDb();
-  const rows = await db.all("SELECT order_id, product_id, date, quantity, name, price FROM orders LEFT JOIN order_items ON orders.id = order_items.order_id LEFT JOIN products on order_items.product_id = products.id"); 
+  const rows = await db.all("SELECT order_id, product_id, date, quantity, name, price FROM orders LEFT JOIN order_items ON orders.id = order_items.order_id LEFT JOIN products on order_items.product_id = products.id ORDER BY date DESC;"); 
   // Join with order_items to get the product details
   const orders = new Map<number, OrderType>();
 

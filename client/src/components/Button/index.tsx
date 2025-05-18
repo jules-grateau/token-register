@@ -5,16 +5,14 @@ interface ButtonProps {
     children: React.ReactNode;
     onClick: () => void;
     color?: 'success' | 'danger' | 'warning' | 'info' | 'primary';
-    size?: 'small' | 'medium';
     fullHeight?: boolean
 }
 
-const Button = ({children, onClick, color = 'primary', fullHeight = false, size = 'medium'} : ButtonProps) => {
+const Button = ({children, onClick, color = 'primary', fullHeight = false} : ButtonProps) => {
    const buttonClasses = [
     styles.button,
     styles[`button--${color}`],
     fullHeight ? styles['button--full-height'] : '',
-    styles[`button--${size}`],
   ]
     .filter(Boolean)
     .join(' ');

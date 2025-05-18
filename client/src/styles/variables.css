@@ -1,24 +1,34 @@
 :root {
-  --color-primary-bg: #007bff;
-  --color-primary-text: #ffffff;
-  --color-primary-bg-hover: #0069d9;
-  --color-primary-bg-active: #0062cc;
+  --color-primary-bg: #FFCA28;
+  --color-primary-text: #202124;
+  --color-primary-bg-hover: #FFC107;
+  --color-primary-bg-active: #FFB300;
 
-  --color-secondary-bg: #6c757d;
-  --color-secondary-text: #ffffff;
-  --color-secondary-bg-hover: #5a6268;
-  --color-secondary-bg-active: #545b62;
+  --color-secondary-bg: #3C4043;
+  --color-secondary-text: #E8EAED;
+  --color-secondary-bg-hover: #4E5155;
+  --color-secondary-bg-active: #5F6368;
 
-  --color-success-bg: #28a745;
-  --color-success-text: #ffffff;
-  --color-success-bg-hover: #218838;
-  --color-success-bg-active: #1e7e34;
+  --color-secondary-light-bg: rgba(138, 180, 248, 0.08);
+  --color-secondary-light-text: #E8EAED;
+  --color-secondary-light-bg-hover: rgba(138, 180, 248, 0.12);
+  --color-secondary-light-bg-active: rgba(138, 180, 248, 0.16);
 
-  --color-danger-bg: #dc3545;
-  --color-danger-text: #ffffff;
-  --color-danger-bg-hover: #c82333;
-  --color-danger-bg-active: #bd2130;
+  --color-success-bg: #81C995;
+  --color-success-text: #1E3E23;
+  --color-success-bg-hover: #6FB07F;
+  --color-success-bg-active: #5A9A6A;
 
-  --color-disabled-bg: #cccccc;
-  --color-disabled-text: #666666;
+  --color-danger-bg: #F28B82;
+  --color-danger-text: #461A17;
+  --color-danger-bg-hover: #E4756D;
+  --color-danger-bg-active: #D96059;
+  
+  --color-info-bg: #89B4F8;
+  --color-info-text: #172A4F;
+  --color-info-bg-hover: #73A3E2;
+  --color-info-bg-active: #5E92D6;
+
+  --color-border: #5F6368;
+  --color-border-light: #9AA0A6;
 }

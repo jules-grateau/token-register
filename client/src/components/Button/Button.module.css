@@ -12,14 +12,8 @@
   transition: background-color 0.2s ease-in-out, transform 0.1s ease, color 0.2s ease-in-out;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-  background-color: var(--button-current-bg, var(--color-success-bg));
-  color: var(--button-current-text, var(--color-success-text));
-}
-
-.button--small {
-  width: 28px;
-  height: 28px;
-  padding: 0;
+  background-color: var(--button-current-bg, var(--color-primary-bg));
+  color: var(--button-current-text, var(--color-primary-text));
 }
 
 .button:hover:not(:disabled) {

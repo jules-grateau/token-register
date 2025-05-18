@@ -5,7 +5,7 @@ import Button from '../../Button';
 
 interface CartItemProps {
   item: CartItemType;
-  onRemove: () => void;
+  onRemove?: () => void;
 }
 
 const CartItem: React.FC<CartItemProps> = ({ item, onRemove }) => {
@@ -20,13 +20,14 @@ const CartItem: React.FC<CartItemProps> = ({ item, onRemove }) => {
           <span className={styles.itemQuantity}>× {item.quantity}</span>
         </div>
       </div>
-      <Button
-        onClick={() => onRemove()}
-        color="danger"
-        size='small'
-      >
-        × 
-      </Button>
+      {onRemove && (
+        <Button
+          onClick={() => onRemove()}
+          color="danger"
+        >
+          × 
+        </Button>
+    )}
     </li>
   );
 };
