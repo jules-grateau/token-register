@@ -1,8 +1,8 @@
 .productAreaContainer {
-  flex-grow: 1; /* Takes up remaining 80% of the width */
+  flex-grow: 1; 
   padding: 20px;
-  background-color: #f8f9fa; /* Light background */
-  overflow-y: auto; /* Enable scrolling if content overflows */
+  background-color: #f8f9fa;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 }
@@ -18,8 +18,7 @@
 
 .productList {
   display: grid;
-  /* Adjust minmax for desired button size and responsiveness */
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 15px; /* Space between product cards */
-  flex-grow: 1; /* Allows the grid to expand if needed */
+  gap: 15px;
+  flex-grow: 1;
 }

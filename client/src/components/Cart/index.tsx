@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { selectCartItems, selectTotalPrice, remove, selectTotalItems, clear } from '../../redux/cartSlice';
 import type { CartItemType } from 'shared-ts';
 import { useAddOrderMutation } from '../../services/orders';
+import Button from '../Button';
 
 
 const Cart: React.FC = () => {
@@ -25,7 +26,10 @@ const Cart: React.FC = () => {
 
   return (
     <div className={styles.cartContainer}>
-      <h2 className={styles.areaTitle}>Cart</h2>
+      <div className={styles.cartHeader}>
+        <h2 className={styles.areaTitle}>Cart</h2>
+        <Button onClick={() => dispatch(clear())}> History </Button>
+      </div>
       {cartItems.length === 0 ? (
         <p className={styles.emptyCartMessage}>Your cart is empty.</p>
       ) : (
@@ -44,12 +48,7 @@ const Cart: React.FC = () => {
             ))}
           </ul>
           <div className={styles.checkoutContainer}>
-            <button
-              className={styles.checkoutButton}
-              onClick={() => onCheckout(cartItems)}
-            >
-              Checkout
-            </button>
+            <Button onClick={() => onCheckout(cartItems)} fullHeight color='success'> Checkout </Button>  
             <div className={styles.cartTotal}>
               <strong>{totalItems} Items</strong>
               <br />

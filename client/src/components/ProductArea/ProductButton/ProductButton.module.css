@@ -8,13 +8,13 @@
   transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Center content vertically */
-  align-items: center; /* Center content horizontally */
-  min-height: 100px; /* Ensure cards have a decent size */
+  justify-content: center; 
+  align-items: center;
+  min-height: 100px; 
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  color: #333; /* Default text color for button */
-  font-family: inherit; /* Inherit font from parent */
-  font-size: 1em; /* Default font size */
+  color: #333;
+  font-family: inherit;
+  font-size: 1em;
 }
 
 .productCard:hover {
@@ -24,17 +24,17 @@
 
 .productCard:active {
   transform: translateY(-1px);
-  background-color: #e9ecef; /* Slight feedback on click */
+  background-color: #e9ecef; 
 }
 
 .productName {
   font-weight: bold;
   font-size: 1.1em;
   margin-bottom: 5px;
-  color: #007bff; /* Primary color for name */
+  color: #007bff;
 }
 
 .productPrice {
   font-size: 0.9em;
-  color: #28a745; /* Green for price */
+  color: #28a745;
 }

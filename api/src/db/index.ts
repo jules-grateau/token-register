@@ -50,7 +50,7 @@ export async function openDb() {
   await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Eau', 1]);
   await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Café/Thé', 1]);
   await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Sandwich Jambon beurre', 3]);
-  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Sandwich Rilette poulet', 3]);
+  await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Sandwich Rillette poulet', 3]);
   await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Sandwich Camembert', 3]);
   await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Croque Monsieur', 2]);
   await db.run(`INSERT INTO products (name, price) VALUES (?, ?)`, ['Chips', 1]);

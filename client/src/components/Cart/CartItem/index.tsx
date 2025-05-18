@@ -1,6 +1,7 @@
 import React from 'react';
 import type { CartItemType } from 'shared-ts'; // Or your central types file
 import styles from './CartItem.module.css';
+import Button from '../../Button';
 
 interface CartItemProps {
   item: CartItemType;
@@ -19,13 +20,13 @@ const CartItem: React.FC<CartItemProps> = ({ item, onRemove }) => {
           <span className={styles.itemQuantity}>× {item.quantity}</span>
         </div>
       </div>
-      <button
+      <Button
         onClick={() => onRemove()}
-        className={styles.removeButton}
-        title={`Remove ${item.product.name} from cart`} // Accessibility
+        color="danger"
+        size='small'
       >
-        × {/* A simple 'x' for remove */}
-      </button>
+        × 
+      </Button>
     </li>
   );
 };

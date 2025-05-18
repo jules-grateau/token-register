@@ -1,4 +1,3 @@
-
 import { useGetOrdersQuery, useRemoveOrderMutation } from './services/orders';
 import { Register } from './components/Register';
 

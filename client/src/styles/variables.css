@@ -1,0 +1,24 @@
+:root {
+  --color-primary-bg: #007bff;
+  --color-primary-text: #ffffff;
+  --color-primary-bg-hover: #0069d9;
+  --color-primary-bg-active: #0062cc;
+
+  --color-secondary-bg: #6c757d;
+  --color-secondary-text: #ffffff;
+  --color-secondary-bg-hover: #5a6268;
+  --color-secondary-bg-active: #545b62;
+
+  --color-success-bg: #28a745;
+  --color-success-text: #ffffff;
+  --color-success-bg-hover: #218838;
+  --color-success-bg-active: #1e7e34;
+
+  --color-danger-bg: #dc3545;
+  --color-danger-text: #ffffff;
+  --color-danger-bg-hover: #c82333;
+  --color-danger-bg-active: #bd2130;
+
+  --color-disabled-bg: #cccccc;
+  --color-disabled-text: #666666;
+}

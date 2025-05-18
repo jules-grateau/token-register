@@ -1,0 +1,72 @@
+.button {
+  display: block;
+  padding: 12px 20px;
+  font-size: 1.1em;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease, color 0.2s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  background-color: var(--button-current-bg, var(--color-success-bg));
+  color: var(--button-current-text, var(--color-success-text));
+}
+
+.button--small {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+}
+
+.button:hover:not(:disabled) {
+  background-color: var(--button-current-bg-hover, var(--color-success-bg-hover));
+}
+
+.button:active:not(:disabled) {
+  background-color: var(--button-current-bg-active, var(--color-success-bg-active));
+  transform: translateY(1px);
+}
+
+.button:disabled {
+  background-color: var(--color-disabled-bg);
+  color: var(--color-disabled-text);
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.button--primary {
+  --button-current-bg: var(--color-primary-bg);
+  --button-current-text: var(--color-primary-text);
+  --button-current-bg-hover: var(--color-primary-bg-hover);
+  --button-current-bg-active: var(--color-primary-bg-active);
+}
+
+.button--secondary {
+  --button-current-bg: var(--color-secondary-bg);
+  --button-current-text: var(--color-secondary-text);
+  --button-current-bg-hover: var(--color-secondary-bg-hover);
+  --button-current-bg-active: var(--color-secondary-bg-active);
+}
+
+.button--success {
+  --button-current-bg: var(--color-success-bg);
+  --button-current-text: var(--color-success-text);
+  --button-current-bg-hover: var(--color-success-bg-hover);
+  --button-current-bg-active: var(--color-success-bg-active);
+}
+
+.button--danger {
+  --button-current-bg: var(--color-danger-bg);
+  --button-current-text: var(--color-danger-text);
+  --button-current-bg-hover: var(--color-danger-bg-hover);
+  --button-current-bg-active: var(--color-danger-bg-active);
+}
+
+.button--full-height {
+  height: 100%;
+}
