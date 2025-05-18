@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { openDb } from './db';
-import { Product, CartItem, Order } from 'shared-ts';
+import { ProductType, CartItemType, OrderType } from 'shared-ts';
 import cors from 'cors';
 
 // Create the Express app
@@ -16,7 +16,7 @@ app.get('/', (req: Request, res: Response) => {
 app.get("/products", async (req: Request, res: Response) => {
   // Return all products fromt the database
   const db = await openDb();
-  const products = await db.all<Product>("SELECT * FROM products");
+  const products = await db.all<ProductType>("SELECT * FROM products");
   res.json(products);
   db.close();
 });
@@ -26,7 +26,7 @@ app.get("/orders", async (req: Request, res: Response) => {
   const db = await openDb();
   const rows = await db.all("SELECT order_id, product_id, date, quantity, name, price FROM orders LEFT JOIN order_items ON orders.id = order_items.order_id LEFT JOIN products on order_items.product_id = products.id"); 
   // Join with order_items to get the product details
-  const orders = new Map<number, Order>();
+  const orders = new Map<number, OrderType>();
 
   for (const row of rows) {
     const { order_id, date, name, product_id, price, quantity } = row;
@@ -45,7 +45,7 @@ app.get("/orders", async (req: Request, res: Response) => {
 
 app.post("/orders", async (req: Request, res: Response) => {
   const db = await openDb();
-  const cartItems : CartItem[] = req.body; // Extract cartItems from the request body
+  const cartItems : CartItemType[] = req.body; // Extract cartItems from the request body
 
   if (!cartItems || cartItems.length === 0) {
     res.status(400).json({ error: "No items in the cart" });
