@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node src/server.ts",
-    "flush-db": "ts-node src/db/scripts/flushDb.ts"
+    "flush-db": "ts-node src/db/scripts/flushDb.ts",
+    "init-db": "ts-node src/db/scripts/initDb.ts"
   },
   "author": "Jules Grateau",
   "license": "ISC",
