@@ -6,8 +6,6 @@
   padding: 5px;
   background-color: var(--color-secondary-bg);
   color: var(--color-secondary-text);
-  display: flex;
-  flex-direction: column;
 }
 
 .header {
@@ -34,4 +32,26 @@
 .catalogBody {
   padding: 10px;
   overflow: auto;
+}
+
+@media (max-width: 900px) {
+  .catalogContainer {
+    height: 60%;
+    width: 100%;;
+    border-bottom: 2px solid var(--color-border);
+  }
+  .cardList {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (max-width: 600px) {
+  .catalogContainer {
+    padding: 2px;
+  }
+  .cardList {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }

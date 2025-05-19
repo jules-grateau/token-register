@@ -91,6 +91,13 @@
   align-items: center;
 }
 
+@media (max-width: 600px) {
+  .orderHeader {
+    flex-direction: column-reverse;
+    align-items: center;
+  }
+}
+
 .orderHeader > h3 {
   font-size: 1.25em;
   font-weight: 600;

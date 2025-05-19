@@ -19,6 +19,18 @@
   flex-grow: 1;
 }
 
+@media (max-width: 900px) {
+  .cartItem {
+    padding: 4px 2px;
+  }
+
+  .itemDetails {
+    flex-direction: row;
+    gap: 10px;
+    flex-grow: 0;
+  }
+}
+
 .itemName {
   font-weight: 600;
   font-size: 1em;
