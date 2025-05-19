@@ -4,7 +4,6 @@
   "description": "Simple and cashless Register software",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "ts-node src/server.ts",
     "flush-db": "ts-node src/db/scripts/flushDb.ts",
     "init-db": "ts-node src/db/scripts/initDb.ts"
@@ -16,6 +15,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "pino": "^9.7.0",
+    "pino-http": "^10.4.0",
     "shared-ts": "file:../shared-ts",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
