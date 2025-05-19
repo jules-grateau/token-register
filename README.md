@@ -65,7 +65,7 @@ token-register/
 1. **Clone the repository**
 
    ```sh
-   git clone <your-repo-url>
+   git clone https://github.com/jules-grateau/token-register.git
    cd token-register
    ```
 
