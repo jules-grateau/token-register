@@ -8,6 +8,7 @@
   "order_history": "Order History",
   "order": "Order",
   "order_number": "Order #{{id}} - {{date}}",
+  "order_placed": "Order #{{id}} placed",
   "delete": "Delete",
   "close": "Close",
   "loading": "Loading...",
@@ -26,6 +27,6 @@
   "refresh_page": "Refresh Page",
   "oops_error": "Oops! Something went wrong.",
   "error_message": "We're sorry for the inconvenience. Please try refreshing the page.",
-  "order_removed": "Order removed",
+  "order_removed": "Order #{{id}} removed",
   "error_adding_order": "Error adding order: {{error}}"
 }

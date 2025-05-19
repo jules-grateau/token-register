@@ -4,6 +4,7 @@ import { useGetOrdersQuery, useRemoveOrderMutation } from '../../services/orders
 import CartItem from '../Cart/CartItem';
 import Button from '../Button';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -22,10 +23,10 @@ const OrderModal: React.FC<OrderModalProps> = ({
 
   const onRemoveOrder = async (id : number) => {
     try {
-      const response = await removeOrder(id).unwrap();
-      console.log('Order removed:', response);
+      await removeOrder(id).unwrap();
+      toast.success(t('order_removed', { id }));
     } catch (error) {
-      console.error(t('error_removing_order', { error: String(error) }));
+      toast.error(t('error_removing_order', { error: String(error) }));
     }
     finally {
       ordersQuery.refetch();

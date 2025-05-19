@@ -7,6 +7,7 @@ import type { CartItemType } from 'shared-ts';
 import { useAddOrderMutation, useGetOrdersQuery } from '../../services/orders';
 import Button from '../Button';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'react-toastify';
 
 interface CartProps {
   onClickHistory: () => void;
@@ -23,12 +24,13 @@ const Cart: React.FC<CartProps> = ({onClickHistory} : CartProps) => {
 
   const onCheckout = async (cartItems : CartItemType[]) => {
     try {
-      addOrder(cartItems).unwrap().then(() => {
+      addOrder(cartItems).unwrap().then((id) => {
         dispatch(clear()); 
         ordersQuery.refetch();
+        toast.success(t('order_placed', { id }));
       });
     } catch (error) {
-      alert(t('error_adding_order', { error: String(error) }));
+      toast.error(t(t('error_adding_order', { error: String(error) })));
     }
   }; 
 

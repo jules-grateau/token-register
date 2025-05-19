@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { CartItemType, OrderType } from 'shared-ts';
+import type { CartItemType, OrderType, PostAPIResponseType } from 'shared-ts';
 
 const API_URL = import.meta.env.VITE_BASE_API_URL + '/orders';
 
@@ -12,13 +12,13 @@ export const ordersApi = createApi({
       return headers;
     }}),
   endpoints: (build) => ({
-    addOrder: build.mutation<void,CartItemType[]>({
+    addOrder: build.mutation<number,CartItemType[]>({
       query: (cart : CartItemType[]) => ({
         url: '',
         method: 'POST',
         body: cart,
-
       }),
+      transformResponse: (response: PostAPIResponseType) => response.id,
     }),
     removeOrder: build.mutation<void, number>({
       query: (id) => ({
