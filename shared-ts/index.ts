@@ -14,3 +14,8 @@ export type OrderType = {
   date: number; // Order date
   items: CartItemType[]; // List of items in the order
 }
+
+export type CategoryType = {
+  id: number;
+  name: string;
+}

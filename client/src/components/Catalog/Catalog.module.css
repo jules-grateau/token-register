@@ -1,34 +1,37 @@
-.productAreaContainer {
+.catalogContainer {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
   height: 100%;
-  padding: 20px;
+  padding: 5px;
   background-color: var(--color-secondary-bg);
   color: var(--color-secondary-text);
   display: flex;
   flex-direction: column;
 }
 
-.areaHeader {
-  display: flex;;
-}
-
-.areaTitle {
+.header {
+ display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 0;
+  padding: 0px 10px;
   margin-bottom: 20px;
-  font-size: 1.8em;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 10px;
+  border-bottom: 2px solid var(--color-border);
 }
 
-.productList {
+.title {
+  font-size: 1.8em;
+}
+
+.cardList {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 15px;
   flex-grow: 1;
 }
 
-.productArea {
+.catalogBody {
+  padding: 10px;
   overflow: auto;
 }

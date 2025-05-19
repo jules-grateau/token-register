@@ -1,6 +1,6 @@
 import React from 'react';
 
-import ProductArea from '../ProductArea';
+import Catalog from '../Catalog';
 import Cart from '../Cart';
 import OrderModal from '../OrderModal';
 
@@ -10,7 +10,7 @@ export const Register: React.FC = () => {
   return (
     <>
       <Cart onClickHistory={() => setIsOrderModalOpen(true)}/>
-      <ProductArea />
+      <Catalog />
       <OrderModal isOpen={isOrderModalOpen} onClose={() => setIsOrderModalOpen(false)}/>
     </>
   )

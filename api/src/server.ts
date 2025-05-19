@@ -13,19 +13,37 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Hello World from Express + TypeScript!');
 });
 
+app.get('/categories', async (req: Request, res: Response) => {
+  const db = await openDb();
+  const categories = await db.all("SELECT * FROM categories");
+  res.json(categories);
+  db.close();
+});
+
 app.get("/products", async (req: Request, res: Response) => {
-  // Return all products fromt the database
   const db = await openDb();
   const products = await db.all<ProductType>("SELECT * FROM products");
   res.json(products);
   db.close();
 });
 
+// Get all products by category
+app.get("/categories/:categoryId/products", async (req: Request, res: Response) => {
+  const categoryId = parseInt(req.params.categoryId, 10);
+  if (isNaN(categoryId)) {
+    res.status(400).json({ error: "Invalid category ID" });
+    return;
+  }
+
+  const db = await openDb();
+  const products = await db.all<ProductType[]>("SELECT * FROM products WHERE category_id = ?", [categoryId]);
+  res.json(products);
+  db.close();
+});
+
 app.get("/orders", async (req: Request, res: Response) => {
-  // Return all orders from the database
   const db = await openDb();
   const rows = await db.all("SELECT order_id, product_id, date, quantity, name, price FROM orders LEFT JOIN order_items ON orders.id = order_items.order_id LEFT JOIN products on order_items.product_id = products.id ORDER BY date DESC;"); 
-  // Join with order_items to get the product details
   const orders = new Map<number, OrderType>();
 
   for (const row of rows) {
@@ -53,7 +71,6 @@ app.post("/orders", async (req: Request, res: Response) => {
     return;
   }
   
-  // Insert the order into the orders table
   const order = await db.run("INSERT INTO orders (date) VALUES (?)", [Date.now()]);
   const orderId = order.lastID;
 
@@ -61,7 +78,6 @@ app.post("/orders", async (req: Request, res: Response) => {
     const { product, quantity } = item;
     const { id } = product;
 
-    // Insert the order items into the order_items table
     await db.run("INSERT INTO order_items (order_id, product_id, quantity) VALUES (?, ?, ?)", [orderId, id, quantity]);
   };
 
@@ -78,9 +94,8 @@ app.delete("/orders/:id", async (req: Request, res: Response) => {
     return;
   }
   
-  // Delete the order items from the order_items table
+
   await db.run("DELETE FROM order_items WHERE order_id = ?", [orderId]);
-  // Delete the order from the orders table
   await db.run("DELETE FROM orders WHERE id = ?", [orderId]);
   res.status(204).send();
   db.close();
