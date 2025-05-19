@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { CategoryType, ProductType } from 'shared-ts';
 
-const API_URL = 'http://localhost:3001/categories';
+const API_URL = import.meta.env.VITE_BASE_API_URL + '/categories';
 
 export const categoriesApi = createApi({
   reducerPath: 'categoriesApi',

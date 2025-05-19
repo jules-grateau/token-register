@@ -1,0 +1,93 @@
+/* frontend/src/components/ErrorBoundary/ErrorBoundary.module.css */
+
+.errorBoundaryContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1.5rem;
+  background-color: var(--color-secondary-light-bg); 
+  color: var(--color-secondary-light-text);
+  font-family: sans-serif; 
+  text-align: center;
+}
+
+.errorContent {
+  background-color: var(--color-secondary-bg);
+  padding: 2rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  max-width: 600px;
+  width: 100%;
+  border: 1px solid var(--color-border);
+}
+
+.errorTitle {
+  font-size: 1.75rem; 
+  color: var(--color-danger-bg); 
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.errorMessage {
+  font-size: 1.125rem;
+  color: var(--color-secondary-light-text);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.errorDetails {
+  background-color: var(--color-secondary-bg-active);
+  border: 1px solid var(--color-border-light);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  font-size: 0.875rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.errorDetails summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-secondary-light-text);
+  margin-bottom: 0.5rem;
+}
+
+.errorDetails pre {
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--color-secondary-text); 
+  margin: 0;
+}
+
+.refreshButton {
+  background-color: var(--color-primary-bg);
+  color: var(--color-primary-text);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.refreshButton:hover {
+  background-color: var(--color-primary-bg-hover);
+}
+
+.refreshButton:active {
+  background-color: var(--color-primary-bg-active);
+  transform: translateY(1px);
+}
+
+.refreshButton:focus-visible {
+  outline: 2px solid var(--color-primary-bg-hover); 
+  outline-offset: 2px;
+}

@@ -1,8 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { CartItemType, OrderType } from 'shared-ts';
-import { remove } from '../redux/cartSlice';
 
-const API_URL = 'http://localhost:3001/orders';
+const API_URL = import.meta.env.VITE_BASE_API_URL + '/orders';
 
 export const ordersApi = createApi({
   reducerPath: 'ordersApi',

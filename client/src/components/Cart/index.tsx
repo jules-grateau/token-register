@@ -17,7 +17,6 @@ const Cart: React.FC<CartProps> = ({onClickHistory} : CartProps) => {
   const totalItems = useSelector(selectTotalItems);
   const [addOrder] = useAddOrderMutation();
   const ordersQuery = useGetOrdersQuery();
-
   const dispatch = useDispatch();
 
   const onCheckout = async (cartItems : CartItemType[]) => {
