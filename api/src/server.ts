@@ -2,16 +2,23 @@ import express, { Request, Response } from 'express';
 import { openDb } from './db';
 import { ProductType, CartItemType, OrderType } from 'shared-ts';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import { basicAuthMiddleware } from './middleware/basicAuth';
 
-// Create the Express app
+dotenv.config();
+
 const app = express();
-app.use(cors({ origin: 'http://localhost:5173' })); // Allow requests from the React app
-app.use(express.json()); // Parse JSON request bodies
 
-// Define a GET route at "/"
-app.get('/', (req: Request, res: Response) => {
-  res.send('Hello World from Express + TypeScript!');
-});
+console.log(process.env.FRONTEND_URL);
+app.use(cors({ 
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+app.use(basicAuthMiddleware);
+
+app.use(express.json());
+
 
 app.get('/categories', async (req: Request, res: Response) => {
   const db = await openDb();
@@ -27,7 +34,6 @@ app.get("/products", async (req: Request, res: Response) => {
   db.close();
 });
 
-// Get all products by category
 app.get("/categories/:categoryId/products", async (req: Request, res: Response) => {
   const categoryId = parseInt(req.params.categoryId, 10);
   if (isNaN(categoryId)) {
@@ -94,15 +100,16 @@ app.delete("/orders/:id", async (req: Request, res: Response) => {
     return;
   }
   
-
   await db.run("DELETE FROM order_items WHERE order_id = ?", [orderId]);
   await db.run("DELETE FROM orders WHERE id = ?", [orderId]);
   res.status(204).send();
   db.close();
 });
 
-// Start the server on port 3001
-const PORT = 3001;
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+app.listen(process.env.PORT, () => {
+  console.log(`Server running at http://localhost:${process.env.PORT}`);
+  console.log(`Frontend URL: ${process.env.FRONTEND_URL}`);
+  if (!process.env.BASIC_AUTH_USER || !process.env.BASIC_AUTH_PASS) {
+    console.warn('WARNING: Basic Auth credentials are not set. Authentication will fail.');
+  }
 });

@@ -1,6 +1,7 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import path from 'path';
+import dotenv from 'dotenv';
 
 // We use the 'sqlite' package wrapper for Promises on top of sqlite3
 // You need to install it: npm install sqlite
@@ -8,8 +9,8 @@ import path from 'path';
 // Async function to open the DB connection
 export async function openDb() {
   const db = await open({
-    filename: path.resolve(__dirname, './data/database.sqlite'),  // SQLite file path in your backend root
-    driver: sqlite3.Database
+    filename: path.resolve(__dirname, process?.env?.DATABASE_PATH || "./data/database.sqlite"),  
+        driver: sqlite3.Database
   });
 
   console.log('Initializing database...');

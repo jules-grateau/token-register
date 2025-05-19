@@ -7,6 +7,7 @@ const API_URL = 'http://localhost:3001/orders';
 export const ordersApi = createApi({
   reducerPath: 'ordersApi',
   baseQuery: fetchBaseQuery({ baseUrl: API_URL,  
+    credentials: 'include',
     prepareHeaders: (headers) => {
       headers.set('Content-Type', 'application/json');
       return headers;
