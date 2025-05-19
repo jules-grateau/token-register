@@ -1,6 +1,7 @@
 import React from 'react';
 import type { CategoryType } from 'shared-ts';
 import ClickableCard from '../../ClickableCard';
+import { useTranslation } from 'react-i18next';
 
 interface CategoryListProps {
   isLoading: boolean;
@@ -11,9 +12,11 @@ interface CategoryListProps {
 }
 
 const CategoryList: React.FC<CategoryListProps> = ({ isLoading, isError, categories, allCategoriesId, onSelectCategory }) => {
-  if (isLoading) return <p>Loading categories...</p>;
-  if (isError) return <p>Error loading categories.</p>;
-  if (!categories || categories.length === 0) return <p>No categories available.</p>;
+  const { t } = useTranslation();
+
+  if (isLoading) return <p>{t('loading_categories')}</p>;
+  if (isError) return <p>{t('error_loading_categories')}</p>;
+  if (!categories || categories.length === 0) return <p>{t('no_categories')}</p>;
 
   return (
     <>
@@ -27,7 +30,7 @@ const CategoryList: React.FC<CategoryListProps> = ({ isLoading, isError, categor
       {allCategoriesId !== undefined && 
       <ClickableCard
         key='0'
-        title="All Categories"
+        title={t('all_categories')}
         onClick={() => onSelectCategory(allCategoriesId)}
       />}
     </>

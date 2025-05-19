@@ -9,9 +9,9 @@ import CategoryList from './CategoryList';
 import ProductList from './ProductList';
 import { useGetProductsQuery } from '../../services/product';
 import type { ProductType } from 'shared-ts';
+import { useTranslation } from 'react-i18next';
 
 export const ALL_CATEGORIES_ID = 0;
-
 
 const Catalog : React.FC = () => {
     const dispatch = useDispatch();
@@ -23,7 +23,10 @@ const Catalog : React.FC = () => {
         selectedCategory!,
         { skip: selectedCategory === null || selectedCategory === ALL_CATEGORIES_ID }
     );
-    const selectedCategoryName = selectedCategory != ALL_CATEGORIES_ID ? categoriesQuery.data?.find(category => category.id === selectedCategory)?.name : "All categories";
+    const { t } = useTranslation();
+    const selectedCategoryName = selectedCategory != ALL_CATEGORIES_ID
+      ? categoriesQuery.data?.find(category => category.id === selectedCategory)?.name
+      : t('all_categories');
 
     const handleSelectCategory = (categoryId: number) => {
         setSelectedCategory(categoryId);
@@ -47,12 +50,12 @@ const Catalog : React.FC = () => {
   return (
     <div className={styles.catalogContainer}>
         <div className={styles.header}>
-            <h2 className={styles.title}>{hasSelectedCategory ?  selectedCategoryName : "Categories"}</h2>
+            <h2 className={styles.title}>{hasSelectedCategory ?  selectedCategoryName : t('categories')}</h2>
             {hasSelectedCategory && (
                 <Button
                     onClick={handleGoBack}
                     color='primary'>
-                    Go back
+                    {t('go_back')}
                 </Button>
             )}
         </div>

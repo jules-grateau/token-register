@@ -3,6 +3,7 @@ import styles from './OrderModal.module.css';
 import { useGetOrdersQuery, useRemoveOrderMutation } from '../../services/orders';
 import CartItem from '../Cart/CartItem';
 import Button from '../Button';
+import { useTranslation } from 'react-i18next';
 
 interface OrderModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ const OrderModal: React.FC<OrderModalProps> = ({
   isOpen,
   onClose
 }) => {
+  const { t } = useTranslation();
   const ordersQuery = useGetOrdersQuery();
   const { data: ordersData, isLoading, error } = ordersQuery;
   const [removeOrder] = useRemoveOrderMutation();
@@ -23,7 +25,7 @@ const OrderModal: React.FC<OrderModalProps> = ({
       const response = await removeOrder(id).unwrap();
       console.log('Order removed:', response);
     } catch (error) {
-      console.error('Error removing order:', error);
+      console.error(t('error_removing_order', { error: String(error) }));
     }
     finally {
       ordersQuery.refetch();
@@ -38,14 +40,14 @@ const OrderModal: React.FC<OrderModalProps> = ({
     <div className={styles.modalOverlay} onClick={onClose} role="dialog" aria-modal="true">
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2 className={styles.modalTitle}> Order History</h2>
-          <button onClick={onClose} className={styles.closeButton} aria-label="Close modal">
+          <h2 className={styles.modalTitle}>{t('order_history')}</h2>
+          <button onClick={onClose} className={styles.closeButton} aria-label={t('close')}>
             ×
           </button>
         </div>
         <div className={styles.modalBody}>
-            {isLoading && <p>Loading...</p>}
-            {error && <p>Error loading orders</p>}
+            {isLoading && <p>{t('loading')}</p>}
+            {error && <p>{t('error_loading_orders')}</p>}
           {ordersData && ordersData.length > 0 ? (
             <>
               <ul className={styles.orderList}>
@@ -53,11 +55,11 @@ const OrderModal: React.FC<OrderModalProps> = ({
                     <div className={styles.order} key={index}>
                       <li key={index}>
                         <div className={styles.orderHeader}>
-                          <h3 className={styles.orderNumber}>Order #{order.id} - {new Date(order.date).toLocaleString('fr-FR')}</h3>
+                          <h3 className={styles.orderNumber}>{t('order_number', { id: order.id, date: new Date(order.date).toLocaleString() })}</h3>
                            <Button
                             onClick={() => onRemoveOrder(order.id)}
                             color="danger"
-                          > Delete </Button>
+                          > {t('delete')} </Button>
                         </div>
                           <ul className={styles.orderItems}>
                               {order.items.map((item, itemIndex) => (
@@ -69,19 +71,19 @@ const OrderModal: React.FC<OrderModalProps> = ({
                           </ul>
                       </li>
                     <div className={styles.orderTotal}>
-                      <span>{order.items.reduce((acc, item) => acc + item.product.price * item.quantity, 0)} Tokens</span>
-                      <span>{order.items.reduce((acc, item) => acc + item.quantity, 0)} Items</span>
+                      <span>{order.items.reduce((acc, item) => acc + item.product.price * item.quantity, 0)} {t('tokens')}</span>
+                      <span>{order.items.reduce((acc, item) => acc + item.quantity, 0)} {t('items')}</span>
                     </div>
                   </div>
                   ))}
               </ul>
             </>
           ) : (
-            <p>No orders to display.</p>
+            <p>{t('no_orders')}</p>
           )}
         </div>
         <div className={styles.modalFooter}>
-          <Button onClick={onClose} color='danger'> Close </Button>
+          <Button onClick={onClose} color='danger'> {t('close')} </Button>
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { ProductType } from 'shared-ts';
 import ProductCard from './ProductCard'; 
-
+import { useTranslation } from 'react-i18next';
 
 interface ProductListProps {
   isLoading: boolean;
@@ -11,10 +11,11 @@ interface ProductListProps {
 }
 
 const ProductList: React.FC<ProductListProps> = ({ isLoading, isError, products, onAddToCart }) => {
+  const { t } = useTranslation();
 
-    if (isLoading) return <p>Loading products...</p>;
-  if (isError) return <p>Error loading products.</p>;
-  if (!products || products.length === 0) return <p>No products in this category.</p>;
+  if (isLoading) return <p>{t('loading_products')}</p>;
+  if (isError) return <p>{t('error_loading_products')}</p>;
+  if (!products || products.length === 0) return <p>{t('no_products')}</p>;
 
   return (
     <>

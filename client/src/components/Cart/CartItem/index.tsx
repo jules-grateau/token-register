@@ -1,7 +1,8 @@
 import React from 'react';
-import type { CartItemType } from 'shared-ts'; // Or your central types file
+import type { CartItemType } from 'shared-ts';
 import styles from './CartItem.module.css';
 import Button from '../../Button';
+import { useTranslation } from 'react-i18next';
 
 interface CartItemProps {
   item: CartItemType;
@@ -9,13 +10,14 @@ interface CartItemProps {
 }
 
 const CartItem: React.FC<CartItemProps> = ({ item, onRemove }) => {
+  const { t } = useTranslation();
   return (
     <li className={styles.cartItem}>
       <div className={styles.itemDetails}>
         <span className={styles.itemName}>{item.product.name}</span>
         <div className={styles.itemPriceAndQuantity}>
           {item.product.price !== undefined && (
-            <span className={styles.itemPrice}> {item.product.price} Tokens </span>
+            <span className={styles.itemPrice}> {item.product.price} {t('tokens')} </span>
           )}
           <span className={styles.itemQuantity}>× {item.quantity}</span>
         </div>
@@ -27,7 +29,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, onRemove }) => {
         >
           × 
         </Button>
-    )}
+      )}
     </li>
   );
 };

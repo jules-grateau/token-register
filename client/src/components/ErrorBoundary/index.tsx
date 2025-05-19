@@ -1,8 +1,10 @@
 import React from 'react';
 import type { ErrorInfo, ReactNode } from 'react';
-import styles from './ErrorBoundary.module.css'; // We'll create this CSS Module
+import styles from './ErrorBoundary.module.css';
+import { withTranslation } from 'react-i18next';
+import type { WithTranslation } from 'react-i18next';
 
-interface Props {
+interface Props extends WithTranslation {
   children?: ReactNode;
 }
 
@@ -33,13 +35,15 @@ class ErrorBoundary extends React.Component<Props, State> {
   };
 
   render() {
+    const { t } = this.props;
+
     if (this.state.hasError) {
       return (
         <div className={styles.errorBoundaryContainer} role="alert">
           <div className={styles.errorContent}>
-            <h1 className={styles.errorTitle}>Oops! Something went wrong.</h1>
+            <h1 className={styles.errorTitle}>{t('oops_error')}</h1>
             <p className={styles.errorMessage}>
-              We're sorry for the inconvenience. Please try refreshing the page.
+              {t('error_message')}
             </p>
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className={styles.errorDetails}>
@@ -51,7 +55,7 @@ class ErrorBoundary extends React.Component<Props, State> {
               </details>
             )}
             <button className={styles.refreshButton} onClick={this.handleRefresh}>
-              Refresh Page
+              {t('refresh_page')}
             </button>
           </div>
         </div>
@@ -62,4 +66,4 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 }
 
-export default ErrorBoundary;
+export default withTranslation()(ErrorBoundary);
