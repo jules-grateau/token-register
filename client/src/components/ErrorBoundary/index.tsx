@@ -46,13 +46,13 @@ class ErrorBoundary extends React.Component<Props, State> {
               {t('error_message')}
             </p>
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className={styles.errorDetails}>
+              <div className={styles.errorDetails}>
                 <summary>Error Details (Development Only)</summary>
                 <pre>
                   {this.state.error.toString()}
                   {this.state.errorInfo && this.state.errorInfo.componentStack}
                 </pre>
-              </details>
+              </div>
             )}
             <button className={styles.refreshButton} onClick={this.handleRefresh}>
               {t('refresh_page')}

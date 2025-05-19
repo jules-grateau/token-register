@@ -1,5 +1,3 @@
-/* frontend/src/components/ErrorBoundary/ErrorBoundary.module.css */
-
 .errorBoundaryContainer {
   display: flex;
   flex-direction: column;
@@ -7,8 +5,8 @@
   justify-content: center;
   min-height: 100vh;
   padding: 1.5rem;
-  background-color: var(--color-secondary-light-bg); 
-  color: var(--color-secondary-light-text);
+  background-color: var(--color-secondary-bg); 
+  color: var(--color-secondary-text);
   font-family: sans-serif; 
   text-align: center;
 }
