@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { basicAuthMiddleware } from './middleware/basicAuth';
 import { pinoHttp } from 'pino-http';
 import logger from './logger';
+import path from 'path';
 
 dotenv.config();
 
@@ -14,7 +15,6 @@ app.use(pinoHttp({
   logger
 }));
 
-console.log(process.env.FRONTEND_URL);
 app.use(cors({ 
     origin: process.env.FRONTEND_URL,
     credentials: true,
@@ -23,6 +23,22 @@ app.use(cors({
 app.use(basicAuthMiddleware);
 
 app.use(express.json());
+
+if (process.env.NODE_ENV === 'production') {
+    const clientBuildPath = path.resolve(__dirname, '../../client/dist');
+
+    console.log(`Serving static files from: ${clientBuildPath}`);
+
+    app.use(express.static(clientBuildPath));
+
+    app.get('/', (req, res) => {
+        res.sendFile(path.resolve(clientBuildPath, 'index.html'));
+    });
+} else {
+    app.get('/', (req, res) => {
+        res.send('API is running in development mode. React client served separately by Vite.');
+    });
+}
 
 
 app.get('/categories', async (req: Request, res: Response) => {
@@ -115,7 +131,7 @@ app.post("/orders", async (req: Request, res: Response) => {
 
   try {
     db = await openDb();
-    const cartItems : CartItemType[] = req.body; // Extract cartItems from the request body
+    const cartItems : CartItemType[] = req.body;
     if (!cartItems || cartItems.length === 0) {
       res.status(400).json({ error: "No items in the cart" });
       return;

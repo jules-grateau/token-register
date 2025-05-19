@@ -106,6 +106,53 @@ token-register/
 
    The frontend runs on [http://localhost:5173](http://localhost:5173) or where configured in the `client/.env` file.
 
+## Production Deployment
+
+To deploy the backend in production, this project uses [PM2](https://pm2.keymetrics.io/) for process management.
+
+### 1. Build the backend and frontend
+```sh
+npm run build
+```
+This should create the `/dist` folder is both `/api` and `/client`
+
+### 2. Set up environment variables
+
+- Copy `api/.env.example` to `api/.env.production` (or `.env`) and fill in production values (e.g., `NODE_ENV=production`, correct `DATABASE_PATH`, credentials, etc.).
+
+### 3. Initialize the database
+
+Before starting the server, ensure the database is initialized:
+
+```sh
+npm run prod:db:init
+```
+
+### 4. Start the backend with PM2
+
+If you do not have pm2, install it with
+
+```sh
+npm install pm2 -g
+```
+
+From the project root, run:
+
+```sh
+pm2 start ecosystem.config.js
+```
+
+This will launch the backend using the configuration in [`ecosystem.config.js`](ecosystem.config.js).
+
+### 5. (Optional) Manage the process
+
+- View logs: `pm2 logs`
+- Restart: `pm2 restart token-register-api`
+- Stop: `pm2 stop token-register-api`
+- List: `pm2 list`
+
+For more details, see the [PM2 documentation](https://pm2.keymetrics.io/docs/usage/quick-start/).
+
 ## Usage
 
 - Open the frontend in your browser.
@@ -120,7 +167,7 @@ token-register/
   npm run flush-db -w=api
   ```
 
-- **Re-initialize the database:**  
+- **Initialize the database:**  
   ```sh
   npm run init-db -w=api
   ```

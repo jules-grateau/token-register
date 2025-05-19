@@ -5,8 +5,11 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node src/server.ts",
-    "flush-db": "ts-node src/db/scripts/flushDb.ts",
-    "init-db": "ts-node src/db/scripts/initDb.ts"
+    "build": "tsc",
+    "dev:db:init": "ts-node src/db/scripts/initDb.ts",
+    "dev:db:flush": "ts-node src/db/scripts/flushDb.ts",
+    "prod:db:init": "node dist/db/scripts/initDb.js",
+    "prod:db:flush": "node dist/db/scripts/flushDb.js"
   },
   "author": "Jules Grateau",
   "license": "ISC",

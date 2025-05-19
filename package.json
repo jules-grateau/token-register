@@ -6,6 +6,12 @@
     "api",
     "shared-ts"
   ],
+  "scripts": {
+    "build:api": "npm run build -w=api",
+    "build:client": "npm run build -w=client",
+    "build": "npm run build:api && npm run build:client",
+    "prod:db:init":"npm run prod:db:init -w=api"
+  },
   "devDependencies": {
     "pino-pretty": "^13.0.0",
     "typescript": "^5.8.3"

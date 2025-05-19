@@ -1,8 +1,47 @@
-import { openDb } from "..";
+import sqlite3, { Database } from "sqlite3";
 import logger from "../../logger";
+import path from "path";
+import fs from "fs";
+import { getDatabasePath } from "..";
 
-openDb().then(async (db) => {
-  logger.info('Initializing database');
+
+
+export const dbFilePath = getDatabasePath();
+export const dbDir = path.dirname(dbFilePath);
+
+initializeDatabase();
+
+async function initializeDatabase() {
+  logger.info("Initializing database...");
+    logger.info(`Target database directory: ${dbDir}`);
+    logger.info(`Target database file: ${dbFilePath}`);
+
+    if (!fs.existsSync(dbDir)) {
+        logger.info(`Directory ${dbDir} does not exist. Creating it...`);
+        try {
+            fs.mkdirSync(dbDir, { recursive: true });
+            logger.info(`Directory ${dbDir} created successfully.`);
+        } catch (err) {
+            logger.error(`Error creating directory ${dbDir}:`, err);
+            process.exit(1);
+        }
+    } else {
+        logger.info(`Directory ${dbDir} already exists.`);
+    }
+
+    const db = new sqlite3.Database(dbFilePath, (err) => {
+        if (err) {
+            console.error('Error opening database:', err.message);
+            return process.exit(1);
+        }
+        logger.info(`Successfully connected to/created database at ${dbFilePath}`);
+    });
+
+    await createTables(db);
+}
+
+async function createTables(db : Database) {
+
   try {
     logger.info('Creating tables');
     await db.exec(`
@@ -75,5 +114,4 @@ openDb().then(async (db) => {
   } finally {
     db.close();
   }
-  
-})
+}

@@ -1,5 +1,6 @@
 # Environment variables
 .env
+.env.production
 
 # Logs
 logs
@@ -14,7 +15,7 @@ node_modules
 dist
 dist-ssr
 *.local
-api/src/db/data/database.sqlite
+*.sqlite
 
 # Editor directories and files
 .vscode/*
