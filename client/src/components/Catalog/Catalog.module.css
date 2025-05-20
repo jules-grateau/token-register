@@ -3,23 +3,23 @@
   flex-direction: column;
   flex-grow: 1;
   height: 100%;
-  padding: 5px;
   background-color: var(--color-secondary-bg);
   color: var(--color-secondary-text);
 }
 
 .header {
- display: flex;
+  display: flex;
   justify-content: space-between;
+  min-height: 58px;
   align-items: center;
-  margin-top: 0;
-  padding: 0px 10px;
-  margin-bottom: 20px;
+  padding: 10px 20px;
   border-bottom: 2px solid var(--color-border);
 }
 
 .title {
   font-size: 1.8em;
+  padding: 0 10px;
+  margin: 0;
 }
 
 .cardList {
@@ -36,7 +36,7 @@
 
 @media (max-width: 900px) {
   .catalogContainer {
-    height: 60%;
+    height: 55%;
     width: 100%;;
     border-bottom: 2px solid var(--color-border);
   }
@@ -44,14 +44,12 @@
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     gap: 10px;
   }
-}
-
-@media (max-width: 600px) {
-  .catalogContainer {
-    padding: 2px;
+  .title {
+    font-size: 1.4em;
   }
-  .cardList {
-    grid-template-columns: 1fr;
-    gap: 8px;
+
+  .header {
+    min-height: 40px;
+    padding: 0;
   }
 }

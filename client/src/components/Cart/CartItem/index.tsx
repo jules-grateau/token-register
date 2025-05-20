@@ -14,12 +14,15 @@ const CartItem: React.FC<CartItemProps> = ({ item, onRemove }) => {
   return (
     <li className={styles.cartItem}>
       <div className={styles.itemDetails}>
-        <span className={styles.itemName}>{item.product.name}</span>
+
+        <span className={styles.itemName}>         
+          {item.product.name} <span className={styles.itemQuantity}>x{item.quantity}</span>
+          </span>
         <div className={styles.itemPriceAndQuantity}>
           {item.product.price !== undefined && (
             <span className={styles.itemPrice}> {item.product.price} {t('tokens', { count:item.product.price })} </span>
           )}
-          <span className={styles.itemQuantity}>× {item.quantity}</span>
+
         </div>
       </div>
       {onRemove && (
