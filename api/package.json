@@ -20,6 +20,7 @@
     "express": "^5.1.0",
     "pino": "^9.7.0",
     "pino-http": "^10.4.0",
+    "pm2": "^6.0.6",
     "shared-ts": "file:../shared-ts",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
@@ -28,6 +29,7 @@
     "@types/cors": "^2.8.18",
     "@types/express": "^5.0.1",
     "@types/node": "^22.15.18",
+    "@types/sqlite3": "^3.1.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   }

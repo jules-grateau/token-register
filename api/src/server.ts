@@ -7,6 +7,7 @@ import { basicAuthMiddleware } from './middleware/basicAuth';
 import { pinoHttp } from 'pino-http';
 import logger from './logger';
 import path from 'path';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -23,23 +24,6 @@ app.use(cors({
 app.use(basicAuthMiddleware);
 
 app.use(express.json());
-
-if (process.env.NODE_ENV === 'production') {
-    const clientBuildPath = path.resolve(__dirname, '../../client/dist');
-
-    console.log(`Serving static files from: ${clientBuildPath}`);
-
-    app.use(express.static(clientBuildPath));
-
-    app.get('/', (req, res) => {
-        res.sendFile(path.resolve(clientBuildPath, 'index.html'));
-    });
-} else {
-    app.get('/', (req, res) => {
-        res.send('API is running in development mode. React client served separately by Vite.');
-    });
-}
-
 
 app.get('/categories', async (req: Request, res: Response) => {
   let db;
@@ -182,6 +166,32 @@ app.delete("/orders/:id", async (req: Request, res: Response) => {
     db?.close();  
   }
 });
+
+if (process.env.NODE_ENV === 'production') {
+    const clientBuildPath = path.resolve(__dirname, '../../client/dist');
+    // --- Environment variable for the client ---
+    const runtimeClientApiUrl = process.env.RUNTIME_VITE_BASE_API_URL || 'http://localhost:3001'; 
+    const runtimeClientDefaultLang = process.env.RUNTIME_VITE_DEFAULT_LANGUAGE || 'fr';
+
+
+    logger.info(`Serving static files from: ${clientBuildPath}`);
+
+    app.use(express.static(clientBuildPath));
+
+   app.get('/config.js', (req, res) => {
+      res.type('application/javascript');
+      res.send(`
+        window.APP_CONFIG = {
+          VITE_BASE_API_URL: "${runtimeClientApiUrl}",
+          VITE_DEFAULT_LANGUAGE: "${runtimeClientDefaultLang}"
+        };
+      `);
+    });
+} else {
+    app.get('/', (req, res) => {
+        res.send('API is running in development mode. React client served separately by Vite.');
+    });
+}
 
 app.listen(process.env.PORT, () => {
   logger.info(`Server is running on port ${process.env.PORT}`);

@@ -10,7 +10,8 @@
     "build:api": "npm run build -w=api",
     "build:client": "npm run build -w=client",
     "build": "npm run build:api && npm run build:client",
-    "prod:db:init":"npm run prod:db:init -w=api"
+    "prod:db:init":"npm run prod:db:init -w=api",
+    "prod:start": "pm2-runtime start ecosystem.config.js --env production"
   },
   "devDependencies": {
     "pino-pretty": "^13.0.0",
