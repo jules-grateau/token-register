@@ -58,9 +58,9 @@ const Cart: React.FC<CartProps> = ({onClickHistory} : CartProps) => {
               {t('checkout')}
             </Button>  
             <div className={styles.cartTotal}>
-              <strong>{totalItems} {t('items')}</strong>
+              <strong>{totalItems} {t('items', { count:totalItems })}</strong>
               <br />
-              <strong>{totalPrice} {t('tokens')}</strong>
+              <strong>{totalPrice} {t('tokens', { count:totalPrice})}</strong>
             </div>
           </div>
         </>

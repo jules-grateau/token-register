@@ -52,8 +52,11 @@ const OrderModal: React.FC<OrderModalProps> = ({
           {ordersData && ordersData.length > 0 ? (
             <>
               <ul className={styles.orderList}>
-                  {ordersData.map((order, index) => (
-                    <div className={styles.order} key={index}>
+                  {ordersData.map((order, index) => 
+                    {
+                    var totalPrice = order.items.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+                    var totalItems = order.items.reduce((acc, item) => acc + item.quantity, 0)
+                    return <div className={styles.order} key={index}>
                       <li key={index}>
                         <div className={styles.orderHeader}>
                           <h3 className={styles.orderNumber}>{t('order_number', { id: order.id, date: new Date(order.date).toLocaleString() })}</h3>
@@ -72,11 +75,11 @@ const OrderModal: React.FC<OrderModalProps> = ({
                           </ul>
                       </li>
                     <div className={styles.orderTotal}>
-                      <span>{order.items.reduce((acc, item) => acc + item.product.price * item.quantity, 0)} {t('tokens')}</span>
-                      <span>{order.items.reduce((acc, item) => acc + item.quantity, 0)} {t('items')}</span>
+                      <span>{totalPrice} {t('tokens', { count:totalPrice })}</span>
+                      <span>{totalItems} {t('items', { count:totalItems })}</span>
                     </div>
                   </div>
-                  ))}
+                  })}
               </ul>
             </>
           ) : (

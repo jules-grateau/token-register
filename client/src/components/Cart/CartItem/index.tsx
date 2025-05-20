@@ -17,7 +17,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, onRemove }) => {
         <span className={styles.itemName}>{item.product.name}</span>
         <div className={styles.itemPriceAndQuantity}>
           {item.product.price !== undefined && (
-            <span className={styles.itemPrice}> {item.product.price} {t('tokens')} </span>
+            <span className={styles.itemPrice}> {item.product.price} {t('tokens', { count:item.product.price })} </span>
           )}
           <span className={styles.itemQuantity}>× {item.quantity}</span>
         </div>

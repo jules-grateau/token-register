@@ -17,7 +17,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) =>
       onClick={() => onClick()}
     >
       {product.price !== undefined && (
-        <span className={styles.productPrice}>{product.price} {t('tokens')}</span>
+        <span className={styles.productPrice}>{product.price} {t('tokens', { count:product.price })}</span>
       )}
     </ClickableCard>
   );
