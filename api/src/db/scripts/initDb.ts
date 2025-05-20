@@ -121,6 +121,8 @@ async function insertData(db : Database) {
       { name: 'Sandwich Camembert', price: 3, category_id: 2 },
       { name: 'Croque Monsieur', price: 2, category_id: 2 },
       { name: 'Chips', price: 1, category_id: 3 },
+      { name: 'Barre chocolatée', price: 1, category_id: 3},
+      { name: 'Bonbons', price: 1, category_id:3 },
       { name: 'Dessert', price: 2, category_id: 4 },
       { name: 'Crêpes', price: 2, category_id: 4 },
       { name: 'Eco-cup', price: 1, category_id: 5 },
