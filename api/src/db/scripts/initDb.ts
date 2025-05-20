@@ -82,11 +82,34 @@ async function createTables(db : Database) {
     logger.info('Tables created');
     logger.info('Inserting categories and products');
 
-    await db.run(`INSERT INTO categories (id,name) VALUES (?,?)`, [1,'Boissons']);
-    await db.run(`INSERT INTO categories (id,name) VALUES (?,?)`, [2,'Restauration']);
-    await db.run(`INSERT INTO categories (id,name) VALUES (?,?)`, [3,'Snacking']);
-    await db.run(`INSERT INTO categories (id,name) VALUES (?,?)`, [4,'Desserts']);
-    await db.run(`INSERT INTO categories (id,name) VALUES (?,?)`, [5,'Eco-cup']);
+    const count = db.get(`SELECT COUNT(id) as count from categories`, [], (err, row : { count: number}) => {
+      if(err) {
+        logger.error('Error executing count query on categories table:', err.message);
+        insertData(db);
+        return;
+      }
+      const categoryCount = row.count;
+      if(categoryCount > 0) {
+        logger.info('Database is already populated. Skipping initalization.');
+      } else {
+        insertData(db);
+      }
+    });
+
+    
+  } catch(error) {
+    logger.error('Error initializing database: %s', error);
+  } finally {
+    db.close();
+  }
+}
+
+async function insertData(db : Database) {
+    await db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [1,'Boissons']);
+    await db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [2,'Restauration']);
+    await db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [3,'Snacking']);
+    await db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [4,'Desserts']);
+    await db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [5,'Eco-cup']);
 
     const products = [
       { name: 'Bière', price: 3, category_id: 1 },
@@ -109,9 +132,4 @@ async function createTables(db : Database) {
       await db.run(`INSERT INTO products (name, price, category_id) VALUES (?, ?, ?)`, [product.name, product.price, product.category_id]);
     }
     logger.info('Categories and products inserted');
-  } catch(error) {
-    logger.error('Error initializing database: %s', error);
-  } finally {
-    db.close();
-  }
 }
