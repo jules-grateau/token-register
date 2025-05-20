@@ -126,7 +126,7 @@ app.post("/orders", async (req: Request, res: Response) => {
     for (const item of cartItems) {
       const { product, quantity } = item;
       const { id } = product;
-      logger.info('Inserting order item: %s', { orderId, productId: id, quantity });
+      logger.info({ orderId, productId: id, quantity }, 'Inserting order item');
       
       await db.run("INSERT INTO order_items (order_id, product_id, quantity) VALUES (?, ?, ?)", [orderId, id, quantity]);
     };

@@ -1,8 +1,8 @@
 import pino from 'pino';
 import dotenv from 'dotenv';
-
 dotenv.config();
 
+let dir = process.env.LOG_FILES_PATH || "./";
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 const logger = pino({
@@ -16,7 +16,15 @@ const logger = pino({
           ignore: 'pid,hostname',
         },
       }
-    : undefined,
+    : {
+      target: 'pino/file',
+      options: {
+        destination: dir+"/log.log",
+        mkdir: true
+      }
+    },
 });
+
+pino.destination(dir);
 
 export default logger;
