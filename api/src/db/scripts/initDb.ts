@@ -82,11 +82,11 @@ async function createTables(db : Database) {
     logger.info('Tables created');
     logger.info('Inserting categories and products');
 
-    await db.run(`INSERT INTO categories (name) VALUES (?)`, ['Boissons']);
-    await db.run(`INSERT INTO categories (name) VALUES (?)`, ['Restauration']);
-    await db.run(`INSERT INTO categories (name) VALUES (?)`, ['Snacking']);
-    await db.run(`INSERT INTO categories (name) VALUES (?)`, ['Desserts']);
-    await db.run(`INSERT INTO categories (name) VALUES (?)`, ['Eco-cup']);
+    await db.run(`INSERT INTO categories (id,name) VALUES (?,?)`, [1,'Boissons']);
+    await db.run(`INSERT INTO categories (id,name) VALUES (?,?)`, [2,'Restauration']);
+    await db.run(`INSERT INTO categories (id,name) VALUES (?,?)`, [3,'Snacking']);
+    await db.run(`INSERT INTO categories (id,name) VALUES (?,?)`, [4,'Desserts']);
+    await db.run(`INSERT INTO categories (id,name) VALUES (?,?)`, [5,'Eco-cup']);
 
     const products = [
       { name: 'Bière', price: 3, category_id: 1 },
