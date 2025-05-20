@@ -25,6 +25,4 @@ const logger = pino({
     },
 });
 
-pino.destination(dir);
-
 export default logger;
