@@ -18,6 +18,7 @@
   padding: 25px;
   border-radius: 8px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  min-width: 20%;
   max-width: 80%;
   max-height: 90%;
   min-height: 20%;
