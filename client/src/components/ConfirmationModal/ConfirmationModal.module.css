@@ -1,0 +1,10 @@
+.confirmationFooterButtons {
+    width: 100%;
+    display: flex;
+    flex-grow: 1;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+    border-top: 2px solid var(--color-border);
+    padding-top: 10px;
+}

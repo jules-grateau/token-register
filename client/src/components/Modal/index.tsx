@@ -8,6 +8,7 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  footer?: React.ReactNode;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -15,6 +16,7 @@ const Modal: React.FC<ModalProps> = ({
   onClose,
   title,
   children,
+  footer
 }) => {
     const { t } = useTranslation();
 
@@ -27,15 +29,13 @@ const Modal: React.FC<ModalProps> = ({
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2 id={'modal-title'} className={styles.modalTitle}>{title}</h2>
-          <button onClick={onClose} className={styles.closeButton} aria-label="Close">
-            ×
-          </button>
         </div>
         <div className={styles.modalBody}>
           {children}
         </div>
           <div className={styles.modalFooter}>
-            <Button onClick={onClose} color='danger'> {t('close')} </Button>
+            {footer}
+            {!footer && <Button onClick={onClose} color='danger'> {t('close')} </Button>}
           </div>
       </div>
     </div>

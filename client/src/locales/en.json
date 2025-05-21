@@ -8,6 +8,7 @@
   "tokens_other": "Tokens",
   "your_cart_is_empty": "Your cart is empty.",
   "order_history": "Order History",
+  "cart_confirmation": "Cart confirmation",
   "order": "Order",
   "order_number": "Order #{{id}} - {{date}}",
   "order_placed": "Order #{{id}} placed",
@@ -26,9 +27,14 @@
   "categories": "Categories",
   "go_back": "Go back",
   "add_to_cart": "Add to cart",
+  "validate_cart": "Confirm the order",
   "refresh_page": "Refresh Page",
   "oops_error": "Oops! Something went wrong.",
   "error_message": "We're sorry for the inconvenience. Please try refreshing the page.",
   "order_removed": "Order #{{id}} removed",
-  "error_adding_order": "Error adding order: {{error}}"
+  "error_adding_order": "Error adding order: {{error}}",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "order_removal_confirmation": "You are going to remove the order #{{id}}",
+  "confirmation": "Confirmation"
 }

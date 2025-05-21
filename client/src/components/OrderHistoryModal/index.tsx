@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './OrderHistoryModal.module.css';
 import { useGetOrdersQuery, useRemoveOrderMutation } from '../../services/orders';
 import CartItem from '../Cart/CartItem';
@@ -6,6 +6,7 @@ import Button from '../Button';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import Modal from '../Modal';
+import ConfirmationModal from '../ConfirmationModal';
 
 interface OrderHistoryModalProps {
   isOpen: boolean;
@@ -20,9 +21,16 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
   const ordersQuery = useGetOrdersQuery();
   const { data: ordersData, isLoading, error } = ordersQuery;
   const [removeOrder] = useRemoveOrderMutation();
+  const [selectedOrder, setSelectedOrder] = useState(0);
+  const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false); 
 
 
-  const onRemoveOrder = async (id : number) => {
+  const onRemoveOrder = (id : number) => {
+    setSelectedOrder(id);
+    setIsConfirmationModalOpen(true);
+  };
+
+  const onConfirmRemoveOrder = async (id: number) => {
     try {
       await removeOrder(id).unwrap();
       toast.success(t('order_removed', { id }));
@@ -32,9 +40,10 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
     finally {
       ordersQuery.refetch();
     }
-  };
+  }
 
   return (
+    <>
     <Modal 
         isOpen={isOpen} 
         onClose={onClose} 
@@ -79,6 +88,15 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
         <p>{t('no_orders')}</p>
         )}
     </Modal>
+    <ConfirmationModal
+      isOpen={isConfirmationModalOpen}
+      onClose={() => setIsConfirmationModalOpen(false)}
+      onConfirm={() => onConfirmRemoveOrder(selectedOrder)}
+      title={t('confirmation')}
+      >
+      <p className={styles.confirmationMessage}>{t('order_removal_confirmation', { id: selectedOrder })} </p>
+    </ConfirmationModal>
+    </>
   );
 };
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import styles from './Catalog.module.css';
 import { useDispatch } from 'react-redux';
@@ -15,7 +15,7 @@ export const ALL_CATEGORIES_ID = 0;
 
 const Catalog : React.FC = () => {
     const dispatch = useDispatch();
-    const [selectedCategory, setSelectedCategory] = React.useState<number | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
     const categoriesQuery = useGetCategoriesQuery();
     const productsQuery = useGetProductsQuery()
     const hasSelectedCategory = selectedCategory !== null;

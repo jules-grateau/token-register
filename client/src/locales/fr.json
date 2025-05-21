@@ -7,6 +7,7 @@
   "tokens_one": "Jeton",
   "tokens_other": "Jetons",
   "your_cart_is_empty": "Votre panier est vide.",
+  "cart_confirmation": "Confirmer le panier",
   "order_history": "Historique des commandes",
   "order": "Commande",
   "order_number": "Commande n°{{id}} - {{date}}",
@@ -26,9 +27,14 @@
   "categories": "Catégories",
   "go_back": "Retour",
   "add_to_cart": "Ajouter au panier",
+  "validate_cart": "Confirmer la commande",
   "refresh_page": "Rafraîchir la page",
   "oops_error": "Oups ! Une erreur est survenue.",
   "error_message": "Nous sommes désolés pour le désagrément. Veuillez essayer de rafraîchir la page.",
   "order_removed": "Commande n°{{id}} supprimée",
-  "error_adding_order": "Erreur lors de l'ajout de la commande : {{error}}"
+  "error_adding_order": "Erreur lors de l'ajout de la commande : {{error}}",
+  "confirm": "Confirmer",
+  "cancel": "Annuler",
+  "order_removal_confirmation": "Vous allez supprimer la commande n°{{id}}",
+  "confirmation": "Confirmation"
 }
