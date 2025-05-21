@@ -1,6 +1,7 @@
 # Token Register
 
 A simple, cashless register software for events, built with a React + TypeScript frontend and an Express + SQLite backend.
+You can check the demo here : https://token-register-demo.julesgrateau.dev/ with the username `demo` and password `demo`
 
 ## Features
 
