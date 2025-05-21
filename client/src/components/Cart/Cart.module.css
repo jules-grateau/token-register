@@ -39,6 +39,10 @@
   overflow: auto;
 }
 
+.cartList > li {
+  padding: 12px 5px;
+}
+
 .checkoutContainer {
   display: flex;
   justify-content: space-between;
@@ -86,5 +90,9 @@
   display: flex;
   gap: 10px;
   padding: 5px 5px;
-}
+  }
+
+  .cartList > li {
+    padding: 5px 5px;
+  }
 }

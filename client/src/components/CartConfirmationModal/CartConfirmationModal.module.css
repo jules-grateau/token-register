@@ -1,0 +1,28 @@
+.modalFooter {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px;
+    border-top: 2px solid var(--color-border);
+    padding-top: 10px;
+}
+
+.cartList {
+    padding: 0;
+    margin: 10px 5px;
+}
+
+.cartList > li {
+    padding: 10px 0px;
+}
+
+.cartTotal {
+    display: grid;
+    grid-template-columns: auto auto; /* Two columns that size to their content */
+    justify-content: center; /* Centers the grid items within the grid container */
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    font-size: 1.2em;
+}

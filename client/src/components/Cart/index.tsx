@@ -2,37 +2,21 @@ import React from 'react';
 import CartItem from './CartItem';
 import styles from './Cart.module.css';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectCartItems, selectTotalPrice, remove, selectTotalItems, clear } from '../../redux/cartSlice';
-import type { CartItemType } from 'shared-ts';
-import { useAddOrderMutation, useGetOrdersQuery } from '../../services/orders';
+import { selectCartItems, selectTotalPrice, remove, selectTotalItems } from '../../redux/cartSlice';
 import Button from '../Button';
 import { useTranslation } from 'react-i18next';
-import { toast } from 'react-toastify';
 
 interface CartProps {
   onClickHistory: () => void;
+  onValidateCart: () => void;
 }
 
-const Cart: React.FC<CartProps> = ({onClickHistory} : CartProps) => {
+const Cart: React.FC<CartProps> = ({onClickHistory, onValidateCart} : CartProps) => {
   const { t } = useTranslation();
   const cartItems = useSelector(selectCartItems);
   const totalPrice = useSelector(selectTotalPrice);
   const totalItems = useSelector(selectTotalItems);
-  const [addOrder] = useAddOrderMutation();
-  const ordersQuery = useGetOrdersQuery();
   const dispatch = useDispatch();
-
-  const onCheckout = async (cartItems : CartItemType[]) => {
-    try {
-      addOrder(cartItems).unwrap().then((id) => {
-        dispatch(clear()); 
-        ordersQuery.refetch();
-        toast.success(t('order_placed', { id }));
-      });
-    } catch (error) {
-      toast.error(t(t('error_adding_order', { error: String(error) })));
-    }
-  }; 
 
   return (
     <div className={styles.cartContainer}>
@@ -54,7 +38,7 @@ const Cart: React.FC<CartProps> = ({onClickHistory} : CartProps) => {
             ))}
           </ul>
           <div className={styles.checkoutContainer}>
-            <Button onClick={() => onCheckout(cartItems)} fullHeight color='success'>
+            <Button onClick={onValidateCart} fullHeight color='success'>
               {t('checkout')}
             </Button>  
             <div className={styles.cartTotal}>
