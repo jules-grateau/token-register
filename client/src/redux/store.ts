@@ -1,6 +1,6 @@
 import { configureStore, createListenerMiddleware, isAnyOf } from '@reduxjs/toolkit'
 import { productsApi } from '../services/product'
-import { add, cartReducer, clear, remove, type CartState } from './cartSlice'
+import { add, addDiscount, cartReducer, clear, remove, type CartState } from './cartSlice'
 import { ordersApi } from '../services/orders'
 import { categoriesApi } from '../services/categories'
 import { loadCartFromLocalStorage, saveCartToLocalStorage } from '../utils/localStorageCart'
@@ -8,7 +8,7 @@ import { loadCartFromLocalStorage, saveCartToLocalStorage } from '../utils/local
 const listenerMiddleware = createListenerMiddleware<RootState>();
 
 listenerMiddleware.startListening({
-  matcher: isAnyOf(add, remove, clear),
+  matcher: isAnyOf(add, remove, clear, addDiscount),
   effect: (_action, store) => {
     const newCartState = store.getState().cart;
     saveCartToLocalStorage(newCartState);

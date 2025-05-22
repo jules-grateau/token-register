@@ -85,17 +85,17 @@ app.get("/orders", async (req: Request, res: Response) => {
   let db;
   try {
     db= await openDb();
-    const rows = await db.all("SELECT order_id, product_id, date, quantity, name, price FROM orders LEFT JOIN order_items ON orders.id = order_items.order_id LEFT JOIN products on order_items.product_id = products.id ORDER BY date DESC;"); 
+    const rows = await db.all("SELECT order_id, product_id, date, quantity, discountedAmount, name, price FROM orders LEFT JOIN order_items ON orders.id = order_items.order_id LEFT JOIN products on order_items.product_id = products.id ORDER BY date DESC;"); 
     const orders = new Map<number, OrderType>();
 
     for (const row of rows) {
-      const { order_id, date, name, product_id, price, quantity } = row;
+      const { order_id, date, name, product_id, price, quantity, discountedAmount } = row;
       if (!orders.has(order_id)) {
         orders.set(order_id, { id: order_id, date, items: [] });
       }
       const order = orders.get(order_id);
       if (order) {
-        order.items.push({ product: { id: product_id, name, price }, quantity });
+        order.items.push({ product: { id: product_id, name, price }, quantity, discountedAmount });
       }
     }
 
@@ -124,11 +124,11 @@ app.post("/orders", async (req: Request, res: Response) => {
     const order = await db.run("INSERT INTO orders (date) VALUES (?)", [Date.now()]);
     const orderId = order.lastID;
     for (const item of cartItems) {
-      const { product, quantity } = item;
+      const { product, quantity, discountedAmount } = item;
       const { id } = product;
       logger.info({ orderId, productId: id, quantity }, 'Inserting order item');
       
-      await db.run("INSERT INTO order_items (order_id, product_id, quantity) VALUES (?, ?, ?)", [orderId, id, quantity]);
+      await db.run("INSERT INTO order_items (order_id, product_id, quantity, discountedAmount) VALUES (?, ?, ?, ?)", [orderId, id, quantity, discountedAmount]);
     };
 
     logger.info('New order created with ID: %s', orderId);

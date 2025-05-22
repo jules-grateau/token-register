@@ -60,7 +60,7 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
             <ul className={styles.orderList}>
                 {ordersData.map((order, index) => 
                 {
-                var totalPrice = order.items.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+                var totalPrice = order.items.reduce((acc, item) => acc + ((item.product.price * item.quantity) - item.discountedAmount), 0);
                 var totalItems = order.items.reduce((acc, item) => acc + item.quantity, 0)
                 return <div className={styles.order} key={index}>
                     <li key={index}>

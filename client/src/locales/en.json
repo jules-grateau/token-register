@@ -36,5 +36,18 @@
   "confirm": "Confirm",
   "cancel": "Cancel",
   "order_removal_confirmation": "You are going to remove the order #{{id}}",
-  "confirmation": "Confirmation"
+  "confirmation": "Confirmation",
+  "apply_discount": "Apply discount",
+  "product": "Product",
+  "quantity": "Quantity",
+  "discount_type_title": "Type of discount",
+  "fixed_amount": "Fixed amount",
+  "percentage": "Percentage",
+  "discount_value_title": "Discounted amound",
+  "placeholder_percentage_discount": "eg: 10 for 10%",
+  "placeholder_fixed_discount": "eg: 1 for 1 Token",
+  "new_total_price_for_item": "New total price",
+  "error_invalid_discount_value_positive": "Discount amound is incorrect",
+  "error_invalid_fixed_value_over_total_price": "Cannot discount more than total price",
+  "error_invalid_percentage_value_max_100": "Cannot discount more than 100%"
 }

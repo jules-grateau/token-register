@@ -7,6 +7,7 @@ export type ProductType = {
 export type CartItemType = {
   product: ProductType; // Product details
   quantity: number; // Quantity of the product in the cart
+  discountedAmount: number;
 }
 
 export type OrderType = {

@@ -36,5 +36,18 @@
   "confirm": "Confirmer",
   "cancel": "Annuler",
   "order_removal_confirmation": "Vous allez supprimer la commande n°{{id}}",
-  "confirmation": "Confirmation"
+  "confirmation": "Confirmation",
+  "apply_discount": "Appliquer une réduction",
+  "product": "Produit",
+  "quantity": "Quantité",
+  "discount_type_title": "Type de réduction",
+  "fixed_amount": "Montant fixe",
+  "percentage": "Pourcentage",
+  "discount_value_title": "Montant de la réduction",
+  "placeholder_percentage_discount": "ex: 10 pour 10%",
+  "placeholder_fixed_discount": "ex: 1 pour 1 Jeton",
+  "new_total_price_for_item": "Nouveau prix total",
+  "error_invalid_discount_value_positive": "Valeur de la réduction incorrect",
+  "error_invalid_fixed_value_over_total_price": "Impossible de faire une réduction suppérieur au prix total",
+  "error_invalid_percentage_value_max_100": "Impossible de faire une réduction suppérieur a 100%"
 }

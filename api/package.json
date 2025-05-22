@@ -8,8 +8,10 @@
     "build": "tsc",
     "dev:db:init": "ts-node src/db/scripts/initDb.ts",
     "dev:db:flush": "ts-node src/db/scripts/flushDb.ts",
+    "dev:db:migrate": "ts-node src/db/scripts/migrateDb.ts",
     "prod:db:init": "node dist/db/scripts/initDb.js",
-    "prod:db:flush": "node dist/db/scripts/flushDb.js"
+    "prod:db:flush": "node dist/db/scripts/flushDb.js",
+    "prod:db:migrate": "node dist/db/scripts/migrateDb.js"
   },
   "author": "Jules Grateau",
   "license": "ISC",

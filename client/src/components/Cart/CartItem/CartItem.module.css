@@ -1,6 +1,6 @@
 .cartItem {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   border-bottom: 1px solid var(--color-border-light);
   color: var(--color-secondary-text);
@@ -17,6 +17,65 @@
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  margin-left: 5px;
+}
+
+.moreOptionsContainer {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+
+}
+
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.optionsMenu {
+  position: absolute;
+  top: 98%;
+  left: 0;
+  color: var(--color-secondary-text);
+  background-color: var(--color-secondary-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  min-width: 300px;
+  padding: 5px 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  animation: fadeIn 0.3s ease-in-out;
+  gap: 3px;
+
+}
+
+.menuItem {
+  display: block;
+  width: 100%;
+  padding: 8px 15px;
+  text-align: left;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: inherit;
+}
+
+.menuItem:hover {
+  background-color: var(--color-secondary-bg-hover);
+}
+
+.menuItem:active {
+  background-color: var(--color-secondary-bg-active);
+}
+
+.removeItem {
+  color: var(--color-danger-bg)
 }
 
 @media (max-width: 900px) {
@@ -45,6 +104,13 @@
 .itemPrice {
   font-size: 0.9em;
   margin-top: 2px;
+}
+
+.itemPriceBeforeDiscount {
+  font-size: 0.9em;
+  margin-top: 2px;
+  text-decoration: line-through;
+  color: var(--color-primary-bg)
 }
 
 .itemQuantity {
