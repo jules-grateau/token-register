@@ -1,7 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { CartItemType, ProductType } from "shared-ts";
 
-interface CartState {
+export interface CartState {
     items: CartItemType[]
 }
 
