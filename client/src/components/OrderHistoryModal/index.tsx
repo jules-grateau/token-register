@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './OrderHistoryModal.module.css';
 import { useGetOrdersQuery, useRemoveOrderMutation } from '../../services/orders';
 import CartItem from '../Cart/CartItem';
@@ -23,6 +23,10 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
   const [removeOrder] = useRemoveOrderMutation();
   const [selectedOrder, setSelectedOrder] = useState(0);
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false); 
+
+  useEffect(() => {
+    if(isOpen) ordersQuery.refetch();
+  },[isOpen])
 
 
   const onRemoveOrder = (id : number) => {
