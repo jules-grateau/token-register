@@ -114,12 +114,32 @@ app.post("/orders", async (req: Request, res: Response) => {
   let db;
 
   try {
-    db = await openDb();
     const cartItems : CartItemType[] = req.body;
     if (!cartItems || cartItems.length === 0) {
       res.status(400).json({ error: "No items in the cart" });
       return;
     }
+
+    const hasInvalidDiscount = cartItems.findIndex((cartItem) => {
+      const totalItemPrice = cartItem.product.price * cartItem.quantity;
+      return cartItem.discountedAmount > totalItemPrice || cartItem.discountedAmount < 0;
+    }) != -1;
+
+    if(hasInvalidDiscount) {
+      res.status(400).json({ error: "Invalid discount amount"});
+      return;
+    }
+
+    const hasInvalidQuantity = cartItems.findIndex((cartItem) => {
+      return cartItem.quantity < 1;
+    }) != -1;
+
+    if(hasInvalidQuantity) {
+      res.status(400).json({ error: "Invalid product quantity"});
+      return;
+    }
+
+    db = await openDb();
     
     const order = await db.run("INSERT INTO orders (date) VALUES (?)", [Date.now()]);
     const orderId = order.lastID;

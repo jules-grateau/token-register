@@ -32,6 +32,8 @@ const CartConfirmationModal  : React.FC<CartConfirmationModalProps> = ( {isOpen,
             ordersQuery.refetch();
             onClose();
             toast.success(t('order_placed', { id }));
+            }).catch((error) => {
+              toast.error(t(t('error_adding_order', { error: String(error?.data?.error) })));  
             });
         } catch (error) {
             toast.error(t(t('error_adding_order', { error: String(error) })));

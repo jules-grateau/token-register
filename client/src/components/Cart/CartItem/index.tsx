@@ -15,7 +15,6 @@ const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onDiscount }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const moreOptionsButtonRef = useRef<HTMLButtonElement>(null);
-  console.log(item);
 
   const toggleMenu = () => {
     setIsMenuOpen(prev => !prev);
