@@ -64,8 +64,7 @@ async function createTables(db : Database) {
     await db.exec(`
       CREATE TABLE IF NOT EXISTS orders (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date INTEGER NOT NULL,
-        discountedAmount INTEGER NOT NULL DEFAULT 0
+        date INTEGER NOT NULL
       )
     `);
 
@@ -74,6 +73,7 @@ async function createTables(db : Database) {
         order_id INTEGER NOT NULL,
         product_id INTEGER NOT NULL,
         quantity INTEGER NOT NULL,
+        discountedAmount INTEGER NOT NULL DEFAULT 0,
         FOREIGN KEY (order_id) REFERENCES orders (id),
         FOREIGN KEY (product_id) REFERENCES products (id),
         PRIMARY KEY (order_id, product_id)
