@@ -64,7 +64,8 @@ async function createTables(db : Database) {
     await db.exec(`
       CREATE TABLE IF NOT EXISTS orders (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date INTEGER NOT NULL
+        date INTEGER NOT NULL,
+        discountedAmount INTEGER NOT NULL DEFAULT 0
       )
     `);
 
@@ -106,10 +107,9 @@ async function createTables(db : Database) {
 
 async function insertData(db : Database) {
     await db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [1,'Boissons']);
-    await db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [2,'Restauration']);
-    await db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [3,'Snacking']);
-    await db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [4,'Desserts']);
-    await db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [5,'Eco-cup']);
+    await db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [2,'Salé']);
+    await db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [3,'Sucré']);
+    await db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [4,'Eco-cup']);
 
     const products = [
       { name: 'Bière', price: 3, category_id: 1 },
@@ -120,13 +120,13 @@ async function insertData(db : Database) {
       { name: 'Sandwich Rillette poulet', price: 3, category_id: 2 },
       { name: 'Sandwich Camembert', price: 3, category_id: 2 },
       { name: 'Croque Monsieur', price: 2, category_id: 2 },
-      { name: 'Chips', price: 1, category_id: 3 },
+      { name: 'Chips', price: 1, category_id: 2 },
       { name: 'Barre chocolatée', price: 1, category_id: 3},
       { name: 'Bonbons', price: 1, category_id:3 },
-      { name: 'Dessert', price: 2, category_id: 4 },
-      { name: 'Crêpes', price: 2, category_id: 4 },
-      { name: 'Eco-cup', price: 1, category_id: 5 },
-      { name: 'Retour Eco-cup', price: -1, category_id: 5 },
+      { name: 'Dessert', price: 2, category_id: 3 },
+      { name: 'Crêpes', price: 2, category_id: 3 },
+      { name: 'Eco-cup', price: 1, category_id: 4 },
+      { name: 'Retour Eco-cup', price: -1, category_id: 4 },
     ]
 
     // Insert products
