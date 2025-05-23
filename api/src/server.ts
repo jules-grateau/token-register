@@ -7,7 +7,6 @@ import { basicAuthMiddleware } from './middleware/basicAuth';
 import { pinoHttp } from 'pino-http';
 import logger from './logger';
 import path from 'path';
-import fs from 'fs';
 
 dotenv.config();
 
@@ -122,6 +121,9 @@ app.post("/orders", async (req: Request, res: Response) => {
 
     const hasInvalidDiscount = cartItems.findIndex((cartItem) => {
       const totalItemPrice = cartItem.product.price * cartItem.quantity;
+
+      if(cartItem.discountedAmount === 0 ) return false;
+
       return cartItem.discountedAmount > totalItemPrice || cartItem.discountedAmount < 0;
     }) != -1;
 

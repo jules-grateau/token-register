@@ -63,8 +63,8 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
     if(!discountValue) return;
 
     const value = parseInt(discountValue);
-
-    if (isNaN(value) || value <= 0) {
+ 
+    if (isNaN(value) || value <= 0 || originalTotalItemPrice < 0) {
       setValidationError(t('error_invalid_discount_value_positive'));
       return;
     }
