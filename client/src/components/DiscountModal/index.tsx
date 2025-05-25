@@ -95,6 +95,7 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
     onConfirmDiscount({
       discount: finalDiscountAmount(discountValue)
     });
+    onClose();
   };
 
   const modalContent = (
@@ -164,7 +165,6 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
       onClose={onClose}
       onConfirm={handleConfirm}
       title={t('apply_discount', { itemName: item.product.name })}
-      closeOnConfirm={false}
     >
       {modalContent}
     </ConfirmationModal>

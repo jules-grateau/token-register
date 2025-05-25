@@ -8,6 +8,7 @@ import { useAddOrderMutation, useGetOrdersQuery } from '../../services/orders';
 import type { CartItemType } from 'shared-ts';
 import { toast } from 'react-toastify';
 import ConfirmationModal from '../ConfirmationModal';
+import Loader from '../Loader';
 
 interface CartConfirmationModalProps {
     isOpen: boolean;
@@ -21,24 +22,30 @@ const CartConfirmationModal  : React.FC<CartConfirmationModalProps> = ( {isOpen,
     const totalPrice = useSelector(selectTotalPrice);
     const totalItems = useSelector(selectTotalItems);
 
-    const [addOrder] = useAddOrderMutation();
+    const [addOrder, {isLoading}] = useAddOrderMutation();
     const ordersQuery = useGetOrdersQuery();
     const dispatch = useDispatch();
 
-    const onConfirm = async (cartItems : CartItemType[]) => {
+    const handleConfirm = async (cartItems : CartItemType[]) => {
+      if(isLoading) return;
         try {
             addOrder(cartItems).unwrap().then((id) => {
-            dispatch(clear()); 
-            ordersQuery.refetch();
-            onClose();
-            toast.success(t('order_placed', { id }));
-            }).catch((error) => {
-              toast.error(t(t('error_adding_order', { error: String(error?.data?.error) })));  
+              dispatch(clear()); 
+              ordersQuery.refetch();
+              toast.success(t('order_placed', { id }));
+              onClose();
+              }).catch((error) => {
+                toast.error(t(t('error_adding_order', { error: String(error?.data?.error) })));  
             });
         } catch (error) {
             toast.error(t(t('error_adding_order', { error: String(error) })));
         }
-    }; 
+    };
+
+    const handleClose = () =>{
+      if(isLoading) return;
+      onClose();
+    }
 
     const modalFooter = <>
         <div className={styles.cartTotal}>
@@ -47,14 +54,18 @@ const CartConfirmationModal  : React.FC<CartConfirmationModalProps> = ( {isOpen,
         </div> 
     </>
 
+    console.log(ordersQuery.isLoading);
+
     return <ConfirmationModal
     isOpen={isOpen}
     title={t('cart_confirmation')}
-    onClose={onClose}
-    onConfirm={() => onConfirm(cartItems)}
+    onClose={handleClose}
+    onConfirm={() => handleConfirm(cartItems)}
     extraFooter={modalFooter}
     >
+      <>
         <div>
+            {<Loader isLoading={isLoading} />}
             {cartItems.length === 0 ? (
                     <p className={styles.emptyCartMessage}>{t('your_cart_is_empty')}</p>
                   ) : (
@@ -70,6 +81,7 @@ const CartConfirmationModal  : React.FC<CartConfirmationModalProps> = ( {isOpen,
                     </>
                   )}
         </div>
+      </>
     </ConfirmationModal>
 
 }

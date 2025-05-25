@@ -13,7 +13,6 @@ interface ConfirmationModalProps {
   confirmButtonText?: string;
   cancelButtonText?: string;
   extraFooter?: React.ReactNode;
-  closeOnConfirm?: boolean
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -25,13 +24,11 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   confirmButtonText,
   cancelButtonText,
   extraFooter,
-  closeOnConfirm = true
 }) => {
   const { t } = useTranslation();
 
   const handleConfirm = () => {
     onConfirm();
-    if(closeOnConfirm) onClose();
   };
 
   const footerContent = (

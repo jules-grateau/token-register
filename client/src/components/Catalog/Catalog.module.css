@@ -30,8 +30,10 @@
 }
 
 .catalogBody {
+  position: relative;
   padding: 10px;
   overflow: auto;
+  flex-grow: 1;
 }
 
 @media (max-width: 900px) {

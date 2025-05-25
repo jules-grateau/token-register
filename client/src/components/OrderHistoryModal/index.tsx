@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import Modal from '../Modal';
 import ConfirmationModal from '../ConfirmationModal';
+import Loader from '../Loader';
 
 interface OrderHistoryModalProps {
   isOpen: boolean;
@@ -19,7 +20,7 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const ordersQuery = useGetOrdersQuery();
-  const { data: ordersData, isLoading, error } = ordersQuery;
+  const { data: ordersData, isFetching, error } = ordersQuery;
   const [removeOrder] = useRemoveOrderMutation();
   const [selectedOrder, setSelectedOrder] = useState(0);
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false); 
@@ -53,10 +54,11 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
         onClose={onClose} 
         title={t('order_history')} 
     >
-        {isLoading && <p>{t('loading')}</p>}
+        {isFetching && <p>{t('loading')}</p>}
         {error && <p>{t('error_loading_orders')}</p>}
         {ordersData && ordersData.length > 0 ? (
         <>
+            <Loader isLoading={isFetching} />
             <ul className={styles.orderList}>
                 {ordersData.map((order, index) => 
                 {

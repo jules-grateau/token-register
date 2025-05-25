@@ -10,6 +10,7 @@ import ProductList from './ProductList';
 import { useGetProductsQuery } from '../../services/product';
 import type { ProductType } from 'shared-ts';
 import { useTranslation } from 'react-i18next';
+import Loader from '../Loader';
 
 export const ALL_CATEGORIES_ID = 0;
 
@@ -49,7 +50,7 @@ const Catalog : React.FC = () => {
 
   return (
     <div className={styles.catalogContainer}>
-        <div className={styles.header}>
+         <div className={styles.header}>
             <h2 className={styles.title}>{hasSelectedCategory ?  selectedCategoryName : t('categories')}</h2>
             {hasSelectedCategory && (
                 <Button
@@ -60,12 +61,13 @@ const Catalog : React.FC = () => {
             )}
         </div>
         <div className={styles.catalogBody}>
+            <Loader isLoading={categoriesQuery.isLoading || productsQuery.isFetching  || productsByCategoryQuery.isFetching } />
             {!hasSelectedCategory && (
                 <div className={styles.cardList}>
                     <CategoryList 
-                        categories={categoriesQuery.data} 
+                        categories={categoriesQuery.currentData} 
                         isError={categoriesQuery.isError} 
-                        isLoading={categoriesQuery.isLoading}
+                        isLoading={categoriesQuery.isFetching}
                         onSelectCategory={handleSelectCategory}
                         allCategoriesId={ALL_CATEGORIES_ID}
                     />
@@ -74,9 +76,9 @@ const Catalog : React.FC = () => {
             {productSource && (
                 <div className={styles.cardList}>
                     <ProductList
-                        products={productSource.data}
+                        products={productSource.currentData}
                         isError={productSource.isError}
-                        isLoading={productSource.isLoading}
+                        isLoading={productSource.isFetching}
                         onAddToCart={handleAddToCart}
                     />
                 </div>

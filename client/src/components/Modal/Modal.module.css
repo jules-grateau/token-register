@@ -13,6 +13,7 @@
 }
 
 .modalContent {
+  position: relative;
   background-color: var(--color-secondary-bg);
   color: var(--color-secondary-text);
   padding: 25px;

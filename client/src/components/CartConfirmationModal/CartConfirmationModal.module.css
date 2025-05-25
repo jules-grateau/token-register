@@ -1,3 +1,6 @@
+.content {
+    position: relative;
+}
 .modalFooter {
     width: 100%;
     display: flex;
@@ -19,8 +22,8 @@
 
 .cartTotal {
     display: grid;
-    grid-template-columns: auto auto; /* Two columns that size to their content */
-    justify-content: center; /* Centers the grid items within the grid container */
+    grid-template-columns: auto auto;
+    justify-content: center;
     align-items: center;
     gap: 10px;
     justify-content: center;
