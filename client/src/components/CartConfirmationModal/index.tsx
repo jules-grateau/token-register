@@ -54,8 +54,6 @@ const CartConfirmationModal  : React.FC<CartConfirmationModalProps> = ( {isOpen,
         </div> 
     </>
 
-    console.log(ordersQuery.isLoading);
-
     return <ConfirmationModal
     isOpen={isOpen}
     title={t('cart_confirmation')}
