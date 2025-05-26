@@ -121,6 +121,9 @@ This should create the `/dist` folder is both `/api` and `/client`
 
 - Copy `api/.env.example` to `api/.env.production` (or `.env`) and fill in production values (e.g., `NODE_ENV=production`, correct `DATABASE_PATH`, credentials, etc.).
 
+- Alternatively, you can setup the environment variable when running the docker image.
+- If the client is distributed by the backend, you will also need to setup the client environment variable on the backend env, so it will be distributed to it. See [`client/config/index.ts`](client/config/index.ts)
+
 ### 3. Initialize the database
 
 Before starting the server, ensure the database is initialized:
