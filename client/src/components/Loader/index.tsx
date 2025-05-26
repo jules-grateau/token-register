@@ -6,12 +6,9 @@ interface Loader {
   text?: string;
 }
 
-const Loader: React.FC<Loader> = ({
-  isLoading,
-  text, 
-}) => {
+const Loader: React.FC<Loader> = ({ isLoading, text }) => {
   if (!isLoading) {
-    return
+    return;
   }
 
   return (

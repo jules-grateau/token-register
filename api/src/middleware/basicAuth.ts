@@ -1,11 +1,7 @@
 // backend/src/middleware/basicAuth.ts
 import { Request, Response, NextFunction } from 'express';
 
-export function basicAuthMiddleware(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void {
+export function basicAuthMiddleware(req: Request, res: Response, next: NextFunction): void {
   const user = process.env.BASIC_AUTH_USER;
   const pass = process.env.BASIC_AUTH_PASS;
 
@@ -38,9 +34,9 @@ export function basicAuthMiddleware(
     const [username, password] = decodedCredentials.split(':');
 
     if (typeof username === 'undefined' || typeof password === 'undefined') {
-        res.setHeader('WWW-Authenticate', 'Basic realm="Restricted Area"');
-        res.status(401).send('Invalid credential format after decoding.');
-        return;
+      res.setHeader('WWW-Authenticate', 'Basic realm="Restricted Area"');
+      res.status(401).send('Invalid credential format after decoding.');
+      return;
     }
 
     if (username === user && password === pass) {
@@ -49,12 +45,12 @@ export function basicAuthMiddleware(
     } else {
       res.setHeader('WWW-Authenticate', 'Basic realm="Restricted Area"');
       res.status(401).send('Invalid credentials.');
-      return; 
+      return;
     }
   } catch (error) {
-    console.error("Error decoding Basic Auth credentials:", error);
+    console.error('Error decoding Basic Auth credentials:', error);
     res.setHeader('WWW-Authenticate', 'Basic realm="Restricted Area"');
     res.status(401).send('Invalid authentication format (error during decoding).');
-    return; // 
+    return; //
   }
 }

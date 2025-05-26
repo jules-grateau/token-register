@@ -1,7 +1,20 @@
 {
-  "files": [],
-  "references": [
-    { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ]
+  // "files": [], // Remove this if "include" is used. They are mutually exclusive in effect.
+  "compilerOptions": {
+    // ADD compilerOptions if missing
+    "target": "ES2020",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "moduleResolution": "bundler", // or "node"
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true // If Vite/build tool handles emit
+  },
+  "include": ["src/**/*"], // GOOD
+  "exclude": ["node_modules", "dist"] // GOOD
 }

@@ -7,11 +7,11 @@ export class CategoryService {
     let db;
     try {
       db = await openDb();
-      const categories = await db.all<CategoryType[]>("SELECT * FROM categories");
+      const categories = await db.all<CategoryType[]>('SELECT * FROM categories');
       return categories;
     } catch (error) {
       logger.error('Error fetching categories in service: %s', error);
-      throw error; 
+      throw error;
     } finally {
       await db?.close();
     }

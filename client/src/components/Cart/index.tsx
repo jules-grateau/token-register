@@ -2,7 +2,13 @@ import React, { useState } from 'react';
 import CartItem from './CartItem';
 import styles from './Cart.module.css';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectCartItems, selectTotalPrice, remove, selectTotalItems, addDiscount } from '../../redux/cartSlice';
+import {
+  selectCartItems,
+  selectTotalPrice,
+  remove,
+  selectTotalItems,
+  addDiscount,
+} from '../../redux/cartSlice';
 import Button from '../Button';
 import { useTranslation } from 'react-i18next';
 import type { CartItemType } from 'shared-ts';
@@ -13,7 +19,7 @@ interface CartProps {
   onValidateCart: () => void;
 }
 
-const Cart: React.FC<CartProps> = ({onClickHistory, onValidateCart} : CartProps) => {
+const Cart: React.FC<CartProps> = ({ onClickHistory, onValidateCart }: CartProps) => {
   const { t } = useTranslation();
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
   const [discountModalTarget, setDiscountModalTarget] = useState<CartItemType>();
@@ -22,15 +28,20 @@ const Cart: React.FC<CartProps> = ({onClickHistory, onValidateCart} : CartProps)
   const totalItems = useSelector(selectTotalItems);
   const dispatch = useDispatch();
 
-  const openDiscountModal = (cartItem : CartItemType) => {
+  const openDiscountModal = (cartItem: CartItemType) => {
     setIsDiscountModalOpen(true);
     setDiscountModalTarget(cartItem);
-  }
+  };
 
   const handleConfirmDiscountModal = (discountDetails: DiscountDetails) => {
     setIsDiscountModalOpen(false);
-    dispatch(addDiscount({productId: discountModalTarget?.product.id || 0, discountedAmount: discountDetails.discount}));
-  }
+    dispatch(
+      addDiscount({
+        productId: discountModalTarget?.product.id || 0,
+        discountedAmount: discountDetails.discount,
+      })
+    );
+  };
 
   return (
     <div className={styles.cartContainer}>
@@ -53,22 +64,26 @@ const Cart: React.FC<CartProps> = ({onClickHistory, onValidateCart} : CartProps)
             ))}
           </ul>
           <div className={styles.checkoutContainer}>
-            <Button onClick={onValidateCart} fullHeight color='success'>
+            <Button onClick={onValidateCart} fullHeight color="success">
               {t('checkout')}
-            </Button>  
+            </Button>
             <div className={styles.cartTotal}>
-              <strong>{totalItems} {t('items', { count:totalItems })}</strong>
+              <strong>
+                {totalItems} {t('items', { count: totalItems })}
+              </strong>
               <br />
-              <strong>{totalPrice} {t('tokens', { count:totalPrice})}</strong>
+              <strong>
+                {totalPrice} {t('tokens', { count: totalPrice })}
+              </strong>
             </div>
           </div>
         </>
       )}
       <DiscountModal
-      isOpen={isDiscountModalOpen}
-      item={discountModalTarget}
-      onClose={() => setIsDiscountModalOpen(false)}
-      onConfirmDiscount={handleConfirmDiscountModal}
+        isOpen={isDiscountModalOpen}
+        item={discountModalTarget}
+        onClose={() => setIsDiscountModalOpen(false)}
+        onConfirmDiscount={handleConfirmDiscountModal}
       />
     </div>
   );

@@ -26,7 +26,7 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
+    console.error('Uncaught error:', error, errorInfo);
     this.setState({ errorInfo });
   }
 
@@ -42,9 +42,7 @@ class ErrorBoundary extends React.Component<Props, State> {
         <div className={styles.errorBoundaryContainer} role="alert">
           <div className={styles.errorContent}>
             <h1 className={styles.errorTitle}>{t('oops_error')}</h1>
-            <p className={styles.errorMessage}>
-              {t('error_message')}
-            </p>
+            <p className={styles.errorMessage}>{t('error_message')}</p>
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <div className={styles.errorDetails}>
                 <summary>Error Details (Development Only)</summary>

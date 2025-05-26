@@ -112,9 +112,11 @@ token-register/
 To deploy the backend in production, this project uses [PM2](https://pm2.keymetrics.io/) for process management.
 
 ### 1. Build the backend and frontend
+
 ```sh
 npm run build
 ```
+
 This should create the `/dist` folder is both `/api` and `/client`
 
 ### 2. Set up environment variables
@@ -146,7 +148,7 @@ From the project root, run:
 pm2 start ecosystem.config.js
 ```
 
-This will launch the backend using the configuration in [`ecosystem.config.js`](ecosystem.config.js).
+This will launch the backend using the configuration in [`ecosystem.config.cjs`](ecosystem.config.cjs).
 
 ### 5. (Optional) Manage the process
 
@@ -166,12 +168,13 @@ For more details, see the [PM2 documentation](https://pm2.keymetrics.io/docs/usa
 
 ## Development
 
-- **Flush the database:**  
+- **Flush the database:**
+
   ```sh
   npm run flush-db -w=api
   ```
 
-- **Initialize the database:**  
+- **Initialize the database:**
   ```sh
   npm run init-db -w=api
   ```
@@ -229,6 +232,7 @@ docker run \
 ```
 
 **Notes:**
+
 - Adjust the environment variables as needed for your deployment (especially credentials and URLs).
 - The backend will be available on port `3000` inside the container and mapped to `8080` on your host (`-p 8080:3000`).
 - The frontend will be served from the same container and port.

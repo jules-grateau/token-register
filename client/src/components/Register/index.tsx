@@ -12,10 +12,16 @@ export const Register: React.FC = () => {
 
   return (
     <div className={styles.registerContainer}>
-      <Cart onClickHistory={() => setIsOrderModalOpen(true)} onValidateCart={() => setIsCartConfrimationModalOpen(true)}/>
+      <Cart
+        onClickHistory={() => setIsOrderModalOpen(true)}
+        onValidateCart={() => setIsCartConfrimationModalOpen(true)}
+      />
       <Catalog />
-      <OrderHistoryModal isOpen={isOrderModalOpen} onClose={() => setIsOrderModalOpen(false)}/>
-      <CartConfirmationModal isOpen={isCartConfirmationModalOpen} onClose={() => setIsCartConfrimationModalOpen(false)}/>
+      <OrderHistoryModal isOpen={isOrderModalOpen} onClose={() => setIsOrderModalOpen(false)} />
+      <CartConfirmationModal
+        isOpen={isCartConfirmationModalOpen}
+        onClose={() => setIsCartConfrimationModalOpen(false)}
+      />
     </div>
-  )
-}
+  );
+};

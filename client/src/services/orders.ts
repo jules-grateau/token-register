@@ -6,15 +6,17 @@ const API_URL = BASE_API_URL + '/orders';
 
 export const ordersApi = createApi({
   reducerPath: 'ordersApi',
-  baseQuery: fetchBaseQuery({ baseUrl: API_URL,  
+  baseQuery: fetchBaseQuery({
+    baseUrl: API_URL,
     credentials: 'include',
     prepareHeaders: (headers) => {
       headers.set('Content-Type', 'application/json');
       return headers;
-    }}),
+    },
+  }),
   endpoints: (build) => ({
-    addOrder: build.mutation<number,CartItemType[]>({
-      query: (cart : CartItemType[]) => ({
+    addOrder: build.mutation<number, CartItemType[]>({
+      query: (cart: CartItemType[]) => ({
         url: '',
         method: 'POST',
         body: cart,
@@ -31,10 +33,9 @@ export const ordersApi = createApi({
       query: () => ({
         url: '',
         method: 'GET',
-        
       }),
-    })
+    }),
   }),
-})
+});
 
 export const { useAddOrderMutation, useGetOrdersQuery, useRemoveOrderMutation } = ordersApi;

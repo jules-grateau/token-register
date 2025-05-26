@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { basicAuthMiddleware } from './middleware/basicAuth';
@@ -13,13 +13,15 @@ dotenv.config();
 const app = express();
 
 app.use(pinoHttp({ logger }));
-app.use(cors({
-  origin: process.env.FRONTEND_URL,
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-app.use(express.json()); 
-app.use(basicAuthMiddleware); 
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  })
+);
+app.use(express.json());
+app.use(basicAuthMiddleware);
 
 const categoryController = new CategoryController();
 const productController = new ProductController();
@@ -28,7 +30,6 @@ const orderController = new OrderController();
 app.use(categoryController.path, categoryController.router);
 app.use(productController.path, productController.router);
 app.use(orderController.path, orderController.router);
-
 
 // --- Static file serving and config for production ---
 if (process.env.NODE_ENV === 'production') {
@@ -54,9 +55,9 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response) => {
   req.log.error(err, 'Unhandled error or error passed by next()');
-  
+
   if (err instanceof NotFoundError) {
     res.status(404).json({ error: err.message });
     return;
@@ -74,7 +75,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     error: 'Internal Server Error',
   });
 });
-
 
 app.listen(process.env.PORT, () => {
   logger.info(`Server is running on port ${process.env.PORT}`);

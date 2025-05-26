@@ -1,7 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { ProductService } from '../services/product.service';
 
-
 export class ProductController {
   public path = '/products';
   public router = Router();
@@ -16,7 +15,11 @@ export class ProductController {
     this.router.get('/', this.getAllProducts);
   }
 
-  public getAllProducts = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  public getAllProducts = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
     req.log.info('Controller: Fetching all products');
     try {
       const products = await this.productService.getAllProducts();
@@ -25,5 +28,5 @@ export class ProductController {
       req.log.error('Controller Error: Error fetching products: %s', error);
       next(error);
     }
-  }
+  };
 }

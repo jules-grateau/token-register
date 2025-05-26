@@ -11,7 +11,13 @@ interface CategoryListProps {
   onSelectCategory: (categoryId: number) => void;
 }
 
-const CategoryList: React.FC<CategoryListProps> = ({ isLoading, isError, categories, allCategoriesId, onSelectCategory }) => {
+const CategoryList: React.FC<CategoryListProps> = ({
+  isLoading,
+  isError,
+  categories,
+  allCategoriesId,
+  onSelectCategory,
+}) => {
   const { t } = useTranslation();
 
   if (isLoading) return <p>{t('loading_categories')}</p>;
@@ -20,19 +26,20 @@ const CategoryList: React.FC<CategoryListProps> = ({ isLoading, isError, categor
 
   return (
     <>
-      {categories.map(category => (
+      {categories.map((category) => (
         <ClickableCard
           key={category.id}
           title={category.name}
           onClick={() => onSelectCategory(category.id)}
         />
       ))}
-      {allCategoriesId !== undefined && 
-      <ClickableCard
-        key='0'
-        title={t('all_categories')}
-        onClick={() => onSelectCategory(allCategoriesId)}
-      />}
+      {allCategoriesId !== undefined && (
+        <ClickableCard
+          key="0"
+          title={t('all_categories')}
+          onClick={() => onSelectCategory(allCategoriesId)}
+        />
+      )}
     </>
   );
 };

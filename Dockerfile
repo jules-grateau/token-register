@@ -12,7 +12,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 COPY api/package*.json ./api/
 COPY client/package*.json ./client/
-COPY ecosystem.config.js ./x
+COPY ecosystem.config.cjs ./x
 
 # ---- Dependencies Stage ----
 # Install ALL dependencies (including devDependencies for the build)
@@ -43,7 +43,7 @@ RUN npm ci --omit=dev
 # 2. Copy the built application code from the 'builder' stage
 COPY --from=builder /usr/src/app/api/dist ./api/dist 
 COPY --from=builder /usr/src/app/client/dist ./client/dist  
-COPY --from=builder /usr/src/app/ecosystem.config.js ./ecosystem.config.js
+COPY --from=builder /usr/src/app/ecosystem.config.cjs ./ecosystem.config.cjs
 # Copy any other necessary runtime files/folders (e.g., public assets, views)
 # Example: COPY --from=builder /usr/src/app/public ./public
 

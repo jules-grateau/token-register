@@ -7,7 +7,7 @@ const API_URL = BASE_API_URL + '/products';
 export const productsApi = createApi({
   reducerPath: 'productsApi',
   baseQuery: fetchBaseQuery({ baseUrl: API_URL, credentials: 'include' }),
-  endpoints : (build) => ({
+  endpoints: (build) => ({
     getProducts: build.query<ProductType[], void>({
       query: () => ({
         url: '',
@@ -16,6 +16,6 @@ export const productsApi = createApi({
       transformResponse: (response: ProductType[]) => response,
     }),
   }),
-})
+});
 
 export const { useGetProductsQuery } = productsApi;

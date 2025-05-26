@@ -7,7 +7,7 @@ const API_URL = BASE_API_URL + '/categories';
 export const categoriesApi = createApi({
   reducerPath: 'categoriesApi',
   baseQuery: fetchBaseQuery({ baseUrl: API_URL, credentials: 'include' }),
-  endpoints : (build) => ({
+  endpoints: (build) => ({
     getCategories: build.query<CategoryType[], void>({
       query: () => ({
         url: '',
@@ -20,9 +20,9 @@ export const categoriesApi = createApi({
         url: `/${categoryId}/products`,
         method: 'GET',
       }),
-      transformResponse: (response: ProductType[]) => response
+      transformResponse: (response: ProductType[]) => response,
     }),
   }),
-})
+});
 
 export const { useGetCategoriesQuery, useGetProductsByCategoryQuery } = categoriesApi;

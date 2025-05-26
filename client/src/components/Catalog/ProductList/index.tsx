@@ -1,6 +1,6 @@
 import React from 'react';
 import type { ProductType } from 'shared-ts';
-import ProductCard from './ProductCard'; 
+import ProductCard from './ProductCard';
 import { useTranslation } from 'react-i18next';
 
 interface ProductListProps {
@@ -19,12 +19,8 @@ const ProductList: React.FC<ProductListProps> = ({ isLoading, isError, products,
 
   return (
     <>
-      {products.map(product => (
-        <ProductCard
-          key={product.id}
-          product={product}
-          onClick={() => onAddToCart(product)} 
-        />
+      {products.map((product) => (
+        <ProductCard key={product.id} product={product} onClick={() => onAddToCart(product)} />
       ))}
     </>
   );

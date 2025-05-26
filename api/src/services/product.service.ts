@@ -7,7 +7,7 @@ export class ProductService {
     let db;
     try {
       db = await openDb();
-      const products = await db.all<ProductType[]>("SELECT * FROM products");
+      const products = await db.all<ProductType[]>('SELECT * FROM products');
       return products;
     } catch (error) {
       logger.error('Error fetching products in service: %s', error);
@@ -21,7 +21,9 @@ export class ProductService {
     let db;
     try {
       db = await openDb();
-      const products = await db.all<ProductType[]>("SELECT * FROM products WHERE category_id = ?", [categoryId]);
+      const products = await db.all<ProductType[]>('SELECT * FROM products WHERE category_id = ?', [
+        categoryId,
+      ]);
       return products;
     } catch (error) {
       logger.error('Error fetching products by category ID in service: %s', error);

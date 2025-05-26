@@ -1,9 +1,9 @@
-import { configureStore, createListenerMiddleware, isAnyOf } from '@reduxjs/toolkit'
-import { productsApi } from '../services/product'
-import { add, addDiscount, cartReducer, clear, remove, type CartState } from './cartSlice'
-import { ordersApi } from '../services/orders'
-import { categoriesApi } from '../services/categories'
-import { loadCartFromLocalStorage, saveCartToLocalStorage } from '../utils/localStorageCart'
+import { configureStore, createListenerMiddleware, isAnyOf } from '@reduxjs/toolkit';
+import { productsApi } from '../services/product';
+import { add, addDiscount, cartReducer, clear, remove, type CartState } from './cartSlice';
+import { ordersApi } from '../services/orders';
+import { categoriesApi } from '../services/categories';
+import { loadCartFromLocalStorage, saveCartToLocalStorage } from '../utils/localStorageCart';
 
 const listenerMiddleware = createListenerMiddleware<RootState>();
 
@@ -12,12 +12,12 @@ listenerMiddleware.startListening({
   effect: (_action, store) => {
     const newCartState = store.getState().cart;
     saveCartToLocalStorage(newCartState);
-  }
-})
+  },
+});
 
 const preloadedCart = loadCartFromLocalStorage();
-const preloadedState : Partial<RootState> = {
-  cart: preloadedCart
+const preloadedState: Partial<RootState> = {
+  cart: preloadedCart,
 };
 
 export const store = configureStore({
@@ -25,15 +25,16 @@ export const store = configureStore({
     [productsApi.reducerPath]: productsApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,
     [categoriesApi.reducerPath]: categoriesApi.reducer,
-    'cart': cartReducer,
+    cart: cartReducer,
   },
   preloadedState: preloadedState as RootState,
   middleware: (getDefaultMiddleware) =>
-      getDefaultMiddleware().concat(productsApi.middleware)
-        .concat(ordersApi.middleware).concat(categoriesApi.middleware)
-        .concat(listenerMiddleware.middleware),
-    
-})
+    getDefaultMiddleware()
+      .concat(productsApi.middleware)
+      .concat(ordersApi.middleware)
+      .concat(categoriesApi.middleware)
+      .concat(listenerMiddleware.middleware),
+});
 
 export interface RootState {
   [productsApi.reducerPath]: ReturnType<typeof productsApi.reducer>;
@@ -41,5 +42,4 @@ export interface RootState {
   [categoriesApi.reducerPath]: ReturnType<typeof categoriesApi.reducer>;
   cart: CartState;
 }
-// Inferred type: {posts: PostsState, comments: CommentsState, users: UsersState
-export type AppDispatch = typeof store.dispatch
+export type AppDispatch = typeof store.dispatch;

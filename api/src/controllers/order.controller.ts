@@ -28,27 +28,28 @@ export class OrderController {
       req.log.error('Controller Error: Error fetching orders: %s', error);
       next(error);
     }
-  }
+  };
 
   public createOrder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     req.log.info('Controller: Creating new order');
     try {
-      const cartItems: CartItemType[] = req.body;
-      if (!Array.isArray(cartItems)) { 
-        res.status(400).json({ error: "Invalid request body: Expected an array of cart items." });
+      const cartItems: CartItemType[] = req.body as CartItemType[];
+
+      if (!Array.isArray(cartItems)) {
+        res.status(400).json({ error: 'Invalid request body: Expected an array of cart items.' });
         return;
       }
       const newOrder = await this.orderService.createOrder(cartItems);
       res.status(201).json(newOrder);
     } catch (error) {
-        req.log.error('Controller Error: Error creating new order: %s', error);
+      req.log.error('Controller Error: Error creating new order: %s', error);
       if (error instanceof ValidationError) {
         res.status(400).json({ error: error.message });
       } else {
         next(error);
       }
     }
-  }
+  };
 
   public deleteOrder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const orderIdParam = req.params.id;
@@ -56,7 +57,7 @@ export class OrderController {
     try {
       const orderId = parseInt(orderIdParam, 10);
       if (isNaN(orderId)) {
-        res.status(400).json({ error: "Invalid order ID format" });
+        res.status(400).json({ error: 'Invalid order ID format' });
         return;
       }
       await this.orderService.deleteOrder(orderId);
@@ -64,13 +65,12 @@ export class OrderController {
     } catch (error) {
       req.log.error(`Controller Error: Error deleting order ${orderIdParam}: %s`, error);
       if (error instanceof NotFoundError) {
-         res.status(404).json({ error: error.message });
+        res.status(404).json({ error: error.message });
       } else if (error instanceof ValidationError) {
-         res.status(400).json({ error: error.message });
-      }
-      else {
+        res.status(400).json({ error: error.message });
+      } else {
         next(error);
       }
     }
-  }
+  };
 }

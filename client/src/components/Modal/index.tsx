@@ -11,14 +11,8 @@ interface ModalProps {
   footer?: React.ReactNode;
 }
 
-const Modal: React.FC<ModalProps> = ({
-  isOpen,
-  onClose,
-  title,
-  children,
-  footer
-}) => {
-    const { t } = useTranslation();
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, footer }) => {
+  const { t } = useTranslation();
 
   if (!isOpen) {
     return null;
@@ -28,15 +22,20 @@ const Modal: React.FC<ModalProps> = ({
     <div className={styles.modalOverlay} onClick={onClose} role="dialog" aria-modal="true">
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2 id={'modal-title'} className={styles.modalTitle}>{title}</h2>
+          <h2 id={'modal-title'} className={styles.modalTitle}>
+            {title}
+          </h2>
         </div>
-        <div className={styles.modalBody}>
-          {children}
+        <div className={styles.modalBody}>{children}</div>
+        <div className={styles.modalFooter}>
+          {footer}
+          {!footer && (
+            <Button onClick={onClose} color="danger">
+              {' '}
+              {t('close')}{' '}
+            </Button>
+          )}
         </div>
-          <div className={styles.modalFooter}>
-            {footer}
-            {!footer && <Button onClick={onClose} color='danger'> {t('close')} </Button>}
-          </div>
       </div>
     </div>
   );

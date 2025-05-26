@@ -1,18 +1,18 @@
-import { log } from 'console';
 import { openDb } from '..';
 import logger from '../../utils/logger';
 
+(async () => {
+  const db = await openDb();
+  logger.info('Migrating operation');
 
-openDb().then((db) => {
-    logger.info('Migrating operation');
-
-    try {
-        db.exec('ALTER TABLE order_items ADD COLUMN discountedAmount INTEGER;');
-    } catch(error) {
-        logger.error('Error migrating database: %s', error);
-    } finally {
-        db.close();
-    }
-
-    logger.info('All tables dropped');
+  try {
+    await db.exec('ALTER TABLE order_items ADD COLUMN discountedAmount INTEGER;');
+    logger.info('Migration completed');
+  } catch (error) {
+    logger.error('Error migrating database: %s', error);
+  } finally {
+    await db.close();
+  }
+})().catch((err) => {
+  logger.error('Migration script failed: %s', err);
 });

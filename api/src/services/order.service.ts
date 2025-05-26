@@ -1,6 +1,6 @@
 import { openDb } from '../db';
 import logger from '../utils/logger';
-import { CartItemType, OrderType, ProductType } from 'shared-ts';
+import { CartItemType, OrderType } from 'shared-ts';
 import { NotFoundError, ValidationError } from '../types/errors';
 
 interface OrderDbRow {
@@ -17,8 +17,8 @@ export class OrderService {
   async getAllOrders(): Promise<OrderType[]> {
     let db;
     try {
-        db = await openDb();
-        const rows = await db.all<OrderDbRow[]>(`
+      db = await openDb();
+      const rows = await db.all<OrderDbRow[]>(`
             SELECT order_id, 
             product_id, 
             date, 
@@ -29,33 +29,36 @@ export class OrderService {
             FROM orders 
             LEFT JOIN order_items ON orders.id = order_items.order_id 
             LEFT JOIN products on order_items.product_id = products.id 
-            ORDER BY date DESC;`
-        ); 
-        const orders = new Map<number, OrderType>();
+            ORDER BY date DESC;`);
+      const orders = new Map<number, OrderType>();
 
-        for (const row of rows) {
-            const { order_id, date, name, product_id, price, quantity, discountedAmount } = row;
-            if (!orders.has(order_id)) {
-                orders.set(order_id, { id: order_id, date, items: [] });
-            }
-            
-            const order = orders.get(order_id);
-            
-            if (order) {
-                order.items.push({ product: { id: product_id, name, price }, quantity, discountedAmount });
-            }
+      for (const row of rows) {
+        const { order_id, date, name, product_id, price, quantity, discountedAmount } = row;
+        if (!orders.has(order_id)) {
+          orders.set(order_id, { id: order_id, date, items: [] });
         }
-        return Array.from(orders.values());
+
+        const order = orders.get(order_id);
+
+        if (order) {
+          order.items.push({
+            product: { id: product_id, name, price },
+            quantity,
+            discountedAmount,
+          });
+        }
+      }
+      return Array.from(orders.values());
     } catch (error) {
-        throw new Error(`Error fetching orders: ${error}`);
+      throw new Error(`Error fetching orders: ${String(error)}`);
     } finally {
-        db?.close();
-  }
+      await db?.close();
+    }
   }
 
   async createOrder(cartItems: CartItemType[]): Promise<{ id: number }> {
     if (!cartItems || cartItems.length === 0) {
-      throw new ValidationError("No items in the cart");
+      throw new ValidationError('No items in the cart');
     }
 
     const hasInvalidDiscount = cartItems.some((cartItem) => {
@@ -64,14 +67,14 @@ export class OrderService {
       return cartItem.discountedAmount > totalItemPrice || cartItem.discountedAmount < 0;
     });
 
-    if (hasInvalidDiscount) {;
-      throw new ValidationError("Invalid discount amount");
+    if (hasInvalidDiscount) {
+      throw new ValidationError('Invalid discount amount');
     }
 
     const hasInvalidQuantity = cartItems.some((cartItem) => cartItem.quantity < 1);
 
     if (hasInvalidQuantity) {
-      throw new ValidationError("Invalid product quantity");
+      throw new ValidationError('Invalid product quantity');
     }
 
     let db;
@@ -79,7 +82,7 @@ export class OrderService {
       db = await openDb();
       await db.exec('BEGIN TRANSACTION');
 
-      const orderResult = await db.run("INSERT INTO orders (date) VALUES (?)", [Date.now()]);
+      const orderResult = await db.run('INSERT INTO orders (date) VALUES (?)', [Date.now()]);
       const orderId = orderResult.lastID;
 
       if (!orderId) {
@@ -90,9 +93,12 @@ export class OrderService {
       for (const item of cartItems) {
         const { product, quantity, discountedAmount } = item;
         const { id: productId } = product;
-        logger.info({ orderId, productId, quantity, discountedAmount }, 'Inserting order item in service');
+        logger.info(
+          { orderId, productId, quantity, discountedAmount },
+          'Inserting order item in service'
+        );
         await db.run(
-          "INSERT INTO order_items (order_id, product_id, quantity, discountedAmount) VALUES (?, ?, ?, ?)",
+          'INSERT INTO order_items (order_id, product_id, quantity, discountedAmount) VALUES (?, ?, ?, ?)',
           [orderId, productId, quantity, discountedAmount]
         );
       }
@@ -113,8 +119,8 @@ export class OrderService {
     try {
       db = await openDb();
       await db.exec('BEGIN TRANSACTION');
-      await db.run("DELETE FROM order_items WHERE order_id = ?", [orderId]);
-      const orderChanges = await db.run("DELETE FROM orders WHERE id = ?", [orderId]);
+      await db.run('DELETE FROM order_items WHERE order_id = ?', [orderId]);
+      const orderChanges = await db.run('DELETE FROM orders WHERE id = ?', [orderId]);
       await db.exec('COMMIT');
 
       if (orderChanges.changes === 0) {

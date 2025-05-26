@@ -34,9 +34,9 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
   const originalTotalItemPrice = originalItemPrice * itemQuantity;
 
   useEffect(() => {
-      setDiscountType('fixed');
-      setDiscountValue('');
-      setValidationError('');
+    setDiscountType('fixed');
+    setDiscountValue('');
+    setValidationError('');
   }, [isOpen, item]);
 
   if (!item) {
@@ -45,55 +45,55 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
 
   const finalDiscountAmount = (discountValue: string) => {
     const value = parseInt(discountValue);
-    if(validationError || !value) return 0;
+    if (validationError || !value) return 0;
 
-    if(discountType === 'fixed') {
-        return value
+    if (discountType === 'fixed') {
+      return value;
     } else {
-        return Math.ceil(originalTotalItemPrice * (value / 100));
+      return Math.ceil(originalTotalItemPrice * (value / 100));
     }
-  }
+  };
 
-  const priceAfterDiscount = (discountValue: string) =>{
+  const priceAfterDiscount = (discountValue: string) => {
     return originalTotalItemPrice - finalDiscountAmount(discountValue);
-  }
+  };
 
   const validateDiscountValue = (discountValue: string) => {
     setValidationError('');
-    if(!discountValue) return;
+    if (!discountValue) return;
 
     const value = parseInt(discountValue);
- 
+
     if (isNaN(value) || value <= 0 || originalTotalItemPrice < 0) {
       setValidationError(t('error_invalid_discount_value_positive'));
       return;
     }
 
-    if(discountType === 'fixed' && value > originalTotalItemPrice) {
-        setValidationError(t('error_invalid_fixed_value_over_total_price'));
+    if (discountType === 'fixed' && value > originalTotalItemPrice) {
+      setValidationError(t('error_invalid_fixed_value_over_total_price'));
     }
 
-    if (discountType === 'percentage' && (value > 100)) {
+    if (discountType === 'percentage' && value > 100) {
       setValidationError(t('error_invalid_percentage_value_max_100'));
       return;
     }
-  }
+  };
 
-  const handleDiscountValueChange = (value : string) => {
+  const handleDiscountValueChange = (value: string) => {
     setDiscountValue(value);
     validateDiscountValue(value);
-  }
+  };
 
-  const handleDiscountTypeChange = (value : DiscountType) => {
+  const handleDiscountTypeChange = (value: DiscountType) => {
     setDiscountType(value);
     setDiscountValue('');
-  }
+  };
 
   const handleConfirm = () => {
-    if(validationError) return;
+    if (validationError) return;
 
     onConfirmDiscount({
-      discount: finalDiscountAmount(discountValue)
+      discount: finalDiscountAmount(discountValue),
     });
     onClose();
   };
@@ -103,7 +103,9 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
       <div>
         <h3 className={styles.sectionTitle}>{t('discount_type_title')}</h3>
         <div className={styles.discountTypeGroup}>
-          <label className={clsx(styles.discountTypeLabel, discountType === 'fixed' && styles.selected)}>
+          <label
+            className={clsx(styles.discountTypeLabel, discountType === 'fixed' && styles.selected)}
+          >
             <input
               type="radio"
               name="discountType"
@@ -112,9 +114,17 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
               onChange={() => handleDiscountTypeChange('fixed')}
             />
             <span className={styles.customRadio}></span>
-            <span>{t('fixed_amount')} ({t('currency_symbol', { defaultValue: t('tokens', {count: 1}) })})</span>
+            <span>
+              {t('fixed_amount')} (
+              {t('currency_symbol', { defaultValue: t('tokens', { count: 1 }) })})
+            </span>
           </label>
-          <label className={clsx(styles.discountTypeLabel, discountType === 'percentage' && styles.selected)}>
+          <label
+            className={clsx(
+              styles.discountTypeLabel,
+              discountType === 'percentage' && styles.selected
+            )}
+          >
             <input
               type="radio"
               name="discountType"
@@ -134,7 +144,7 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
           <input
             id="discountValueInput"
             type="text"
-            inputMode='numeric'
+            inputMode="numeric"
             className={styles.discountValueInput}
             value={discountValue}
             onChange={(e) => handleDiscountValueChange(e.target.value)}
@@ -144,18 +154,19 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
                 : t('placeholder_fixed_discount')
             }
           />
-            <p className={styles.errorMessage}>{validationError}</p>
+          <p className={styles.errorMessage}>{validationError}</p>
         </div>
       </div>
 
-      {(
+      {
         <div className={styles.newPriceSection}>
           <span className={styles.newPriceLabel}>{t('new_total_price_for_item')}:</span>
-          <span  className={styles.newPriceValue} >
-            {priceAfterDiscount(discountValue)} {t('tokens', { count: priceAfterDiscount(discountValue) })}
+          <span className={styles.newPriceValue}>
+            {priceAfterDiscount(discountValue)}{' '}
+            {t('tokens', { count: priceAfterDiscount(discountValue) })}
           </span>
         </div>
-      )}
+      }
     </div>
   );
 

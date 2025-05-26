@@ -8,5 +8,7 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist"
-  }
+  },
+  "include": ["src/**/*"], // This includes all files in src and its subdirectories
+  "exclude": ["node_modules", "dist", "log", "data"]
 }
