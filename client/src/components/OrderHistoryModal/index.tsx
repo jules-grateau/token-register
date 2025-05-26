@@ -21,7 +21,7 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
   const { t } = useTranslation();
   const ordersQuery = useGetOrdersQuery();
   const { data: ordersData, isFetching, error } = ordersQuery;
-  const [removeOrder] = useRemoveOrderMutation();
+  const [removeOrder, {isLoading: isRemoveLoading}] = useRemoveOrderMutation();
   const [selectedOrder, setSelectedOrder] = useState(0);
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false); 
 
@@ -36,9 +36,11 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
   };
 
   const onConfirmRemoveOrder = async (id: number) => {
+    if(isRemoveLoading) return;
     try {
       await removeOrder(id).unwrap();
       toast.success(t('order_removed', { id }));
+      setIsConfirmationModalOpen(false);
     } catch (error) {
       toast.error(t('error_removing_order', { error: String(error) }));
     }
@@ -100,6 +102,7 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
       onConfirm={() => onConfirmRemoveOrder(selectedOrder)}
       title={t('confirmation')}
       >
+      <Loader isLoading={isRemoveLoading}></Loader>
       <p className={styles.confirmationMessage}>{t('order_removal_confirmation', { id: selectedOrder })} </p>
     </ConfirmationModal>
     </>
