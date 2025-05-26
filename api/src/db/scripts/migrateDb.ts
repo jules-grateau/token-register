@@ -1,6 +1,6 @@
 import { log } from 'console';
 import { openDb } from '..';
-import logger from '../../logger';
+import logger from '../../utils/logger';
 
 
 openDb().then((db) => {

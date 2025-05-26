@@ -1,5 +1,5 @@
 import sqlite3, { Database } from "sqlite3";
-import logger from "../../logger";
+import logger from "../../utils/logger";
 import path from "path";
 import fs from "fs";
 import { getDatabasePath } from "..";

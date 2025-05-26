@@ -1,7 +1,7 @@
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
 import path from 'path';
-import logger from '../logger';
+import logger from '../utils/logger';
 
 export const getDatabasePath = (): string => {
     const dbPathFromEnv = process.env.DATABASE_PATH;
