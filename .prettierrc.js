@@ -8,4 +8,5 @@ export default {
   jsxSingleQuote: false, // Use double quotes in JSX
   bracketSpacing: true, // Print spaces between brackets in object literals
   arrowParens: 'always', // Always include parentheses around a sole arrow function parameter
+  endOfLine: 'auto',
 };
