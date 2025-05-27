@@ -11,7 +11,8 @@
     "dev:db:migrate": "ts-node src/db/scripts/migrateDb.ts",
     "prod:db:init": "node dist/db/scripts/initDb.js",
     "prod:db:flush": "node dist/db/scripts/flushDb.js",
-    "prod:db:migrate": "node dist/db/scripts/migrateDb.js"
+    "prod:db:migrate": "node dist/db/scripts/migrateDb.js",
+    "test": "jest"
   },
   "author": "Jules Grateau",
   "license": "ISC",
