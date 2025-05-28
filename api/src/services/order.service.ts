@@ -86,7 +86,6 @@ export class OrderService {
       const orderId = orderResult.lastID;
 
       if (!orderId) {
-        await db.exec('ROLLBACK');
         throw new Error('Failed to create order record.');
       }
 
@@ -107,8 +106,7 @@ export class OrderService {
       return { id: orderId };
     } catch (error) {
       if (db) await db.exec('ROLLBACK');
-      logger.error('Error creating new order in service: %s', error);
-      throw error;
+      throw new Error(`Error creating new order in service: ${String(error)}`);
     } finally {
       await db?.close();
     }
@@ -130,8 +128,8 @@ export class OrderService {
       logger.info('Order deleted with ID: %s', orderId);
     } catch (error) {
       if (db) await db.exec('ROLLBACK');
-      logger.error('Error deleting order in service: %s', error);
-      throw error;
+      if (error instanceof NotFoundError) throw error;
+      throw new Error(`Error delete order in service: ${String(error)}`);
     } finally {
       await db?.close();
     }

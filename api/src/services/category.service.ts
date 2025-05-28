@@ -1,5 +1,4 @@
 import { openDb } from '../db';
-import logger from '../utils/logger';
 import { CategoryType } from 'shared-ts';
 
 export class CategoryService {
@@ -10,8 +9,7 @@ export class CategoryService {
       const categories = await db.all<CategoryType[]>('SELECT * FROM categories');
       return categories;
     } catch (error) {
-      logger.error('Error fetching categories in service: %s', error);
-      throw error;
+      throw new Error(`Error fetching categories: ${String(error)}`);
     } finally {
       await db?.close();
     }

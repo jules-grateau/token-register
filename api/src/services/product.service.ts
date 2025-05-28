@@ -1,5 +1,4 @@
 import { openDb } from '../db';
-import logger from '../utils/logger';
 import { ProductType } from 'shared-ts';
 
 export class ProductService {
@@ -10,8 +9,7 @@ export class ProductService {
       const products = await db.all<ProductType[]>('SELECT * FROM products');
       return products;
     } catch (error) {
-      logger.error('Error fetching products in service: %s', error);
-      throw error;
+      throw new Error(`Error fetching products: ${String(error)}`);
     } finally {
       await db?.close();
     }
@@ -26,8 +24,7 @@ export class ProductService {
       ]);
       return products;
     } catch (error) {
-      logger.error('Error fetching products by category ID in service: %s', error);
-      throw error;
+      throw new Error(`Error fetching products by category ID: ${String(error)}`);
     } finally {
       await db?.close();
     }
