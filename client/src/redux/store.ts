@@ -1,19 +1,11 @@
-import { configureStore, createListenerMiddleware, isAnyOf } from '@reduxjs/toolkit';
+import { configureStore } from '@reduxjs/toolkit';
 import { productsApi } from '../services/product';
-import { add, addDiscount, cartReducer, clear, remove, type CartState } from './cartSlice';
+import { cartReducer, type CartState } from './cartSlice';
 import { ordersApi } from '../services/orders';
 import { categoriesApi } from '../services/categories';
-import { loadCartFromLocalStorage, saveCartToLocalStorage } from '../utils/localStorageCart';
-
-const listenerMiddleware = createListenerMiddleware<RootState>();
-
-listenerMiddleware.startListening({
-  matcher: isAnyOf(add, remove, clear, addDiscount),
-  effect: (_action, store) => {
-    const newCartState = store.getState().cart;
-    saveCartToLocalStorage(newCartState);
-  },
-});
+import { loadCartFromLocalStorage } from '../utils/localStorageCart';
+import { selectedCategoryReducer } from './selectedCategorySlice';
+import listenerMiddleware from './listeners';
 
 const preloadedCart = loadCartFromLocalStorage();
 const preloadedState: Partial<RootState> = {
@@ -26,6 +18,7 @@ export const store = configureStore({
     [ordersApi.reducerPath]: ordersApi.reducer,
     [categoriesApi.reducerPath]: categoriesApi.reducer,
     cart: cartReducer,
+    selectedCategory: selectedCategoryReducer,
   },
   preloadedState: preloadedState as RootState,
   middleware: (getDefaultMiddleware) =>

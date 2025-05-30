@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import styles from './Catalog.module.css';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { add } from '../../redux/cartSlice';
 import { useGetCategoriesQuery, useGetProductsByCategoryQuery } from '../../services/categories';
 import Button from '../Button';
@@ -11,14 +11,19 @@ import { useGetProductsQuery } from '../../services/product';
 import type { ProductType } from 'shared-ts';
 import { useTranslation } from 'react-i18next';
 import Loader from '../Loader';
+import {
+  resetSelectedCategory,
+  selectSelectedCategory,
+  setSelectedCategory,
+} from '../../redux/selectedCategorySlice';
 
 export const ALL_CATEGORIES_ID = 0;
 
 const Catalog: React.FC = () => {
   const dispatch = useDispatch();
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const categoriesQuery = useGetCategoriesQuery();
   const productsQuery = useGetProductsQuery();
+  const selectedCategory = useSelector(selectSelectedCategory);
   const hasSelectedCategory = selectedCategory !== null;
   const productsByCategoryQuery = useGetProductsByCategoryQuery(selectedCategory!, {
     skip: selectedCategory === null || selectedCategory === ALL_CATEGORIES_ID,
@@ -30,11 +35,11 @@ const Catalog: React.FC = () => {
       : t('all_categories');
 
   const handleSelectCategory = (categoryId: number) => {
-    setSelectedCategory(categoryId);
+    dispatch(setSelectedCategory(categoryId));
   };
 
   const handleGoBack = () => {
-    setSelectedCategory(null);
+    dispatch(resetSelectedCategory());
   };
 
   const handleAddToCart = (product: ProductType) => {
@@ -45,7 +50,6 @@ const Catalog: React.FC = () => {
   if (selectedCategory === ALL_CATEGORIES_ID) {
     productSource = productsQuery;
   } else if (selectedCategory !== null) {
-    //
     productSource = productsByCategoryQuery;
   }
 
