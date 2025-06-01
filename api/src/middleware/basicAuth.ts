@@ -19,38 +19,31 @@ export function basicAuthMiddleware(req: Request, res: Response, next: NextFunct
     return;
   }
 
-  const parts = authHeader.split(' '); // Use a different variable name
+  const splittedAuthHeader = authHeader.split(' ');
 
-  if (parts.length !== 2 || parts[0] !== 'Basic') {
+  if (splittedAuthHeader.length !== 2 || splittedAuthHeader[0] !== 'Basic') {
     res.setHeader('WWW-Authenticate', 'Basic realm="Restricted Area"');
     res.status(401).send('Invalid authentication type or format. Basic authentication required.');
     return;
   }
 
-  const credentialsB64 = parts[1];
+  const credentialsB64 = splittedAuthHeader[1];
 
-  try {
-    const decodedCredentials = Buffer.from(credentialsB64, 'base64').toString();
-    const [username, password] = decodedCredentials.split(':');
+  const decodedCredentials = Buffer.from(credentialsB64, 'base64').toString();
+  const [username, password] = decodedCredentials.split(':');
 
-    if (typeof username === 'undefined' || typeof password === 'undefined') {
-      res.setHeader('WWW-Authenticate', 'Basic realm="Restricted Area"');
-      res.status(401).send('Invalid credential format after decoding.');
-      return;
-    }
-
-    if (username === user && password === pass) {
-      next();
-      return;
-    } else {
-      res.setHeader('WWW-Authenticate', 'Basic realm="Restricted Area"');
-      res.status(401).send('Invalid credentials.');
-      return;
-    }
-  } catch (error) {
-    console.error('Error decoding Basic Auth credentials:', error);
+  if (typeof username === 'undefined' || typeof password === 'undefined') {
     res.setHeader('WWW-Authenticate', 'Basic realm="Restricted Area"');
-    res.status(401).send('Invalid authentication format (error during decoding).');
-    return; //
+    res.status(401).send('Invalid credential format after decoding.');
+    return;
+  }
+
+  if (username === user && password === pass) {
+    next();
+    return;
+  } else {
+    res.setHeader('WWW-Authenticate', 'Basic realm="Restricted Area"');
+    res.status(401).send('Invalid credentials.');
+    return;
   }
 }
