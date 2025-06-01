@@ -107,6 +107,20 @@ token-register/
 
    The frontend runs on [http://localhost:5173](http://localhost:5173) or where configured in the `client/.env` file.
 
+## Running Unit Tests
+
+This project uses [Jest](https://jestjs.io/) for unit testing (with TypeScript support).
+
+To run tests for backend :
+
+```sh
+npm run test -w=api
+```
+
+Test results and coverage reports will be shown in the terminal.
+
+---
+
 ## Production Deployment
 
 To deploy the backend in production, this project uses [PM2](https://pm2.keymetrics.io/) for process management.
