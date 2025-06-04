@@ -95,5 +95,15 @@ export default tseslint.config(
       ...prettierConfig.rules,
       'prettier/prettier': 'warn',
     },
+  },
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
+    rules: {
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
   }
 );
