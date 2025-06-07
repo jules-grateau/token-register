@@ -79,12 +79,14 @@ const Cart: React.FC<CartProps> = ({ onClickHistory, onValidateCart }: CartProps
           </div>
         </>
       )}
-      <DiscountModal
-        isOpen={isDiscountModalOpen}
-        item={discountModalTarget}
-        onClose={() => setIsDiscountModalOpen(false)}
-        onConfirmDiscount={handleConfirmDiscountModal}
-      />
+      {discountModalTarget && (
+        <DiscountModal
+          isOpen={isDiscountModalOpen}
+          item={discountModalTarget}
+          onClose={() => setIsDiscountModalOpen(false)}
+          onConfirmDiscount={handleConfirmDiscountModal}
+        />
+      )}
     </div>
   );
 };

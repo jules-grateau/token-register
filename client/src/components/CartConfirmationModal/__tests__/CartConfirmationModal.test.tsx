@@ -29,28 +29,6 @@ jest.mock('react-toastify', () => ({
   },
 }));
 
-jest.mock(
-  '../../ConfirmationModal',
-  () =>
-    ({ children, onConfirm, onClose, isOpen, title, extraFooter }: any) =>
-      isOpen ? (
-        <div>
-          <h1>{title}</h1>
-          <div>{children}</div>
-          <footer>{extraFooter}</footer>
-          <button onClick={onConfirm}>Confirm</button>
-          <button onClick={onClose}>Cancel</button>
-        </div>
-      ) : null
-);
-
-jest.mock(
-  '../../Loader',
-  () =>
-    ({ isLoading }: { isLoading: boolean }) =>
-      isLoading ? <div role="progressbar">Loading...</div> : null
-);
-
 const mockDispatch = jest.fn();
 const mockAddOrder = jest.fn();
 const mockRefetchOrders = jest.fn();
@@ -152,7 +130,7 @@ describe('CartConfirmationModal', () => {
     (useAddOrderMutation as jest.Mock).mockReturnValue([mockAddOrder, { isLoading: true }]);
 
     render(<CartConfirmationModal isOpen={true} onClose={mockOnClose} />);
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByTestId('loading')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));

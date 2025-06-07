@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './Loader.module.css'; // CSS remains the same
+import styles from './Loader.module.css';
 
 interface Loader {
   isLoading: boolean;
@@ -12,7 +12,7 @@ const Loader: React.FC<Loader> = ({ isLoading, text }) => {
   }
 
   return (
-    <div className={styles.overlay}>
+    <div className={styles.overlay} data-testid="loading">
       <div className={styles.content}>
         <div className={styles.spinner}></div>
         {text && <p className={styles.text}>{text}</p>}

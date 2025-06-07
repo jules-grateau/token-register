@@ -4,6 +4,7 @@ import type { CartItemType } from 'shared-ts';
 import { useTranslation } from 'react-i18next';
 import styles from './DiscountModal.module.css';
 import clsx from 'clsx';
+import { validateDiscountValue } from './utils/validateDiscountValue';
 
 export type DiscountType = 'percentage' | 'fixed';
 
@@ -15,7 +16,7 @@ interface DiscountModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirmDiscount: (discountDetails: DiscountDetails) => void;
-  item?: CartItemType;
+  item: CartItemType;
 }
 
 const DiscountModal: React.FC<DiscountModalProps> = ({
@@ -58,30 +59,11 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
     return originalTotalItemPrice - finalDiscountAmount(discountValue);
   };
 
-  const validateDiscountValue = (discountValue: string) => {
-    setValidationError('');
-    if (!discountValue) return;
-
-    const value = parseInt(discountValue);
-
-    if (isNaN(value) || value <= 0 || originalTotalItemPrice < 0) {
-      setValidationError(t('error_invalid_discount_value_positive'));
-      return;
-    }
-
-    if (discountType === 'fixed' && value > originalTotalItemPrice) {
-      setValidationError(t('error_invalid_fixed_value_over_total_price'));
-    }
-
-    if (discountType === 'percentage' && value > 100) {
-      setValidationError(t('error_invalid_percentage_value_max_100'));
-      return;
-    }
-  };
-
   const handleDiscountValueChange = (value: string) => {
     setDiscountValue(value);
-    validateDiscountValue(value);
+    setValidationError(
+      validateDiscountValue(value, discountType, originalTotalItemPrice, (key) => t(key))
+    );
   };
 
   const handleDiscountTypeChange = (value: DiscountType) => {

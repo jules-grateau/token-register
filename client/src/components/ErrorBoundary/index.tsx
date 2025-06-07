@@ -6,6 +6,7 @@ import type { WithTranslation } from 'react-i18next';
 
 interface Props extends WithTranslation {
   children?: ReactNode;
+  onReload?: () => void;
 }
 
 interface State {
@@ -21,6 +22,10 @@ class ErrorBoundary extends React.Component<Props, State> {
     errorInfo: null,
   };
 
+  static defaultProps = {
+    onReload: () => window.location.reload(),
+  };
+
   public static getDerivedStateFromError(error: Error): Pick<State, 'hasError' | 'error'> {
     return { hasError: true, error };
   }
@@ -31,7 +36,7 @@ class ErrorBoundary extends React.Component<Props, State> {
   }
 
   handleRefresh = () => {
-    window.location.reload();
+    this.props.onReload?.();
   };
 
   render() {

@@ -47,11 +47,10 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose} title={t('order_history')}>
-        {isFetching && <p>{t('loading')}</p>}
         {error && <p>{t('error_loading_orders')}</p>}
+        <Loader isLoading={isFetching} />
         {ordersData && ordersData.length > 0 ? (
           <>
-            <Loader isLoading={isFetching} />
             <ul className={styles.orderList}>
               {ordersData.map((order, index) => {
                 const totalPrice = order.items.reduce(
