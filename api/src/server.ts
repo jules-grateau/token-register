@@ -9,7 +9,7 @@ import { CategoryController, ProductController, OrderController } from './contro
 import { AppError, ValidationError, NotFoundError } from './types/errors';
 
 dotenv.config();
-
+const API_ROUTE = '/api';
 const app = express();
 
 app.use(pinoHttp({ logger }));
@@ -27,9 +27,9 @@ const categoryController = new CategoryController();
 const productController = new ProductController();
 const orderController = new OrderController();
 
-app.use(categoryController.path, categoryController.router);
-app.use(productController.path, productController.router);
-app.use(orderController.path, orderController.router);
+app.use(API_ROUTE + categoryController.path, categoryController.router);
+app.use(API_ROUTE + productController.path, productController.router);
+app.use(API_ROUTE + orderController.path, orderController.router);
 
 // --- Static file serving and config for production ---
 if (process.env.NODE_ENV === 'production') {
