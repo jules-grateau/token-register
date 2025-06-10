@@ -41,7 +41,7 @@ describe('OrderService (unit)', () => {
     const service = new OrderService();
     const cart = [
       {
-        product: { id: 1, name: 'A', price: 10 },
+        product: { id: 1, name: 'A', price: 10, categoryId: 1 },
         quantity: 9,
         discountedAmount: 100,
       },
@@ -53,7 +53,7 @@ describe('OrderService (unit)', () => {
     const service = new OrderService();
     const cart = [
       {
-        product: { id: 1, name: 'A', price: 10 },
+        product: { id: 1, name: 'A', price: 10, categoryId: 1 },
         quantity: 10,
         discountedAmount: -1,
       },
@@ -65,7 +65,7 @@ describe('OrderService (unit)', () => {
     const service = new OrderService();
     const cart = [
       {
-        product: { id: 1, name: 'A', price: 10 },
+        product: { id: 1, name: 'A', price: 10, categoryId: 1 },
         quantity: 0,
         discountedAmount: 0,
       },
@@ -142,7 +142,7 @@ describe('OrderService (unit)', () => {
     const service = new OrderService();
     const cart = [
       {
-        product: { id: 1, name: 'A', price: 10 },
+        product: { id: 1, name: 'A', price: 10, categoryId: 1 },
         quantity: 2,
         discountedAmount: 0,
       },
@@ -174,7 +174,7 @@ describe('OrderService (unit)', () => {
     const service = new OrderService();
     const cart = [
       {
-        product: { id: 1, name: 'A', price: 10 },
+        product: { id: 1, name: 'A', price: 10, categoryId: 1 },
         quantity: 2,
         discountedAmount: 0,
       },
@@ -212,7 +212,7 @@ describe('OrderService (unit)', () => {
     const service = new OrderService();
     const cart = [
       {
-        product: { id: 1, name: 'A', price: 10 },
+        product: { id: 1, name: 'A', price: 10, categoryId: 1 },
         quantity: 2,
         discountedAmount: 0,
       },

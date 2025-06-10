@@ -1,19 +1,20 @@
 export type ProductType = {
-  id: number; // Product ID
-  name: string; // Product name
-  price: number; // Product price (in tokens)
+  id: number;
+  name: string;
+  price: number;
+  categoryId: number;
 };
 
 export type CartItemType = {
-  product: ProductType; // Product details
-  quantity: number; // Quantity of the product in the cart
+  product: ProductType;
+  quantity: number;
   discountedAmount: number;
 };
 
 export type OrderType = {
-  id: number; // Order ID
-  date: number; // Order date
-  items: CartItemType[]; // List of items in the order
+  id: number;
+  date: number;
+  items: CartItemType[];
 };
 
 export type CategoryType = {

@@ -5,14 +5,22 @@ import type { Request, Response, NextFunction } from 'express';
 describe('CategoryController', () => {
   let controller: CategoryController;
   let mockCategoryService: { getAllCategories: jest.Mock };
-  let mockProductService: { getAllProducts: jest.Mock; getProductsByCategoryId: jest.Mock };
+  let mockProductService: {
+    getAllProducts: jest.Mock;
+    getProductsByCategoryId: jest.Mock;
+    addProduct: jest.Mock;
+  };
   let req: Partial<Request>;
   let res: Partial<Response>;
   let next: jest.Mock;
 
   beforeEach(() => {
     mockCategoryService = { getAllCategories: jest.fn() };
-    mockProductService = { getAllProducts: jest.fn(), getProductsByCategoryId: jest.fn() };
+    mockProductService = {
+      getAllProducts: jest.fn(),
+      getProductsByCategoryId: jest.fn(),
+      addProduct: jest.fn(),
+    };
     controller = new CategoryController();
     controller['categoryService'] = mockCategoryService;
     controller['productService'] = mockProductService;

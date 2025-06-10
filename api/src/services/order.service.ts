@@ -8,6 +8,7 @@ interface OrderDbRow {
   date: number;
   name: string;
   product_id: number;
+  category_id: number;
   price: number;
   quantity: number;
   discountedAmount: number;
@@ -21,6 +22,7 @@ export class OrderService {
       const rows = await db.all<OrderDbRow[]>(`
             SELECT order_id, 
             product_id, 
+            category_id,
             date, 
             quantity, 
             discountedAmount, 
@@ -33,7 +35,8 @@ export class OrderService {
       const orders = new Map<number, OrderType>();
 
       for (const row of rows) {
-        const { order_id, date, name, product_id, price, quantity, discountedAmount } = row;
+        const { order_id, date, name, product_id, category_id, price, quantity, discountedAmount } =
+          row;
         if (!orders.has(order_id)) {
           orders.set(order_id, { id: order_id, date, items: [] });
         }
@@ -42,7 +45,7 @@ export class OrderService {
 
         if (order) {
           order.items.push({
-            product: { id: product_id, name, price },
+            product: { id: product_id, name, price, categoryId: category_id },
             quantity,
             discountedAmount,
           });

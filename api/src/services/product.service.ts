@@ -29,4 +29,24 @@ export class ProductService {
       await db?.close();
     }
   }
+
+  async addProduct(product: Omit<ProductType, 'id'>): Promise<number> {
+    let db;
+    try {
+      db = await openDb();
+      const result = await db.run(
+        `INSERT INTO products (name, price, category_id) VALUES (?, ?, ?)`,
+        [product.name, product.price, product.categoryId]
+      );
+      if (!result.lastID) {
+        throw new Error('Failed to create the product');
+      }
+
+      return result.lastID;
+    } catch (error) {
+      throw new Error(`Error creating new product in service: ${String(error)}`);
+    } finally {
+      await db?.close();
+    }
+  }
 }
