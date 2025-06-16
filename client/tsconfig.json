@@ -16,5 +16,5 @@
     "noEmit": true // If Vite/build tool handles emit
   },
   "include": ["src/**/*"], // GOOD
-  "exclude": ["node_modules", "dist"] // GOOD
+  "exclude": ["node_modules", "dist", "__tests__"] // GOOD
 }

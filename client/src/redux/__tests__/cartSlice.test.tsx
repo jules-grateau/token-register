@@ -5,12 +5,12 @@ describe('cartSlice selectors', () => {
     cart: {
       items: [
         {
-          product: { id: 1, name: 'Apple', price: 10 },
+          product: { id: 1, name: 'Apple', price: 10, categoryId: 1 },
           quantity: 2,
           discountedAmount: 0,
         },
         {
-          product: { id: 2, name: 'Banana', price: 5 },
+          product: { id: 2, name: 'Banana', price: 5, categoryId: 1 },
           quantity: 3,
           discountedAmount: 2,
         },

@@ -4,7 +4,13 @@ const CART_STORAGE_KEY = 'rtkPersistedCart';
 
 describe('localStorageCart', () => {
   const mockCartState: CartState = {
-    items: [{ product: { id: 1, name: 'Apple', price: 10 }, quantity: 2, discountedAmount: 0 }],
+    items: [
+      {
+        product: { id: 1, name: 'Apple', price: 10, categoryId: 1 },
+        quantity: 2,
+        discountedAmount: 0,
+      },
+    ],
   };
 
   beforeEach(() => {
