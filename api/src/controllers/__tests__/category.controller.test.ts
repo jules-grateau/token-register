@@ -4,7 +4,7 @@ import type { Request, Response, NextFunction } from 'express';
 
 describe('CategoryController', () => {
   let controller: CategoryController;
-  let mockCategoryService: { getAllCategories: jest.Mock };
+  let mockCategoryService: { getAllCategories: jest.Mock; addCategory: jest.Mock };
   let mockProductService: {
     getAllProducts: jest.Mock;
     getProductsByCategoryId: jest.Mock;
@@ -15,7 +15,7 @@ describe('CategoryController', () => {
   let next: jest.Mock;
 
   beforeEach(() => {
-    mockCategoryService = { getAllCategories: jest.fn() };
+    mockCategoryService = { getAllCategories: jest.fn(), addCategory: jest.fn() };
     mockProductService = {
       getAllProducts: jest.fn(),
       getProductsByCategoryId: jest.fn(),
@@ -86,6 +86,41 @@ describe('CategoryController', () => {
     mockProductService.getProductsByCategoryId.mockRejectedValue(error);
 
     await controller.getProductsByCategory(req as Request, res as Response, next as NextFunction);
+    expect(next).toHaveBeenCalledWith(error);
+  });
+
+  it('should create a category and return its id', async () => {
+    const newCategory = { name: 'New Category' };
+    const createdId = 99;
+    req.body = newCategory;
+    mockCategoryService.addCategory.mockResolvedValue(createdId);
+
+    await controller.addCategory(req as Request, res as Response, next as NextFunction);
+
+    expect(mockCategoryService.addCategory).toHaveBeenCalledWith(newCategory);
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(res.json).toHaveBeenCalledWith({ id: createdId });
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('should return 400 if category name is missing', async () => {
+    req.body = {};
+    await controller.addCategory(req as Request, res as Response, next as NextFunction);
+
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ error: 'Category name is required' });
+    expect(mockCategoryService.addCategory).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+
+  it('should handle error in addCategory', async () => {
+    const newCategory = { name: 'New Category' };
+    req.body = newCategory;
+    const error = new Error('fail');
+    mockCategoryService.addCategory.mockRejectedValue(error);
+
+    await controller.addCategory(req as Request, res as Response, next as NextFunction);
+
     expect(next).toHaveBeenCalledWith(error);
   });
 });

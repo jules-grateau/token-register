@@ -14,4 +14,21 @@ export class CategoryService {
       await db?.close();
     }
   }
+
+  async addCategory(category: Omit<CategoryType, 'id'>): Promise<number> {
+    let db;
+    try {
+      db = await openDb();
+      const result = await db.run(`INSERT INTO categories (name) VALUES (?)`, [category.name]);
+      if (!result.lastID) {
+        throw new Error('Failed to create the category');
+      }
+
+      return result.lastID;
+    } catch (error) {
+      throw new Error(`Error creating new category in service: ${String(error)}`);
+    } finally {
+      await db?.close();
+    }
+  }
 }
