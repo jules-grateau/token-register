@@ -62,61 +62,96 @@ token-register/
 
 ### Setup
 
-1. **Clone the repository**
+#### 1. **Clone the repository**
 
-   ```sh
-   git clone https://github.com/jules-grateau/token-register.git
-   cd token-register
-   ```
+```sh
+git clone https://github.com/jules-grateau/token-register.git
+cd token-register
+```
 
-2. **Install dependencies**
+#### 2. **Install dependencies**
 
-   ```sh
-   npm install
-   ```
+```sh
+npm install
+```
 
-3. **Setup environment variables**
+#### 3. **Setup environment variables**
 
-   - Copy `api/.env.example` to `api/.env` and fill in the values as needed.
-   - Copy `client/.env.example` to `client/.env` and set the API URL if different.
+- Copy `api/.env.example` to `api/.env` and fill in the values as needed.
+- Copy `client/.env.example` to `client/.env` and set the API URL if different.
+  
+- Alternatively, you can setup the environment variable when running the docker image.
+- If the client is distributed by the backend, you will also need to setup the client environment variable on the backend env, so it will be distributed to it. See [`client/config/index.ts`](client/config/index.ts)
 
-4. **Initialize the database**
+##### **API**
 
-   ```sh
-   npm run init-db -w=api
-   ```
+```env
+NODE_ENV= production # Environement
+PORT= 3000 # Port where the server should run
+DATABASE_PATH= /data/database.sqlite # Path to the Database
+BASIC_AUTH_USER= demo 
+BASIC_AUTH_PASS= demo
+FRONTEND_URL= https://your-app # Used for CORS authorization - Should not be used in production
+LOG_LEVEL= info # Level of log needed
+RUNTIME_VITE_BASE_API_URL= https://your-app/api # URL to API - Used when the frontend is distributed by the backend.
+RUNTIME_VITE_DEFAULT_LANGUAGE= en # Define the default language. - Used when the frontend is distributed by the backend.
+```
 
-   This will create and seed the SQLite database at `api/src/db/data/database.sqlite` or where configured in the `api/.env` file
+##### **CLIENT**
 
-5. **Start the backend**
+```env
+VITE_BASE_API_URL=http://localhost:3001/api # URL to API - Used when deploying FrontEnd separatly
+VITE_DEFAULT_LANGUAGE=fr # Default Language - Used when deploying FrontEnd separatly
+```
 
-   ```sh
-   npm run start -w=api
-   ```
+#### 4. **Initialize the database**
 
-   The backend runs on the port specified in `api/.env` (default: 3001).
+```sh
+npm run init-db -w=api
+```
 
-6. **Start the frontend**
+This will create and seed the SQLite database at `api/src/db/data/database.sqlite` or where configured in the `api/.env` file
 
-   In a new terminal:
+#### 5. **Start the backend**
 
-   ```sh
-   npm run dev -w=client
-   ```
+```sh
+npm run start -w=api
+```
 
-   The frontend runs on [http://localhost:5173](http://localhost:5173) or where configured in the `client/.env` file.
+The backend runs on the port specified in `api/.env` (default: 3001).
 
-## Running Unit Tests
+#### 6. **Start the frontend**
+
+In a new terminal:
+
+```sh
+npm run dev -w=client
+```
+
+The frontend runs on [http://localhost:5173](http://localhost:5173) or where configured in the `client/.env` file.
+
+### Running Unit Tests
 
 This project uses [Jest](https://jestjs.io/) for unit testing (with TypeScript support).
 
-To run tests for backend :
-
+To run tests for backend:
 ```sh
 npm run test -w=api
 ```
 
 Test results and coverage reports will be shown in the terminal.
+
+### Development
+
+- Flush the database:
+```sh
+npm run flush-db -w=api
+  ```
+
+- Initialize the database:
+```sh
+npm run init-db -w=api
+```
 
 ---
 
@@ -124,20 +159,18 @@ Test results and coverage reports will be shown in the terminal.
 
 To deploy the backend in production, this project uses [PM2](https://pm2.keymetrics.io/) for process management.
 
-### 1. Build the backend and frontend
+### 1. Setup the environement variable
+
+- Copy `api/.env.example` to `api/.env.production` (or `.env`) and fill in production values (e.g., `NODE_ENV=production`, correct `DATABASE_PATH`, credentials, etc.).
+- Alternatively, you can setup the environment variable when running the docker image.
+
+### 2. Build the backend and frontend
 
 ```sh
 npm run build
 ```
 
 This should create the `/dist` folder is both `/api` and `/client`
-
-### 2. Set up environment variables
-
-- Copy `api/.env.example` to `api/.env.production` (or `.env`) and fill in production values (e.g., `NODE_ENV=production`, correct `DATABASE_PATH`, credentials, etc.).
-
-- Alternatively, you can setup the environment variable when running the docker image.
-- If the client is distributed by the backend, you will also need to setup the client environment variable on the backend env, so it will be distributed to it. See [`client/config/index.ts`](client/config/index.ts)
 
 ### 3. Initialize the database
 
@@ -147,54 +180,16 @@ Before starting the server, ensure the database is initialized:
 npm run prod:db:init
 ```
 
-### 4. Start the backend with PM2
-
-If you do not have pm2, install it with
-
+### Run the app 
 ```sh
-npm install pm2 -g
+npm run prod:start
 ```
-
-From the project root, run:
-
-```sh
-pm2 start ecosystem.config.js
-```
-
-This will launch the backend using the configuration in [`ecosystem.config.cjs`](ecosystem.config.cjs).
-
-### 5. (Optional) Manage the process
-
-- View logs: `pm2 logs`
-- Restart: `pm2 restart token-register-api`
-- Stop: `pm2 stop token-register-api`
-- List: `pm2 list`
-
-For more details, see the [PM2 documentation](https://pm2.keymetrics.io/docs/usage/quick-start/).
-
 ## Usage
 
 - Open the frontend in your browser.
 - Use the cart to add products and checkout orders.
 - View and delete order history.
 - All API requests are protected by basic authentication (credentials set in `api/.env`).
-
-## Development
-
-- **Flush the database:**
-
-  ```sh
-  npm run flush-db -w=api
-  ```
-
-- **Initialize the database:**
-  ```sh
-  npm run init-db -w=api
-  ```
-
-## Environment Variables
-
-See [`api/.env.example`](api/.env.example) and [`client/.env.example`](client/.env.example) for all available variables.
 
 ## Docker
 
@@ -252,22 +247,7 @@ docker run \
 - The FRONTEND_URL is only required if you wish to use the API with CORS
 - The database file will be created inside the container at the path specified by `DATABASE_PATH`. If you want to persist data, consider mounting a volume.
 
-### 3. Stopping and Removing the Container
-
-To stop the container:
-
-```sh
-docker ps   # Find the container ID
-docker stop <container_id>
-```
-
-To remove the container:
-
-```sh
-docker rm <container_id>
-```
-
-### 4. Persisting Data (Optional)
+### 3. Persisting Data (Optional)
 
 To persist the SQLite database outside the container, add a volume:
 
@@ -278,8 +258,6 @@ To persist the SQLite database outside the container, add a volume:
 and set `DATABASE_PATH=/usr/src/app/api/src/db/data/database.sqlite`.
 
 ---
-
-For more advanced Docker usage, see the [Docker documentation](https://docs.docker.com/engine/reference/commandline/run/).
 
 ## License
 
