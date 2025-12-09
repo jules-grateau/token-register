@@ -1,22 +1,18 @@
 import React from 'react';
-
-import styles from './Catalog.module.css';
+import { Stack, SimpleGrid, Paper, ScrollArea } from '@mantine/core';
 import { useDispatch, useSelector } from 'react-redux';
 import { add } from '../../redux/cartSlice';
 import { useGetCategoriesQuery, useGetProductsByCategoryQuery } from '../../services/categories';
-import Button from '../Button';
 import CategoryList from './CategoryList';
 import ProductList from './ProductList';
 import { useGetProductsQuery } from '../../services/product';
 import type { ProductType } from 'shared-ts';
-import { useTranslation } from 'react-i18next';
 import Loader from '../Loader';
 import {
   resetSelectedCategory,
   selectSelectedCategory,
   setSelectedCategory,
 } from '../../redux/selectedCategorySlice';
-
 export const ALL_CATEGORIES_ID = 0;
 
 const Catalog: React.FC = () => {
@@ -28,11 +24,6 @@ const Catalog: React.FC = () => {
   const productsByCategoryQuery = useGetProductsByCategoryQuery(selectedCategory!, {
     skip: selectedCategory === null || selectedCategory === ALL_CATEGORIES_ID,
   });
-  const { t } = useTranslation();
-  const selectedCategoryName =
-    selectedCategory != ALL_CATEGORIES_ID
-      ? categoriesQuery.data?.find((category) => category.id === selectedCategory)?.name
-      : t('all_categories');
 
   const handleSelectCategory = (categoryId: number) => {
     dispatch(setSelectedCategory(categoryId));
@@ -54,18 +45,8 @@ const Catalog: React.FC = () => {
   }
 
   return (
-    <div className={styles.catalogContainer}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>
-          {hasSelectedCategory ? selectedCategoryName : t('categories')}
-        </h2>
-        {hasSelectedCategory && (
-          <Button onClick={handleGoBack} color="primary">
-            {t('go_back')}
-          </Button>
-        )}
-      </div>
-      <div className={styles.catalogBody}>
+    <Paper radius={0} display="flex" flex={1}>
+      <Stack flex={1} p="xl" gap="md" m={0}>
         <Loader
           isLoading={
             categoriesQuery.isLoading ||
@@ -74,28 +55,33 @@ const Catalog: React.FC = () => {
           }
         />
         {!hasSelectedCategory && (
-          <div className={styles.cardList}>
-            <CategoryList
-              categories={categoriesQuery.currentData}
-              isError={categoriesQuery.isError}
-              isLoading={categoriesQuery.isFetching}
-              onSelectCategory={handleSelectCategory}
-              allCategoriesId={ALL_CATEGORIES_ID}
-            />
-          </div>
+          <ScrollArea flex={1}>
+            <SimpleGrid cols={{ sm: 2, md: 4, lg: 6 }} spacing="md">
+              <CategoryList
+                categories={categoriesQuery.currentData}
+                isError={categoriesQuery.isError}
+                isLoading={categoriesQuery.isFetching}
+                onSelectCategory={handleSelectCategory}
+                allCategoriesId={ALL_CATEGORIES_ID}
+              />
+            </SimpleGrid>
+          </ScrollArea>
         )}
         {productSource && (
-          <div className={styles.cardList}>
-            <ProductList
-              products={productSource.currentData}
-              isError={productSource.isError}
-              isLoading={productSource.isFetching}
-              onAddToCart={handleAddToCart}
-            />
-          </div>
+          <ScrollArea flex={1}>
+            <SimpleGrid cols={{ sm: 2, md: 4, lg: 6 }} spacing="md">
+              <ProductList
+                products={productSource.currentData}
+                isError={productSource.isError}
+                isLoading={productSource.isFetching}
+                onAddToCart={handleAddToCart}
+                onGoBack={handleGoBack}
+              />
+            </SimpleGrid>
+          </ScrollArea>
         )}
-      </div>
-    </div>
+      </Stack>
+    </Paper>
   );
 };
 

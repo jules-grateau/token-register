@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from './CartConfirmationModal.module.css';
 import CartItem from '../Cart/CartItem';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
@@ -7,6 +6,7 @@ import { selectCartItems, selectTotalPrice, selectTotalItems, clear } from '../.
 import { useAddOrderMutation, useGetOrdersQuery } from '../../services/orders';
 import type { CartItemType } from 'shared-ts';
 import { toast } from 'react-toastify';
+import { Group, Stack, Text, ScrollArea } from '@mantine/core';
 import ConfirmationModal from '../ConfirmationModal';
 import Loader from '../Loader';
 
@@ -25,41 +25,29 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({ isOpen, o
   const ordersQuery = useGetOrdersQuery();
   const dispatch = useDispatch();
 
-  const handleConfirm = (cartItems: CartItemType[]) => {
+  const handleConfirm = async (cartItems: CartItemType[]) => {
     if (isLoading) return;
     try {
-      addOrder(cartItems)
-        .unwrap()
-        .then((id) => {
-          dispatch(clear());
-          void ordersQuery.refetch();
-          toast.success(t('order_placed', { id }));
-          onClose();
-        })
-        .catch((error) => {
-          toast.error(t(t('error_adding_order', { error: String(error) })));
-        });
+      const id = await addOrder(cartItems).unwrap();
+      dispatch(clear());
+      void ordersQuery.refetch();
+      toast.success(t('order_placed', { id }));
+      onClose();
     } catch (error) {
       toast.error(t(t('error_adding_order', { error: String(error) })));
     }
   };
 
   const handleClose = () => {
-    if (isLoading) return;
+    // The modal's confirm button can be disabled, but closing should always be possible.
     onClose();
   };
 
   const modalFooter = (
-    <>
-      <div className={styles.cartTotal}>
-        <strong>
-          {totalItems} {t('items', { count: totalItems })}
-        </strong>
-        <strong>
-          {totalPrice} {t('tokens', { count: totalPrice })}
-        </strong>
-      </div>
-    </>
+    <Group justify="space-between">
+      <Text fw={700}>{`${totalItems} ${t('items', { count: totalItems })}`}</Text>
+      <Text fw={700}>{`${totalPrice} ${t('tokens', { count: totalPrice })}`}</Text>
+    </Group>
   );
 
   return (
@@ -70,22 +58,20 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({ isOpen, o
       onConfirm={() => void handleConfirm(cartItems)}
       extraFooter={modalFooter}
     >
-      <>
-        <div>
-          {<Loader isLoading={isLoading} />}
-          {cartItems.length === 0 ? (
-            <p className={styles.emptyCartMessage}>{t('your_cart_is_empty')}</p>
-          ) : (
-            <>
-              <ul className={styles.cartList}>
-                {cartItems.map((item, index) => (
-                  <CartItem key={index} item={item} />
-                ))}
-              </ul>
-            </>
-          )}
-        </div>
-      </>
+      <Stack>
+        {isLoading && <Loader isLoading={isLoading} />}
+        {cartItems.length === 0 && !isLoading ? (
+          <Text>{t('your_cart_is_empty')}</Text>
+        ) : (
+          <ScrollArea.Autosize mah={300}>
+            <Stack>
+              {cartItems.map((item, index) => (
+                <CartItem key={index} item={item} />
+              ))}
+            </Stack>
+          </ScrollArea.Autosize>
+        )}
+      </Stack>
     </ConfirmationModal>
   );
 };

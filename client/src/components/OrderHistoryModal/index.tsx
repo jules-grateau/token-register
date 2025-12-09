@@ -1,13 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import styles from './OrderHistoryModal.module.css';
 import { useGetOrdersQuery, useRemoveOrderMutation } from '../../services/orders';
 import CartItem from '../Cart/CartItem';
-import Button from '../Button';
+import Loader from '../Loader';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import Modal from '../Modal';
 import ConfirmationModal from '../ConfirmationModal';
-import Loader from '../Loader';
+
+import {
+  Modal,
+  Button,
+  Stack,
+  Group,
+  Text,
+  Card,
+  ScrollArea,
+  Divider,
+  Center,
+} from '@mantine/core';
 
 interface OrderHistoryModalProps {
   isOpen: boolean;
@@ -44,57 +53,79 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
     }
   };
 
+  const renderContent = () => {
+    if (isFetching) {
+      return (
+        <Center h={200}>
+          {' '}
+          <Loader isLoading={true} />
+        </Center>
+      );
+    }
+
+    if (error) {
+      return <Text c="red">{t('error_loading_orders')}</Text>;
+    }
+
+    if (ordersData && ordersData.length > 0) {
+      return (
+        <ScrollArea.Autosize>
+          <Stack>
+            {ordersData.map((order) => {
+              const totalPrice = order.items.reduce(
+                (acc, item) => acc + (item.product.price * item.quantity - item.discountedAmount),
+                0
+              );
+              const totalItems = order.items.reduce((acc, item) => acc + item.quantity, 0);
+              return (
+                <Card withBorder key={order.id}>
+                  <Stack>
+                    <Group justify="space-between">
+                      <Text fw={500}>
+                        {t('order_number', {
+                          id: order.id,
+                          date: new Date(order.date).toLocaleString(),
+                        })}
+                      </Text>
+                      <Button
+                        onClick={() => onRemoveOrder(order.id)}
+                        color="red"
+                        variant="outline"
+                        size="xs"
+                      >
+                        {t('delete')}
+                      </Button>
+                    </Group>
+                    <Stack gap="xs">
+                      {order.items.map((item, itemIndex) => (
+                        <CartItem key={itemIndex} item={item} />
+                      ))}
+                    </Stack>
+                    <Divider />
+                    <Group justify="space-between">
+                      <Text fw={700}>
+                        {totalPrice} {t('tokens', { count: totalPrice })}
+                      </Text>
+                      <Text size="sm" c="dimmed">
+                        {totalItems} {t('items', { count: totalItems })}
+                      </Text>
+                    </Group>
+                  </Stack>
+                </Card>
+              );
+            })}
+          </Stack>
+        </ScrollArea.Autosize>
+      );
+    }
+
+    return <Text>{t('no_orders')}</Text>;
+  };
+
   return (
     <>
-      <Modal isOpen={isOpen} onClose={onClose} title={t('order_history')}>
-        {error && <p>{t('error_loading_orders')}</p>}
-        <Loader isLoading={isFetching} />
-        {ordersData && ordersData.length > 0 ? (
-          <>
-            <ul className={styles.orderList}>
-              {ordersData.map((order, index) => {
-                const totalPrice = order.items.reduce(
-                  (acc, item) => acc + (item.product.price * item.quantity - item.discountedAmount),
-                  0
-                );
-                const totalItems = order.items.reduce((acc, item) => acc + item.quantity, 0);
-                return (
-                  <div className={styles.order} key={index}>
-                    <li key={index}>
-                      <div className={styles.orderHeader}>
-                        <h3 className={styles.orderNumber}>
-                          {t('order_number', {
-                            id: order.id,
-                            date: new Date(order.date).toLocaleString(),
-                          })}
-                        </h3>
-                        <Button onClick={() => onRemoveOrder(order.id)} color="danger">
-                          {' '}
-                          {t('delete')}{' '}
-                        </Button>
-                      </div>
-                      <ul className={styles.orderItems}>
-                        {order.items.map((item, itemIndex) => (
-                          <CartItem key={itemIndex} item={item} />
-                        ))}
-                      </ul>
-                    </li>
-                    <div className={styles.orderTotal}>
-                      <span>
-                        {totalPrice} {t('tokens', { count: totalPrice })}
-                      </span>
-                      <span>
-                        {totalItems} {t('items', { count: totalItems })}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </ul>
-          </>
-        ) : (
-          <p>{t('no_orders')}</p>
-        )}
+      <Modal opened={isOpen} onClose={onClose} title={t('order_history')} size="lg" centered>
+        {renderContent()}
       </Modal>
       <ConfirmationModal
         isOpen={isConfirmationModalOpen}
@@ -102,10 +133,10 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
         onConfirm={() => void onConfirmRemoveOrder(selectedOrder)}
         title={t('confirmation')}
       >
-        <Loader isLoading={isRemoveLoading}></Loader>
-        <p className={styles.confirmationMessage}>
-          {t('order_removal_confirmation', { id: selectedOrder })}{' '}
-        </p>
+        <Stack align="center">
+          {isRemoveLoading && <Loader isLoading={true} />}
+          <Text>{t('order_removal_confirmation', { id: selectedOrder })}</Text>
+        </Stack>
       </ConfirmationModal>
     </>
   );

@@ -1,23 +1,24 @@
-import React from 'react';
-import styles from './Loader.module.css';
+import { Loader as MantineLoader, Overlay, Stack, Text, Center } from '@mantine/core';
 
-interface Loader {
+interface LoaderProps {
   isLoading: boolean;
   text?: string;
 }
 
-const Loader: React.FC<Loader> = ({ isLoading, text }) => {
+const Loader: React.FC<LoaderProps> = ({ isLoading, text }) => {
   if (!isLoading) {
-    return;
+    return null;
   }
 
   return (
-    <div className={styles.overlay} data-testid="loading">
-      <div className={styles.content}>
-        <div className={styles.spinner}></div>
-        {text && <p className={styles.text}>{text}</p>}
-      </div>
-    </div>
+    <Overlay blur={3} zIndex={1000}>
+      <Center h="100%">
+        <Stack align="center" gap="md">
+          <MantineLoader size="lg" />
+          {text && <Text size="sm">{text}</Text>}
+        </Stack>
+      </Center>
+    </Overlay>
   );
 };
 

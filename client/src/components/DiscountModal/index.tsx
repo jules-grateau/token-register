@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import ConfirmationModal from '../ConfirmationModal';
 import type { CartItemType } from 'shared-ts';
 import { useTranslation } from 'react-i18next';
-import styles from './DiscountModal.module.css';
-import clsx from 'clsx';
 import { validateDiscountValue } from './utils/validateDiscountValue';
+import { Stack, Text, Group, TextInput, Chip } from '@mantine/core';
 
 export type DiscountType = 'percentage' | 'fixed';
 
@@ -81,75 +80,47 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
   };
 
   const modalContent = (
-    <div className={styles.discountFormContainer}>
-      <div>
-        <h3 className={styles.sectionTitle}>{t('discount_type_title')}</h3>
-        <div className={styles.discountTypeGroup}>
-          <label
-            className={clsx(styles.discountTypeLabel, discountType === 'fixed' && styles.selected)}
-          >
-            <input
-              type="radio"
-              name="discountType"
-              value="fixed"
-              checked={discountType === 'fixed'}
-              onChange={() => handleDiscountTypeChange('fixed')}
-            />
-            <span className={styles.customRadio}></span>
-            <span>
-              {t('fixed_amount')} (
-              {t('currency_symbol', { defaultValue: t('tokens', { count: 1 }) })})
-            </span>
-          </label>
-          <label
-            className={clsx(
-              styles.discountTypeLabel,
-              discountType === 'percentage' && styles.selected
-            )}
-          >
-            <input
-              type="radio"
-              name="discountType"
-              value="percentage"
-              checked={discountType === 'percentage'}
-              onChange={() => handleDiscountTypeChange('percentage')}
-            />
-            <span className={styles.customRadio}></span>
-            <span>{t('percentage')} (%)</span>
-          </label>
-        </div>
-      </div>
+    <Stack>
+      <Stack gap={4}>
+        <Text fw={500}>{t('discount_type_title')}</Text>
+        <Chip.Group
+          value={discountType}
+          onChange={(value) => handleDiscountTypeChange(value as DiscountType)}
+        >
+          <Group mt="xs" grow>
+            <Chip value="fixed" radius="xs" size="md">
+              {`${t('fixed_amount')} (${t('currency_symbol', {
+                defaultValue: t('tokens', { count: 1 }),
+              })})`}
+            </Chip>
+            <Chip value="percentage" radius="xs" size="md">{`${t('percentage')} (%)`}</Chip>
+          </Group>
+        </Chip.Group>
+      </Stack>
 
-      <div>
-        <h3 className={styles.sectionTitle}>{t('discount_value_title')}</h3>
-        <div className={styles.discountValueGroup}>
-          <input
-            id="discountValueInput"
-            type="text"
-            inputMode="numeric"
-            className={styles.discountValueInput}
-            value={discountValue}
-            onChange={(e) => handleDiscountValueChange(e.target.value)}
-            placeholder={
-              discountType === 'percentage'
-                ? t('placeholder_percentage_discount')
-                : t('placeholder_fixed_discount')
-            }
-          />
-          <p className={styles.errorMessage}>{validationError}</p>
-        </div>
-      </div>
+      <TextInput
+        label={<Text fw={500}>{t('discount_value_title')}</Text>}
+        id="discountValueInput"
+        type="text"
+        inputMode="numeric"
+        value={discountValue}
+        onChange={(e) => handleDiscountValueChange(e.target.value)}
+        placeholder={
+          discountType === 'percentage'
+            ? t('placeholder_percentage_discount')
+            : t('placeholder_fixed_discount')
+        }
+        error={validationError}
+      />
 
-      {
-        <div className={styles.newPriceSection}>
-          <span className={styles.newPriceLabel}>{t('new_total_price_for_item')}:</span>
-          <span className={styles.newPriceValue}>
-            {priceAfterDiscount(discountValue)}{' '}
-            {t('tokens', { count: priceAfterDiscount(discountValue) })}
-          </span>
-        </div>
-      }
-    </div>
+      <Group justify="space-between" mt="md">
+        <Text>{t('new_total_price_for_item')}:</Text>
+        <Text fw={700}>
+          {priceAfterDiscount(discountValue)}{' '}
+          {t('tokens', { count: priceAfterDiscount(discountValue) })}
+        </Text>
+      </Group>
+    </Stack>
   );
 
   return (

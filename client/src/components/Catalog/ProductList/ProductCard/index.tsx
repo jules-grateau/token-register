@@ -1,8 +1,8 @@
 import React from 'react';
 import type { ProductType } from 'shared-ts';
-import styles from './ProductCard.module.css';
 import ClickableCard from '../../../ClickableCard';
 import { useTranslation } from 'react-i18next';
+import { Text } from '@mantine/core';
 
 interface ProductCardProps {
   product: ProductType;
@@ -12,11 +12,11 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ product, onClick }) => {
   const { t } = useTranslation();
   return (
-    <ClickableCard title={product.name} onClick={() => onClick()}>
+    <ClickableCard title={product.name} onClick={onClick}>
       {product.price !== undefined && (
-        <span className={styles.productPrice}>
+        <Text c="dimmed" size="sm">
           {product.price} {t('tokens', { count: product.price })}
-        </span>
+        </Text>
       )}
     </ClickableCard>
   );

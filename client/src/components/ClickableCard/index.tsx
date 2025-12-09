@@ -1,5 +1,5 @@
-import React from 'react';
-import styles from './ClickableCard.module.css';
+import { Stack, Text, Button } from '@mantine/core';
+import { forwardRef } from 'react';
 
 interface ClickableCardProps {
   title: string;
@@ -7,13 +7,21 @@ interface ClickableCardProps {
   children?: React.ReactNode;
 }
 
-export const ClickableCard: React.FC<ClickableCardProps> = ({ title, onClick, children }) => {
-  return (
-    <button className={styles.clickableCard} onClick={() => onClick()}>
-      <span className={styles.cardTitle}>{title}</span>
-      {children}
-    </button>
-  );
-};
+const ClickableCard = forwardRef<HTMLButtonElement, ClickableCardProps>(
+  ({ title, onClick, children }, ref) => {
+    return (
+      <Button ref={ref} onClick={onClick} variant="outline" fullWidth h={{ base: 100, md: 200 }}>
+        <Stack gap="sm">
+          <Text fw={600} size="md">
+            {title}
+          </Text>
+          {children}
+        </Stack>
+      </Button>
+    );
+  }
+);
+
+ClickableCard.displayName = 'ClickableCard';
 
 export default ClickableCard;
