@@ -49,5 +49,7 @@
   "new_total_price_for_item": "New total price",
   "error_invalid_discount_value_positive": "Discount amound is incorrect",
   "error_invalid_fixed_value_over_total_price": "Cannot discount more than total price",
-  "error_invalid_percentage_value_max_100": "Cannot discount more than 100%"
+  "error_invalid_percentage_value_max_100": "Cannot discount more than 100%",
+  "total": "Total",
+  "total_items": "Total items"
 }

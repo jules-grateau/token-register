@@ -3,7 +3,7 @@ import ConfirmationModal from '../ConfirmationModal';
 import type { CartItemType } from 'shared-ts';
 import { useTranslation } from 'react-i18next';
 import { validateDiscountValue } from './utils/validateDiscountValue';
-import { Stack, Text, Group, TextInput, Chip } from '@mantine/core';
+import { Stack, Text, Group, TextInput, SegmentedControl } from '@mantine/core';
 
 export type DiscountType = 'percentage' | 'fixed';
 
@@ -83,19 +83,20 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
     <Stack>
       <Stack gap={4}>
         <Text fw={500}>{t('discount_type_title')}</Text>
-        <Chip.Group
+        <SegmentedControl
+          fullWidth
           value={discountType}
           onChange={(value) => handleDiscountTypeChange(value as DiscountType)}
-        >
-          <Group mt="xs" grow>
-            <Chip value="fixed" radius="xs" size="md">
-              {`${t('fixed_amount')} (${t('currency_symbol', {
+          data={[
+            {
+              label: `${t('fixed_amount')} (${t('currency_symbol', {
                 defaultValue: t('tokens', { count: 1 }),
-              })})`}
-            </Chip>
-            <Chip value="percentage" radius="xs" size="md">{`${t('percentage')} (%)`}</Chip>
-          </Group>
-        </Chip.Group>
+              })})`,
+              value: 'fixed',
+            },
+            { label: `${t('percentage')} (%)`, value: 'percentage' },
+          ]}
+        />
       </Stack>
 
       <TextInput

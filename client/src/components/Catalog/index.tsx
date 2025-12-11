@@ -56,7 +56,7 @@ const Catalog: React.FC = () => {
         />
         {!hasSelectedCategory && (
           <ScrollArea flex={1}>
-            <SimpleGrid cols={{ sm: 2, md: 4, lg: 6 }} spacing="md">
+            <SimpleGrid cols={{ sm: 2, md: 4 }} spacing="md">
               <CategoryList
                 categories={categoriesQuery.currentData}
                 isError={categoriesQuery.isError}
@@ -69,7 +69,7 @@ const Catalog: React.FC = () => {
         )}
         {productSource && (
           <ScrollArea flex={1}>
-            <SimpleGrid cols={{ sm: 2, md: 4, lg: 6 }} spacing="md">
+            <SimpleGrid cols={{ sm: 2, md: 4 }} spacing="md">
               <ProductList
                 products={productSource.currentData}
                 isError={productSource.isError}

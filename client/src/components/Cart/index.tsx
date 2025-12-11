@@ -60,27 +60,28 @@ const Cart: React.FC<CartProps> = ({ onClickHistory, onValidateCart }: CartProps
       display="flex"
       flex={1}
       style={{
-        borderLeft: '1px solid var(--mantine-color-default-border)',
+        border: '1px solid var(--mantine-color-default-border)',
       }}
     >
       <Stack flex={1} gap={0}>
         {/* Header */}
         <Group
           justify="flex-end"
-          align="center"
           p={0}
-          pr="sm"
           gap="xl"
-          flex={1.5}
+          flex={1}
           m={0}
           style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}
         >
-          <ActionIcon onClick={onClickHistory} variant="transparent" radius={0} flex={1} h="100%">
+          <Divider orientation="vertical" />
+          <ActionIcon onClick={onClickHistory} variant="transparent" radius={0} h="100%">
             <IconHistory stroke={1.5} />
           </ActionIcon>
-          <ActionIcon variant="transparent" radius={0} flex={1} h="100%">
+          <Divider orientation="vertical" />
+          <ActionIcon variant="transparent" radius={0} h="100%">
             <IconCancel stroke={1.5} color="red" />
           </ActionIcon>
+          <Divider orientation="vertical" />
         </Group>
 
         {cartItems.length === 0 ? (
@@ -90,7 +91,7 @@ const Cart: React.FC<CartProps> = ({ onClickHistory, onValidateCart }: CartProps
         ) : (
           <>
             <ScrollArea type="auto" flex={8} m={0} p={0}>
-              <Stack gap={0} p="xs" h="fit-content">
+              <Stack gap="xs" p="xs" h="fit-content">
                 {cartItems.map((item, index) => (
                   <>
                     <CartItem
@@ -99,24 +100,36 @@ const Cart: React.FC<CartProps> = ({ onClickHistory, onValidateCart }: CartProps
                       onRemove={() => dispatch(remove(index))}
                       onDiscount={openDiscountModal}
                     />
-                    <Divider my="xs" p={0} mb="xs" />
+                    <Divider my="xs" p={0} m={0} />
                   </>
                 ))}
               </Stack>
             </ScrollArea>
-            <Group flex={2} style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
-              <Button onClick={onValidateCart} fullWidth radius={0} m={0} size="lg">
-                {t('checkout')}
-              </Button>
-              <Stack gap="xs" align="center">
-                <Text fw={700} size="sm" data-testid="cart-total-item">
+            <Stack
+              gap="md"
+              p="md"
+              style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}
+            >
+              <Group justify="space-between">
+                <Text size="sm" c="dimmed">
+                  {t('total_items')}
+                </Text>
+                <Text fw={500} size="sm" data-testid="cart-total-item">
                   {totalItems} {t('items', { count: totalItems })}
                 </Text>
-                <Text fw={700} size="sm" data-testid="item-total-price">
+              </Group>
+              <Group justify="space-between">
+                <Text size="lg" fw={700}>
+                  {t('total')}
+                </Text>
+                <Text fw={700} size="lg" data-testid="item-total-price">
                   {totalPrice} {t('tokens', { count: totalPrice })}
                 </Text>
-              </Stack>
-            </Group>
+              </Group>
+              <Button onClick={onValidateCart} fullWidth size="lg" mt="sm">
+                {t('checkout')}
+              </Button>
+            </Stack>
           </>
         )}
       </Stack>
