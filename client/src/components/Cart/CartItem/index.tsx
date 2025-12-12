@@ -39,28 +39,30 @@ const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onDiscount, onQuant
           <Text fw={600} size="sm" flex={1}>
             {item.product.name}
           </Text>
-          <Group gap="xs" wrap="nowrap" flex={1}>
-            <ActionIcon
-              size="lg"
-              variant="outline"
-              onClick={handleDecrement}
-              disabled={item.quantity <= 0}
-              aria-label={t('minus')}
-            >
-              <IconMinus size={14} />
-            </ActionIcon>
-            <Text size="sm" style={{ minWidth: 20, textAlign: 'center' }}>
-              {item.quantity}
-            </Text>
-            <ActionIcon
-              size="lg"
-              variant="outline"
-              onClick={handleIncrement}
-              aria-label={t('plus')}
-            >
-              <IconPlus size={14} />
-            </ActionIcon>
-          </Group>
+          {onQuantityChange && (
+            <Group gap="xs" wrap="nowrap" flex={1}>
+              <ActionIcon
+                size="lg"
+                variant="outline"
+                onClick={handleDecrement}
+                disabled={item.quantity <= 0}
+                aria-label={t('minus')}
+              >
+                <IconMinus size={14} />
+              </ActionIcon>
+              <Text size="sm" style={{ minWidth: 20, textAlign: 'center' }}>
+                {item.quantity}
+              </Text>
+              <ActionIcon
+                size="lg"
+                variant="outline"
+                onClick={handleIncrement}
+                aria-label={t('plus')}
+              >
+                <IconPlus size={14} />
+              </ActionIcon>
+            </Group>
+          )}
         </Group>
 
         <Group gap={0} justify="flex-end" wrap="nowrap" flex={1}>

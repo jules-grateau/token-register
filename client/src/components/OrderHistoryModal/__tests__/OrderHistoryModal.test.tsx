@@ -95,6 +95,12 @@ describe('OrderHistoryModal', () => {
     expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
   });
 
+  it('does not render quantity controls in order items', () => {
+    render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
+    expect(screen.queryByRole('button', { name: /plus/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /minus/i })).not.toBeInTheDocument();
+  });
+
   it('opens confirmation modal when delete is clicked', async () => {
     render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
