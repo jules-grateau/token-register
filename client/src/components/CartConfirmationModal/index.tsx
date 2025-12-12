@@ -2,7 +2,12 @@ import React from 'react';
 import CartItem from '../Cart/CartItem';
 import { useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
-import { selectCartItems, selectTotalPrice, selectTotalItems, clear } from '../../redux/cartSlice';
+import {
+  selectCartItems,
+  selectTotalPrice,
+  selectTotalItems,
+  clearCart,
+} from '../../redux/cartSlice';
 import { useAddOrderMutation, useGetOrdersQuery } from '../../services/orders';
 import type { CartItemType } from 'shared-ts';
 import { toast } from 'react-toastify';
@@ -29,7 +34,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({ isOpen, o
     if (isLoading) return;
     try {
       const id = await addOrder(cartItems).unwrap();
-      dispatch(clear());
+      dispatch(clearCart());
       void ordersQuery.refetch();
       toast.success(t('order_placed', { id }));
       onClose();

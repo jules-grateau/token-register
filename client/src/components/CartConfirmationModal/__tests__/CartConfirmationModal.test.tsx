@@ -4,7 +4,7 @@ import CartConfirmationModal from '../index';
 import { useSelector, useDispatch } from 'react-redux';
 import { useAddOrderMutation, useGetOrdersQuery } from '../../../services/orders';
 import { toast } from 'react-toastify';
-import { clear } from '../../../redux/cartSlice';
+import { clearCart } from '../../../redux/cartSlice';
 import { render } from '../../../utils/testUtils';
 
 jest.mock('react-redux', () => ({
@@ -95,7 +95,7 @@ describe('CartConfirmationModal', () => {
     });
 
     await waitFor(() => {
-      expect(mockDispatch).toHaveBeenCalledWith(clear());
+      expect(mockDispatch).toHaveBeenCalledWith(clearCart());
       expect(mockRefetchOrders).toHaveBeenCalledTimes(1);
       expect(toast.success).toHaveBeenCalledWith(
         `order_placed (${JSON.stringify({ id: orderId })})`

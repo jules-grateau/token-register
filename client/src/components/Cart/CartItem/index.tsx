@@ -45,13 +45,19 @@ const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onDiscount, onQuant
               variant="outline"
               onClick={handleDecrement}
               disabled={item.quantity <= 0}
+              aria-label={t('minus')}
             >
               <IconMinus size={14} />
             </ActionIcon>
             <Text size="sm" style={{ minWidth: 20, textAlign: 'center' }}>
               {item.quantity}
             </Text>
-            <ActionIcon size="lg" variant="outline" onClick={handleIncrement}>
+            <ActionIcon
+              size="lg"
+              variant="outline"
+              onClick={handleIncrement}
+              aria-label={t('plus')}
+            >
               <IconPlus size={14} />
             </ActionIcon>
           </Group>

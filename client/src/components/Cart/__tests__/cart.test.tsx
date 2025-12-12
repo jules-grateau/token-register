@@ -3,11 +3,15 @@ import { screen, fireEvent } from '@testing-library/react';
 import Cart from '../index';
 import { useSelector } from 'react-redux';
 import { render } from '../../../utils/testUtils';
+import { clearCart, updateQuantity } from '../../../redux/cartSlice';
+
+const mockDispatch = jest.fn();
 
 jest.mock('react-redux', () => ({
   useSelector: jest.fn(),
-  useDispatch: () => jest.fn(),
+  useDispatch: () => mockDispatch,
 }));
+
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, opts?: any) => (opts?.count ? `${key} (${opts.count})` : key),
@@ -36,7 +40,7 @@ describe('Cart', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    mockDispatch.mockClear();
   });
 
   it('renders history button', () => {
@@ -72,5 +76,26 @@ describe('Cart', () => {
     });
     render(<Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} />);
     expect(screen.getByText('your_cart_is_empty')).toBeInTheDocument();
+  });
+
+  it('dispatches updateQuantity with +1 when increment is clicked', () => {
+    render(<Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} />);
+    const incrementButton = screen.getByRole('button', { name: /plus/i });
+    fireEvent.click(incrementButton);
+    expect(mockDispatch).toHaveBeenCalledWith(updateQuantity({ productId: 1, amount: 1 }));
+  });
+
+  it('dispatches updateQuantity with -1 when decrement is clicked', () => {
+    render(<Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} />);
+    const decrementButton = screen.getByRole('button', { name: /minus/i });
+    fireEvent.click(decrementButton);
+    expect(mockDispatch).toHaveBeenCalledWith(updateQuantity({ productId: 1, amount: -1 }));
+  });
+
+  it('dispatches clearCart when "Clear cart" button is clicked', () => {
+    render(<Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} />);
+    const clearButton = screen.getByRole('button', { name: /clear_cart/i });
+    fireEvent.click(clearButton);
+    expect(mockDispatch).toHaveBeenCalledWith(clearCart());
   });
 });

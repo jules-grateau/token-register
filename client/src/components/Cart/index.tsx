@@ -19,6 +19,7 @@ import {
   selectTotalItems,
   addDiscount,
   updateQuantity,
+  clearCart,
 } from '../../redux/cartSlice';
 import { useTranslation } from 'react-i18next';
 import type { CartItemType } from 'shared-ts';
@@ -58,6 +59,10 @@ const Cart: React.FC<CartProps> = ({ onClickHistory, onValidateCart }: CartProps
     dispatch(updateQuantity({ productId: item.product.id, amount }));
   };
 
+  const handleClearCart = () => {
+    dispatch(clearCart());
+  };
+
   return (
     <Paper
       radius={0}
@@ -89,7 +94,13 @@ const Cart: React.FC<CartProps> = ({ onClickHistory, onValidateCart }: CartProps
             <IconHistory stroke={1.5} />
           </ActionIcon>
           <Divider orientation="vertical" />
-          <ActionIcon variant="transparent" radius={0} h="100%">
+          <ActionIcon
+            variant="transparent"
+            radius={0}
+            h="100%"
+            onClick={handleClearCart}
+            aria-label={t('clear_cart')}
+          >
             <IconCancel stroke={1.5} color="red" />
           </ActionIcon>
           <Divider orientation="vertical" />

@@ -1,4 +1,4 @@
-import { cartReducer, add, updateQuantity, remove, clear, addDiscount } from '../cartSlice';
+import { cartReducer, add, updateQuantity, remove, clearCart, addDiscount } from '../cartSlice';
 import type { CartState } from '../cartSlice';
 import type { ProductType } from 'shared-ts';
 
@@ -59,7 +59,7 @@ describe('cartSlice reducers', () => {
   });
 
   it('should handle clear', () => {
-    const nextState = cartReducer(initialState, clear());
+    const nextState = cartReducer(initialState, clearCart());
     expect(nextState.items).toHaveLength(0);
   });
 
