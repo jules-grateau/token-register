@@ -39,7 +39,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({ isOpen, o
   };
 
   const handleClose = () => {
-    // The modal's confirm button can be disabled, but closing should always be possible.
+    if (isLoading) return;
     onClose();
   };
 

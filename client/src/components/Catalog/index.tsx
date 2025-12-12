@@ -8,6 +8,7 @@ import { useGetProductsQuery } from '../../services/product';
 import type { ProductType } from 'shared-ts';
 import Loader from '../Loader';
 import { selectSelectedCategory, setSelectedCategory } from '../../redux/selectedCategorySlice';
+import { useTranslation } from 'react-i18next';
 export const ALL_CATEGORIES_ID = 0;
 
 const Catalog: React.FC = () => {
@@ -15,6 +16,7 @@ const Catalog: React.FC = () => {
   const categoriesQuery = useGetCategoriesQuery();
   const productsQuery = useGetProductsQuery();
   const selectedCategory = useSelector(selectSelectedCategory);
+  const { t } = useTranslation();
 
   const productsByCategoryQuery = useGetProductsByCategoryQuery(selectedCategory!, {
     skip: selectedCategory === null || selectedCategory === ALL_CATEGORIES_ID,
@@ -38,12 +40,24 @@ const Catalog: React.FC = () => {
   }
 
   const categoryData = [
-    { label: 'All Categories', value: String(ALL_CATEGORIES_ID) },
+    { label: t('all_categories'), value: String(ALL_CATEGORIES_ID) },
     ...(categoriesQuery.currentData?.map((category) => ({
       label: category.name,
       value: String(category.id),
     })) || []),
   ];
+
+  const categoryContent = () => {
+    if (categoriesQuery.isLoading) return <p>{t('loading_categories')}</p>;
+    if (categoriesQuery.isError) return <p>{t('error_loading_categories')}</p>;
+    if (!categoryData || categoryData.length === 0) return <p>{t('no_categories')}</p>;
+
+    return categoryData.map((category) => (
+      <Tabs.Tab key={category.value} value={category.value} w="100%" p="xl">
+        <Text fw={700}>{category.label}</Text>
+      </Tabs.Tab>
+    ));
+  };
 
   return (
     <Paper radius={0} display="flex" flex={1}>
@@ -59,11 +73,7 @@ const Catalog: React.FC = () => {
           <Tabs.List>
             <ScrollArea h="100%">
               <Loader isLoading={categoriesQuery.isFetching} />
-              {categoryData.map((category) => (
-                <Tabs.Tab key={category.value} value={category.value} w="100%" p="xl">
-                  <Text fw={700}>{category.label}</Text>
-                </Tabs.Tab>
-              ))}
+              {categoryContent()}
             </ScrollArea>
           </Tabs.List>
 

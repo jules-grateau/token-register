@@ -1,10 +1,11 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor } from '@testing-library/react';
 import CartConfirmationModal from '../index';
 import { useSelector, useDispatch } from 'react-redux';
 import { useAddOrderMutation, useGetOrdersQuery } from '../../../services/orders';
 import { toast } from 'react-toastify';
 import { clear } from '../../../redux/cartSlice';
+import { render } from '../../../utils/testUtils';
 
 jest.mock('react-redux', () => ({
   useSelector: jest.fn(),

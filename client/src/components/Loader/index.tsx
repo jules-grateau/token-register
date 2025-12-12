@@ -14,7 +14,7 @@ const Loader: React.FC<LoaderProps> = ({ isLoading, text }) => {
     <Overlay blur={3} zIndex={1000}>
       <Center h="100%">
         <Stack align="center" gap="md">
-          <MantineLoader size="lg" />
+          <MantineLoader size="lg" data-testid="loading" />
           {text && <Text size="sm">{text}</Text>}
         </Stack>
       </Center>

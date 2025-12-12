@@ -10,6 +10,11 @@ interface AddDiscountActionType {
   discountedAmount: number;
 }
 
+interface UpdateQuantityActionType {
+  productId: number;
+  amount: number;
+}
+
 const initialState: CartState = {
   items: [],
 };
@@ -35,13 +40,25 @@ const cartSlice = createSlice({
     remove(state, action: PayloadAction<number>) {
       state.items.splice(action.payload, 1);
     },
+    updateQuantity(state, action: PayloadAction<UpdateQuantityActionType>) {
+      const { productId, amount } = action.payload;
+      const itemIndex = state.items.findIndex((item) => item.product.id === productId);
+
+      if (itemIndex !== -1) {
+        const itemToUpdate = state.items[itemIndex];
+        const newQuantity = itemToUpdate.quantity + amount;
+        if (newQuantity >= 0) {
+          itemToUpdate.quantity = newQuantity;
+        }
+      }
+    },
     clear(state) {
       state.items = [];
     },
   },
 });
 
-export const { add, remove, clear, addDiscount } = cartSlice.actions;
+export const { add, remove, clear, addDiscount, updateQuantity } = cartSlice.actions;
 export const cartReducer = cartSlice.reducer;
 
 export const selectCartItems = (state: { cart: CartState }) => state.cart.items;

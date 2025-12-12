@@ -1,6 +1,7 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import Loader from '../index';
+import { render } from '../../../utils/testUtils';
 
 describe('Loader', () => {
   it('renders the loader when isLoading is true', () => {

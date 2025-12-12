@@ -10,7 +10,7 @@ const theme = createTheme({
 
 function App() {
   return (
-    <MantineProvider theme={theme} defaultColorScheme="light">
+    <MantineProvider theme={theme} defaultColorScheme="dark">
       <div className="app-container">
         <ToastContainer
           position="top-center"

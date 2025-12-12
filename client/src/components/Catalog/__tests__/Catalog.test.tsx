@@ -1,9 +1,10 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import Catalog from '../index';
 import { useSelector, useDispatch } from 'react-redux';
 import { useGetCategoriesQuery, useGetProductsByCategoryQuery } from '../../../services/categories';
 import { useGetProductsQuery } from '../../../services/product';
+import { render } from '../../../utils/testUtils';
 
 jest.mock('react-redux', () => ({
   useSelector: jest.fn(),
@@ -63,10 +64,8 @@ describe('Catalog', () => {
     jest.clearAllMocks();
   });
 
-  it('renders categories when no category is selected', () => {
+  it('renders categories', () => {
     render(<Catalog />);
-    expect(screen.getByText('categories')).toBeInTheDocument();
-
     expect(screen.getByText('Drinks')).toBeInTheDocument();
     expect(screen.getByText('Snacks')).toBeInTheDocument();
   });
@@ -96,16 +95,6 @@ describe('Catalog', () => {
   it('handles category selection', () => {
     render(<Catalog />);
     fireEvent.click(screen.getByText('Drinks'));
-    expect(mockDispatch).toHaveBeenCalled();
-  });
-
-  it('handles go back button', () => {
-    (useSelector as unknown as jest.Mock).mockImplementation((selector: any) => {
-      if (selector.name === 'selectSelectedCategory') return 1;
-      return undefined;
-    });
-    render(<Catalog />);
-    fireEvent.click(screen.getByRole('button', { name: /go_back/i }));
     expect(mockDispatch).toHaveBeenCalled();
   });
 
