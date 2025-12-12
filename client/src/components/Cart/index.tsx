@@ -18,6 +18,7 @@ import {
   remove,
   selectTotalItems,
   addDiscount,
+  updateQuantity,
 } from '../../redux/cartSlice';
 import { useTranslation } from 'react-i18next';
 import type { CartItemType } from 'shared-ts';
@@ -53,6 +54,10 @@ const Cart: React.FC<CartProps> = ({ onClickHistory, onValidateCart }: CartProps
     );
   };
 
+  const handleQuantityChange = (item: CartItemType, amount: number) => {
+    dispatch(updateQuantity({ productId: item.product.id, amount }));
+  };
+
   return (
     <Paper
       radius={0}
@@ -74,7 +79,13 @@ const Cart: React.FC<CartProps> = ({ onClickHistory, onValidateCart }: CartProps
           style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}
         >
           <Divider orientation="vertical" />
-          <ActionIcon onClick={onClickHistory} variant="transparent" radius={0} h="100%">
+          <ActionIcon
+            onClick={onClickHistory}
+            variant="transparent"
+            radius={0}
+            aria-label={t('history')}
+            h="100%"
+          >
             <IconHistory stroke={1.5} />
           </ActionIcon>
           <Divider orientation="vertical" />
@@ -99,6 +110,7 @@ const Cart: React.FC<CartProps> = ({ onClickHistory, onValidateCart }: CartProps
                       item={item}
                       onRemove={() => dispatch(remove(index))}
                       onDiscount={openDiscountModal}
+                      onQuantityChange={handleQuantityChange}
                     />
                     <Divider my="xs" p={0} m={0} />
                   </>

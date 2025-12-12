@@ -1,16 +1,17 @@
 import React from 'react';
 import type { CartItemType } from 'shared-ts';
-import { Group, Text, Menu, Paper, ActionIcon, Badge } from '@mantine/core';
+import { Group, Text, Menu, Paper, ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { IconDotsVertical, IconDiscount2 } from '@tabler/icons-react';
+import { IconDotsVertical, IconMinus, IconPlus } from '@tabler/icons-react';
 
 interface CartItemProps {
   item: CartItemType;
   onRemove?: () => void;
   onDiscount?: (item: CartItemType) => void;
+  onQuantityChange?: (item: CartItemType, quantity: number) => void;
 }
 
-const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onDiscount }) => {
+const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onDiscount, onQuantityChange }) => {
   const { t } = useTranslation();
 
   const handleDiscountClick = () => {
@@ -21,28 +22,44 @@ const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onDiscount }) => {
     onRemove?.();
   };
 
+  const handleIncrement = () => {
+    onQuantityChange?.(item, 1);
+  };
+
+  const handleDecrement = () => {
+    onQuantityChange?.(item, -1);
+  };
+
+  const calcPrice = item.product.price * item.quantity - item.discountedAmount;
+
   return (
     <Paper p={0} m={0} radius="sm" bg="transparent">
       <Group justify="flex-end" gap="sm" wrap="nowrap">
         <Group gap="xs" style={{ flex: 1 }} wrap="nowrap">
-          <Text fw={600} size="sm" c="yellow" truncate>
+          <Text fw={600} size="sm" flex={1}>
             {item.product.name}
           </Text>
-          <Text size="sm" c="dimmed">
-            x{item.quantity}
-          </Text>
+          <Group gap="xs" wrap="nowrap" flex={1}>
+            <ActionIcon
+              size="lg"
+              variant="outline"
+              onClick={handleDecrement}
+              disabled={item.quantity <= 0}
+            >
+              <IconMinus size={14} />
+            </ActionIcon>
+            <Text size="sm" style={{ minWidth: 20, textAlign: 'center' }}>
+              {item.quantity}
+            </Text>
+            <ActionIcon size="lg" variant="outline" onClick={handleIncrement}>
+              <IconPlus size={14} />
+            </ActionIcon>
+          </Group>
         </Group>
 
-        <Group gap={0} justify="flex-end" wrap="nowrap">
-          {item.discountedAmount > 0 && (
-            <Badge
-              leftSection={<IconDiscount2 size={14} />}
-              variant="outline"
-            >{`-${item.discountedAmount}`}</Badge>
-          )}
+        <Group gap={0} justify="flex-end" wrap="nowrap" flex={1}>
           <Text fw={600} size="sm" c={item.discountedAmount > 0 ? 'teal.8' : undefined}>
-            {item.product.price * item.quantity - item.discountedAmount}{' '}
-            {t('tokens', { count: item.product.price })}
+            {calcPrice} {t('tokens', { count: calcPrice })}
           </Text>
         </Group>
 
