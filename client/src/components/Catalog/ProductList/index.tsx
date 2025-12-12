@@ -2,23 +2,15 @@ import React from 'react';
 import type { ProductType } from 'shared-ts';
 import ProductCard from './ProductCard';
 import { useTranslation } from 'react-i18next';
-import ClickableCard from '../../ClickableCard';
 
 interface ProductListProps {
   isLoading: boolean;
   isError: boolean;
   products: ProductType[] | undefined;
   onAddToCart: (product: ProductType) => void;
-  onGoBack: () => void;
 }
 
-const ProductList: React.FC<ProductListProps> = ({
-  onGoBack,
-  isLoading,
-  isError,
-  products,
-  onAddToCart,
-}) => {
+const ProductList: React.FC<ProductListProps> = ({ isLoading, isError, products, onAddToCart }) => {
   const { t } = useTranslation();
 
   return (
@@ -34,7 +26,6 @@ const ProductList: React.FC<ProductListProps> = ({
           <ProductCard key={product.id} product={product} onClick={() => onAddToCart(product)} />
         ))
       )}
-      <ClickableCard title={t('go_back')} onClick={onGoBack} />
     </>
   );
 };
