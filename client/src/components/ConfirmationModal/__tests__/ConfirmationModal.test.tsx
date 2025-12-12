@@ -1,6 +1,7 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import ConfirmationModal from '../index';
+import { render } from '../../../utils/testUtils';
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({

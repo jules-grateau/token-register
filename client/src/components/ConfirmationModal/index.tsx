@@ -1,8 +1,6 @@
 import React from 'react';
-import Modal from '../Modal';
-import Button from '../Button';
 import { useTranslation } from 'react-i18next';
-import styles from './ConfirmationModal.module.css';
+import { Modal, Button, Group, Stack } from '@mantine/core';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -31,28 +29,18 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     onConfirm();
   };
 
-  const footerContent = (
-    <>
-      {extraFooter}
-      <div className={styles.confirmationFooterButtons}>
-        <Button onClick={handleConfirm} color={'success'} fullWidth>
-          {confirmButtonText || t('confirm')}
-        </Button>
-        <Button onClick={onClose} color={'danger'} fullWidth>
-          {cancelButtonText || t('cancel')}
-        </Button>
-      </div>
-    </>
-  );
-
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={title || t('confirm_operation')}
-      footer={footerContent}
-    >
-      {children}
+    <Modal opened={isOpen} onClose={onClose} title={title || t('confirm_operation')} centered>
+      <Stack>
+        {children}
+        {extraFooter}
+        <Group grow mt="md">
+          <Button onClick={handleConfirm}>{confirmButtonText || t('confirm')}</Button>
+          <Button onClick={onClose} color="red" variant="outline">
+            {cancelButtonText || t('cancel')}
+          </Button>
+        </Group>
+      </Stack>
     </Modal>
   );
 };

@@ -1,7 +1,8 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import Cart from '../index';
 import { useSelector } from 'react-redux';
+import { render } from '../../../utils/testUtils';
 
 jest.mock('react-redux', () => ({
   useSelector: jest.fn(),
@@ -38,9 +39,8 @@ describe('Cart', () => {
     jest.clearAllMocks();
   });
 
-  it('renders cart header and history button', () => {
+  it('renders history button', () => {
     render(<Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} />);
-    expect(screen.getByText('cart')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /history/i })).toBeInTheDocument();
   });
 

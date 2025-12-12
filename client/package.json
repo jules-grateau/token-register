@@ -8,9 +8,13 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "jest"
+    "test": "jest",
+    "coverage": "jest --collectCoverage"
   },
   "dependencies": {
+    "@mantine/core": "^8.3.10",
+    "@mantine/hooks": "^8.3.10",
+    "@tabler/icons-react": "^3.35.0",
     "@reduxjs/toolkit": "^2.8.2",
     "@testing-library/jest-dom": "^6.6.3",
     "axios": "^1.9.0",

@@ -49,5 +49,7 @@
   "new_total_price_for_item": "Nouveau prix total",
   "error_invalid_discount_value_positive": "Valeur de la réduction incorrect",
   "error_invalid_fixed_value_over_total_price": "Impossible de faire une réduction suppérieur au prix total",
-  "error_invalid_percentage_value_max_100": "Impossible de faire une réduction suppérieur a 100%"
+  "error_invalid_percentage_value_max_100": "Impossible de faire une réduction suppérieur a 100%",
+  "total": "Total",
+  "total_items": "Articles"
 }

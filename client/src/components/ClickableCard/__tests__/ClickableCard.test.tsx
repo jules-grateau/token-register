@@ -1,6 +1,7 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import ClickableCard from '../index';
+import { render } from '../../../utils/testUtils';
 
 describe('ClickableCard', () => {
   it('renders the title', () => {

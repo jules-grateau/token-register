@@ -1,9 +1,9 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import OrderHistoryModal from '../index';
 import { useGetOrdersQuery, useRemoveOrderMutation } from '../../../services/orders';
 import { toast } from 'react-toastify';
-
+import { render } from '../../../utils/testUtils';
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, opts?: any) =>
@@ -95,17 +95,19 @@ describe('OrderHistoryModal', () => {
     expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
   });
 
-  it('opens confirmation modal when delete is clicked', () => {
+  it('opens confirmation modal when delete is clicked', async () => {
     render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
-    expect(screen.getByText(/order_removal_confirmation/i)).toBeInTheDocument();
+    expect(await screen.findByText(/order_removal_confirmation/i)).toBeInTheDocument();
   });
 
   it('removes order and shows toast on confirm', async () => {
     mockRemoveOrder.mockReturnValue({ unwrap: () => Promise.resolve() });
     render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
-    fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
+    const confirmationModal = await screen.findByRole('dialog', { name: /confirmation/i });
+    const confirmButton = within(confirmationModal).getByRole('button', { name: /confirm/i });
+    fireEvent.click(confirmButton);
     await waitFor(() => {
       expect(mockRemoveOrder).toHaveBeenCalled();
     });
@@ -119,7 +121,9 @@ describe('OrderHistoryModal', () => {
     });
     render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
-    fireEvent.click(screen.getByRole('button', { name: /confirm/i }));
+    const confirmationModal = await screen.findByRole('dialog', { name: /confirmation/i });
+    const confirmButton = within(confirmationModal).getByRole('button', { name: /confirm/i });
+    fireEvent.click(confirmButton);
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalled();
     });

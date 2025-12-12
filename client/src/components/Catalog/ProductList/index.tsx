@@ -13,15 +13,19 @@ interface ProductListProps {
 const ProductList: React.FC<ProductListProps> = ({ isLoading, isError, products, onAddToCart }) => {
   const { t } = useTranslation();
 
-  if (isLoading) return <p>{t('loading_products')}</p>;
-  if (isError) return <p>{t('error_loading_products')}</p>;
-  if (!products || products.length === 0) return <p>{t('no_products')}</p>;
-
   return (
     <>
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} onClick={() => onAddToCart(product)} />
-      ))}
+      {isLoading ? (
+        <p>{t('loading_products')}</p>
+      ) : isError ? (
+        <p>{t('error_loading_products')}</p>
+      ) : !products || products.length === 0 ? (
+        <p>{t('no_products')}</p>
+      ) : (
+        products.map((product) => (
+          <ProductCard key={product.id} product={product} onClick={() => onAddToCart(product)} />
+        ))
+      )}
     </>
   );
 };
