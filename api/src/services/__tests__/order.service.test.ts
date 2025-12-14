@@ -2,7 +2,28 @@ import { OrderService } from '../order.service';
 import * as dbModule from '../../db';
 import { NotFoundError, ValidationError } from '../../types/errors';
 
+type MockDb = Awaited<ReturnType<typeof dbModule.openDb>>;
+
 describe('OrderService (unit)', () => {
+  let mockRun: jest.Mock;
+  let mockAll: jest.Mock;
+  let mockExec: jest.Mock;
+  let mockClose: jest.Mock;
+
+  beforeEach(() => {
+    mockRun = jest.fn();
+    mockAll = jest.fn();
+    mockExec = jest.fn();
+    mockClose = jest.fn().mockResolvedValue(undefined);
+
+    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
+      run: mockRun,
+      all: mockAll,
+      exec: mockExec,
+      close: mockClose,
+    } as unknown as MockDb);
+  });
+
   afterEach(() => {
     jest.restoreAllMocks();
   });
@@ -19,11 +40,7 @@ describe('OrderService (unit)', () => {
         discountedAmount: 0,
       },
     ];
-    const mockAll = jest.fn().mockResolvedValue(mockRows);
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      all: mockAll,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    mockAll.mockResolvedValue(mockRows);
 
     const service = new OrderService();
     const orders = await service.getAllOrders();
@@ -74,16 +91,9 @@ describe('OrderService (unit)', () => {
   });
 
   it('should delete order', async () => {
-    const mockExec = jest.fn();
-    const mockRun = jest
-      .fn()
+    mockRun
       .mockResolvedValueOnce({ changes: 1 }) // order_items delete
       .mockResolvedValueOnce({ changes: 1 }); // orders delete
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      exec: mockExec,
-      run: mockRun,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
 
     const service = new OrderService();
     await expect(service.deleteOrder(1)).resolves.toBeUndefined();
@@ -92,31 +102,16 @@ describe('OrderService (unit)', () => {
   });
 
   it('should throw NotFoundError if order not found on delete', async () => {
-    const mockExec = jest.fn();
-    const mockRun = jest
-      .fn()
+    mockRun
       .mockResolvedValueOnce({ changes: 0 }) // order_items delete
       .mockResolvedValueOnce({ changes: 0 }); // orders delete
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      exec: mockExec,
-      run: mockRun,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
 
     const service = new OrderService();
     await expect(service.deleteOrder(1)).rejects.toThrow(NotFoundError);
   });
 
   it('should throw an error if db.run fails during deleteOrder', async () => {
-    const mockExec = jest.fn();
-
-    const mockRun = jest.fn().mockRejectedValueOnce(new Error('DB delete error'));
-
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      exec: mockExec,
-      run: mockRun,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    mockRun.mockRejectedValueOnce(new Error('DB delete error'));
 
     const service = new OrderService();
 
@@ -127,17 +122,9 @@ describe('OrderService (unit)', () => {
   });
 
   it('should create an order successfully', async () => {
-    const mockExec = jest.fn();
-    const mockRun = jest
-      .fn()
+    mockRun
       .mockResolvedValueOnce({ lastID: 42 }) // orders insert
       .mockResolvedValueOnce({}); // order_items insert
-
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      exec: mockExec,
-      run: mockRun,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
 
     const service = new OrderService();
     const cart = [
@@ -161,16 +148,7 @@ describe('OrderService (unit)', () => {
   });
 
   it('should rollback and throw if db.run fails during order creation', async () => {
-    const mockExec = jest.fn();
-
-    const mockRun = jest.fn().mockRejectedValueOnce(new Error('DB insert error'));
-
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      exec: mockExec,
-      run: mockRun,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
-
+    mockRun.mockRejectedValueOnce(new Error('DB insert error'));
     const service = new OrderService();
     const cart = [
       {
@@ -185,13 +163,7 @@ describe('OrderService (unit)', () => {
   });
 
   it('should throw if db.all fails in getAllOrders', async () => {
-    const mockAll = jest.fn().mockRejectedValue(new Error('DB fetch error'));
-
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      all: mockAll,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
-
+    mockAll.mockRejectedValue(new Error('DB fetch error'));
     const service = new OrderService();
     await expect(service.getAllOrders()).rejects.toThrow(
       'Error fetching orders: Error: DB fetch error'
@@ -199,16 +171,7 @@ describe('OrderService (unit)', () => {
   });
 
   it('should throw if orderResult.lastID is falsy', async () => {
-    const mockExec = jest.fn();
-
-    const mockRun = jest.fn().mockResolvedValueOnce({ lastID: undefined }); // Failed insert
-
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      exec: mockExec,
-      run: mockRun,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
-
+    mockRun.mockResolvedValueOnce({ lastID: undefined }); // Failed insert
     const service = new OrderService();
     const cart = [
       {

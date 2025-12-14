@@ -4,7 +4,11 @@ import type { Request, Response, NextFunction } from 'express';
 
 describe('CategoryController', () => {
   let controller: CategoryController;
-  let mockCategoryService: { getAllCategories: jest.Mock; addCategory: jest.Mock };
+  let mockCategoryService: {
+    getAllCategories: jest.Mock;
+    addCategory: jest.Mock;
+    deleteCategory: jest.Mock;
+  };
   let mockProductService: {
     getAllProducts: jest.Mock;
     getProductsByCategoryId: jest.Mock;
@@ -15,7 +19,11 @@ describe('CategoryController', () => {
   let next: jest.Mock;
 
   beforeEach(() => {
-    mockCategoryService = { getAllCategories: jest.fn(), addCategory: jest.fn() };
+    mockCategoryService = {
+      getAllCategories: jest.fn(),
+      addCategory: jest.fn(),
+      deleteCategory: jest.fn(),
+    };
     mockProductService = {
       getAllProducts: jest.fn(),
       getProductsByCategoryId: jest.fn(),

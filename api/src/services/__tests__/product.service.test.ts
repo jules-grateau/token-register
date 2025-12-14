@@ -1,21 +1,31 @@
 import { ProductService } from '../product.service';
 import * as dbModule from '../../db';
 
+type MockDb = Awaited<ReturnType<typeof dbModule.openDb>>;
+
 describe('ProductService (unit)', () => {
+  let mockRun: jest.Mock;
+  let mockAll: jest.Mock;
+
+  beforeEach(() => {
+    mockRun = jest.fn();
+    mockAll = jest.fn();
+    const mockClose = jest.fn().mockResolvedValue(undefined);
+
+    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
+      run: mockRun,
+      all: mockAll,
+      close: mockClose,
+    } as unknown as MockDb);
+  });
+
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
   it('should return all products', async () => {
-    const mockProducts = [
-      { id: 1, name: 'Test', price: 10, category_id: 1 },
-      { id: 2, name: 'Test2', price: 20, category_id: 2 },
-    ];
-    const mockAll = jest.fn().mockResolvedValue(mockProducts);
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      all: mockAll,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    const mockProducts = [{ id: 1, name: 'Test', price: 10, category_id: 1 }];
+    mockAll.mockResolvedValue(mockProducts);
 
     const service = new ProductService();
     const products = await service.getAllProducts();
@@ -25,12 +35,7 @@ describe('ProductService (unit)', () => {
 
   it('should return products by category', async () => {
     const mockProducts = [{ id: 1, name: 'Test', price: 10, category_id: 1 }];
-    const mockAll = jest.fn().mockResolvedValue(mockProducts);
-
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      all: mockAll,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    mockAll.mockResolvedValue(mockProducts);
 
     const service = new ProductService();
     const products = await service.getProductsByCategoryId(1);
@@ -39,11 +44,7 @@ describe('ProductService (unit)', () => {
   });
 
   it('should throw if db.all fails in getAllProducts', async () => {
-    const mockAll = jest.fn().mockRejectedValue(new Error('DB Fetch error'));
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      all: mockAll,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    mockAll.mockRejectedValue(new Error('DB Fetch error'));
 
     const service = new ProductService();
     await expect(service.getAllProducts()).rejects.toThrow(
@@ -52,11 +53,7 @@ describe('ProductService (unit)', () => {
   });
 
   it('should throw if db.all fails in getAllProductsByCategory', async () => {
-    const mockAll = jest.fn().mockRejectedValue(new Error('DB Fetch error'));
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      all: mockAll,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    mockAll.mockRejectedValue(new Error('DB Fetch error'));
 
     const service = new ProductService();
     await expect(service.getProductsByCategoryId(1)).rejects.toThrow(
@@ -65,11 +62,7 @@ describe('ProductService (unit)', () => {
   });
 
   it('should add a product and return its id', async () => {
-    const mockRun = jest.fn().mockResolvedValue({ lastID: 123 });
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      run: mockRun,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    mockRun.mockResolvedValue({ lastID: 123 });
 
     const service = new ProductService();
     const product = { name: 'New Product', price: 99, categoryId: 2 };
@@ -83,11 +76,7 @@ describe('ProductService (unit)', () => {
   });
 
   it('should throw if lastID is falsy', async () => {
-    const mockRun = jest.fn().mockResolvedValue({ lastID: undefined });
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      run: mockRun,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    mockRun.mockResolvedValue({ lastID: undefined });
 
     const service = new ProductService();
     const product = { name: 'New Product', price: 99, categoryId: 2 };
@@ -95,11 +84,7 @@ describe('ProductService (unit)', () => {
   });
 
   it('should throw if db.run fails', async () => {
-    const mockRun = jest.fn().mockRejectedValue(new Error('DB insert error'));
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      run: mockRun,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    mockRun.mockRejectedValue(new Error('DB insert error'));
 
     const service = new ProductService();
     const product = { name: 'New Product', price: 99, categoryId: 2 };

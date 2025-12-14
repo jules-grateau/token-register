@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { CategoryService } from '../services/category.service';
 import { ProductService } from '../services/product.service';
 import { CategoryType } from 'shared-ts';
+import { NotFoundError } from '../types/errors';
 
 export class CategoryController {
   public path = '/categories';
@@ -19,6 +20,7 @@ export class CategoryController {
     this.router.get('/', this.getAllCategories);
     this.router.get('/:categoryId/products', this.getProductsByCategory);
     this.router.post('/', this.addCategory);
+    this.router.delete('/:categoryId', this.deleteCategory);
   }
 
   public getAllCategories = async (
@@ -72,6 +74,33 @@ export class CategoryController {
       res.status(201).json({ id });
     } catch (error) {
       req.log.error('Controller Error: Error creating category: %s', error);
+      next(error);
+    }
+  };
+
+  public deleteCategory = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    const categoryIdParam = req.params.categoryId;
+    req.log.info(`Controller: Deleting category with ID: ${categoryIdParam}`);
+    try {
+      const categoryId = parseInt(categoryIdParam, 10);
+      if (isNaN(categoryId)) {
+        res.status(400).json({ error: 'Invalid category ID format' });
+        return;
+      }
+
+      await this.categoryService.deleteCategory(categoryId);
+
+      res.status(204).send();
+    } catch (error) {
+      req.log.error(`Controller Error: Error deleting category ${categoryIdParam}: %s`, error);
+      if (error instanceof NotFoundError) {
+        res.status(404).json({ error: error.message });
+        return;
+      }
       next(error);
     }
   };

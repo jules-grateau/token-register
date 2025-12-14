@@ -1,18 +1,39 @@
 import { CategoryService } from '../category.service';
 import * as dbModule from '../../db';
+import { NotFoundError } from '../../types/errors';
+
+// Define a type for our mock database object to avoid 'unknown'
+type MockDb = Awaited<ReturnType<typeof dbModule.openDb>>;
 
 describe('CategoryService (unit)', () => {
+  // Centralize mock objects
+  let mockRun: jest.Mock;
+  let mockAll: jest.Mock;
+  let mockExec: jest.Mock;
+  let mockClose: jest.Mock;
+
+  beforeEach(() => {
+    // Reset mocks and set up the shared openDb spy before each test
+    mockRun = jest.fn();
+    mockAll = jest.fn();
+    mockExec = jest.fn();
+    mockClose = jest.fn().mockResolvedValue(undefined);
+
+    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
+      run: mockRun,
+      all: mockAll,
+      exec: mockExec,
+      close: mockClose,
+    } as unknown as MockDb);
+  });
+
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
   it('should return all categories', async () => {
     const mockCategories = [{ id: 1, name: 'Drinks' }];
-    const mockAll = jest.fn().mockResolvedValue(mockCategories);
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      all: mockAll,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    mockAll.mockResolvedValue(mockCategories);
 
     const service = new CategoryService();
     const categories = await service.getAllCategories();
@@ -21,11 +42,7 @@ describe('CategoryService (unit)', () => {
   });
 
   it('should throw if db.all fails in getAllCategories', async () => {
-    const mockAll = jest.fn().mockRejectedValue(new Error('DB Fetch error'));
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      all: mockAll,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    mockAll.mockRejectedValue(new Error('DB Fetch error'));
 
     const categories = new CategoryService();
     await expect(categories.getAllCategories()).rejects.toThrow(
@@ -34,11 +51,7 @@ describe('CategoryService (unit)', () => {
   });
 
   it('should add a category and return its id', async () => {
-    const mockRun = jest.fn().mockResolvedValue({ lastID: 55 });
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      run: mockRun,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    mockRun.mockResolvedValue({ lastID: 55 });
 
     const service = new CategoryService();
     const id = await service.addCategory({ name: 'New Category' });
@@ -50,11 +63,7 @@ describe('CategoryService (unit)', () => {
   });
 
   it('should throw if lastID is falsy', async () => {
-    const mockRun = jest.fn().mockResolvedValue({ lastID: undefined });
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      run: mockRun,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    mockRun.mockResolvedValue({ lastID: undefined });
 
     const service = new CategoryService();
     await expect(service.addCategory({ name: 'New Category' })).rejects.toThrow(
@@ -63,15 +72,66 @@ describe('CategoryService (unit)', () => {
   });
 
   it('should throw if db.run fails', async () => {
-    const mockRun = jest.fn().mockRejectedValue(new Error('DB insert error'));
-    jest.spyOn(dbModule, 'openDb').mockResolvedValue({
-      run: mockRun,
-      close: jest.fn(),
-    } as unknown as Awaited<ReturnType<typeof dbModule.openDb>>);
+    mockRun.mockRejectedValue(new Error('DB insert error'));
 
     const service = new CategoryService();
     await expect(service.addCategory({ name: 'New Category' })).rejects.toThrow(
       'Error creating new category in service: Error: DB insert error'
     );
+  });
+
+  describe('deleteCategory', () => {
+    it('should delete a category and its products within a transaction', async () => {
+      const mockRun = jest.fn().mockResolvedValue({ changes: 1 });
+      (dbModule.openDb as jest.Mock).mockResolvedValue({
+        run: mockRun,
+        exec: mockExec,
+        close: mockClose,
+      } as unknown as MockDb);
+      const service = new CategoryService();
+      await service.deleteCategory(1);
+
+      expect(mockExec).toHaveBeenCalledWith('BEGIN TRANSACTION');
+      expect(mockRun).toHaveBeenCalledWith('DELETE FROM products WHERE category_id = ?', [1]);
+      expect(mockRun).toHaveBeenCalledWith('DELETE FROM categories WHERE id = ?', [1]);
+      expect(mockExec).toHaveBeenCalledWith('COMMIT');
+      expect(mockClose).toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundError if the category does not exist and rollback', async () => {
+      // First call to delete products is fine, second to delete category finds nothing.
+      const mockRun = jest
+        .fn()
+        .mockResolvedValueOnce({ changes: 5 })
+        .mockResolvedValueOnce({ changes: 0 });
+
+      (dbModule.openDb as jest.Mock).mockResolvedValue({
+        run: mockRun,
+        exec: mockExec,
+        close: mockClose,
+      } as unknown as MockDb);
+      const service = new CategoryService();
+      await expect(service.deleteCategory(999)).rejects.toThrow(
+        new NotFoundError('Category with ID 999 not found.')
+      );
+
+      expect(mockExec).toHaveBeenCalledWith('BEGIN TRANSACTION');
+      expect(mockExec).toHaveBeenCalledWith('ROLLBACK');
+      expect(mockExec).not.toHaveBeenCalledWith('COMMIT');
+      expect(mockClose).toHaveBeenCalled();
+    });
+
+    it('should rollback the transaction if deleting products fails', async () => {
+      const dbError = new Error('DB write error');
+      mockRun.mockRejectedValue(dbError);
+
+      const service = new CategoryService();
+      await expect(service.deleteCategory(1)).rejects.toThrow(dbError);
+
+      expect(mockExec).toHaveBeenCalledWith('BEGIN TRANSACTION');
+      expect(mockExec).toHaveBeenCalledWith('ROLLBACK');
+      expect(mockExec).not.toHaveBeenCalledWith('COMMIT');
+      expect(mockClose).toHaveBeenCalled();
+    });
   });
 });
