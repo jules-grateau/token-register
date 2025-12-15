@@ -1,5 +1,6 @@
 import { openDb } from '../db';
 import { ProductType } from 'shared-ts';
+import { NotFoundError } from '../types/errors';
 
 export class ProductService {
   async getAllProducts(): Promise<ProductType[]> {
@@ -45,6 +46,52 @@ export class ProductService {
       return result.lastID;
     } catch (error) {
       throw new Error(`Error creating new product in service: ${String(error)}`);
+    } finally {
+      await db?.close();
+    }
+  }
+
+  async updateProduct(id: number, product: Partial<Omit<ProductType, 'id'>>): Promise<void> {
+    let db;
+    try {
+      db = await openDb();
+      const fields = Object.keys(product)
+        .map((key) => (key === 'categoryId' ? 'category_id' : key))
+        .map((key) => `${key} = ?`);
+
+      if (fields.length === 0) {
+        // Nothing to update
+        return;
+      }
+
+      const values = Object.values(product);
+      const query = `UPDATE products SET ${fields.join(', ')} WHERE id = ?`;
+
+      const result = await db.run(query, [...values, id]);
+
+      if (result.changes === 0) {
+        throw new NotFoundError(`Product with ID ${id} not found`);
+      }
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      throw new Error(`Error updating product: ${String(error)}`);
+    } finally {
+      await db?.close();
+    }
+  }
+
+  async deleteProduct(id: number): Promise<void> {
+    let db;
+    try {
+      db = await openDb();
+      const result = await db.run(`DELETE FROM products WHERE id = ?`, [id]);
+
+      if (result.changes === 0) {
+        throw new NotFoundError(`Product with ID ${id} not found`);
+      }
+    } catch (error) {
+      if (error instanceof NotFoundError) throw error;
+      throw new Error(`Error deleting product: ${String(error)}`);
     } finally {
       await db?.close();
     }

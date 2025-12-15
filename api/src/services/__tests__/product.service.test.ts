@@ -1,5 +1,6 @@
 import { ProductService } from '../product.service';
 import * as dbModule from '../../db';
+import { NotFoundError } from '../../types/errors';
 
 type MockDb = Awaited<ReturnType<typeof dbModule.openDb>>;
 
@@ -91,5 +92,100 @@ describe('ProductService (unit)', () => {
     await expect(service.addProduct(product)).rejects.toThrow(
       'Error creating new product in service: Error: DB insert error'
     );
+  });
+
+  describe('updateProduct', () => {
+    it('should update a product successfully', async () => {
+      mockRun.mockResolvedValue({ changes: 1 });
+      const service = new ProductService();
+      const productUpdate = { name: 'Updated Product', price: 199, categoryId: 1 };
+      const productId = 1;
+
+      await service.updateProduct(productId, productUpdate);
+
+      expect(mockRun).toHaveBeenCalledWith(
+        `UPDATE products SET name = ?, price = ?, category_id = ? WHERE id = ?`,
+        [productUpdate.name, productUpdate.price, productUpdate.categoryId, productId]
+      );
+    });
+
+    it('should build a partial update query correctly', async () => {
+      mockRun.mockResolvedValue({ changes: 1 });
+      const service = new ProductService();
+      const partialUpdate = { price: 250 };
+      const productId = 2;
+
+      await service.updateProduct(productId, partialUpdate);
+
+      expect(mockRun).toHaveBeenCalledWith(`UPDATE products SET price = ? WHERE id = ?`, [
+        partialUpdate.price,
+        productId,
+      ]);
+    });
+
+    it('should do nothing if no fields are provided for update', async () => {
+      const service = new ProductService();
+      const productId = 1;
+      const emptyUpdate = {};
+
+      await service.updateProduct(productId, emptyUpdate);
+
+      // Expect that no database call was made
+      expect(mockRun).not.toHaveBeenCalled();
+    });
+
+    it('should throw an error if the product to update is not found', async () => {
+      mockRun.mockResolvedValue({ changes: 0 });
+      const service = new ProductService();
+      const productUpdate = { name: 'Updated Product', price: 199, categoryId: 1 };
+      const productId = 999; // Non-existent ID
+
+      await expect(service.updateProduct(productId, productUpdate)).rejects.toThrow(
+        new NotFoundError(`Product with ID ${productId} not found`)
+      );
+    });
+
+    it('should throw an error if db.run fails during update', async () => {
+      mockRun.mockRejectedValue(new Error('DB update error'));
+      const service = new ProductService();
+      const productUpdate = { name: 'Updated Product', price: 199, categoryId: 1 };
+      const productId = 1;
+
+      await expect(service.updateProduct(productId, productUpdate)).rejects.toThrow(
+        'Error updating product: Error: DB update error'
+      );
+    });
+  });
+
+  describe('deleteProduct', () => {
+    it('should delete a product successfully', async () => {
+      mockRun.mockResolvedValue({ changes: 1 });
+      const service = new ProductService();
+      const productId = 1;
+
+      await service.deleteProduct(productId);
+
+      expect(mockRun).toHaveBeenCalledWith(`DELETE FROM products WHERE id = ?`, [productId]);
+    });
+
+    it('should throw an error if the product to delete is not found', async () => {
+      mockRun.mockResolvedValue({ changes: 0 });
+      const service = new ProductService();
+      const productId = 999; // Non-existent ID
+
+      await expect(service.deleteProduct(productId)).rejects.toThrow(
+        new NotFoundError(`Product with ID ${productId} not found`)
+      );
+    });
+
+    it('should throw an error if db.run fails during deletion', async () => {
+      mockRun.mockRejectedValue(new Error('DB delete error'));
+      const service = new ProductService();
+      const productId = 1;
+
+      await expect(service.deleteProduct(productId)).rejects.toThrow(
+        'Error deleting product: Error: DB delete error'
+      );
+    });
   });
 });

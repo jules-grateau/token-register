@@ -47,7 +47,6 @@ export class CategoryService {
         throw new NotFoundError(`Category with ID ${categoryId} not found.`);
       }
     } catch (error) {
-      // Re-throw NotFoundError, but wrap others for context.
       if (error instanceof NotFoundError) throw error;
       throw new Error(`Error updating category in service: ${String(error)}`);
     } finally {
@@ -61,14 +60,11 @@ export class CategoryService {
       db = await openDb();
       await db.exec('BEGIN TRANSACTION');
 
-      // First, delete all products associated with the category
       await db.run('DELETE FROM products WHERE category_id = ?', [categoryId]);
 
-      // Then, delete the category itself
       const result = await db.run('DELETE FROM categories WHERE id = ?', [categoryId]);
 
       if (result.changes === 0) {
-        // If no category was deleted, it means it wasn't found.
         throw new NotFoundError(`Category with ID ${categoryId} not found.`);
       }
 
@@ -76,7 +72,8 @@ export class CategoryService {
       logger.info('Category and associated products deleted for ID: %s', categoryId);
     } catch (error) {
       if (db) await db.exec('ROLLBACK');
-      throw error; // Re-throw the original error (e.g., NotFoundError or a generic Error)
+      if (error instanceof NotFoundError) throw error;
+      throw new Error(`Error deleting category in service: ${String(error)}`);
     } finally {
       await db?.close();
     }

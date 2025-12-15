@@ -155,7 +155,9 @@ describe('CategoryService (unit)', () => {
       mockRun.mockRejectedValue(dbError);
 
       const service = new CategoryService();
-      await expect(service.deleteCategory(1)).rejects.toThrow(dbError);
+      await expect(service.deleteCategory(1)).rejects.toThrow(
+        new Error('Error deleting category in service: Error: DB write error')
+      );
 
       expect(mockExec).toHaveBeenCalledWith('BEGIN TRANSACTION');
       expect(mockExec).toHaveBeenCalledWith('ROLLBACK');
