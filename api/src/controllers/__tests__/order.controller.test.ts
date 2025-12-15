@@ -2,161 +2,209 @@ import { Logger } from 'pino';
 import { OrderController } from '../order.controller';
 import type { Request, Response, NextFunction } from 'express';
 import { ValidationError, NotFoundError } from '../../types/errors';
+import { OrderService } from '../../services/order.service';
+
+jest.mock('../../services/order.service');
 
 describe('OrderController', () => {
   let controller: OrderController;
-  let mockOrderService: {
-    getAllOrders: jest.Mock;
-    createOrder: jest.Mock;
-    deleteOrder: jest.Mock;
-  };
-  let req: Partial<Request>;
-  let res: Partial<Response>;
-  let next: jest.Mock;
+  let mockRequest: Partial<Request>;
+  let mockResponse: Partial<Response>;
+  let nextFunction: jest.Mock;
+  let mockOrderService: jest.Mocked<OrderService>;
 
   beforeEach(() => {
-    mockOrderService = {
-      getAllOrders: jest.fn(),
-      createOrder: jest.fn(),
-      deleteOrder: jest.fn(),
-    };
-    controller = new OrderController();
-    controller['orderService'] = mockOrderService;
+    jest.clearAllMocks();
 
-    req = {
+    mockRequest = {
       params: {},
-      body: [],
       log: {
         info: jest.fn(),
         error: jest.fn(),
       } as unknown as Logger,
+      body: {},
     };
-    res = {
+    mockResponse = {
       json: jest.fn(),
       status: jest.fn().mockReturnThis(),
       send: jest.fn(),
     };
-    next = jest.fn();
+    nextFunction = jest.fn();
+
+    mockOrderService = new OrderService() as jest.Mocked<OrderService>;
+    controller = new OrderController(mockOrderService);
   });
 
-  it('should return all orders', async () => {
-    const orders = [{ id: 1, date: 123, items: [] }];
-    mockOrderService.getAllOrders.mockResolvedValue(orders);
+  describe('getAllOrders', () => {
+    it('should return all orders from the service', async () => {
+      const orders = [{ id: 1, date: 123, items: [] }];
+      mockOrderService.getAllOrders.mockResolvedValue(orders);
 
-    await controller.getAllOrders(req as Request, res as Response, next as NextFunction);
+      await controller.getAllOrders(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
 
-    expect(mockOrderService.getAllOrders).toHaveBeenCalled();
-    expect(res.json).toHaveBeenCalledWith(orders);
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('should handle error in getAllOrders', async () => {
-    const error = new Error('fail');
-    mockOrderService.getAllOrders.mockRejectedValue(error);
-
-    await controller.getAllOrders(req as Request, res as Response, next as NextFunction);
-    expect(next).toHaveBeenCalledWith(error);
-  });
-
-  it('should create an order', async () => {
-    const newOrder = { id: 42 };
-    req.body = [{ product: { id: 1, name: 'A', price: 10 }, quantity: 2, discountedAmount: 0 }];
-    mockOrderService.createOrder.mockResolvedValue(newOrder);
-
-    await controller.createOrder(req as Request, res as Response, next as NextFunction);
-
-    expect(mockOrderService.createOrder).toHaveBeenCalledWith(req.body);
-    expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith(newOrder);
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('should return 400 if cartItems is not an array', async () => {
-    req.body = {};
-    await controller.createOrder(req as Request, res as Response, next as NextFunction);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({
-      error: 'Invalid request body: Expected an array of cart items.',
+      expect(mockOrderService.getAllOrders).toHaveBeenCalled();
+      expect(mockResponse.json).toHaveBeenCalledWith(orders);
+      expect(nextFunction).not.toHaveBeenCalled();
     });
-    expect(next).not.toHaveBeenCalled();
+
+    it('should forward errors to the next function', async () => {
+      const error = new Error('fail');
+      mockOrderService.getAllOrders.mockRejectedValue(error);
+
+      await controller.getAllOrders(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
+      expect(nextFunction).toHaveBeenCalledWith(error);
+    });
   });
 
-  it('should handle ValidationError in createOrder', async () => {
-    const error = new ValidationError('bad');
-    req.body = [];
-    mockOrderService.createOrder.mockRejectedValue(error);
+  describe('createOrder', () => {
+    it('should create an order and return 201', async () => {
+      const newOrder = { id: 42 };
+      mockRequest.body = [
+        { product: { id: 1, name: 'A', price: 10 }, quantity: 2, discountedAmount: 0 },
+      ];
+      mockOrderService.createOrder.mockResolvedValue(newOrder);
 
-    await controller.createOrder(req as Request, res as Response, next as NextFunction);
+      await controller.createOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
 
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: error.message });
-    expect(next).not.toHaveBeenCalled();
+      expect(mockOrderService.createOrder).toHaveBeenCalledWith(mockRequest.body);
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
+      expect(mockResponse.json).toHaveBeenCalledWith(newOrder);
+      expect(nextFunction).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 if cartItems is not an array', async () => {
+      mockRequest.body = {};
+      await controller.createOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: 'Invalid request body: Expected an array of cart items.',
+      });
+      expect(nextFunction).not.toHaveBeenCalled();
+    });
+
+    it('should handle ValidationError and return 400', async () => {
+      const error = new ValidationError('bad');
+      mockRequest.body = [];
+      mockOrderService.createOrder.mockRejectedValue(error);
+
+      await controller.createOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({ error: error.message });
+      expect(nextFunction).not.toHaveBeenCalled();
+    });
+
+    it('should forward other errors to the next function', async () => {
+      const error = new Error('fail');
+      mockRequest.body = [];
+      mockOrderService.createOrder.mockRejectedValue(error);
+
+      await controller.createOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
+
+      expect(nextFunction).toHaveBeenCalledWith(error);
+    });
   });
 
-  it('should handle other errors in createOrder', async () => {
-    const error = new Error('fail');
-    req.body = [];
-    mockOrderService.createOrder.mockRejectedValue(error);
+  describe('deleteOrder', () => {
+    it('should delete an order and return 204', async () => {
+      mockRequest.params = { id: '1' };
+      mockOrderService.deleteOrder.mockResolvedValue(undefined);
 
-    await controller.createOrder(req as Request, res as Response, next as NextFunction);
+      await controller.deleteOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
 
-    expect(next).toHaveBeenCalledWith(error);
-  });
+      expect(mockOrderService.deleteOrder).toHaveBeenCalledWith(1);
+      expect(mockResponse.status).toHaveBeenCalledWith(204);
+      expect(mockResponse.send).toHaveBeenCalled();
+      expect(nextFunction).not.toHaveBeenCalled();
+    });
 
-  it('should delete an order', async () => {
-    req.params = { id: '1' };
-    mockOrderService.deleteOrder.mockResolvedValue(undefined);
+    it('should return 400 for an invalid order ID', async () => {
+      mockRequest.params = { id: 'not-a-number' };
 
-    await controller.deleteOrder(req as Request, res as Response, next as NextFunction);
+      await controller.deleteOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
 
-    expect(mockOrderService.deleteOrder).toHaveBeenCalledWith(1);
-    expect(res.status).toHaveBeenCalledWith(204);
-    expect(res.send).toHaveBeenCalled();
-    expect(next).not.toHaveBeenCalled();
-  });
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({ error: 'Invalid order ID format' });
+      expect(nextFunction).not.toHaveBeenCalled();
+    });
 
-  it('should return 400 for invalid order ID', async () => {
-    req.params = { id: 'not-a-number' };
+    it('should handle NotFoundError and return 404', async () => {
+      mockRequest.params = { id: '1' };
+      const error = new NotFoundError('not found');
+      mockOrderService.deleteOrder.mockRejectedValue(error);
 
-    await controller.deleteOrder(req as Request, res as Response, next as NextFunction);
+      await controller.deleteOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
 
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Invalid order ID format' });
-    expect(next).not.toHaveBeenCalled();
-  });
+      expect(mockResponse.status).toHaveBeenCalledWith(404);
+      expect(mockResponse.json).toHaveBeenCalledWith({ error: error.message });
+      expect(nextFunction).not.toHaveBeenCalled();
+    });
 
-  it('should handle NotFoundError in deleteOrder', async () => {
-    req.params = { id: '1' };
-    const error = new NotFoundError('not found');
-    mockOrderService.deleteOrder.mockRejectedValue(error);
+    it('should handle ValidationError and return 400', async () => {
+      mockRequest.params = { id: '1' };
+      const error = new ValidationError('bad');
+      mockOrderService.deleteOrder.mockRejectedValue(error);
 
-    await controller.deleteOrder(req as Request, res as Response, next as NextFunction);
+      await controller.deleteOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
 
-    expect(res.status).toHaveBeenCalledWith(404);
-    expect(res.json).toHaveBeenCalledWith({ error: error.message });
-    expect(next).not.toHaveBeenCalled();
-  });
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({ error: error.message });
+      expect(nextFunction).not.toHaveBeenCalled();
+    });
 
-  it('should handle ValidationError in deleteOrder', async () => {
-    req.params = { id: '1' };
-    const error = new ValidationError('bad');
-    mockOrderService.deleteOrder.mockRejectedValue(error);
+    it('should forward other errors to the next function', async () => {
+      mockRequest.params = { id: '1' };
+      const error = new Error('fail');
+      mockOrderService.deleteOrder.mockRejectedValue(error);
 
-    await controller.deleteOrder(req as Request, res as Response, next as NextFunction);
+      await controller.deleteOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
 
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: error.message });
-    expect(next).not.toHaveBeenCalled();
-  });
-
-  it('should handle other errors in deleteOrder', async () => {
-    req.params = { id: '1' };
-    const error = new Error('fail');
-    mockOrderService.deleteOrder.mockRejectedValue(error);
-
-    await controller.deleteOrder(req as Request, res as Response, next as NextFunction);
-
-    expect(next).toHaveBeenCalledWith(error);
+      expect(nextFunction).toHaveBeenCalledWith(error);
+    });
   });
 });

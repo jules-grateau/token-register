@@ -80,6 +80,35 @@ describe('CategoryService (unit)', () => {
     );
   });
 
+  describe('updateCategory', () => {
+    it('should update a category', async () => {
+      mockRun.mockResolvedValue({ changes: 1 });
+      const service = new CategoryService();
+      const categoryUpdate = { name: 'Updated Drinks' };
+
+      await service.updateCategory(1, categoryUpdate);
+
+      expect(mockRun).toHaveBeenCalledWith('UPDATE categories SET name = ? WHERE id = ?', [
+        categoryUpdate.name,
+        1,
+      ]);
+    });
+
+    it('should throw NotFoundError if the category to update does not exist', async () => {
+      mockRun.mockResolvedValue({ changes: 0 });
+      const service = new CategoryService();
+      await expect(service.updateCategory(999, { name: 'Does not exist' })).rejects.toThrow(
+        new NotFoundError('Category with ID 999 not found.')
+      );
+    });
+
+    it('should throw if db.run fails during update', async () => {
+      mockRun.mockRejectedValue(new Error('DB update error'));
+      const service = new CategoryService();
+      await expect(service.updateCategory(1, { name: 'Fail' })).rejects.toThrow('DB update error');
+    });
+  });
+
   describe('deleteCategory', () => {
     it('should delete a category and its products within a transaction', async () => {
       const mockRun = jest.fn().mockResolvedValue({ changes: 1 });

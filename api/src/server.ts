@@ -7,6 +7,9 @@ import logger from './utils/logger';
 import path from 'path';
 import { CategoryController, ProductController, OrderController } from './controllers';
 import { AppError, ValidationError, NotFoundError } from './types/errors';
+import { CategoryService } from './services/category.service';
+import { ProductService } from './services/product.service';
+import { OrderService } from './services/order.service';
 
 dotenv.config();
 const API_ROUTE = '/api';
@@ -23,9 +26,9 @@ app.use(
 app.use(express.json());
 app.use(basicAuthMiddleware);
 
-const categoryController = new CategoryController();
-const productController = new ProductController();
-const orderController = new OrderController();
+const categoryController = new CategoryController(new CategoryService(), new ProductService());
+const productController = new ProductController(new ProductService());
+const orderController = new OrderController(new OrderService());
 
 app.use(API_ROUTE + categoryController.path, categoryController.router);
 app.use(API_ROUTE + productController.path, productController.router);

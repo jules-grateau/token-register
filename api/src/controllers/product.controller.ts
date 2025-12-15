@@ -5,10 +5,10 @@ import { ProductType } from 'shared-ts';
 export class ProductController {
   public path = '/products';
   public router = Router();
-  private productService: ProductService;
+  private readonly productService: ProductService;
 
-  constructor() {
-    this.productService = new ProductService();
+  constructor(productService: ProductService) {
+    this.productService = productService;
     this.initializeRoutes();
   }
 

@@ -34,6 +34,27 @@ export class CategoryService {
     }
   }
 
+  async updateCategory(categoryId: number, category: Omit<CategoryType, 'id'>): Promise<void> {
+    let db;
+    try {
+      db = await openDb();
+      const result = await db.run('UPDATE categories SET name = ? WHERE id = ?', [
+        category.name,
+        categoryId,
+      ]);
+
+      if (result.changes === 0) {
+        throw new NotFoundError(`Category with ID ${categoryId} not found.`);
+      }
+    } catch (error) {
+      // Re-throw NotFoundError, but wrap others for context.
+      if (error instanceof NotFoundError) throw error;
+      throw new Error(`Error updating category in service: ${String(error)}`);
+    } finally {
+      await db?.close();
+    }
+  }
+
   async deleteCategory(categoryId: number): Promise<void> {
     let db;
     try {

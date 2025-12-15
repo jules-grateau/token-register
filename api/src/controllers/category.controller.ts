@@ -7,12 +7,12 @@ import { NotFoundError } from '../types/errors';
 export class CategoryController {
   public path = '/categories';
   public router = Router();
-  private categoryService: CategoryService;
-  private productService: ProductService;
+  private readonly categoryService: CategoryService;
+  private readonly productService: ProductService;
 
-  constructor() {
-    this.categoryService = new CategoryService();
-    this.productService = new ProductService();
+  constructor(categoryService: CategoryService, productService: ProductService) {
+    this.categoryService = categoryService;
+    this.productService = productService;
     this.initializeRoutes();
   }
 
@@ -20,6 +20,7 @@ export class CategoryController {
     this.router.get('/', this.getAllCategories);
     this.router.get('/:categoryId/products', this.getProductsByCategory);
     this.router.post('/', this.addCategory);
+    this.router.put('/:categoryId', this.updateCategory);
     this.router.delete('/:categoryId', this.deleteCategory);
   }
 
@@ -74,6 +75,39 @@ export class CategoryController {
       res.status(201).json({ id });
     } catch (error) {
       req.log.error('Controller Error: Error creating category: %s', error);
+      next(error);
+    }
+  };
+
+  public updateCategory = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    const categoryIdParam = req.params.categoryId;
+    req.log.info(`Controller: Updating category with ID: ${categoryIdParam}`);
+    try {
+      const categoryId = parseInt(categoryIdParam, 10);
+      if (isNaN(categoryId)) {
+        res.status(400).json({ error: 'Invalid category ID format' });
+        return;
+      }
+
+      const { name } = req.body as Omit<CategoryType, 'id'>;
+      if (!name) {
+        res.status(400).json({ error: 'Category name is required' });
+        return;
+      }
+
+      await this.categoryService.updateCategory(categoryId, { name });
+
+      res.status(204).send();
+    } catch (error) {
+      req.log.error(`Controller Error: Error updating category ${categoryIdParam}: %s`, error);
+      if (error instanceof NotFoundError) {
+        res.status(404).json({ error: error.message });
+        return;
+      }
       next(error);
     }
   };

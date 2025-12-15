@@ -6,10 +6,10 @@ import { ValidationError, NotFoundError } from '../types/errors';
 export class OrderController {
   public path = '/orders';
   public router = Router();
-  private orderService: OrderService;
+  private readonly orderService: OrderService;
 
-  constructor() {
-    this.orderService = new OrderService();
+  constructor(orderService: OrderService) {
+    this.orderService = orderService;
     this.initializeRoutes();
   }
 
