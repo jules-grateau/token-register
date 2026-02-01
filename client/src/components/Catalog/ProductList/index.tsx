@@ -8,9 +8,20 @@ interface ProductListProps {
   isError: boolean;
   products: ProductType[] | undefined;
   onAddToCart: (product: ProductType) => void;
+  isEditMode?: boolean;
+  onEditProduct?: (product: ProductType) => void;
+  onDeleteProduct?: (product: ProductType) => void;
 }
 
-const ProductList: React.FC<ProductListProps> = ({ isLoading, isError, products, onAddToCart }) => {
+const ProductList: React.FC<ProductListProps> = ({
+  isLoading,
+  isError,
+  products,
+  onAddToCart,
+  isEditMode = false,
+  onEditProduct,
+  onDeleteProduct,
+}) => {
   const { t } = useTranslation();
 
   return (
@@ -23,7 +34,14 @@ const ProductList: React.FC<ProductListProps> = ({ isLoading, isError, products,
         <p>{t('no_products')}</p>
       ) : (
         products.map((product) => (
-          <ProductCard key={product.id} product={product} onClick={() => onAddToCart(product)} />
+          <ProductCard
+            key={product.id}
+            product={product}
+            onClick={() => onAddToCart(product)}
+            isEditMode={isEditMode}
+            onEdit={onEditProduct}
+            onDelete={onDeleteProduct}
+          />
         ))
       )}
     </>

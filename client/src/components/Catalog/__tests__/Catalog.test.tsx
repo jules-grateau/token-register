@@ -18,9 +18,15 @@ jest.mock('react-i18next', () => ({
 jest.mock('../../../services/categories', () => ({
   useGetCategoriesQuery: jest.fn(),
   useGetProductsByCategoryQuery: jest.fn(),
+  useCreateCategoryMutation: jest.fn(() => [jest.fn(), {}]),
+  useUpdateCategoryMutation: jest.fn(() => [jest.fn(), {}]),
+  useDeleteCategoryMutation: jest.fn(() => [jest.fn(), {}]),
 }));
 jest.mock('../../../services/product', () => ({
   useGetProductsQuery: jest.fn(),
+  useCreateProductMutation: jest.fn(() => [jest.fn(), {}]),
+  useUpdateProductMutation: jest.fn(() => [jest.fn(), {}]),
+  useDeleteProductMutation: jest.fn(() => [jest.fn(), {}]),
 }));
 
 const mockDispatch = jest.fn();

@@ -30,7 +30,13 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   };
 
   return (
-    <Modal opened={isOpen} onClose={onClose} title={title || t('confirm_operation')} centered>
+    <Modal
+      opened={isOpen}
+      onClose={onClose}
+      title={title || t('confirm_operation')}
+      centered
+      closeButtonProps={{ 'aria-label': t('close') }}
+    >
       <Stack>
         {children}
         {extraFooter}
