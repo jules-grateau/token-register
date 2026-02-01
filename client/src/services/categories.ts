@@ -11,18 +11,11 @@ export const categoriesApi = createApi({
   tagTypes: ['Categories', 'Products'],
   endpoints: (build) => ({
     getCategories: build.query<CategoryType[], void>({
-      query: () => ({
-        url: '',
-        method: 'GET',
-      }),
-      transformResponse: (response: CategoryType[]) => response,
+      query: () => '',
       providesTags: ['Categories'],
     }),
     getProductsByCategory: build.query<ProductType[], number>({
-      query: (categoryId) => ({
-        url: `/${categoryId}/products`,
-        method: 'GET',
-      }),
+      query: (categoryId) => `/${categoryId}/products`,
       transformResponse: (response: ApiProductType[]) => response.map(mapProduct),
       providesTags: ['Products'],
     }),

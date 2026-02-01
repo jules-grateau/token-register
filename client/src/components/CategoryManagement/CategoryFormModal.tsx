@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, TextInput, Button, Group, Stack } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,7 @@ import { toast } from 'react-toastify';
 import type { CategoryType } from 'shared-ts';
 import { useCreateCategoryMutation, useUpdateCategoryMutation } from '../../services/categories';
 import { setSelectedCategory } from '../../redux/selectedCategorySlice';
+import { extractApiError } from '../../utils/extractApiError';
 import ConfirmationModal from '../ConfirmationModal';
 
 interface CategoryFormModalProps {
@@ -69,16 +70,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
       form.reset();
       onClose();
     } catch (err) {
-      const errorMessage =
-        err &&
-        typeof err === 'object' &&
-        'data' in err &&
-        err.data &&
-        typeof err.data === 'object' &&
-        'error' in err.data
-          ? String(err.data.error)
-          : t('errors.unknown');
-      toast.error(errorMessage);
+      toast.error(extractApiError(err, t('errors.unknown')));
     }
   };
 
@@ -96,16 +88,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
       form.reset();
       onClose();
     } catch (err) {
-      const errorMessage =
-        err &&
-        typeof err === 'object' &&
-        'data' in err &&
-        err.data &&
-        typeof err.data === 'object' &&
-        'error' in err.data
-          ? String(err.data.error)
-          : t('errors.unknown');
-      toast.error(errorMessage);
+      toast.error(extractApiError(err, t('errors.unknown')));
       setShowConfirmation(false);
     }
   };

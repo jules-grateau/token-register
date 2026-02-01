@@ -1,4 +1,3 @@
-import React from 'react';
 import { Button, Group, Text } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +6,7 @@ interface NewCategoryButtonProps {
   onClick: () => void;
 }
 
-export const NewCategoryButton: React.FC<NewCategoryButtonProps> = ({ onClick }) => {
+function NewCategoryButton({ onClick }: NewCategoryButtonProps): React.ReactElement {
   const { t } = useTranslation();
 
   return (
@@ -30,6 +29,6 @@ export const NewCategoryButton: React.FC<NewCategoryButtonProps> = ({ onClick })
       </Group>
     </Button>
   );
-};
+}
 
 export default NewCategoryButton;

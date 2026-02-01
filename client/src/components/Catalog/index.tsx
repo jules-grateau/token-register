@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SimpleGrid, Paper, ScrollArea, Group, Tabs, Text, ActionIcon, Stack } from '@mantine/core';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,7 +20,14 @@ import CategoryDeleteConfirm from '../CategoryManagement/CategoryDeleteConfirm';
 
 export const ALL_CATEGORIES_ID = 0;
 
-const Catalog: React.FC = () => {
+interface CategoryTab {
+  label: string;
+  value: string;
+  id: number;
+  categoryData?: CategoryType;
+}
+
+function Catalog(): React.ReactElement {
   const dispatch = useDispatch();
   const categoriesQuery = useGetCategoriesQuery();
   const productsQuery = useGetProductsQuery();
@@ -57,17 +64,9 @@ const Catalog: React.FC = () => {
     setIsProductFormOpen(true);
   };
 
-  const handleDeleteProduct = (product: ProductType) => {
-    setDeletingProduct(product);
-  };
-
   const handleCloseProductForm = () => {
     setIsProductFormOpen(false);
     setEditingProduct(null);
-  };
-
-  const handleCloseProductDeleteConfirm = () => {
-    setDeletingProduct(null);
   };
 
   const handleEditCategory = (category: CategoryType) => {
@@ -75,32 +74,19 @@ const Catalog: React.FC = () => {
     setIsCategoryFormOpen(true);
   };
 
-  const handleDeleteCategory = (category: CategoryType) => {
-    setDeletingCategory(category);
-  };
-
   const handleCloseCategoryForm = () => {
     setIsCategoryFormOpen(false);
     setEditingCategory(null);
   };
 
-  const handleCloseCategoryDeleteConfirm = () => {
-    setDeletingCategory(null);
-  };
+  const productSource =
+    selectedCategory === ALL_CATEGORIES_ID
+      ? productsQuery
+      : selectedCategory !== null
+        ? productsByCategoryQuery
+        : undefined;
 
-  let productSource;
-  if (selectedCategory === ALL_CATEGORIES_ID) {
-    productSource = productsQuery;
-  } else if (selectedCategory !== null) {
-    productSource = productsByCategoryQuery;
-  }
-
-  const categoryData: Array<{
-    label: string;
-    value: string;
-    id: number;
-    categoryData?: CategoryType;
-  }> = [
+  const categoryTabs: CategoryTab[] = [
     { label: t('all_categories'), value: String(ALL_CATEGORIES_ID), id: ALL_CATEGORIES_ID },
     ...(categoriesQuery.currentData?.map((category) => ({
       label: category.name,
@@ -110,43 +96,49 @@ const Catalog: React.FC = () => {
     })) || []),
   ];
 
-  const categoryContent = () => {
-    if (categoriesQuery.isLoading) return <p>{t('loading_categories')}</p>;
-    if (categoriesQuery.isError) return <p>{t('error_loading_categories')}</p>;
-    if (!categoryData || categoryData.length === 0) return <p>{t('no_categories')}</p>;
+  const renderCategoryContent = (): React.ReactNode => {
+    if (categoriesQuery.isLoading) {
+      return <p>{t('loading_categories')}</p>;
+    }
+    if (categoriesQuery.isError) {
+      return <p>{t('error_loading_categories')}</p>;
+    }
+    if (categoryTabs.length === 0) {
+      return <p>{t('no_categories')}</p>;
+    }
 
     return (
       <>
-        {categoryData.map((category) => (
-          <Tabs.Tab key={category.value} value={category.value} w="100%" p={0}>
-            <Group
-              justify="space-between"
-              wrap="nowrap"
-              gap={0}
-              align="stretch"
-              style={{
-                minHeight: '80px',
-                background:
-                  String(selectedCategory) === category.value
-                    ? 'var(--mantine-color-dark-5)'
-                    : 'transparent',
-              }}
-            >
-              <Text
-                size="lg"
-                fw={700}
-                truncate
-                flex={1}
-                px="md"
-                py="md"
-                c="white"
-                style={{ alignContent: 'center' }}
+        {categoryTabs.map((category) => {
+          const isSelected = String(selectedCategory) === category.value;
+          const { categoryData } = category;
+          const canEdit = isEditMode && category.id !== ALL_CATEGORIES_ID && categoryData;
+
+          return (
+            <Tabs.Tab key={category.value} value={category.value} w="100%" p={0}>
+              <Group
+                justify="space-between"
+                wrap="nowrap"
+                gap={0}
+                align="stretch"
+                style={{
+                  minHeight: '80px',
+                  background: isSelected ? 'var(--mantine-color-dark-5)' : 'transparent',
+                }}
               >
-                {category.label}
-              </Text>
-              {isEditMode &&
-                category.id !== ALL_CATEGORIES_ID &&
-                category.categoryData !== undefined && (
+                <Text
+                  size="lg"
+                  fw={700}
+                  truncate
+                  flex={1}
+                  px="md"
+                  py="md"
+                  c="white"
+                  style={{ alignContent: 'center' }}
+                >
+                  {category.label}
+                </Text>
+                {canEdit && (
                   <Group
                     gap={0}
                     wrap="nowrap"
@@ -161,9 +153,7 @@ const Catalog: React.FC = () => {
                       flex={1}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (category.categoryData) {
-                          handleEditCategory(category.categoryData);
-                        }
+                        handleEditCategory(categoryData);
                       }}
                       aria-label={t('actions.edit')}
                     >
@@ -176,9 +166,7 @@ const Catalog: React.FC = () => {
                       flex={1}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (category.categoryData) {
-                          handleDeleteCategory(category.categoryData);
-                        }
+                        setDeletingCategory(categoryData);
                       }}
                       aria-label={t('delete')}
                     >
@@ -186,9 +174,10 @@ const Catalog: React.FC = () => {
                     </ActionIcon>
                   </Group>
                 )}
-            </Group>
-          </Tabs.Tab>
-        ))}
+              </Group>
+            </Tabs.Tab>
+          );
+        })}
         {isEditMode && <NewCategoryButton onClick={() => setIsCategoryFormOpen(true)} />}
       </>
     );
@@ -209,9 +198,7 @@ const Catalog: React.FC = () => {
             <Tabs.List style={{ flex: isEditMode ? 2 : 1 }}>
               <ScrollArea h="100%">
                 <Loader isLoading={categoriesQuery.isFetching} />
-                <Stack gap="xs">
-                  {categoryContent()}
-                </Stack>
+                <Stack gap="xs">{renderCategoryContent()}</Stack>
               </ScrollArea>
             </Tabs.List>
 
@@ -228,7 +215,7 @@ const Catalog: React.FC = () => {
                       isLoading={productSource.isFetching}
                       isEditMode={isEditMode}
                       onEditProduct={handleEditProduct}
-                      onDeleteProduct={handleDeleteProduct}
+                      onDeleteProduct={setDeletingProduct}
                     />
                   </SimpleGrid>
                 </ScrollArea>
@@ -247,7 +234,7 @@ const Catalog: React.FC = () => {
 
       <ProductDeleteConfirm
         isOpen={!!deletingProduct}
-        onClose={handleCloseProductDeleteConfirm}
+        onClose={() => setDeletingProduct(null)}
         product={deletingProduct}
       />
 
@@ -259,11 +246,11 @@ const Catalog: React.FC = () => {
 
       <CategoryDeleteConfirm
         isOpen={!!deletingCategory}
-        onClose={handleCloseCategoryDeleteConfirm}
+        onClose={() => setDeletingCategory(null)}
         category={deletingCategory}
       />
     </>
   );
-};
+}
 
 export default Catalog;

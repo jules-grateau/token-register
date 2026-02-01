@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Box, Flex, Menu, ActionIcon, Group, Text } from '@mantine/core';
 import { IconSettings } from '@tabler/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -9,7 +9,7 @@ import OrderHistoryModal from '../OrderHistoryModal';
 import CartConfirmationModal from '../CartConfirmationModal';
 import { toggleEditMode, selectIsEditMode } from '../../redux/editModeSlice';
 
-export const Register: React.FC = () => {
+export function Register(): React.ReactElement {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const isEditMode = useSelector(selectIsEditMode);
@@ -79,4 +79,4 @@ export const Register: React.FC = () => {
       />
     </Flex>
   );
-};
+}
