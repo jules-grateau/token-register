@@ -54,5 +54,48 @@
   "total_items": "Total items",
   "clear_cart": "Clear cart",
   "minus": "Minus",
-  "plus": "Plus"
+  "plus": "Plus",
+  "edit_mode": {
+    "toggle": "Edit Mode",
+    "exit": "Exit Edit Mode",
+    "active": "Edit Mode Active"
+  },
+  "product_management": {
+    "new": "New Product",
+    "edit": "Edit Product",
+    "delete": "Delete Product",
+    "delete_confirm": "Are you sure you want to delete \"{{name}}\"?",
+    "created": "Product created successfully",
+    "updated": "Product updated successfully",
+    "deleted": "Product deleted successfully",
+    "form": {
+      "name": "Product Name",
+      "price": "Price (tokens)",
+      "category": "Category"
+    }
+  },
+  "category_management": {
+    "new": "New Category",
+    "edit": "Edit Category",
+    "delete": "Delete Category",
+    "delete_confirm": "Delete \"{{name}}\" and {{count}} products?",
+    "delete_confirm_no_products": "Delete \"{{name}}\"?",
+    "created": "Category created successfully",
+    "updated": "Category updated successfully",
+    "deleted": "Category deleted successfully",
+    "form": {
+      "name": "Category Name"
+    }
+  },
+  "actions": {
+    "save": "Save",
+    "edit": "Edit",
+    "create": "Create"
+  },
+  "errors": {
+    "required": "This field is required",
+    "min_price": "Price must be 0 or greater",
+    "unknown": "An error occurred. Please try again.",
+    "network": "Network error. Please check your connection."
+  }
 }

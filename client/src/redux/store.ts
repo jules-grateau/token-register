@@ -5,6 +5,7 @@ import { ordersApi } from '../services/orders';
 import { categoriesApi } from '../services/categories';
 import { loadCartFromLocalStorage } from '../utils/localStorageCart';
 import { selectedCategoryReducer } from './selectedCategorySlice';
+import { editModeReducer } from './editModeSlice';
 import listenerMiddleware from './listeners';
 
 const preloadedCart = loadCartFromLocalStorage();
@@ -19,6 +20,7 @@ export const store = configureStore({
     [categoriesApi.reducerPath]: categoriesApi.reducer,
     cart: cartReducer,
     selectedCategory: selectedCategoryReducer,
+    editMode: editModeReducer,
   },
   preloadedState: preloadedState as RootState,
   middleware: (getDefaultMiddleware) =>
@@ -34,5 +36,6 @@ export interface RootState {
   [ordersApi.reducerPath]: ReturnType<typeof ordersApi.reducer>;
   [categoriesApi.reducerPath]: ReturnType<typeof categoriesApi.reducer>;
   cart: CartState;
+  editMode: { isEditMode: boolean };
 }
 export type AppDispatch = typeof store.dispatch;

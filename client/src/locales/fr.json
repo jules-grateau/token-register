@@ -54,5 +54,48 @@
   "total_items": "Articles",
   "clear_cart": "Vider le panier",
   "minus": "Moins",
-  "plus": "Plus"
+  "plus": "Plus",
+  "edit_mode": {
+    "toggle": "Mode Édition",
+    "exit": "Quitter le Mode Édition",
+    "active": "Mode Édition Actif"
+  },
+  "product_management": {
+    "new": "Nouveau Produit",
+    "edit": "Modifier le Produit",
+    "delete": "Supprimer le Produit",
+    "delete_confirm": "Voulez-vous vraiment supprimer \"{{name}}\" ?",
+    "created": "Produit créé avec succès",
+    "updated": "Produit mis à jour avec succès",
+    "deleted": "Produit supprimé avec succès",
+    "form": {
+      "name": "Nom du Produit",
+      "price": "Prix (jetons)",
+      "category": "Catégorie"
+    }
+  },
+  "category_management": {
+    "new": "Nouvelle Catégorie",
+    "edit": "Modifier la Catégorie",
+    "delete": "Supprimer la Catégorie",
+    "delete_confirm": "Supprimer \"{{name}}\" et {{count}} produits ?",
+    "delete_confirm_no_products": "Supprimer \"{{name}}\" ?",
+    "created": "Catégorie créée avec succès",
+    "updated": "Catégorie mise à jour avec succès",
+    "deleted": "Catégorie supprimée avec succès",
+    "form": {
+      "name": "Nom de la Catégorie"
+    }
+  },
+  "actions": {
+    "save": "Enregistrer",
+    "edit": "Modifier",
+    "create": "Créer"
+  },
+  "errors": {
+    "required": "Ce champ est obligatoire",
+    "min_price": "Le prix doit être 0 ou plus",
+    "unknown": "Une erreur s'est produite. Veuillez réessayer.",
+    "network": "Erreur réseau. Veuillez vérifier votre connexion."
+  }
 }

@@ -23,3 +23,8 @@ body,
   height: 100%;
   width: 100;
 }
+
+.new-category-button:hover {
+  background-color: var(--mantine-color-dark-6);
+  border-color: var(--mantine-color-blue-6);
+}
