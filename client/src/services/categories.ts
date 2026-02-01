@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { CategoryType, ProductType, PostAPIResponseType } from 'shared-ts';
 import { BASE_API_URL } from '../config';
+import { ApiProductType, mapProduct } from './mappers';
 
 const API_URL = BASE_API_URL + '/categories';
 
@@ -22,7 +23,7 @@ export const categoriesApi = createApi({
         url: `/${categoryId}/products`,
         method: 'GET',
       }),
-      transformResponse: (response: ProductType[]) => response,
+      transformResponse: (response: ApiProductType[]) => response.map(mapProduct),
       providesTags: ['Products'],
     }),
     createCategory: build.mutation<PostAPIResponseType, Omit<CategoryType, 'id'>>({

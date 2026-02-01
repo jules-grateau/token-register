@@ -3,6 +3,7 @@ import type { TypedStartListening, TypedAddListener } from '@reduxjs/toolkit';
 import type { RootState, AppDispatch } from '../store';
 import orderAddedListener from './orderAddedListener';
 import cartUpdateListener from './cartUpdateListener';
+import productMutationListener from './productMutationListener';
 
 const listenerMiddleware = createListenerMiddleware<RootState>();
 export default listenerMiddleware;
@@ -13,3 +14,4 @@ export const addAppListener = addListener as TypedAddListener<RootState, AppDisp
 
 orderAddedListener(startAppListening);
 cartUpdateListener(startAppListening);
+productMutationListener(startAppListening);

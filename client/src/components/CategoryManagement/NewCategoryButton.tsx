@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Text, Center } from '@mantine/core';
+import { Button, Group, Text } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,34 +11,24 @@ export const NewCategoryButton: React.FC<NewCategoryButtonProps> = ({ onClick })
   const { t } = useTranslation();
 
   return (
-    <Box
+    <Button
       onClick={onClick}
-      p="md"
+      variant="default"
+      radius={0}
       w="100%"
-      role="button"
-      tabIndex={0}
+      h={60}
       aria-label={t('category_management.new')}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      className="new-category-button"
-      style={{
-        cursor: 'pointer',
-        borderRadius: '4px',
-        border: '2px dashed var(--mantine-color-default-border)',
-        transition: 'all 0.2s',
+      styles={{
+        root: { borderStyle: 'dashed' },
       }}
     >
-      <Center>
-        <IconPlus size={18} style={{ marginRight: '8px' }} />
-        <Text fw={600} size="sm">
+      <Group gap="sm" justify="center">
+        <IconPlus size={24} stroke={1.5} />
+        <Text fw={600} size="md">
           {t('category_management.new')}
         </Text>
-      </Center>
-    </Box>
+      </Group>
+    </Button>
   );
 };
 

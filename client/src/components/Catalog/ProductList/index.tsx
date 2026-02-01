@@ -31,7 +31,7 @@ const ProductList: React.FC<ProductListProps> = ({
       ) : isError ? (
         <p>{t('error_loading_products')}</p>
       ) : !products || products.length === 0 ? (
-        <p>{t('no_products')}</p>
+        !isEditMode && <p>{t('no_products')}</p>
       ) : (
         products.map((product) => (
           <ProductCard

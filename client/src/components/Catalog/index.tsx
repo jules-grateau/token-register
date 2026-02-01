@@ -47,7 +47,9 @@ const Catalog: React.FC = () => {
   }, [dispatch, selectedCategory]);
 
   const handleAddToCart = (product: ProductType) => {
-    dispatch(add(product));
+    if (!isEditMode) {
+      dispatch(add(product));
+    }
   };
 
   const handleEditProduct = (product: ProductType) => {
@@ -116,17 +118,47 @@ const Catalog: React.FC = () => {
     return (
       <>
         {categoryData.map((category) => (
-          <Tabs.Tab key={category.value} value={category.value} w="100%" p="md">
-            <Group justify="space-between" w="100%">
-              <Text fw={700}>{category.label}</Text>
+          <Tabs.Tab key={category.value} value={category.value} w="100%" p={0}>
+            <Group
+              justify="space-between"
+              wrap="nowrap"
+              gap={0}
+              align="stretch"
+              style={{
+                minHeight: '80px',
+                background:
+                  String(selectedCategory) === category.value
+                    ? 'var(--mantine-color-dark-5)'
+                    : 'transparent',
+              }}
+            >
+              <Text
+                size="lg"
+                fw={700}
+                truncate
+                flex={1}
+                px="md"
+                py="md"
+                c="white"
+                style={{ alignContent: 'center' }}
+              >
+                {category.label}
+              </Text>
               {isEditMode &&
                 category.id !== ALL_CATEGORIES_ID &&
                 category.categoryData !== undefined && (
-                  <Group gap="xs">
+                  <Group
+                    gap={0}
+                    wrap="nowrap"
+                    align="stretch"
+                    onClick={(e) => e.stopPropagation()}
+                    w="50%"
+                  >
                     <ActionIcon
                       variant="subtle"
-                      color="blue"
-                      size="lg"
+                      radius={0}
+                      h="auto"
+                      flex={1}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (category.categoryData) {
@@ -135,12 +167,13 @@ const Catalog: React.FC = () => {
                       }}
                       aria-label={t('actions.edit')}
                     >
-                      <IconEdit size={22} />
+                      <IconEdit size={24} color="var(--mantine-primary-color-filled)" />
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"
-                      color="red"
-                      size="lg"
+                      radius={0}
+                      h="auto"
+                      flex={1}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (category.categoryData) {
@@ -149,7 +182,7 @@ const Catalog: React.FC = () => {
                       }}
                       aria-label={t('delete')}
                     >
-                      <IconTrash size={22} />
+                      <IconTrash size={24} color="var(--mantine-color-red-6)" />
                     </ActionIcon>
                   </Group>
                 )}
@@ -173,22 +206,17 @@ const Catalog: React.FC = () => {
             flex={1}
             h="100%"
           >
-            <Tabs.List>
+            <Tabs.List style={{ flex: isEditMode ? 2 : 1 }}>
               <ScrollArea h="100%">
                 <Loader isLoading={categoriesQuery.isFetching} />
-                <Stack gap="xs" p="sm">
+                <Stack gap="xs">
                   {categoryContent()}
                 </Stack>
               </ScrollArea>
             </Tabs.List>
 
             {productSource && (
-              <Tabs.Panel
-                value={String(selectedCategory)}
-                style={{ flex: 9 }}
-                display="flex"
-                flex={1}
-              >
+              <Tabs.Panel value={String(selectedCategory)} style={{ flex: 8 }} display="flex">
                 <ScrollArea flex={1} p="xl" h="100%">
                   <Loader isLoading={productSource.isFetching} />
                   <SimpleGrid cols={{ xs: 1, sm: 2, md: 3, lg: 4 }} spacing="md">

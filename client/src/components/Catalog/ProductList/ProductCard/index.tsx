@@ -44,8 +44,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       }}
       style={{ position: 'relative', overflow: 'hidden' }}
     >
-      <Stack gap={0} align="center" justify="space-between" style={{ width: '100%', height: '100%' }}>
-        <Stack gap="sm" align="center" justify="center" style={{ flex: 1, padding: 'var(--mantine-spacing-lg)' }}>
+      <Stack
+        gap={0}
+        align="center"
+        justify="space-between"
+        style={{ width: '100%', height: '100%' }}
+      >
+        <Stack
+          gap="sm"
+          align="center"
+          justify="center"
+          style={{ flex: 1, padding: 'var(--mantine-spacing-lg)' }}
+        >
           <Text fw={700} size="lg" ta="center">
             {product.name}
           </Text>
@@ -57,7 +67,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </Stack>
 
         {isEditMode && (
-          <Group gap={0} w="100%" grow style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
+          <Group
+            gap={0}
+            w="100%"
+            grow
+            style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}
+          >
             <Button
               variant="default"
               onClick={handleEdit}
@@ -67,10 +82,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 flex: 1,
                 borderRight: '1px solid var(--mantine-color-default-border)',
                 height: '56px',
-                color: 'var(--mantine-color-blue-6)'
               }}
             >
-              <IconEdit size={24} />
+              <IconEdit size={20} color="var(--mantine-primary-color-filled)" />
             </Button>
             <Button
               variant="default"
@@ -80,10 +94,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               style={{
                 flex: 1,
                 height: '56px',
-                color: 'var(--mantine-color-red-6)'
               }}
             >
-              <IconTrash size={24} />
+              <IconTrash size={20} color="var(--mantine-color-red-6)" />
             </Button>
           </Group>
         )}

@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Modal, TextInput, Button, Group, Stack } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import type { CategoryType } from 'shared-ts';
 import { useCreateCategoryMutation, useUpdateCategoryMutation } from '../../services/categories';
+import { setSelectedCategory } from '../../redux/selectedCategorySlice';
 import ConfirmationModal from '../ConfirmationModal';
 
 interface CategoryFormModalProps {
@@ -23,6 +25,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
   category,
 }) => {
   const { t } = useTranslation();
+  const dispatch = useDispatch();
   const [createCategory] = useCreateCategoryMutation();
   const [updateCategory] = useUpdateCategoryMutation();
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -60,8 +63,9 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
 
   const handleCreate = async (values: CategoryFormValues) => {
     try {
-      await createCategory({ name: values.name }).unwrap();
+      const newCategory = await createCategory({ name: values.name }).unwrap();
       toast.success(t('category_management.created'));
+      dispatch(setSelectedCategory(newCategory.id));
       form.reset();
       onClose();
     } catch (err) {

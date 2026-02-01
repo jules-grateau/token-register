@@ -1,6 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { ProductType, PostAPIResponseType } from 'shared-ts';
 import { BASE_API_URL } from '../config';
+import { ApiProductType, mapProduct } from './mappers';
 
 const API_URL = BASE_API_URL + '/products';
 
@@ -14,7 +15,7 @@ export const productsApi = createApi({
         url: '',
         method: 'GET',
       }),
-      transformResponse: (response: ProductType[]) => response,
+      transformResponse: (response: ApiProductType[]) => response.map(mapProduct),
       providesTags: ['Products'],
     }),
     createProduct: build.mutation<PostAPIResponseType, Omit<ProductType, 'id'>>({
