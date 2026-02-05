@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { CartItemType, OrderType, PostAPIResponseType } from 'shared-ts';
+import type { CartItemType, OrderType, PostAPIResponseType, PaginatedOrdersResponse, PaginationParams } from 'shared-ts';
 import { BASE_API_URL } from '../config';
 
 const API_URL = BASE_API_URL + '/orders';
@@ -29,11 +29,19 @@ export const ordersApi = createApi({
         method: 'DELETE',
       }),
     }),
-    getOrders: build.query<OrderType[], void>({
-      query: () => ({
-        url: '',
-        method: 'GET',
-      }),
+    getOrders: build.query<PaginatedOrdersResponse, PaginationParams | void>({
+      query: (params) => {
+        const queryParams = new URLSearchParams();
+        if (params) {
+          queryParams.append('page', params.page.toString());
+          queryParams.append('pageSize', params.pageSize.toString());
+        }
+        const queryString = queryParams.toString();
+        return {
+          url: queryString ? `?${queryString}` : '',
+          method: 'GET',
+        };
+      },
     }),
   }),
 });

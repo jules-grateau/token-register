@@ -8,5 +8,13 @@ echo "Entrypoint: Running Database Initialization..."
 # This assumes your WORKDIR in Dockerfile is the app root
 npm run prod:db:init
 
+echo "Entrypoint: Running Database Migrations..."
+
+# Run database migrations
+# Migration script is idempotent and safe to run on every startup
+npm run prod:db:migrate
+
+echo "Entrypoint: Database setup complete. Starting application..."
+
 # Execute the command passed as CMD from the Dockerfile (which will be ["npm", "start"])
 exec "$@"

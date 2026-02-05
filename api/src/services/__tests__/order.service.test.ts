@@ -7,18 +7,21 @@ type MockDb = Awaited<ReturnType<typeof dbModule.openDb>>;
 describe('OrderService (unit)', () => {
   let mockRun: jest.Mock;
   let mockAll: jest.Mock;
+  let mockGet: jest.Mock;
   let mockExec: jest.Mock;
   let mockClose: jest.Mock;
 
   beforeEach(() => {
     mockRun = jest.fn();
     mockAll = jest.fn();
+    mockGet = jest.fn();
     mockExec = jest.fn();
     mockClose = jest.fn().mockResolvedValue(undefined);
 
     jest.spyOn(dbModule, 'openDb').mockResolvedValue({
       run: mockRun,
       all: mockAll,
+      get: mockGet,
       exec: mockExec,
       close: mockClose,
     } as unknown as MockDb);
@@ -29,23 +32,28 @@ describe('OrderService (unit)', () => {
   });
 
   it('should return all orders', async () => {
+    const mockCountResult = { count: 1 };
     const mockRows = [
       {
         order_id: 1,
         date: 123,
-        name: 'Test',
         product_id: 1,
-        price: 10,
+        product_name: 'Test',
+        product_price: 10,
+        category_name: 'TestCategory',
         quantity: 2,
         discountedAmount: 0,
       },
     ];
-    mockAll.mockResolvedValue(mockRows);
+    mockGet.mockResolvedValue(mockCountResult); // COUNT query
+    mockAll.mockResolvedValue(mockRows); // SELECT query
 
     const service = new OrderService();
-    const orders = await service.getAllOrders();
-    expect(orders.length).toBe(1);
-    expect(orders[0].id).toBe(1);
+    const result = await service.getAllOrders();
+    expect(result.data.length).toBe(1);
+    expect(result.data[0].id).toBe(1);
+    expect(result.pagination.totalCount).toBe(1);
+    expect(mockGet).toHaveBeenCalled();
     expect(mockAll).toHaveBeenCalled();
   });
 
@@ -122,6 +130,7 @@ describe('OrderService (unit)', () => {
   });
 
   it('should create an order successfully', async () => {
+    mockGet.mockResolvedValue({ name: 'CategoryA' }); // category lookup
     mockRun
       .mockResolvedValueOnce({ lastID: 42 }) // orders insert
       .mockResolvedValueOnce({}); // order_items insert
@@ -139,9 +148,10 @@ describe('OrderService (unit)', () => {
 
     expect(mockExec).toHaveBeenCalledWith('BEGIN TRANSACTION');
     expect(mockRun).toHaveBeenCalledWith('INSERT INTO orders (date) VALUES (?)', expect.any(Array));
+    expect(mockGet).toHaveBeenCalledWith('SELECT name FROM categories WHERE id = ?', [1]);
     expect(mockRun).toHaveBeenCalledWith(
-      'INSERT INTO order_items (order_id, product_id, quantity, discountedAmount) VALUES (?, ?, ?, ?)',
-      [42, 1, 2, 0]
+      expect.stringContaining('INSERT INTO order_items'),
+      [42, 1, 2, 0, 'A', 10, 'CategoryA']
     );
     expect(mockExec).toHaveBeenCalledWith('COMMIT');
     expect(result).toEqual({ id: 42 });
@@ -162,11 +172,11 @@ describe('OrderService (unit)', () => {
     expect(mockExec).toHaveBeenCalledWith('ROLLBACK');
   });
 
-  it('should throw if db.all fails in getAllOrders', async () => {
-    mockAll.mockRejectedValue(new Error('DB fetch error'));
+  it('should throw if db.get fails in getAllOrders', async () => {
+    mockGet.mockRejectedValue(new Error('DB count error'));
     const service = new OrderService();
     await expect(service.getAllOrders()).rejects.toThrow(
-      'Error fetching orders: Error: DB fetch error'
+      'Error fetching orders: Error: DB count error'
     );
   });
 

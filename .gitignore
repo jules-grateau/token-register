@@ -30,3 +30,9 @@ dist-ssr
 
 # Test Reports
 coverage
+
+# AI-generated specs
+specs/
+
+# Claude Code local settings
+.claude/settings.local.json

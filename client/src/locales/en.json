@@ -97,5 +97,6 @@
     "min_price": "Price must be 0 or greater",
     "unknown": "An error occurred. Please try again.",
     "network": "Network error. Please check your connection."
-  }
+  },
+  "showing": "Showing {{count}} of {{total}} orders"
 }

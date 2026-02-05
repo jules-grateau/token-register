@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2026-02-01
 
 ## Active Technologies
+- TypeScript 5.8.3 (Backend: Node.js with ts-node/compiled; Frontend: React with Vite) (002-order-history-preservation)
+- SQLite3 database (existing tables: categories, products, orders, order_items) (002-order-history-preservation)
 
 - TypeScript 5.8.3 (001-item-category-management)
 
@@ -23,6 +25,7 @@ npm test; npm run lint
 TypeScript 5.8.3: Follow standard conventions
 
 ## Recent Changes
+- 002-order-history-preservation: Added TypeScript 5.8.3 (Backend: Node.js with ts-node/compiled; Frontend: React with Vite)
 
 - 001-item-category-management: Added TypeScript 5.8.3
 

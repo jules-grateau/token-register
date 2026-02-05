@@ -257,6 +257,36 @@ To persist the SQLite database outside the container, add a volume:
 
 and set `DATABASE_PATH=/usr/src/app/api/src/db/data/database.sqlite`.
 
+### 4. Database Migrations
+
+When updating to a new version of the application, database migrations may be required. The Docker image automatically runs migrations on startup via the `entrypoint.sh` script.
+
+**For existing containers:**
+- The entrypoint runs migrations automatically on container start
+- Migrations are idempotent (safe to run multiple times)
+- See [feature migration guides](./specs/) for specific migration details
+
+**Manual migration** (if needed):
+```bash
+# Run migration in existing container
+docker exec -it <container-name> npm run prod:db:migrate
+
+# Or run in temporary container with volume
+docker run --rm \
+  -v /host/path/to/data:/usr/src/app/api/src/db/data \
+  -e DATABASE_PATH=/usr/src/app/api/src/db/data/database.sqlite \
+  token-register:latest \
+  npm run prod:db:migrate
+```
+
+**Important:** Always backup your database before deploying major updates:
+```bash
+docker cp <container-name>:/path/to/database.sqlite ./backup/database-$(date +%Y%m%d).sqlite
+```
+
+For detailed migration procedures, see:
+- [Order History Preservation Deployment Guide](./specs/002-order-history-preservation/deployment.md)
+
 ---
 
 ## License
