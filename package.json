@@ -12,6 +12,7 @@
     "build:client": "npm run build -w=client",
     "build": "npm run build:api && npm run build:client",
     "prod:db:init": "npm run prod:db:init -w=api",
+    "prod:db:migrate": "npm run prod:db:migrate -w=api",
     "prod:start": "pm2-runtime start ecosystem.config.cjs --env production",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\" --ignore-path .gitignore --ignore-path .prettierignore",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yaml,yml}\" --ignore-path .gitignore --ignore-path .prettierignore",

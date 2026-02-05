@@ -97,5 +97,6 @@
     "min_price": "Le prix doit être 0 ou plus",
     "unknown": "Une erreur s'est produite. Veuillez réessayer.",
     "network": "Erreur réseau. Veuillez vérifier votre connexion."
-  }
+  },
+  "showing": "Affichage de {{count}} sur {{total}} commandes"
 }

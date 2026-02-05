@@ -1,42 +1,67 @@
 import { openDb } from '../db';
 import logger from '../utils/logger';
-import { CartItemType, OrderType } from 'shared-ts';
+import { CartItemType, OrderType, OrderItemType, PaginationParams, PaginatedOrdersResponse } from 'shared-ts';
 import { NotFoundError, ValidationError } from '../types/errors';
 
-interface OrderDbRow {
+interface OrderItemDbRow {
   order_id: number;
   date: number;
-  name: string;
-  product_id: number;
-  category_id: number;
-  price: number;
+  product_id: number | null;
+  product_name: string;
+  product_price: number;
+  category_name: string;
   quantity: number;
   discountedAmount: number;
 }
 
 export class OrderService {
-  async getAllOrders(): Promise<OrderType[]> {
+  async getAllOrders(params?: PaginationParams): Promise<PaginatedOrdersResponse> {
+    const page = params?.page ?? 1;
+    const pageSize = params?.pageSize ?? 20;
+
+    if (page < 1) {
+      throw new ValidationError('Page number must be >= 1');
+    }
+
+    if (pageSize < 1 || pageSize > 100) {
+      throw new ValidationError('Page size must be between 1 and 100');
+    }
+
+    const offset = (page - 1) * pageSize;
+
     let db;
     try {
       db = await openDb();
-      const rows = await db.all<OrderDbRow[]>(`
-            SELECT order_id, 
-            product_id, 
-            category_id,
-            date, 
-            quantity, 
-            discountedAmount, 
-            name, 
-            price 
-            FROM orders 
-            LEFT JOIN order_items ON orders.id = order_items.order_id 
-            LEFT JOIN products on order_items.product_id = products.id 
-            ORDER BY date DESC;`);
+
+      const countResult = await db.get<{ count: number }>('SELECT COUNT(*) as count FROM orders');
+      const totalCount = countResult?.count ?? 0;
+
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      const rows = await db.all<OrderItemDbRow[]>(`
+            SELECT
+              orders.id as order_id,
+              orders.date,
+              order_items.product_id,
+              order_items.product_name,
+              order_items.product_price,
+              order_items.category_name,
+              order_items.quantity,
+              order_items.discountedAmount
+            FROM orders
+            LEFT JOIN order_items ON orders.id = order_items.order_id
+            WHERE orders.id IN (
+              SELECT id FROM orders
+              ORDER BY date DESC
+              LIMIT ? OFFSET ?
+            )
+            ORDER BY orders.date DESC;`, [pageSize, offset]);
+
       const orders = new Map<number, OrderType>();
 
       for (const row of rows) {
-        const { order_id, date, name, product_id, category_id, price, quantity, discountedAmount } =
-          row;
+        const { order_id, date, product_id, product_name, product_price, category_name, quantity, discountedAmount } = row;
+
         if (!orders.has(order_id)) {
           orders.set(order_id, { id: order_id, date, items: [] });
         }
@@ -44,15 +69,34 @@ export class OrderService {
         const order = orders.get(order_id);
 
         if (order) {
-          order.items.push({
-            product: { id: product_id, name, price, categoryId: category_id },
+          const orderItem: OrderItemType = {
+            productId: product_id,
+            productName: product_name,
+            productPrice: product_price,
+            categoryName: category_name,
             quantity,
             discountedAmount,
-          });
+          };
+          order.items.push(orderItem);
         }
       }
-      return Array.from(orders.values());
+
+      const result: PaginatedOrdersResponse = {
+        data: Array.from(orders.values()),
+        pagination: {
+          currentPage: page,
+          pageSize,
+          totalCount,
+          totalPages,
+        },
+      };
+
+      logger.info({ page, pageSize, totalCount, totalPages }, 'Fetched paginated orders');
+      return result;
     } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error;
+      }
       throw new Error(`Error fetching orders: ${String(error)}`);
     } finally {
       await db?.close();
@@ -94,18 +138,45 @@ export class OrderService {
 
       for (const item of cartItems) {
         const { product, quantity, discountedAmount } = item;
-        const { id: productId } = product;
+        const { id: productId, name: productName, price: productPrice, categoryId } = product;
+
+        let categoryName = 'Unknown Category';
+        try {
+          const categoryRow = await db.get<{ name: string }>(
+            'SELECT name FROM categories WHERE id = ?',
+            [categoryId]
+          );
+
+          if (categoryRow && categoryRow.name) {
+            categoryName = categoryRow.name;
+          } else {
+            logger.warn(
+              { productId, categoryId },
+              'Category not found for product, using fallback category name'
+            );
+          }
+        } catch (error) {
+          logger.error(
+            { productId, categoryId, error },
+            'Error fetching category name, using fallback'
+          );
+        }
+
         logger.info(
-          { orderId, productId, quantity, discountedAmount },
-          'Inserting order item in service'
+          { orderId, productId, productName, productPrice, categoryName, quantity, discountedAmount },
+          'Creating order item with product snapshot'
         );
+
         await db.run(
-          'INSERT INTO order_items (order_id, product_id, quantity, discountedAmount) VALUES (?, ?, ?, ?)',
-          [orderId, productId, quantity, discountedAmount]
+          `INSERT INTO order_items
+          (order_id, product_id, quantity, discountedAmount, product_name, product_price, category_name)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [orderId, productId, quantity, discountedAmount, productName, productPrice, categoryName]
         );
       }
+
       await db.exec('COMMIT');
-      logger.info('New order created with ID: %s', orderId);
+      logger.info('New order created with ID: %s with product snapshots', orderId);
       return { id: orderId };
     } catch (error) {
       if (db) await db.exec('ROLLBACK');

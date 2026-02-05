@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { OrderService } from '../services/order.service';
-import { CartItemType } from 'shared-ts';
+import { CartItemType, PaginationParams } from 'shared-ts';
 import { ValidationError, NotFoundError } from '../types/errors';
 
 export class OrderController {
@@ -20,13 +20,48 @@ export class OrderController {
   }
 
   public getAllOrders = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    req.log.info('Controller: Fetching all orders');
+    let page: number | undefined;
+    let pageSize: number | undefined;
+
+    if (req.query.page) {
+      const parsedPage = parseInt(req.query.page as string, 10);
+      if (isNaN(parsedPage)) {
+        res.status(400).json({ error: 'Invalid page parameter' });
+        return;
+      }
+      page = parsedPage;
+    }
+
+    if (req.query.pageSize) {
+      const parsedPageSize = parseInt(req.query.pageSize as string, 10);
+      if (isNaN(parsedPageSize)) {
+        res.status(400).json({ error: 'Invalid pageSize parameter' });
+        return;
+      }
+      pageSize = parsedPageSize;
+    }
+
+    const paginationParams: PaginationParams | undefined =
+      page !== undefined || pageSize !== undefined
+        ? {
+            page: page ?? 1,
+            pageSize: pageSize ?? 20,
+          }
+        : undefined;
+
+    req.log.info({ page, pageSize }, 'Controller: Fetching orders with pagination');
+
     try {
-      const orders = await this.orderService.getAllOrders();
-      res.json(orders);
+      const result = await this.orderService.getAllOrders(paginationParams);
+
+      res.json(result);
     } catch (error) {
       req.log.error('Controller Error: Error fetching orders: %s', error);
-      next(error);
+      if (error instanceof ValidationError) {
+        res.status(400).json({ error: error.message });
+      } else {
+        next(error);
+      }
     }
   };
 

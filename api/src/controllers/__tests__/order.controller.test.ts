@@ -37,8 +37,16 @@ describe('OrderController', () => {
 
   describe('getAllOrders', () => {
     it('should return all orders from the service', async () => {
-      const orders = [{ id: 1, date: 123, items: [] }];
-      mockOrderService.getAllOrders.mockResolvedValue(orders);
+      const paginatedResponse = {
+        data: [{ id: 1, date: 123, items: [] }],
+        pagination: {
+          currentPage: 1,
+          pageSize: 20,
+          totalCount: 1,
+          totalPages: 1,
+        },
+      };
+      mockOrderService.getAllOrders.mockResolvedValue(paginatedResponse);
 
       await controller.getAllOrders(
         mockRequest as Request,
@@ -47,7 +55,7 @@ describe('OrderController', () => {
       );
 
       expect(mockOrderService.getAllOrders).toHaveBeenCalled();
-      expect(mockResponse.json).toHaveBeenCalledWith(orders);
+      expect(mockResponse.json).toHaveBeenCalledWith(paginatedResponse);
       expect(nextFunction).not.toHaveBeenCalled();
     });
 

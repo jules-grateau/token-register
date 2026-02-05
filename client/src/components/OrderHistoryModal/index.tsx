@@ -16,6 +16,7 @@ import {
   ScrollArea,
   Divider,
   Center,
+  Pagination,
 } from '@mantine/core';
 
 interface OrderHistoryModalProps {
@@ -25,14 +26,19 @@ interface OrderHistoryModalProps {
 
 const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  const ordersQuery = useGetOrdersQuery();
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
+  const ordersQuery = useGetOrdersQuery({ page: currentPage, pageSize });
   const { data: ordersData, isFetching, error } = ordersQuery;
   const [removeOrder, { isLoading: isRemoveLoading }] = useRemoveOrderMutation();
   const [selectedOrder, setSelectedOrder] = useState(0);
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
   useEffect(() => {
-    if (isOpen) void ordersQuery.refetch();
+    if (isOpen) {
+      setCurrentPage(1);
+      void ordersQuery.refetch();
+    }
   }, [isOpen]);
 
   const onRemoveOrder = (id: number) => {
@@ -67,13 +73,13 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
       return <Text c="red">{t('error_loading_orders')}</Text>;
     }
 
-    if (ordersData && ordersData.length > 0) {
+    if (ordersData && ordersData.data && ordersData.data.length > 0) {
       return (
         <ScrollArea.Autosize>
           <Stack>
-            {ordersData.map((order) => {
+            {ordersData.data.map((order) => {
               const totalPrice = order.items.reduce(
-                (acc, item) => acc + (item.product.price * item.quantity - item.discountedAmount),
+                (acc, item) => acc + (item.productPrice * item.quantity - item.discountedAmount),
                 0
               );
               const totalItems = order.items.reduce((acc, item) => acc + item.quantity, 0);
@@ -98,7 +104,19 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
                     </Group>
                     <Stack gap="xs">
                       {order.items.map((item, itemIndex) => (
-                        <CartItem key={itemIndex} item={item} />
+                        <CartItem
+                          key={itemIndex}
+                          item={{
+                            product: {
+                              id: item.productId ?? 0,
+                              name: item.productName,
+                              price: item.productPrice,
+                              categoryId: 0,
+                            },
+                            quantity: item.quantity,
+                            discountedAmount: item.discountedAmount,
+                          }}
+                        />
                       ))}
                     </Stack>
                     <Divider />
@@ -126,6 +144,23 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
     <>
       <Modal opened={isOpen} onClose={onClose} title={t('order_history')} size="lg" centered>
         {renderContent()}
+        {ordersData && ordersData.pagination && ordersData.pagination.totalPages > 1 && (
+          <Stack mt="md" gap="sm">
+            <Pagination
+              value={currentPage}
+              onChange={setCurrentPage}
+              total={ordersData.pagination.totalPages}
+              siblings={1}
+              boundaries={1}
+            />
+            <Text size="sm" c="dimmed" ta="center">
+              {t('showing', {
+                count: ordersData.data.length,
+                total: ordersData.pagination.totalCount,
+              })}
+            </Text>
+          </Stack>
+        )}
       </Modal>
       <ConfirmationModal
         isOpen={isConfirmationModalOpen}
