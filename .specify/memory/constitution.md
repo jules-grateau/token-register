@@ -109,7 +109,7 @@ All changes MUST pass through the following gates before merge:
 ### Branch Strategy
 
 - `main` branch MUST always be deployable
-- Feature branches MUST follow naming convention: `[issue-number]-[brief-description]`
+- Feature branches MUST follow naming convention: `feature/brief-description`
 - Direct commits to `main` are PROHIBITED except for critical hotfixes with post-hoc review
 
 ### Commit Standards
