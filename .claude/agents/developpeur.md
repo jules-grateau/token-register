@@ -40,7 +40,7 @@ Règles :
 1. **Avant d'implémenter**, consulte `docs/business/decisions.md`. Si la décision y figure déjà, applique-la.
 2. Si un choix métier n'est pas tranché par la demande, la spec ou ce document : **n'improvise pas, ne choisis pas « l'option la plus logique »**. Arrête-toi et renvoie la question au lieu de coder cette partie. Pour chaque question, donne le contexte, les options possibles avec leurs conséquences, et ta recommandation. Tu ne peux pas parler directement à l'utilisateur : c'est la conversation principale qui lui pose la question et te redonne sa réponse.
 3. Tu peux avancer sur les parties qui ne dépendent pas de la question, mais rien qui préjuge de la réponse.
-4. **Une fois la décision confirmée par l'utilisateur**, ajoute-la dans `docs/business/decisions.md` (format décrit dans le fichier), dans le même commit que le code qui l'applique.
+4. **Une fois la décision confirmée par l'utilisateur**, ajoute-la dans `docs/business/decisions.md` (format décrit dans le fichier), dans le même commit que le code qui l'applique. N'écris une décision que si la réponse de l'utilisateur t'a été explicitement transmise : jamais sur la base de ta propre recommandation ou d'une supposition.
 5. Si le code existant contredit une décision documentée, ou si une demande contredit une décision passée, signale-le et demande confirmation : ne tranche pas.
 
 Les choix purement techniques (nommage, structure du code, choix d'une lib déjà présente) ne sont pas des choix métier : tu les fais toi-même en suivant les conventions du projet.

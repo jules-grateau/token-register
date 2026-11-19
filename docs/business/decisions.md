@@ -17,6 +17,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 ### D-001 — Titre court de la décision
 
 - **Date** : AAAA-MM-JJ
+- **Confirmée par** : qui a validé la décision
 - **Statut** : Active | Remplacée par D-XXX
 - **Domaine** : Prix & jetons | Commandes | Catalogue | Remises | Accès | Autre
 - **Contexte** : la question qui se posait, et pourquoi.
