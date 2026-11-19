@@ -28,8 +28,9 @@ env:
   SCREENSHOTS_BRANCH: design-review-screenshots
 
 jobs:
-  # Skip the whole review when the app didn't change: on opening, over the whole PR;
-  # on a new push, over the new commits only (the previous review still stands).
+  # Skip the whole review when the release PR, taken as a whole, doesn't touch the app.
+  # Always the whole PR (base...head), never only the new commits: a newer run cancels
+  # the one in progress (concurrency), so it must cover everything the cancelled one did.
   changes:
     if: >-
       !github.event.pull_request.draft &&
@@ -47,13 +48,10 @@ jobs:
       - name: Did this change touch the app?
         id: diff
         env:
-          ACTION: ${{ github.event.action }}
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
-          BEFORE: ${{ github.event.before }}
-          AFTER: ${{ github.event.after }}
         run: |
-          if [ "$ACTION" = "synchronize" ]; then range="$BEFORE..$AFTER"; else range="$BASE...$HEAD"; fi
+          range="$BASE...$HEAD"
           app=$(bash scripts/ci/app-changed.sh "$range")
           echo "app=$app" >> "$GITHUB_OUTPUT"
           echo "### App changed: \`$app\` (range \`$range\`)" >> "$GITHUB_STEP_SUMMARY"
