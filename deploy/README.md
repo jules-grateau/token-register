@@ -17,12 +17,10 @@ then checks the container is still running after the DB migrations).
 
 ## One-time setup
 
-### 1. DNS
+No DNS change needed: the existing wildcard record already points `test.demo.julesgrateau.dev`
+to the VPS, and Traefik gets its TLS certificate automatically.
 
-Add an `A` record for `test.demo.julesgrateau.dev` pointing to the VPS. Traefik gets the
-TLS certificate automatically.
-
-### 2. VPS
+### 1. VPS
 
 In the directory that holds the current `compose.yaml` (**keep the same directory**: Docker
 prefixes volume names with the directory name, so moving it would start prod on an empty DB):
@@ -44,7 +42,7 @@ docker compose pull token-register && docker compose up -d token-register
 Create a dedicated deploy user (member of the `docker` group) and add the public part of a
 new SSH key to its `~/.ssh/authorized_keys`.
 
-### 3. GitHub
+### 2. GitHub
 
 - **Branch**: create `develop` from `main` and push it.
 - **Settings → Secrets and variables → Actions**, repository secrets:
