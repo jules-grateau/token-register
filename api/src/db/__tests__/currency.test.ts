@@ -173,7 +173,7 @@ describe('currency conversion command', () => {
     const plan = await planCurrencyConversion(db, 'TOKEN');
 
     expect(plan.inconsistentOrderItems).toHaveLength(1);
-    expect(describeConversionPlan(plan).join('\n')).toContain('Blocking');
+    expect(describeConversionPlan(plan).join('\n')).toContain('Blocking (D-016)');
     await expect(applyCurrencyConversion(db, plan)).rejects.toThrow('Nothing was converted');
     expect(await getStoredCurrency(db)).toBe('EUR');
   });

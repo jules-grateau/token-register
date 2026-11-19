@@ -96,4 +96,5 @@ It is shown read-only in the app (⚙️ menu). Amounts are stored as whole numb
 
    `--entrypoint ""` skips the startup migration, which would otherwise stop on the mismatch.
    The command refuses to write anything if, after rounding, an order line would get a discount
-   larger than its total; the preview lists those lines.
+   larger than its total (D-016); the preview lists those lines. Handle those orders first,
+   then run the conversion again.

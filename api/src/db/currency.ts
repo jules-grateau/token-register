@@ -207,8 +207,9 @@ export async function planCurrencyConversion(
 
 /**
  * Applies a conversion plan in a single transaction and records the new currency.
- * Refuses lines whose rounded discount would exceed the rounded line total: how to handle
- * them is not decided yet, so nothing is written in that case.
+ * D-016: if any order line would end up with a discount larger than its total after rounding,
+ * the whole conversion is refused and nothing is written. The admin must handle those orders
+ * first (the preview lists them).
  */
 export async function applyCurrencyConversion(
   db: Database,
@@ -217,7 +218,9 @@ export async function applyCurrencyConversion(
   if (plan.inconsistentOrderItems.length > 0) {
     throw new Error(
       `${plan.inconsistentOrderItems.length} order line(s) would end up with a discount larger ` +
-        'than their total after rounding. Nothing was converted.'
+        'than their total after rounding. Nothing was converted (D-016). ' +
+        'Handle the orders listed in the preview first, then run the ' +
+        'conversion again.'
     );
   }
 
@@ -279,7 +282,11 @@ export function describeConversionPlan(plan: CurrencyConversionPlan): string[] {
     `  Total revenue: ${fmtFrom(plan.revenueBefore)} -> ${fmtTo(plan.revenueAfter)}`
   );
   if (plan.inconsistentOrderItems.length > 0) {
-    lines.push('', 'Blocking: discount larger than the line total after rounding:');
+    lines.push(
+      '',
+      'Blocking (D-016): these order lines would get a discount larger than their total ' +
+        'after rounding. The conversion will be refused until these orders are handled:'
+    );
     for (const item of plan.inconsistentOrderItems) {
       lines.push(
         `  order #${item.orderId} ${item.productName} x${item.quantity}: ` +

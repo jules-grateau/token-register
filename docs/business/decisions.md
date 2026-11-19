@@ -133,7 +133,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 
 - **Date** : 2026-11-19
 - **Confirmée par** : Jules (responsable produit), 2026-11-19
-- **Statut** : Active
+- **Statut** : Active, précisée par D-017
 - **Domaine** : Remises
 - **Contexte** : les euros introduisent des montants à virgule ; il faut fixer la précision et l'arrondi des remises.
 - **Décision** : en euros, les montants ont 2 décimales. Une saisie plus précise (ex. 1,555) est refusée avec un message, côté client et côté API (les montants doivent être un nombre entier de centimes). Une remise en pourcentage est arrondie au centime supérieur, en faveur du client (15 % de 2,50 € = 0,38 €). Une remise fixe peut comporter des centimes (0,50 €). Le pourcentage reste un entier de 1 à 100.
@@ -194,3 +194,25 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Décision** : on garde « Token Register » (en-tête et « À propos ») ; seuls les libellés de prix dépendent de la monnaie. Une refonte de l'identité (logo, nom, direction artistique) est prévue plus tard.
 - **Options écartées** : changer le nom affiché pour les instances en euros.
 - **Impact** : aucun changement de code ; libellés de prix dans `client/src/locales`.
+
+### D-016 — Conversion euros → jetons refusée si une remise dépasse le total de sa ligne
+
+- **Date** : 2026-11-19
+- **Confirmée par** : Jules (responsable produit), 2026-11-19
+- **Statut** : Active
+- **Domaine** : Remises
+- **Contexte** : la conversion euros → jetons (D-009) arrondit chaque montant séparément ; une ligne d'historique peut alors avoir une remise supérieure à son total (ex. 2 × 1,49 € avec 2,98 € de remise → 2 × 1 jeton avec 3 jetons de remise).
+- **Décision** : si au moins une ligne d'historique se retrouve avec une remise supérieure à son total après arrondi, la conversion est refusée et rien n'est écrit. Les lignes concernées sont listées dans l'aperçu. Pour convertir, l'admin doit d'abord traiter ces commandes.
+- **Options écartées** : plafonner la remise au total de la ligne ; arrondir le total de la ligne puis en déduire la remise.
+- **Impact** : `api/src/db/currency.ts`, `api/src/db/scripts/convertCurrency.ts`, `deploy/README.md`.
+
+### D-017 — Un collage trop précis est tronqué à 2 décimales
+
+- **Date** : 2026-11-19
+- **Confirmée par** : Jules (responsable produit), 2026-11-19
+- **Statut** : Active
+- **Domaine** : Prix & jetons
+- **Contexte** : en euros, le champ de saisie empêche de taper une 3e décimale ; un collage de « 1,555 » est coupé à « 1,55 » sans message.
+- **Décision** : la troncature silencieuse à 2 décimales est acceptée pour un collage dans le champ (le clavier empêche déjà la 3e décimale). Précise D-010, qui reste active : une saisie trop précise reste refusée avec un message par la validation du formulaire et par l'API.
+- **Options écartées** : refuser aussi le collage avec un message.
+- **Impact** : `client/src/components/ProductManagement/ProductFormModal.tsx`, `client/src/components/DiscountModal` (`NumberInput` avec `decimalScale={2}`).
