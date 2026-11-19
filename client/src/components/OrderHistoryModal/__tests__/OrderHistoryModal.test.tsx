@@ -28,16 +28,25 @@ jest.mock('../../../services/orders', () => ({
 const refetch = jest.fn();
 const mockRemoveOrder = jest.fn();
 
-const mockOrders = [
-  {
-    id: 1,
-    date: new Date().toISOString(),
-    items: [
-      { product: { id: 1, name: 'Apple', price: 10 }, quantity: 2, discountedAmount: 0 },
-      { product: { id: 2, name: 'Banana', price: 5 }, quantity: 1, discountedAmount: 0 },
-    ],
-  },
-];
+const makeItem = (productId: number, productName: string, productPrice: number, quantity: number) => ({
+  productId,
+  productName,
+  productPrice,
+  categoryName: 'Fruits',
+  quantity,
+  discountedAmount: 0,
+});
+
+const mockOrders = {
+  data: [
+    {
+      id: 1,
+      date: Date.now(),
+      items: [makeItem(1, 'Apple', 10, 2), makeItem(2, 'Banana', 5, 1)],
+    },
+  ],
+  pagination: { currentPage: 1, pageSize: 20, totalCount: 1, totalPages: 1 },
+};
 
 describe('OrderHistoryModal', () => {
   beforeEach(() => {
@@ -78,7 +87,10 @@ describe('OrderHistoryModal', () => {
 
   it('renders empty state', () => {
     (useGetOrdersQuery as jest.Mock).mockReturnValue({
-      data: [],
+      data: {
+        data: [],
+        pagination: { currentPage: 1, pageSize: 20, totalCount: 0, totalPages: 0 },
+      },
       isFetching: false,
       error: undefined,
       refetch,

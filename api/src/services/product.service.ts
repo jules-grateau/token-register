@@ -2,6 +2,12 @@ import { openDb } from '../db';
 import { ProductType } from 'shared-ts';
 import { NotFoundError } from '../types/errors';
 
+const UPDATABLE_COLUMNS = {
+  name: 'name',
+  price: 'price',
+  categoryId: 'category_id',
+} as const satisfies Record<keyof Omit<ProductType, 'id'>, string>;
+
 export class ProductService {
   async getAllProducts(): Promise<ProductType[]> {
     let db;
@@ -54,18 +60,21 @@ export class ProductService {
   async updateProduct(id: number, product: Partial<Omit<ProductType, 'id'>>): Promise<void> {
     let db;
     try {
-      db = await openDb();
-      const fields = Object.keys(product)
-        .map((key) => (key === 'categoryId' ? 'category_id' : key))
-        .map((key) => `${key} = ?`);
+      // Only whitelisted fields can reach the SQL query: keys come from the request body.
+      const entries = Object.entries(product).filter(
+        ([key, value]) => Object.prototype.hasOwnProperty.call(UPDATABLE_COLUMNS, key) && value !== undefined
+      ) as [keyof typeof UPDATABLE_COLUMNS, unknown][];
 
-      if (fields.length === 0) {
+      if (entries.length === 0) {
         // Nothing to update
         return;
       }
 
-      const values = Object.values(product);
+      const fields = entries.map(([key]) => `${UPDATABLE_COLUMNS[key]} = ?`);
+      const values = entries.map(([, value]) => value);
       const query = `UPDATE products SET ${fields.join(', ')} WHERE id = ?`;
+
+      db = await openDb();
 
       const result = await db.run(query, [...values, id]);
 

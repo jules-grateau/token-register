@@ -63,6 +63,7 @@ describe('OrderService (unit)', () => {
   });
 
   it('should throw ValidationError for invalid discount when discountedAmount is bigger than price', async () => {
+    mockGet.mockResolvedValue({ name: 'A', price: 10, category_name: 'CategoryA' });
     const service = new OrderService();
     const cart = [
       {
@@ -75,6 +76,7 @@ describe('OrderService (unit)', () => {
   });
 
   it('should throw ValidationError for invalid discount when discountedAmount is negative', async () => {
+    mockGet.mockResolvedValue({ name: 'A', price: 10, category_name: 'CategoryA' });
     const service = new OrderService();
     const cart = [
       {
@@ -130,7 +132,7 @@ describe('OrderService (unit)', () => {
   });
 
   it('should create an order successfully', async () => {
-    mockGet.mockResolvedValue({ name: 'CategoryA' }); // category lookup
+    mockGet.mockResolvedValue({ name: 'A', price: 10, category_name: 'CategoryA' }); // product lookup
     mockRun
       .mockResolvedValueOnce({ lastID: 42 }) // orders insert
       .mockResolvedValueOnce({}); // order_items insert
@@ -148,7 +150,7 @@ describe('OrderService (unit)', () => {
 
     expect(mockExec).toHaveBeenCalledWith('BEGIN TRANSACTION');
     expect(mockRun).toHaveBeenCalledWith('INSERT INTO orders (date) VALUES (?)', expect.any(Array));
-    expect(mockGet).toHaveBeenCalledWith('SELECT name FROM categories WHERE id = ?', [1]);
+    expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('FROM products p'), [1]);
     expect(mockRun).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO order_items'),
       [42, 1, 2, 0, 'A', 10, 'CategoryA']
@@ -157,7 +159,76 @@ describe('OrderService (unit)', () => {
     expect(result).toEqual({ id: 42 });
   });
 
+  it('should snapshot name and price from the database, not from the request', async () => {
+    mockGet.mockResolvedValue({ name: 'Bière', price: 3, category_name: 'Boissons' });
+    mockRun.mockResolvedValueOnce({ lastID: 7 }).mockResolvedValueOnce({});
+
+    const service = new OrderService();
+    const tamperedCart = [
+      {
+        product: { id: 1, name: 'Free beer', price: 0, categoryId: 99 },
+        quantity: 2,
+        discountedAmount: 0,
+      },
+    ];
+
+    await service.createOrder(tamperedCart);
+
+    expect(mockRun).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO order_items'),
+      [7, 1, 2, 0, 'Bière', 3, 'Boissons']
+    );
+  });
+
+  it('should validate the discount against the database price', async () => {
+    mockGet.mockResolvedValue({ name: 'Bière', price: 3, category_name: 'Boissons' });
+    const service = new OrderService();
+    const cart = [
+      {
+        product: { id: 1, name: 'Bière', price: 1000, categoryId: 1 },
+        quantity: 1,
+        discountedAmount: 500,
+      },
+    ];
+
+    await expect(service.createOrder(cart)).rejects.toThrow(ValidationError);
+    expect(mockExec).toHaveBeenCalledWith('ROLLBACK');
+  });
+
+  it('should throw ValidationError and rollback if a product does not exist', async () => {
+    mockGet.mockResolvedValue(undefined);
+    const service = new OrderService();
+    const cart = [
+      {
+        product: { id: 999, name: 'Ghost', price: 1, categoryId: 1 },
+        quantity: 1,
+        discountedAmount: 0,
+      },
+    ];
+
+    await expect(service.createOrder(cart)).rejects.toThrow(ValidationError);
+    expect(mockExec).toHaveBeenCalledWith('ROLLBACK');
+    expect(mockRun).not.toHaveBeenCalled();
+  });
+
+  it('should use a fallback category name when the category is missing', async () => {
+    mockGet.mockResolvedValue({ name: 'A', price: 10, category_name: null });
+    mockRun.mockResolvedValueOnce({ lastID: 1 }).mockResolvedValueOnce({});
+    const service = new OrderService();
+    const cart = [
+      { product: { id: 1, name: 'A', price: 10, categoryId: 1 }, quantity: 1, discountedAmount: 0 },
+    ];
+
+    await service.createOrder(cart);
+
+    expect(mockRun).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO order_items'),
+      [1, 1, 1, 0, 'A', 10, 'Unknown Category']
+    );
+  });
+
   it('should rollback and throw if db.run fails during order creation', async () => {
+    mockGet.mockResolvedValue({ name: 'A', price: 10, category_name: 'CategoryA' });
     mockRun.mockRejectedValueOnce(new Error('DB insert error'));
     const service = new OrderService();
     const cart = [
@@ -181,6 +252,7 @@ describe('OrderService (unit)', () => {
   });
 
   it('should throw if orderResult.lastID is falsy', async () => {
+    mockGet.mockResolvedValue({ name: 'A', price: 10, category_name: 'CategoryA' });
     mockRun.mockResolvedValueOnce({ lastID: undefined }); // Failed insert
     const service = new OrderService();
     const cart = [
