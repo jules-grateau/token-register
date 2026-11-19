@@ -1,5 +1,10 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { CartItemType, OrderType, PostAPIResponseType, PaginatedOrdersResponse, PaginationParams } from 'shared-ts';
+import type {
+  CartItemType,
+  PostAPIResponseType,
+  PaginatedOrdersResponse,
+  PaginationParams,
+} from 'shared-ts';
 import { BASE_API_URL } from '../config';
 
 const API_URL = BASE_API_URL + '/orders';
