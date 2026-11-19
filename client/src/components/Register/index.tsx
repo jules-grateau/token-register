@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Box, Flex, Menu, ActionIcon, Group, Text } from '@mantine/core';
-import { IconSettings } from '@tabler/icons-react';
+import { IconInfoCircle, IconPencil, IconSettings } from '@tabler/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import Catalog from '../Catalog';
 import Cart from '../Cart';
 import OrderHistoryModal from '../OrderHistoryModal';
+import AboutModal from '../AboutModal';
 import CartConfirmationModal from '../CartConfirmationModal';
 import { toggleEditMode, selectIsEditMode } from '../../redux/editModeSlice';
 
@@ -15,6 +16,7 @@ export function Register(): React.ReactElement {
   const isEditMode = useSelector(selectIsEditMode);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isCartConfirmationModalOpen, setIsCartConfrimationModalOpen] = useState(false);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
 
   return (
     <Flex direction="column" style={{ height: '100%', width: '100%' }}>
@@ -45,10 +47,20 @@ export function Register(): React.ReactElement {
           <Menu.Dropdown p="xs">
             <Menu.Item
               onClick={() => dispatch(toggleEditMode())}
+              leftSection={<IconPencil size={20} />}
               py="md"
               style={{ fontSize: 'var(--mantine-font-size-lg)' }}
             >
               {isEditMode ? t('edit_mode.exit') : t('edit_mode.toggle')}
+            </Menu.Item>
+            <Menu.Divider />
+            <Menu.Item
+              onClick={() => setIsAboutOpen(true)}
+              leftSection={<IconInfoCircle size={20} />}
+              py="md"
+              style={{ fontSize: 'var(--mantine-font-size-lg)' }}
+            >
+              {t('about.menu')}
             </Menu.Item>
           </Menu.Dropdown>
         </Menu>
@@ -77,6 +89,7 @@ export function Register(): React.ReactElement {
         isOpen={isCartConfirmationModalOpen}
         onClose={() => setIsCartConfrimationModalOpen(false)}
       />
+      <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
     </Flex>
   );
 }

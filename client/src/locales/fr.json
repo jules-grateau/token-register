@@ -98,5 +98,15 @@
     "unknown": "Une erreur s'est produite. Veuillez réessayer.",
     "network": "Erreur réseau. Veuillez vérifier votre connexion."
   },
-  "showing": "Affichage de {{count}} sur {{total}} commandes"
+  "showing": "Affichage de {{count}} sur {{total}} commandes",
+  "about": {
+    "menu": "À propos",
+    "title": "À propos",
+    "version": "Version {{version}}",
+    "commit": "Commit",
+    "env": {
+      "demo": "Démo",
+      "dev": "Développement"
+    }
+  }
 }
