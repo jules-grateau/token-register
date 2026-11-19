@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Usage: scripts/ci/app-changed.sh <git range>   (e.g. "base...head" or "before..after")
+# Prints "true" if the range touches anything that can affect the app (code, deps,
+# Dockerfile, CI/CD pipeline...), "false" if it only touches files that never reach
+# the app: agent prompts, docs, markdown, review-only workflows and scripts.
+# When in doubt (unknown range, git error), prints "true": better a useless run than
+# a missed deploy.
+set -uo pipefail
+
+range="${1:-}"
+[ -z "$range" ] && { echo true; exit 0; }
+
+if ! files=$(git diff --name-only "$range" 2>/dev/null); then
+  echo true
+  exit 0
+fi
+[ -z "$files" ] && { echo false; exit 0; }
+
+NON_APP='^(\.claude/|docs/|scripts/design-review/|\.github/workflows/(tech-lead-review|design-review)\.yml$)|\.md$'
+
+if printf '%s\n' "$files" | grep -qvE "$NON_APP"; then echo true; else echo false; fi
