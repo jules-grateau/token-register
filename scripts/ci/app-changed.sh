@@ -4,13 +4,14 @@
 # Dockerfile, CI/CD pipeline...), "false" if it only touches files that never reach
 # the app: agent prompts, docs, markdown, review-only workflows and scripts.
 # When in doubt (unknown range, git error), prints "true": better a useless run than
-# a missed deploy.
+# a missed deploy. --no-renames: a file moved out of the app (e.g. into docs/) must
+# still count as an app change through its old path.
 set -uo pipefail
 
 range="${1:-}"
 [ -z "$range" ] && { echo true; exit 0; }
 
-if ! files=$(git diff --name-only "$range" 2>/dev/null); then
+if ! files=$(git diff --name-only --no-renames "$range" 2>/dev/null); then
   echo true
   exit 0
 fi
