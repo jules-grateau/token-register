@@ -1,11 +1,13 @@
 name: Design review
 
-# On release PRs (develop -> main) only, because it is heavier: builds and starts the
-# app, captures screenshots (desktop / tablet / mobile) of the main screens, then
-# the Claude "designer" agent (.claude/agents/designer.md) reviews them against the
-# visual direction and posts its findings on the PR.
+# On release PRs (develop -> main) only. By then develop is already deployed on the
+# demo, so the review tests the real thing: wait for the demo deploy of the PR's
+# commit, drive the demo through its main screens with Playwright (desktop / tablet /
+# mobile), then the Claude "designer" agent (.claude/agents/designer.md) reviews the
+# screenshots and posts its findings on the PR.
 #
-# Uses the same CLAUDE_CODE_OAUTH_TOKEN secret and Claude GitHub App as tech-lead-review.yml.
+# Secrets: CLAUDE_CODE_OAUTH_TOKEN (shared with tech-lead-review.yml),
+#          DEMO_BASIC_AUTH_USER / DEMO_BASIC_AUTH_PASS (demo Basic Auth).
 on:
   pull_request:
     branches: [main]
@@ -15,6 +17,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+env:
+  DEMO_URL: https://demo.julesgrateau.dev
+
 jobs:
   design-review:
     if: >-
@@ -22,53 +27,51 @@ jobs:
       github.event.pull_request.head.ref == 'develop' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     permissions:
       contents: read
+      actions: read
       pull-requests: write
       issues: read
       id-token: write
-    env:
-      # Throwaway credentials and DB, only for this CI run.
-      NODE_ENV: production
-      PORT: 3000
-      DATABASE_PATH: ${{ github.workspace }}/.ci-data/design-review.db
-      BASIC_AUTH_USER: ci
-      BASIC_AUTH_PASS: ci-design-review
-      FRONTEND_URL: http://localhost:3000
-      RUNTIME_VITE_BASE_API_URL: http://localhost:3000/api
-      RUNTIME_VITE_DEFAULT_LANGUAGE: fr
-      OUT_DIR: ${{ github.workspace }}/design-review-output
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
 
-      - name: Build app
+      # The demo must run the PR's commit, otherwise we'd review an old version.
+      - name: Wait for the demo deploy of this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          npm ci
-          npm run build
-
-      - name: Start app
-        run: |
-          npm run prod:db:init
-          npm run prod:db:migrate
-          (cd api && nohup node dist/server.js > "$RUNNER_TEMP/server.log" 2>&1 &)
-          for i in $(seq 1 30); do
-            curl -sf -u "$BASIC_AUTH_USER:$BASIC_AUTH_PASS" http://localhost:3000/api/categories > /dev/null && exit 0
-            sleep 1
+          for i in $(seq 1 40); do
+            run=$(gh run list --workflow ci-cd.yml --commit "$HEAD_SHA" --event push --limit 1 \
+              --json status,conclusion,url -q '.[0] | "\(.status) \(.conclusion) \(.url)"')
+            echo "CI/CD run for $HEAD_SHA: ${run:-not found yet}"
+            case "$run" in
+              "completed success "*) exit 0 ;;
+              completed*) echo "::error::Demo deploy of $HEAD_SHA did not succeed: $run"; exit 1 ;;
+            esac
+            sleep 30
           done
-          echo "App did not start"; cat "$RUNNER_TEMP/server.log"; exit 1
+          echo "::error::Timed out waiting for the demo deploy of $HEAD_SHA"; exit 1
 
-      - name: Capture screenshots
+      - name: Capture screenshots on the demo
+        env:
+          APP_URL: ${{ env.DEMO_URL }}
+          BASIC_AUTH_USER: ${{ secrets.DEMO_BASIC_AUTH_USER }}
+          BASIC_AUTH_PASS: ${{ secrets.DEMO_BASIC_AUTH_PASS }}
+          OUT_DIR: ${{ github.workspace }}/design-review-output
         run: |
-          npm install --no-save playwright@1.55.0
+          if [ -z "$BASIC_AUTH_USER" ] || [ -z "$BASIC_AUTH_PASS" ]; then
+            echo "::error::DEMO_BASIC_AUTH_USER / DEMO_BASIC_AUTH_PASS secrets are not set"; exit 1
+          fi
+          # Only Playwright is needed (no app build): install it apart from the repo.
+          mkdir -p "$RUNNER_TEMP/pw" && cd "$RUNNER_TEMP/pw"
+          npm init -y > /dev/null
+          npm install playwright@1.55.0
           npx playwright install --with-deps chromium
-          node scripts/design-review/capture.mjs
+          cp "$GITHUB_WORKSPACE/scripts/design-review/capture.mjs" .
+          node capture.mjs
 
       - name: Upload screenshots
         if: always()
@@ -85,15 +88,17 @@ jobs:
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
+            DEMO: ${{ env.DEMO_URL }}
             SCREENSHOTS: design-review-output/ (report: design-review-output/report.json)
             ARTIFACT URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
             Tu es le designer du projet. Lis d'abord `.claude/agents/designer.md` (section
             « Revue design d'une PR ») et applique-la à cette pull request de release.
 
-            - L'appli a réellement été lancée et parcourue (accueil, sélection de catégorie,
-              panier rempli, modale de confirmation, commande validée, historique, mode
-              édition) en desktop (1440px), tablette (iPad) et mobile (iPhone 13).
+            - La démo (qui fait déjà tourner le code de cette PR) a été parcourue pour de vrai :
+              accueil, sélection de catégorie, panier rempli, modale de confirmation, commande
+              validée, historique, mode édition ; en desktop (1440px), tablette (iPad) et
+              mobile (iPhone 13). Les commandes de test ont été supprimées ensuite.
             - Lis `report.json` (erreurs d'étapes, erreurs console/JS, débordement horizontal)
               puis ouvre et regarde CHAQUE capture avec Read.
             - Compare avec la DA dans `docs/design/` si elle existe, sinon avec le thème actuel

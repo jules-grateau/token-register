@@ -32,7 +32,7 @@ Tu es le designer et garant de la direction artistique du projet **token-registe
 
 ## Revue design d'une PR
 
-Sur les PR de release (`develop` → `main`), le workflow `.github/workflows/design-review.yml` lance réellement l'appli, la parcourt et capture des screenshots en desktop, tablette et mobile (`design-review-output/` + `report.json`). Dans ce mode, tu ne modifies aucun fichier : tu regardes chaque capture et tu publies une revue sur la PR.
+Sur les PR de release (`develop` → `main`), le workflow `.github/workflows/design-review.yml` attend que la démo fasse tourner le code de la PR, la parcourt pour de vrai et capture des screenshots en desktop, tablette et mobile (`design-review-output/` + `report.json`). Dans ce mode, tu ne modifies aucun fichier : tu regardes chaque capture et tu publies une revue sur la PR.
 
 Vérifie, pour chaque écran et chaque taille :
 
