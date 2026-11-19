@@ -18,5 +18,13 @@ fi
 [ -z "$files" ] && { echo false; exit 0; }
 
 NON_APP='^(\.claude/|docs/|scripts/design-review/|\.github/workflows/(tech-lead-review|design-review)\.yml$)|\.md$'
+# Markdown inside the app workspaces could be imported by the build: it counts.
+APP_DIRS='^(api|client|shared-ts)/'
 
-if printf '%s\n' "$files" | grep -qvE "$NON_APP"; then echo true; else echo false; fi
+while IFS= read -r file; do
+  if [[ "$file" =~ $APP_DIRS ]] || ! [[ "$file" =~ $NON_APP ]]; then
+    echo true
+    exit 0
+  fi
+done <<< "$files"
+echo false

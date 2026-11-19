@@ -30,6 +30,8 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - name: Test the change detection script
+        run: bash scripts/ci/app-changed.test.sh
       - name: Did this change touch the app?
         id: diff
         env:
