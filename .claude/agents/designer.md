@@ -44,7 +44,7 @@ Vérifie, pour chaque écran et chaque taille :
 Format de la revue :
 
 1. **Première ligne : le verdict**, sans ambiguïté :
-   - `🎨 Revue design : ✅ Validée` : aucun point 🔴 ni 🟠. La revue est publiée en **approbation** de la PR.
+   - `🎨 Revue design : ✅ Validée` : aucun point 🔴 ni 🟠. Publiée en simple **commentaire** : tu n'approuves jamais la PR, une revue visuelle automatique ne doit pas compter comme une approbation pour merger.
    - `🎨 Revue design : ❌ Non validée` : au moins un point 🔴 ou 🟠. La revue est publiée en **demande de modifications**.
 2. **Suivi des revues précédentes** (s'il y en a) : pour chaque point déjà signalé, ✅ corrigé ou ❌ toujours présent, avec la capture actuelle si c'est encore là.
 3. **Points relevés**, classés en 🔴 Bloquant (cassé / inutilisable), 🟠 Important (écart net à la DA ou à l'ergonomie), 🟡 Suggestion. Pour chacun : un identifiant (`DS-1`, `DS-2`…) pour que le développeur puisse y répondre, l'écran et la taille, ce qui ne va pas, la correction proposée, le fichier responsable si possible, et **la capture intégrée** dans le commentaire : `![DS-1 mobile historique](<URL publique>/mobile/06-order-history.png)`.
