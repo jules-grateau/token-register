@@ -82,7 +82,8 @@ jobs:
       url: ${{ github.ref_name == 'main' && 'https://poule-aux-jeux-dor.julesgrateau.dev' || 'https://demo.julesgrateau.dev' }}
     steps:
       - name: Pull and restart the services on the VPS
-        uses: appleboy/ssh-action@v1.2.0
+        # Pinned to a commit (not a movable tag): this third-party action receives the SSH key.
+        uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
         env:
           # Compose services of the VPS compose.yaml running this image tag.
           SERVICES: ${{ github.ref_name == 'main' && 'token-register-poule token-register-atakora' || 'token-register' }}
@@ -109,8 +110,9 @@ jobs:
               STATE=$(docker inspect -f '{{.State.Status}}' "$CONTAINER")
               RESTARTS=$(docker inspect -f '{{.RestartCount}}' "$CONTAINER")
               if [ "$STATE" != "running" ] || [ "$RESTARTS" != "0" ]; then
-                echo "::error::$SERVICE failed: state=$STATE restarts=$RESTARTS"
-                docker compose logs --tail=100 "$SERVICE"
+                # Do not print container logs here: Actions logs are public on this repo and
+                # request logs contain Basic Auth headers. Read them on the VPS instead.
+                echo "::error::$SERVICE failed: state=$STATE restarts=$RESTARTS. On the VPS: docker compose logs --tail=100 $SERVICE"
                 FAILED=1
               else
                 echo "$SERVICE is running."
