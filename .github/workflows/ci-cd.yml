@@ -4,6 +4,9 @@ name: CI/CD
 # - Push (= merge) to develop: tests -> image :test   -> redeploy the demo/test instance.
 # - Push (= merge) to main:    tests -> image :latest -> redeploy production instances
 #   (after manual approval, configured on the "production" GitHub environment).
+# All of it is skipped when the change can't affect the app (agent prompts, docs,
+# markdown, review-only workflows: see scripts/ci/app-changed.sh). The run still
+# exists and succeeds, which design-review.yml relies on.
 on:
   push:
     branches: [main, develop]
@@ -19,7 +22,42 @@ env:
   IMAGE: julesgrateau/token-register
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.diff.outputs.app }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Did this change touch the app?
+        id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            range="$BASE...$HEAD"
+          elif [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            range="$BEFORE..$GITHUB_SHA"
+          else
+            range=""  # first push of a branch: unknown, the script answers "true"
+          fi
+          app=$(bash scripts/ci/app-changed.sh "$range")
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+          {
+            echo "### App changed: \`$app\`"
+            echo "Range: \`${range:-unknown}\`"
+            if [ "$app" = "false" ]; then
+              echo "Tests, image build and deploy are skipped (no app file touched)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
   test:
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
