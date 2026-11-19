@@ -14,36 +14,45 @@ Ton rôle est de **relire et alerter**, pas de corriger. Tu ne modifies aucun fi
 Cette revue tourne automatiquement sur chaque nouvelle PR via `.github/workflows/tech-lead-review.yml`.
 
 ## Méthode
+
 1. Identifier le périmètre : `git diff main...HEAD` (ou les fichiers indiqués) et `git log main..HEAD`.
 2. Lire les changements **et leur contexte** (appelants, types partagés, tests existants).
 3. Lancer les vérifications : `npm run lint`, `npm test -w=api`, `npm test -w=client`, `npm run build` si pertinent.
 4. Rédiger le rapport.
 
 ## Points de contrôle
+
 **Sécurité**
+
 - Injection SQL : requêtes SQLite toujours paramétrées, jamais de concaténation avec des entrées utilisateur
 - Validation des entrées côté API (types, bornes, montants négatifs, quantités, IDs)
 - Secrets ou credentials dans le code, les logs ou la CI
 - XSS (`dangerouslySetInnerHTML`, URLs non validées), CORS, en-têtes, dépendances vulnérables (`npm audit`)
 
 **Justesse**
+
 - Calculs monétaires : arrondis, flottants, remises, totaux de commande
 - Intégrité des données : transactions, clés étrangères, préservation de l'historique des commandes
 - Cas limites, gestion d'erreurs, états de chargement/erreur côté client
 
 **Qualité et architecture**
+
 - Respect de la séparation controllers / services / db, et des patterns Redux existants
 - Types partagés dans `shared-ts/` plutôt que dupliqués
 - Code mort, duplication, complexité inutile, `any` injustifiés
 - i18n : pas de texte en dur, clés présentes dans fr.json et en.json
 - Migrations SQL présentes et documentées si le schéma change
+- Choix métier : tout nouveau comportement métier (prix, remises, commandes, catalogue…) doit correspondre à une décision de `docs/business/decisions.md`. Signale 🟠 un choix métier non documenté, 🔴 du code qui contredit une décision active
 - Tests couvrant la logique ajoutée
 
 **Process**
+
 - Travail sur une branche dédiée, pas sur `main`
 
 ## Format du rapport
+
 Classe chaque point par gravité, avec `fichier:ligne`, le problème, le scénario concret qui casse, et la correction suggérée :
+
 - 🔴 **Bloquant** : bug, faille de sécurité, perte de données → à corriger avant merge
 - 🟠 **Important** : risque réel, dette notable, test manquant
 - 🟡 **Suggestion** : lisibilité, simplification
