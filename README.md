@@ -289,6 +289,32 @@ For detailed migration procedures, see:
 
 ---
 
+## Versioning
+
+The app version follows `MAJOR.MINOR.PATCH` (e.g. `1.2.3`). The **root `package.json`** is the
+source of truth; the `api` and `client` workspaces carry the same number. It is shown in the app
+under ⚙️ > "About" (with the commit hash and a "Demo" badge on the demo instance).
+
+**Bump it by hand in every release PR (`develop` → `main`)**, from the repo root:
+
+```sh
+npm version <new-version> --workspaces --include-workspace-root --no-git-tag-version --allow-same-version
+# e.g. npm version 1.1.0 ...  (PATCH: fixes only, MINOR: new features, MAJOR: breaking changes)
+```
+
+Then commit `package.json`, `api/package.json`, `client/package.json`, `shared-ts/package.json`
+and `package-lock.json`.
+
+What CI does with it:
+
+- **PR to `main`**: fails if the version is not greater than the one on `main`.
+- **Push to `main`**: refuses to build if tag `v<version>` already exists; tags the Docker image
+  `:<version>` (in addition to `:latest` and `:sha-xxxxxxx`); after the production deploy, creates
+  the git tag `v<version>` and a GitHub Release with notes generated from the merged PRs.
+- **Push to `develop`**: the demo image shows the current version + commit hash, with a "Demo" badge.
+
+---
+
 ## License
 
 ISC
