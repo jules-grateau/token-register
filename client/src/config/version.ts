@@ -1,6 +1,9 @@
 // Version info injected at build time by Vite (`define` in vite.config.ts).
 // The `typeof` guards keep this module usable where nothing is injected (Jest).
 
+/** Product name, shown in the About modal and in the copied version summary. */
+export const APP_NAME = 'Token Register';
+
 export type ReleaseChannel = 'production' | 'demo' | 'development';
 
 export interface AppVersionInfo {
@@ -31,7 +34,7 @@ export function buildVersionInfo(
 
 /** One-line summary, e.g. `Token Register v1.0.0 (abc1234) – demo` (`Token Register v1.0.0` in production). */
 export function formatVersionForClipboard(info: AppVersionInfo): string {
-  let text = `Token Register v${info.version}`;
+  let text = `${APP_NAME} v${info.version}`;
   if (info.commit) text += ` (${info.commit})`;
   if (info.channel !== 'production') text += ` – ${info.channel}`;
   return text;

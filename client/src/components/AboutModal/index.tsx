@@ -14,7 +14,7 @@ import {
 import { useMediaQuery } from '@mantine/hooks';
 import { IconCheck, IconCopy } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { formatVersionForClipboard, getAppVersionInfo } from '../../config/version';
+import { APP_NAME, formatVersionForClipboard, getAppVersionInfo } from '../../config/version';
 
 interface AboutModalProps {
   isOpen: boolean;
@@ -48,7 +48,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
       closeButtonProps={{ size: 'lg' }}
     >
       <Stack>
-        <Title order={3}>Token Register</Title>
+        <Title order={3}>{APP_NAME}</Title>
         <Group gap="sm">
           <Text size="xl" fw={700}>
             {t('about.version', { version: info.version })}

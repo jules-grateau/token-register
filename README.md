@@ -311,6 +311,9 @@ What CI does with it:
 - **Push to `main`**: refuses to build if tag `v<version>` already exists; tags the Docker image
   `:<version>` (in addition to `:latest` and `:sha-xxxxxxx`); after the production deploy, creates
   the git tag `v<version>` and a GitHub Release with notes generated from the merged PRs.
+- **If the `release` job fails after a production deploy** (e.g. GitHub API error), re-run
+  **only that job** ("Re-run failed jobs"). A full re-run would be blocked by `build` as soon as
+  the tag exists.
 - **Push to `develop`**: the demo image shows the current version + commit hash, with a "Demo" badge.
 
 ---

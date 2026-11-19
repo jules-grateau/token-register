@@ -91,5 +91,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Domaine** : Autre
 - **Contexte** : il faut décider où l'utilisateur trouve la version (proposition du designer).
 - **Décision** : le menu ⚙️ contient un item « À propos » qui ouvre une modale avec le nom de l'appli, la version (cf. D-003) et un bouton « Copier les infos ». Ouvrir cette modale ne touche pas au panier.
-- **Options écartées** : aucune autre option présentée (proposition du designer validée telle quelle).
+- **Options écartées** :
+  - ligne discrète « Token Register v1.0.0 » en bas du menu ⚙️, sans modale (1 clic, mais peu lisible sur tablette et rien à copier) ;
+  - les deux à la fois (entrée « À propos » + ligne en bas du menu).
 - **Impact** : `client/src/components/Register`, `client/src/components/AboutModal`, `client/src/locales`.
