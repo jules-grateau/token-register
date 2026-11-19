@@ -6,6 +6,8 @@
   "items_other": "Articles",
   "tokens_one": "Jeton",
   "tokens_other": "Jetons",
+  "currency_symbol": "Jeton",
+  "currency_symbol_eur": "€",
   "your_cart_is_empty": "Votre panier est vide.",
   "cart_confirmation": "Confirmer le panier",
   "order_history": "Historique des commandes",
@@ -46,6 +48,7 @@
   "discount_value_title": "Montant de la réduction",
   "placeholder_percentage_discount": "ex: 10 pour 10%",
   "placeholder_fixed_discount": "ex: 1 pour 1 Jeton",
+  "placeholder_fixed_discount_eur": "ex : 0,50 pour 0,50 €",
   "new_total_price_for_item": "Nouveau prix total",
   "error_invalid_discount_value_positive": "Valeur de la réduction incorrect",
   "error_invalid_fixed_value_over_total_price": "Impossible de faire une réduction suppérieur au prix total",
@@ -71,6 +74,7 @@
     "form": {
       "name": "Nom du Produit",
       "price": "Prix (jetons)",
+      "price_eur": "Prix (€)",
       "category": "Catégorie"
     }
   },
@@ -94,7 +98,8 @@
   },
   "errors": {
     "required": "Ce champ est obligatoire",
-    "min_price": "Le prix doit être 0 ou plus",
+    "max_two_decimals": "2 décimales maximum (ex : 1,50)",
+    "whole_tokens": "Nombre entier de jetons uniquement",
     "unknown": "Une erreur s'est produite. Veuillez réessayer.",
     "network": "Erreur réseau. Veuillez vérifier votre connexion."
   },
@@ -108,5 +113,13 @@
       "demo": "Démo",
       "dev": "Développement"
     }
+  },
+  "currency": {
+    "menu_label": "Monnaie : {{name}}",
+    "names": {
+      "TOKEN": "Jetons",
+      "EUR": "Euros (€)"
+    },
+    "instance_config": "Définie par la configuration de l'instance"
   }
 }

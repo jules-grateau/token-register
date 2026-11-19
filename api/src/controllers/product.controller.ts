@@ -2,6 +2,11 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { ProductService } from '../services/product.service';
 import { ProductType } from 'shared-ts';
 import { NotFoundError } from '../types/errors';
+import { isValidStoredAmount } from '../utils/currency';
+
+// D-010 / D-012: prices are whole numbers in the smallest unit (tokens or cents).
+const INVALID_PRICE_MESSAGE =
+  'Invalid price: it must be a whole number of tokens, or of cents for euros (2 decimals max)';
 
 export class ProductController {
   public path = '/products';
@@ -43,6 +48,10 @@ export class ProductController {
         res.status(400).json({ error: 'Missing or invalid product fields' });
         return;
       }
+      if (!isValidStoredAmount(price)) {
+        res.status(400).json({ error: INVALID_PRICE_MESSAGE });
+        return;
+      }
       const id = await this.productService.addProduct({ name, price, categoryId });
       res.status(201).json({ id });
     } catch (error) {
@@ -66,6 +75,10 @@ export class ProductController {
       >;
       if (Object.keys(productUpdate).length === 0) {
         res.status(400).json({ error: 'At least one field to update must be provided' });
+        return;
+      }
+      if ('price' in productUpdate && !isValidStoredAmount(productUpdate.price)) {
+        res.status(400).json({ error: INVALID_PRICE_MESSAGE });
         return;
       }
 

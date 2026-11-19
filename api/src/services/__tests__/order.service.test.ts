@@ -180,6 +180,21 @@ describe('OrderService (unit)', () => {
     );
   });
 
+  it('should reject a discount that is not a whole number of units (D-010)', async () => {
+    mockGet.mockResolvedValue({ name: 'Bière', price: 250, category_name: 'Boissons' });
+    const service = new OrderService();
+    const cart = [
+      {
+        product: { id: 1, name: 'Bière', price: 250, categoryId: 1 },
+        quantity: 1,
+        discountedAmount: 37.5,
+      },
+    ];
+
+    await expect(service.createOrder(cart)).rejects.toThrow('Invalid discount amount');
+    expect(mockExec).toHaveBeenCalledWith('ROLLBACK');
+  });
+
   it('should validate the discount against the database price', async () => {
     mockGet.mockResolvedValue({ name: 'Bière', price: 3, category_name: 'Boissons' });
     const service = new OrderService();

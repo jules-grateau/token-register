@@ -95,6 +95,7 @@ FRONTEND_URL= https://your-app # Used for CORS authorization - Should not be use
 LOG_LEVEL= info # Level of log needed
 RUNTIME_VITE_BASE_API_URL= https://your-app/api # URL to API - Used when the frontend is distributed by the backend.
 RUNTIME_VITE_DEFAULT_LANGUAGE= en # Define the default language. - Used when the frontend is distributed by the backend.
+CURRENCY= TOKEN # TOKEN (default) or EUR. Fixed per instance, see deploy/README.md > Currency.
 ```
 
 ##### **CLIENT**
@@ -102,6 +103,7 @@ RUNTIME_VITE_DEFAULT_LANGUAGE= en # Define the default language. - Used when the
 ```env
 VITE_BASE_API_URL=http://localhost:3001/api # URL to API - Used when deploying FrontEnd separatly
 VITE_DEFAULT_LANGUAGE=fr # Default Language - Used when deploying FrontEnd separatly
+VITE_CURRENCY=TOKEN # TOKEN or EUR, must match the API CURRENCY - Used in development / when deploying FrontEnd separatly
 ```
 
 #### 4. **Initialize the database**
@@ -111,6 +113,12 @@ npm run init-db -w=api
 ```
 
 This will create and seed the SQLite database at `api/src/db/data/database.sqlite` or where configured in the `api/.env` file
+
+Then run the migrations, which also record the instance currency (the API refuses to start without it):
+
+```sh
+npm run dev:db:migrate -w=api
+```
 
 #### 5. **Start the backend**
 
@@ -231,6 +239,7 @@ docker run \
   --env=NODE_ENV=production \
   --env=RUNTIME_VITE_BASE_API_URL=localhost:8080 \
   --env=RUNTIME_VITE_DEFAULT_LANGUAGE=en \
+  --env=CURRENCY=TOKEN \
   --network=bridge \
   --workdir=/usr/src/app \
   -p 8080:3000 \

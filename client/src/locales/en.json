@@ -6,6 +6,8 @@
   "items_other": "Items",
   "tokens_one": "Token",
   "tokens_other": "Tokens",
+  "currency_symbol": "Token",
+  "currency_symbol_eur": "€",
   "your_cart_is_empty": "Your cart is empty.",
   "order_history": "Order History",
   "cart_confirmation": "Cart confirmation",
@@ -46,6 +48,7 @@
   "discount_value_title": "Discounted amound",
   "placeholder_percentage_discount": "eg: 10 for 10%",
   "placeholder_fixed_discount": "eg: 1 for 1 Token",
+  "placeholder_fixed_discount_eur": "eg: 0,50 for 0,50 €",
   "new_total_price_for_item": "New total price",
   "error_invalid_discount_value_positive": "Discount amound is incorrect",
   "error_invalid_fixed_value_over_total_price": "Cannot discount more than total price",
@@ -71,6 +74,7 @@
     "form": {
       "name": "Product Name",
       "price": "Price (tokens)",
+      "price_eur": "Price (€)",
       "category": "Category"
     }
   },
@@ -94,7 +98,8 @@
   },
   "errors": {
     "required": "This field is required",
-    "min_price": "Price must be 0 or greater",
+    "max_two_decimals": "2 decimals max (e.g. 1,50)",
+    "whole_tokens": "Whole tokens only",
     "unknown": "An error occurred. Please try again.",
     "network": "Network error. Please check your connection."
   },
@@ -108,5 +113,13 @@
       "demo": "Demo",
       "dev": "Development"
     }
+  },
+  "currency": {
+    "menu_label": "Currency: {{name}}",
+    "names": {
+      "TOKEN": "Tokens",
+      "EUR": "Euros (€)"
+    },
+    "instance_config": "Set by the instance configuration"
   }
 }

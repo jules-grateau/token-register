@@ -5,6 +5,7 @@ import Loader from '../Loader';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import ConfirmationModal from '../ConfirmationModal';
+import { useCurrency } from '../../hooks/useCurrency';
 
 import {
   Modal,
@@ -26,6 +27,7 @@ interface OrderHistoryModalProps {
 
 const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
   const ordersQuery = useGetOrdersQuery({ page: currentPage, pageSize });
@@ -121,8 +123,8 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
                     </Stack>
                     <Divider />
                     <Group justify="space-between">
-                      <Text fw={700}>
-                        {totalPrice} {t('tokens', { count: totalPrice })}
+                      <Text fw={700} style={{ whiteSpace: 'nowrap' }}>
+                        {format(totalPrice)}
                       </Text>
                       <Text size="sm" c="dimmed">
                         {totalItems} {t('items', { count: totalItems })}
