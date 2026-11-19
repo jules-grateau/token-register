@@ -14,6 +14,7 @@ import { toast } from 'react-toastify';
 import { Group, Stack, Text, ScrollArea } from '@mantine/core';
 import ConfirmationModal from '../ConfirmationModal';
 import Loader from '../Loader';
+import { useCurrency } from '../../hooks/useCurrency';
 
 interface CartConfirmationModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface CartConfirmationModalProps {
 
 const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const cartItems = useSelector(selectCartItems);
   const totalPrice = useSelector(selectTotalPrice);
   const totalItems = useSelector(selectTotalItems);
@@ -51,7 +53,9 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({ isOpen, o
   const modalFooter = (
     <Group justify="space-between">
       <Text fw={700}>{`${totalItems} ${t('items', { count: totalItems })}`}</Text>
-      <Text fw={700}>{`${totalPrice} ${t('tokens', { count: totalPrice })}`}</Text>
+      <Text fw={700} style={{ whiteSpace: 'nowrap' }}>
+        {format(totalPrice)}
+      </Text>
     </Group>
   );
 

@@ -106,3 +106,91 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Décision** : la modale « À propos » n'affiche que les infos et un bouton « Fermer », en démo comme en prod.
 - **Options écartées** : bouton « Copier les infos » partout ; bouton seulement en démo.
 - **Impact** : `client/src/components/AboutModal`, `client/src/config/version.ts`, `client/src/locales`.
+
+### D-008 — La monnaie est un réglage de l'instance, visible en lecture seule
+
+- **Date** : 2026-11-19
+- **Confirmée par** : Jules (responsable produit), 2026-11-19
+- **Statut** : Active
+- **Domaine** : Prix & jetons
+- **Contexte** : un nouveau client travaille en euros au lieu de jetons ; il faut décider où se règle la monnaie et qui peut la changer.
+- **Décision** : la monnaie est fixée par la configuration de l'instance (variable d'environnement `CURRENCY` = `TOKEN` par défaut, ou `EUR`), transmise au client par `/config.js`. Elle n'est pas modifiable dans l'appli. Le menu ⚙️ affiche une entrée non cliquable « Monnaie : Euros (€) » ou « Monnaie : Jetons », avec une icône cadenas et la mention « Définie par la configuration de l'instance ».
+- **Options écartées** : réglage modifiable dans l'appli (n'importe quel caissier pourrait le changer, l'accès étant unique, et cela dépassait le délai).
+- **Impact** : `api/src/utils/currency.ts`, `api/src/server.ts`, `client/src/config/currency.ts`, `client/src/components/Register`, `deploy/README.md`.
+
+### D-009 — Changement de monnaie : interdit par défaut, conversion par commande admin explicite
+
+- **Date** : 2026-11-19
+- **Confirmée par** : Jules (responsable produit), 2026-11-19
+- **Statut** : Active
+- **Domaine** : Prix & jetons
+- **Contexte** : passer une instance qui contient déjà des prix et des commandes d'une monnaie à l'autre ferait lire « 3 jetons » comme « 0,03 € », ou l'inverse.
+- **Décision** : l'instance enregistre sa monnaie au premier démarrage et refuse de démarrer si la configuration indique une autre monnaie, avec un message qui renvoie à la commande de correction. Un changement de configuration accidentel ne convertit jamais rien. Pour changer réellement de monnaie, une commande admin lancée volontairement (`prod:db:convert-currency`, documentée dans `deploy/README.md`) convertit 1 pour 1 les prix des produits **et** l'historique des commandes, puis enregistre la nouvelle monnaie. Jetons → euros : 3 → 3,00 €. Euros → jetons : arrondi au jeton le plus proche, le .5 étant arrondi vers le haut en valeur absolue (1,50 € → 2, 1,49 € → 1, -1,50 € → -2). La commande affiche d'abord un aperçu (par défaut, sans rien écrire) et n'applique qu'avec `--apply`, dans une transaction, en rappelant de faire une sauvegarde.
+- **Options écartées** : conversion automatique au redémarrage ; refus de convertir s'il y a des commandes ; arrondi supérieur ; arrondi inférieur.
+- **Impact** : `api/src/db/currency.ts`, `api/src/db/scripts/migrateDb.ts`, `api/src/db/scripts/convertCurrency.ts`, `MIGRATIONS.md`, `deploy/README.md`.
+
+### D-010 — Euros au centime, saisie trop précise refusée, remise en % au centime supérieur
+
+- **Date** : 2026-11-19
+- **Confirmée par** : Jules (responsable produit), 2026-11-19
+- **Statut** : Active
+- **Domaine** : Remises
+- **Contexte** : les euros introduisent des montants à virgule ; il faut fixer la précision et l'arrondi des remises.
+- **Décision** : en euros, les montants ont 2 décimales. Une saisie plus précise (ex. 1,555) est refusée avec un message, côté client et côté API (les montants doivent être un nombre entier de centimes). Une remise en pourcentage est arrondie au centime supérieur, en faveur du client (15 % de 2,50 € = 0,38 €). Une remise fixe peut comporter des centimes (0,50 €). Le pourcentage reste un entier de 1 à 100.
+- **Options écartées** : arrondir silencieusement la saisie ; remise en pourcentage arrondie au centime le plus proche ou inférieur.
+- **Impact** : `client/src/utils/currency.ts`, `client/src/components/DiscountModal`, `client/src/components/ProductManagement/ProductFormModal.tsx`, `api/src/controllers/product.controller.ts`, `api/src/services/order.service.ts`.
+
+### D-011 — Montants en euros toujours au format français
+
+- **Date** : 2026-11-19
+- **Confirmée par** : Jules (responsable produit), 2026-11-19
+- **Statut** : Active
+- **Domaine** : Prix & jetons
+- **Contexte** : il faut fixer l'affichage des montants en euros, l'interface existant en français et en anglais.
+- **Décision** : les montants en euros s'affichent toujours au format français, centimes compris, avec un espace insécable avant le symbole (« 1,50 € », « 2,00 € », « -1,00 € »), même quand l'interface est en anglais. Les jetons gardent leur affichage actuel (« 3 Jetons »).
+- **Options écartées** : format selon la langue (« €1.50 » en anglais) ; centimes affichés seulement s'ils sont non nuls.
+- **Impact** : `client/src/utils/currency.ts` (`formatAmount`), tous les écrans qui affichent un montant.
+
+### D-012 — Pas de jetons à virgule
+
+- **Date** : 2026-11-19
+- **Confirmée par** : Jules (responsable produit), 2026-11-19
+- **Statut** : Active
+- **Domaine** : Prix & jetons
+- **Contexte** : l'arrivée des centimes pose la question des fractions de jeton.
+- **Décision** : les jetons restent des nombres entiers. Rien ne change pour les instances en jetons.
+- **Options écartées** : autoriser les jetons à virgule.
+- **Impact** : validations de saisie (client) et contrôle « nombre entier » (API).
+
+### D-013 — Prix négatifs (consigne) autorisés à la saisie, quelle que soit la monnaie
+
+- **Date** : 2026-11-19
+- **Confirmée par** : Jules (responsable produit), 2026-11-19
+- **Statut** : Active
+- **Domaine** : Catalogue
+- **Contexte** : le formulaire produit refusait les prix négatifs ; une consigne (« Retour Eco-cup ») ne pouvait exister que si elle était préinstallée.
+- **Décision** : le formulaire produit accepte un prix négatif, pour toutes les monnaies, y compris sur les instances en jetons existantes. Un produit à prix négatif ne peut toujours pas recevoir de remise.
+- **Options écartées** : garder l'interdiction des prix négatifs à la saisie.
+- **Impact** : `client/src/components/ProductManagement/ProductFormModal.tsx`.
+
+### D-014 — Catalogue vide pour une nouvelle instance en euros
+
+- **Date** : 2026-11-19
+- **Confirmée par** : Jules (responsable produit), 2026-11-19
+- **Statut** : Active
+- **Domaine** : Catalogue
+- **Contexte** : une base vide reçoit un catalogue d'exemple dont les prix sont en jetons.
+- **Décision** : une nouvelle instance en euros démarre avec un catalogue vide. Les instances en jetons gardent le catalogue d'exemple actuel.
+- **Options écartées** : même catalogue d'exemple avec les mêmes chiffres en euros ; catalogue réel du client.
+- **Impact** : `api/src/db/scripts/initDb.ts`.
+
+### D-015 — Le nom « Token Register » est conservé
+
+- **Date** : 2026-11-19
+- **Confirmée par** : Jules (responsable produit), 2026-11-19
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : le nom de l'appli évoque les jetons alors qu'une instance peut être en euros.
+- **Décision** : on garde « Token Register » (en-tête et « À propos ») ; seuls les libellés de prix dépendent de la monnaie. Une refonte de l'identité (logo, nom, direction artistique) est prévue plus tard.
+- **Options écartées** : changer le nom affiché pour les instances en euros.
+- **Impact** : aucun changement de code ; libellés de prix dans `client/src/locales`.

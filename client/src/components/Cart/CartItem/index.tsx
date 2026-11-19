@@ -3,6 +3,7 @@ import type { CartItemType } from 'shared-ts';
 import { Group, Text, Menu, Paper, ActionIcon } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { IconDotsVertical, IconMinus, IconPlus } from '@tabler/icons-react';
+import { useCurrency } from '../../../hooks/useCurrency';
 
 interface CartItemProps {
   item: CartItemType;
@@ -13,6 +14,7 @@ interface CartItemProps {
 
 const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onDiscount, onQuantityChange }) => {
   const { t } = useTranslation();
+  const { format } = useCurrency();
 
   const handleDiscountClick = () => {
     onDiscount?.(item);
@@ -36,7 +38,7 @@ const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onDiscount, onQuant
     <Paper p={0} m={0} radius="sm" bg="transparent">
       <Group justify="flex-end" gap="sm" wrap="nowrap">
         <Group gap="xs" style={{ flex: 1 }} wrap="nowrap">
-          <Text fw={600} size="sm" flex={1}>
+          <Text fw={600} size="sm" flex={1} lineClamp={2}>
             {item.product.name}
           </Text>
           {onQuantityChange && (
@@ -65,9 +67,15 @@ const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onDiscount, onQuant
           )}
         </Group>
 
-        <Group gap={0} justify="flex-end" wrap="nowrap" flex={1}>
-          <Text fw={600} size="sm" c={item.discountedAmount > 0 ? 'teal.8' : undefined}>
-            {calcPrice} {t('tokens', { count: calcPrice })}
+        {/* A price is never truncated: the name gives way. */}
+        <Group gap={0} justify="flex-end" wrap="nowrap" style={{ flex: 'none' }}>
+          <Text
+            fw={600}
+            size="sm"
+            c={item.discountedAmount > 0 ? 'teal.8' : undefined}
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            {format(calcPrice)}
           </Text>
         </Group>
 

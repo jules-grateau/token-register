@@ -2,6 +2,7 @@ import { openDb } from '../db';
 import logger from '../utils/logger';
 import { CartItemType, OrderType, OrderItemType, PaginationParams, PaginatedOrdersResponse } from 'shared-ts';
 import { NotFoundError, ValidationError } from '../types/errors';
+import { isValidStoredAmount } from '../utils/currency';
 
 interface OrderItemDbRow {
   order_id: number;
@@ -141,7 +142,7 @@ export class OrderService {
         // Math.max: negative-priced products (e.g. eco-cup return) cannot be discounted.
         const maxDiscount = Math.max(0, row.price * quantity);
         if (
-          typeof discountedAmount !== 'number' ||
+          !isValidStoredAmount(discountedAmount) ||
           discountedAmount < 0 ||
           discountedAmount > maxDiscount
         ) {

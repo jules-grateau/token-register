@@ -3,7 +3,14 @@ import ConfirmationModal from '../ConfirmationModal';
 import type { CartItemType } from 'shared-ts';
 import { useTranslation } from 'react-i18next';
 import { validateDiscountValue } from './utils/validateDiscountValue';
-import { Stack, Text, Group, TextInput, SegmentedControl } from '@mantine/core';
+import { Stack, Text, Group, NumberInput, SegmentedControl } from '@mantine/core';
+import { useCurrency } from '../../hooks/useCurrency';
+import {
+  computePercentageDiscount,
+  getDecimalScale,
+  parseAmountInput,
+  toStoredAmount,
+} from '../../utils/currency';
 
 export type DiscountType = 'percentage' | 'fixed';
 
@@ -25,13 +32,16 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
   item,
 }) => {
   const { t } = useTranslation();
+  const { currency, format } = useCurrency();
   const [discountType, setDiscountType] = useState<DiscountType>('fixed');
-  const [discountValue, setDiscountValue] = useState<string>('');
+  const [discountValue, setDiscountValue] = useState<number | string>('');
   const [validationError, setValidationError] = useState<string>('');
 
   const originalItemPrice = item?.product.price || 0;
   const itemQuantity = item?.quantity || 1;
   const originalTotalItemPrice = originalItemPrice * itemQuantity;
+  const isEur = currency === 'EUR';
+  const i18nContext = isEur ? 'eur' : undefined;
 
   useEffect(() => {
     setDiscountType('fixed');
@@ -43,31 +53,33 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
     return null;
   }
 
-  const finalDiscountAmount = (discountValue: string) => {
-    const value = parseInt(discountValue);
+  /** Discount as a stored amount (tokens or cents). */
+  const finalDiscountAmount = (discountValue: number | string) => {
+    const value = parseAmountInput(discountValue);
     if (validationError || !value) return 0;
 
     if (discountType === 'fixed') {
-      return value;
-    } else {
-      return Math.ceil(originalTotalItemPrice * (value / 100));
+      return toStoredAmount(value, currency);
     }
+    // D-010: rounded up to the next token / cent, in favour of the customer.
+    return computePercentageDiscount(originalTotalItemPrice, value);
   };
 
-  const priceAfterDiscount = (discountValue: string) => {
+  const priceAfterDiscount = (discountValue: number | string) => {
     return originalTotalItemPrice - finalDiscountAmount(discountValue);
   };
 
-  const handleDiscountValueChange = (value: string) => {
+  const handleDiscountValueChange = (value: number | string) => {
     setDiscountValue(value);
     setValidationError(
-      validateDiscountValue(value, discountType, originalTotalItemPrice, (key) => t(key))
+      validateDiscountValue(value, discountType, originalTotalItemPrice, currency, (key) => t(key))
     );
   };
 
   const handleDiscountTypeChange = (value: DiscountType) => {
     setDiscountType(value);
     setDiscountValue('');
+    setValidationError('');
   };
 
   const handleConfirm = () => {
@@ -79,6 +91,10 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
     onClose();
   };
 
+  const isFixed = discountType === 'fixed';
+  const decimalScale = isFixed ? getDecimalScale(currency) : 0;
+  const unitSuffix = isFixed ? (isEur ? '€' : undefined) : '%';
+
   const modalContent = (
     <Stack>
       <Stack gap={4}>
@@ -89,9 +105,7 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
           onChange={(value) => handleDiscountTypeChange(value as DiscountType)}
           data={[
             {
-              label: `${t('fixed_amount')} (${t('currency_symbol', {
-                defaultValue: t('tokens', { count: 1 }),
-              })})`,
+              label: `${t('fixed_amount')} (${t('currency_symbol', { context: i18nContext })})`,
               value: 'fixed',
             },
             { label: `${t('percentage')} (%)`, value: 'percentage' },
@@ -99,26 +113,38 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
         />
       </Stack>
 
-      <TextInput
+      <NumberInput
         label={<Text fw={500}>{t('discount_value_title')}</Text>}
         id="discountValueInput"
-        type="text"
-        inputMode="numeric"
         value={discountValue}
-        onChange={(e) => handleDiscountValueChange(e.target.value)}
+        onChange={handleDiscountValueChange}
+        inputMode={decimalScale > 0 ? 'decimal' : 'numeric'}
+        allowDecimal={decimalScale > 0}
+        decimalScale={decimalScale > 0 ? decimalScale : undefined}
+        fixedDecimalScale={decimalScale > 0}
+        decimalSeparator=","
+        allowedDecimalSeparators={['.', ',']}
+        thousandSeparator={false}
+        hideControls
+        rightSection={
+          unitSuffix ? (
+            <Text size="sm" c="dimmed">
+              {unitSuffix}
+            </Text>
+          ) : undefined
+        }
         placeholder={
-          discountType === 'percentage'
-            ? t('placeholder_percentage_discount')
-            : t('placeholder_fixed_discount')
+          isFixed
+            ? t('placeholder_fixed_discount', { context: i18nContext })
+            : t('placeholder_percentage_discount')
         }
         error={validationError}
       />
 
       <Group justify="space-between" mt="md">
         <Text>{t('new_total_price_for_item')}:</Text>
-        <Text fw={700}>
-          {priceAfterDiscount(discountValue)}{' '}
-          {t('tokens', { count: priceAfterDiscount(discountValue) })}
+        <Text fw={700} style={{ whiteSpace: 'nowrap' }}>
+          {format(priceAfterDiscount(discountValue))}
         </Text>
       </Group>
     </Stack>

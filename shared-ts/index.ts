@@ -51,3 +51,7 @@ export type PaginatedResponse<T> = {
 };
 
 export type PaginatedOrdersResponse = PaginatedResponse<OrderType>;
+
+/** Currency of an instance. Amounts are always stored as integers in the smallest unit:
+ * 1 token for TOKEN, 1 cent for EUR. */
+export type CurrencyCode = 'TOKEN' | 'EUR';

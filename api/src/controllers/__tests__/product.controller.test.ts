@@ -69,6 +69,24 @@ describe('ProductController', () => {
       expect(res.json).toHaveBeenCalledWith({ id: createdId });
     });
 
+    it('should return 400 if the price is not a whole number of units (D-010)', async () => {
+      req.body = { name: 'Bière', price: 1.5, categoryId: 2 };
+
+      await controller.createProduct(req as Request, res as Response, next as NextFunction);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(mockProductService.addProduct).not.toHaveBeenCalled();
+    });
+
+    it('should accept a negative price (deposit return, D-013)', async () => {
+      req.body = { name: 'Retour Eco-cup', price: -100, categoryId: 2 };
+      mockProductService.addProduct.mockResolvedValue(7);
+
+      await controller.createProduct(req as Request, res as Response, next as NextFunction);
+
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
+
     it('should return 400 if required fields are missing', async () => {
       req.body = { name: '', price: 'not-a-number', categoryId: null };
 
@@ -109,6 +127,15 @@ describe('ProductController', () => {
       expect(res.status).toHaveBeenCalledWith(204);
       expect(res.send).toHaveBeenCalled();
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should return 400 if the updated price is not a whole number of units', async () => {
+      req.body = { price: 1.555 };
+
+      await controller.updateProduct(req as Request, res as Response, next as NextFunction);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(mockProductService.updateProduct).not.toHaveBeenCalled();
     });
 
     it('should return 400 for an invalid product ID', async () => {
