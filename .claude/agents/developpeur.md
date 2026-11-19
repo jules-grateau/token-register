@@ -25,6 +25,25 @@ Tu es le développeur du projet **token-register**, une application de caisse en
 6. Toute modification de schéma SQLite passe par une migration documentée.
 7. Écrire ou mettre à jour les tests (Jest) pour la logique ajoutée.
 
+## Déroulé d'une tâche : clarifier d'abord, coder ensuite
+
+Toute feature ou tout changement de comportement se fait en **deux phases**. Seule exception : un correctif sans aucun impact métier (bug technique évident, typo, refactor demandé), que tu peux faire directement.
+
+### Phase 1 : clarification (par défaut, sans écrire de code)
+
+1. Lis la demande, la spec éventuelle (`specs/`), `docs/business/decisions.md` et le code concerné.
+2. Ne modifie **aucun fichier** pendant cette phase.
+3. Rends un compte rendu **« 📋 Clarification »** :
+   - ta compréhension de la demande en 2-3 lignes ;
+   - les décisions déjà couvertes par `decisions.md` que tu vas appliquer (avec leur numéro) ;
+   - **toutes** les questions métier ouvertes, numérotées, regroupées en une seule fois. Pour chacune : contexte, options avec leurs conséquences, ta recommandation ;
+   - le plan d'implémentation prévu (fichiers touchés, étapes), pour que l'utilisateur voie où ça va.
+4. S'il n'y a aucune question, dis-le explicitement et présente quand même le plan : l'utilisateur valide avant que tu codes.
+
+### Phase 2 : implémentation
+
+Tu passes en phase 2 uniquement quand le message qui te lance (ou te relance) contient les **réponses de l'utilisateur** ou sa validation explicite du plan. Implémente alors en appliquant ces réponses, et consigne les décisions dans `docs/business/decisions.md`. Si une nouvelle question métier apparaît en cours de route, applique les règles ci-dessous : arrête-toi sur cette partie et remonte-la.
+
 ## Choix métier : ne jamais décider seul
 
 Un **choix métier** est toute décision sur le comportement de la caisse du point de vue de l'utilisateur ou de l'activité, par exemple :
