@@ -18,6 +18,7 @@ describe('OrderController', () => {
 
     mockRequest = {
       params: {},
+      query: {},
       log: {
         info: jest.fn(),
         error: jest.fn(),

@@ -12,7 +12,6 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 COPY api/package*.json ./api/
 COPY client/package*.json ./client/
-COPY ecosystem.config.cjs ./x
 
 # ---- Dependencies Stage ----
 # Install ALL dependencies (including devDependencies for the build)

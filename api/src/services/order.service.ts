@@ -108,17 +108,9 @@ export class OrderService {
       throw new ValidationError('No items in the cart');
     }
 
-    const hasInvalidDiscount = cartItems.some((cartItem) => {
-      const totalItemPrice = cartItem.product.price * cartItem.quantity;
-      if (cartItem.discountedAmount === 0) return false;
-      return cartItem.discountedAmount > totalItemPrice || cartItem.discountedAmount < 0;
-    });
-
-    if (hasInvalidDiscount) {
-      throw new ValidationError('Invalid discount amount');
-    }
-
-    const hasInvalidQuantity = cartItems.some((cartItem) => cartItem.quantity < 1);
+    const hasInvalidQuantity = cartItems.some(
+      (cartItem) => !Number.isInteger(cartItem.quantity) || cartItem.quantity < 1
+    );
 
     if (hasInvalidQuantity) {
       throw new ValidationError('Invalid product quantity');
@@ -129,6 +121,47 @@ export class OrderService {
       db = await openDb();
       await db.exec('BEGIN TRANSACTION');
 
+      // Snapshot name/price/category from the database, never from the request body:
+      // the client could otherwise send arbitrary prices.
+      const snapshots = [];
+      for (const { product, quantity, discountedAmount } of cartItems) {
+        const productId = product?.id;
+        const row = await db.get<{ name: string; price: number; category_name: string | null }>(
+          `SELECT p.name, p.price, c.name AS category_name
+           FROM products p
+           LEFT JOIN categories c ON c.id = p.category_id
+           WHERE p.id = ?`,
+          [productId]
+        );
+
+        if (!row) {
+          throw new ValidationError(`Product with ID ${String(productId)} not found`);
+        }
+
+        // Math.max: negative-priced products (e.g. eco-cup return) cannot be discounted.
+        const maxDiscount = Math.max(0, row.price * quantity);
+        if (
+          typeof discountedAmount !== 'number' ||
+          discountedAmount < 0 ||
+          discountedAmount > maxDiscount
+        ) {
+          throw new ValidationError('Invalid discount amount');
+        }
+
+        if (!row.category_name) {
+          logger.warn({ productId }, 'Category not found for product, using fallback name');
+        }
+
+        snapshots.push({
+          productId,
+          productName: row.name,
+          productPrice: row.price,
+          categoryName: row.category_name ?? 'Unknown Category',
+          quantity,
+          discountedAmount,
+        });
+      }
+
       const orderResult = await db.run('INSERT INTO orders (date) VALUES (?)', [Date.now()]);
       const orderId = orderResult.lastID;
 
@@ -136,31 +169,9 @@ export class OrderService {
         throw new Error('Failed to create order record.');
       }
 
-      for (const item of cartItems) {
-        const { product, quantity, discountedAmount } = item;
-        const { id: productId, name: productName, price: productPrice, categoryId } = product;
-
-        let categoryName = 'Unknown Category';
-        try {
-          const categoryRow = await db.get<{ name: string }>(
-            'SELECT name FROM categories WHERE id = ?',
-            [categoryId]
-          );
-
-          if (categoryRow && categoryRow.name) {
-            categoryName = categoryRow.name;
-          } else {
-            logger.warn(
-              { productId, categoryId },
-              'Category not found for product, using fallback category name'
-            );
-          }
-        } catch (error) {
-          logger.error(
-            { productId, categoryId, error },
-            'Error fetching category name, using fallback'
-          );
-        }
+      for (const snapshot of snapshots) {
+        const { productId, productName, productPrice, categoryName, quantity, discountedAmount } =
+          snapshot;
 
         logger.info(
           { orderId, productId, productName, productPrice, categoryName, quantity, discountedAmount },
@@ -180,6 +191,7 @@ export class OrderService {
       return { id: orderId };
     } catch (error) {
       if (db) await db.exec('ROLLBACK');
+      if (error instanceof ValidationError) throw error;
       throw new Error(`Error creating new order in service: ${String(error)}`);
     } finally {
       await db?.close();
