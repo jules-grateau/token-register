@@ -24,6 +24,10 @@ RUN npm ci
 # Copy the rest of your application code
 FROM dependencies AS builder
 COPY . .
+# Version info shown in the "About" modal (.git is not in the build context).
+# Passed by CI: GIT_SHA = commit hash, RELEASE_CHANNEL = production | demo.
+ARG GIT_SHA=""
+ARG RELEASE_CHANNEL="development"
 # Run your build script (e.g., compiling TypeScript, bundling frontend assets)
 RUN npm run build
 
