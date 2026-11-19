@@ -2,7 +2,6 @@ import React from 'react';
 import {
   Badge,
   Button,
-  CopyButton,
   Flex,
   Group,
   Modal,
@@ -12,9 +11,8 @@ import {
   useMantineTheme,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import { IconCheck, IconCopy } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import { APP_NAME, formatVersionForClipboard, getAppVersionInfo } from '../../config/version';
+import { APP_NAME, getAppVersionInfo } from '../../config/version';
 
 interface AboutModalProps {
   isOpen: boolean;
@@ -61,20 +59,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
             <Text ff="monospace">{info.commit}</Text>
           </Group>
         )}
-        <Flex direction={isMobile ? 'column' : 'row'} justify="flex-end" gap="sm" mt="md">
-          <CopyButton value={formatVersionForClipboard(info)}>
-            {({ copied, copy }) => (
-              <Button
-                variant="light"
-                size="lg"
-                fullWidth={isMobile}
-                leftSection={copied ? <IconCheck size={20} /> : <IconCopy size={20} />}
-                onClick={copy}
-              >
-                {copied ? t('about.copied') : t('about.copy')}
-              </Button>
-            )}
-          </CopyButton>
+        <Flex justify="flex-end" mt="md">
           <Button size="lg" fullWidth={isMobile} onClick={onClose}>
             {t('close')}
           </Button>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent } from '@testing-library/react';
 import AboutModal from '../index';
 import { render } from '../../../utils/testUtils';
 import { getAppVersionInfo } from '../../../config/version';
@@ -20,13 +20,6 @@ jest.mock('../../../config/version', () => ({
 const mockInfo = (info: AppVersionInfo) => (getAppVersionInfo as jest.Mock).mockReturnValue(info);
 
 describe('AboutModal', () => {
-  const writeText = jest.fn().mockResolvedValue(undefined);
-
-  beforeEach(() => {
-    writeText.mockClear();
-    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
-  });
-
   it('shows the version only in production', () => {
     mockInfo({ version: '1.2.0', channel: 'production' });
     render(<AboutModal isOpen={true} onClose={jest.fn()} />);
@@ -56,14 +49,13 @@ describe('AboutModal', () => {
     expect(screen.queryByText(/undefined/)).not.toBeInTheDocument();
   });
 
-  it('copies the one-line summary', async () => {
+  it('only offers the close button as action', () => {
     mockInfo({ version: '1.0.0', commit: 'abc1234', channel: 'demo' });
     render(<AboutModal isOpen={true} onClose={jest.fn()} />);
 
-    fireEvent.click(screen.getByText('about.copy'));
-
-    expect(writeText).toHaveBeenCalledWith('Token Register v1.0.0 (abc1234) – demo');
-    await waitFor(() => expect(screen.getByText('about.copied')).toBeInTheDocument());
+    expect(screen.queryByText('about.copy')).not.toBeInTheDocument();
+    expect(screen.queryByText('about.copied')).not.toBeInTheDocument();
+    expect(screen.getByText('close')).toBeInTheDocument();
   });
 
   it('calls onClose from the close button', () => {

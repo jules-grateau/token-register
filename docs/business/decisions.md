@@ -87,7 +87,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 
 - **Date** : 2026-11-19
 - **Confirmée par** : Jules (responsable produit), 2026-11-19
-- **Statut** : Active
+- **Statut** : Active, précisée par D-007
 - **Domaine** : Autre
 - **Contexte** : il faut décider où l'utilisateur trouve la version (proposition du designer).
 - **Décision** : le menu ⚙️ contient un item « À propos » qui ouvre une modale avec le nom de l'appli, la version (cf. D-003) et un bouton « Copier les infos ». Ouvrir cette modale ne touche pas au panier.
@@ -95,3 +95,14 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - ligne discrète « Token Register v1.0.0 » en bas du menu ⚙️, sans modale (1 clic, mais peu lisible sur tablette et rien à copier) ;
   - les deux à la fois (entrée « À propos » + ligne en bas du menu).
 - **Impact** : `client/src/components/Register`, `client/src/components/AboutModal`, `client/src/locales`.
+
+### D-007 — Pas de bouton de copie dans « À propos »
+
+- **Date** : 2026-11-19
+- **Confirmée par** : Jules (responsable produit), 2026-11-19
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : le bouton « Copier les infos » venait de la proposition du designer reprise dans D-006, sans avoir été validé explicitement par l'utilisateur.
+- **Décision** : la modale « À propos » n'affiche que les infos et un bouton « Fermer », en démo comme en prod.
+- **Options écartées** : bouton « Copier les infos » partout ; bouton seulement en démo.
+- **Impact** : `client/src/components/AboutModal`, `client/src/config/version.ts`, `client/src/locales`.
