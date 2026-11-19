@@ -123,6 +123,29 @@ describe('ProductService (unit)', () => {
       ]);
     });
 
+    it('should ignore non-whitelisted keys to prevent SQL injection', async () => {
+      mockRun.mockResolvedValue({ changes: 1 });
+      const service = new ProductService();
+      const maliciousUpdate = {
+        price: 5,
+        'name = (SELECT 1) --': 'x',
+        id: 42,
+        constructor: 'x',
+      } as unknown as { price: number };
+
+      await service.updateProduct(1, maliciousUpdate);
+
+      expect(mockRun).toHaveBeenCalledWith(`UPDATE products SET price = ? WHERE id = ?`, [5, 1]);
+    });
+
+    it('should do nothing if only unknown keys are provided', async () => {
+      const service = new ProductService();
+
+      await service.updateProduct(1, { foo: 'bar' } as unknown as { price: number });
+
+      expect(mockRun).not.toHaveBeenCalled();
+    });
+
     it('should do nothing if no fields are provided for update', async () => {
       const service = new ProductService();
       const productId = 1;

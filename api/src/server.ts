@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { basicAuthMiddleware } from './middleware/basicAuth';
@@ -58,7 +58,9 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-app.use((err: Error, req: Request, res: Response) => {
+// Express identifies error handlers by their 4-argument signature: `next` must be declared.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   req.log.error(err, 'Unhandled error or error passed by next()');
 
   if (err instanceof NotFoundError) {
