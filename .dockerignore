@@ -6,5 +6,9 @@ Dockerfile
 .gitignore
 README.md
 *.env
+**/.env
+**/.env.*
+.github
+deploy
 dist
 build

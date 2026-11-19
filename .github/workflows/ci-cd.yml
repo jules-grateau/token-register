@@ -1,0 +1,126 @@
+name: CI/CD
+
+# - Pull requests to develop/main: tests only.
+# - Push (= merge) to develop: tests -> build image :test -> deploy test env.
+# - Push (= merge) to main:    tests -> build image :prod -> deploy production.
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Never cancel a deployment halfway; only cancel superseded PR runs.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test -w=api
+      - run: npm test -w=client
+      - run: npm run build
+
+  build:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.target.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve image tag from branch
+        id: target
+        run: |
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then echo "tag=prod" >> "$GITHUB_OUTPUT";
+          else echo "tag=test" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          # :prod / :test is what the VPS runs; :sha-xxxxxxx allows rollbacks.
+          tags: |
+            type=raw,value=${{ steps.target.outputs.tag }}
+            type=sha,prefix=sha-
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ steps.target.outputs.tag }}
+          cache-to: type=gha,mode=max,scope=${{ steps.target.outputs.tag }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # GitHub environments: add a "Required reviewers" rule on "production"
+    # in the repo settings if you want a manual approval before prod deploys.
+    environment:
+      name: ${{ github.ref_name == 'main' && 'production' || 'test' }}
+      url: ${{ github.ref_name == 'main' && 'https://demo.julesgrateau.dev' || 'https://test.demo.julesgrateau.dev' }}
+    permissions:
+      packages: read
+    steps:
+      - name: Pull and restart the service on the VPS
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          SERVICE: ${{ needs.build.outputs.tag == 'prod' && 'token-register' || 'token-register-test' }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: SERVICE,GHCR_USER,GHCR_TOKEN,DEPLOY_PATH
+          script: |
+            set -e
+            cd "$DEPLOY_PATH"
+
+            # GITHUB_TOKEN is short-lived: log in only for the pull, then log out.
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            docker compose pull "$SERVICE"
+            docker logout ghcr.io
+
+            # --no-deps: only restart this environment, never the other one or Traefik.
+            docker compose up -d --no-deps "$SERVICE"
+
+            # The entrypoint runs DB init + migrations: a failure makes the container exit/restart.
+            sleep 20
+            CONTAINER=$(docker compose ps -q "$SERVICE")
+            STATE=$(docker inspect -f '{{.State.Status}}' "$CONTAINER")
+            RESTARTS=$(docker inspect -f '{{.RestartCount}}' "$CONTAINER")
+            if [ "$STATE" != "running" ] || [ "$RESTARTS" != "0" ]; then
+              echo "Deployment failed: state=$STATE restarts=$RESTARTS"
+              docker compose logs --tail=100 "$SERVICE"
+              exit 1
+            fi
+            echo "$SERVICE is running."
+
+            docker image prune -f
