@@ -9,9 +9,11 @@
     "dev:db:init": "ts-node src/db/scripts/initDb.ts",
     "dev:db:flush": "ts-node src/db/scripts/flushDb.ts",
     "dev:db:migrate": "ts-node src/db/scripts/migrateDb.ts",
+    "dev:db:convert-currency": "ts-node src/db/scripts/convertCurrency.ts",
     "prod:db:init": "node dist/db/scripts/initDb.js",
     "prod:db:flush": "node dist/db/scripts/flushDb.js",
     "prod:db:migrate": "node dist/db/scripts/migrateDb.js",
+    "prod:db:convert-currency": "node dist/db/scripts/convertCurrency.js",
     "test": "jest"
   },
   "author": "Jules Grateau",

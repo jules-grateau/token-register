@@ -1,5 +1,7 @@
 import { openDb } from '../index';
 import logger from '../../utils/logger';
+import { getConfiguredCurrency } from '../../utils/currency';
+import { initInstanceCurrency } from '../currency';
 
 /**
  * Migration: Add snapshot columns to order_items table
@@ -118,7 +120,29 @@ async function migrateOrderItems() {
   }
 }
 
+/**
+ * Migration: instance currency (D-008, D-009)
+ *
+ * - Creates the settings table (key/value) if needed.
+ * - Records the instance currency on first run: CURRENCY env var, or TOKEN when the database
+ *   already holds data (it predates the currency feature, so its amounts are tokens).
+ * - On every later run, fails if CURRENCY disagrees with the recorded currency, which stops the
+ *   container before the app starts. Amounts are never converted here: see convertCurrency.ts.
+ */
+async function migrateInstanceCurrency() {
+  logger.info('Checking instance currency...');
+  const configured = getConfiguredCurrency();
+  const db = await openDb();
+  try {
+    const { currency, recorded } = await initInstanceCurrency(db, configured);
+    logger.info(`Instance currency ${recorded ? 'recorded' : 'checked'}: ${currency}`);
+  } finally {
+    await db.close();
+  }
+}
+
 void migrateOrderItems()
+  .then(() => migrateInstanceCurrency())
   .then(() => {
     console.log('='.repeat(50));
     console.log('Migration script completed successfully');

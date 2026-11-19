@@ -54,3 +54,47 @@ docker compose up -d --no-deps token-register-poule
 ```
 
 Restore the `:latest` image once a fixed version is merged.
+
+## Currency
+
+Each instance runs either in tokens or in euros, set by the `CURRENCY` environment variable of
+its service in `compose.yaml`: `TOKEN` (default when unset) or `EUR` (decisions D-008 to D-014).
+It is shown read-only in the app (⚙️ menu). Amounts are stored as whole numbers: tokens, or cents.
+
+- **New EUR instance**: add `CURRENCY=EUR` to the new service before its first start. It starts
+  with an empty catalog (D-014) and records EUR in its database.
+- **Existing instances** (`token-register-poule`, `token-register-atakora`, demo): nothing to do.
+  On the first start of this version, the migration records `TOKEN` in their database.
+- **Safety check**: on every start, the migration compares `CURRENCY` with the currency recorded
+  in the database. If they differ, the container stops before the app starts, with a
+  `Currency mismatch` message in `docker logs`. Nothing is ever converted automatically.
+
+### Fixing a currency mismatch
+
+1. **The configuration is wrong** (most common): set `CURRENCY` back to the value given in the
+   error message, then `docker compose up -d --no-deps <service>`.
+2. **The instance really has to change currency**: use the conversion command. It converts the
+   catalog **and** the order history 1 for 1 (D-009): 3 tokens → 3,00 €; euros → tokens are
+   rounded to the nearest token, .5 away from zero (1,50 € → 2, 1,49 € → 1, -1,50 € → -2).
+
+   ```sh
+   # 1. Stop the service and back up its database (docker compose cp works on a stopped container)
+   docker compose stop <service>
+   docker compose cp <service>:<DATABASE_PATH> ./backup/database-$(date +%Y%m%d-%H%M).sqlite
+
+   # 2. Preview: lists every converted price and the history total, writes nothing
+   docker compose run --rm --no-deps --entrypoint "" <service> \
+     npm run prod:db:convert-currency -- --to=EUR
+
+   # 3. Apply (single transaction), then record the new currency
+   docker compose run --rm --no-deps --entrypoint "" <service> \
+     npm run prod:db:convert-currency -- --to=EUR --apply
+
+   # 4. Set CURRENCY=EUR on the service in compose.yaml, then restart it
+   docker compose up -d --no-deps <service>
+   ```
+
+   `--entrypoint ""` skips the startup migration, which would otherwise stop on the mismatch.
+   The command refuses to write anything if, after rounding, an order line would get a discount
+   larger than its total (D-016); the preview lists those lines. Handle those orders first,
+   then run the conversion again.

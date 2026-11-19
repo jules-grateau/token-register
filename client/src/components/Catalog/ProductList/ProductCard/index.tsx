@@ -3,6 +3,7 @@ import type { ProductType } from 'shared-ts';
 import { useTranslation } from 'react-i18next';
 import { Text, Stack, Group, Button } from '@mantine/core';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
+import { useCurrency } from '../../../../hooks/useCurrency';
 
 interface ProductCardProps {
   product: ProductType;
@@ -20,6 +21,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onDelete,
 }) => {
   const { t } = useTranslation();
+  const { format } = useCurrency();
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -34,7 +36,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <Button
       onClick={onClick}
-      h={{ base: 100, md: 200 }}
+      mih={{ base: 100, md: 200 }}
       variant="default"
       radius="sm"
       p={0}
@@ -54,14 +56,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           gap="sm"
           align="center"
           justify="center"
-          style={{ flex: 1, padding: 'var(--mantine-spacing-lg)' }}
+          p={{ base: 'sm', md: 'lg' }}
+          style={{ flex: 1, maxWidth: '100%' }}
         >
-          <Text fw={700} size="lg" ta="center">
+          {/* A price is never truncated: the name gives way (2 lines max). */}
+          <Text fw={700} size="lg" ta="center" lineClamp={2}>
             {product.name}
           </Text>
           {product.price !== undefined && (
-            <Text c="dimmed" size="sm">
-              {product.price} {t('tokens', { count: product.price })}
+            <Text size="sm" fw={600} style={{ whiteSpace: 'nowrap' }}>
+              {format(product.price)}
             </Text>
           )}
         </Stack>

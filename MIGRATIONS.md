@@ -43,6 +43,30 @@ npm run dev:db:migrate -w=api
 npm run prod:db:migrate
 ```
 
+### Instance currency (settings table)
+
+**Script**: `api/src/db/scripts/migrateDb.ts` (step `migrateInstanceCurrency`, runs on every start)
+**Schema change**: creates `settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)` if missing.
+**Data**: inserts `currency` = `CURRENCY` env var on an empty database, or `TOKEN` on a database
+that already holds products or orders (it predates the currency feature). Amounts are not touched.
+**Check**: fails (exit 1, container stopped) if `CURRENCY` differs from the recorded currency.
+
+Rollback: the `settings` table is ignored by older versions; it can stay, or be dropped with
+`DROP TABLE settings;`.
+
+### Currency conversion (admin command, never automatic)
+
+**Script**: `api/src/db/scripts/convertCurrency.ts`
+
+```bash
+npm run prod:db:convert-currency -- --to=EUR           # preview, writes nothing
+npm run prod:db:convert-currency -- --to=EUR --apply   # converts in one transaction
+```
+
+Converts `products.price`, `order_items.product_price` and `order_items.discountedAmount`, then
+updates `settings.currency`. Back up the database first. Full procedure:
+[deploy/README.md > Currency](./deploy/README.md#currency).
+
 ## Deployment Workflow
 
 ### Development Environment

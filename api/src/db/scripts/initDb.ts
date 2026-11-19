@@ -3,6 +3,7 @@ import logger from '../../utils/logger';
 import path from 'path';
 import fs from 'fs';
 import { getDatabasePath } from '..';
+import { getConfiguredCurrency } from '../../utils/currency';
 
 export const dbFilePath = getDatabasePath();
 export const dbDir = path.dirname(dbFilePath);
@@ -89,8 +90,10 @@ function createTables(db: Database) {
       const categoryCount = row.count;
       if (categoryCount > 0) {
         logger.info('Database is already populated. Skipping initalization.');
-      } else {
+      } else if (shouldSeedSampleCatalog()) {
         insertData(db);
+      } else {
+        logger.info('EUR instance: starting with an empty catalog (no sample data).');
       }
     });
   } catch (error) {
@@ -98,6 +101,11 @@ function createTables(db: Database) {
   } finally {
     db.close();
   }
+}
+
+/** D-014: a new EUR instance starts with an empty catalog; token instances keep the sample one. */
+function shouldSeedSampleCatalog(): boolean {
+  return getConfiguredCurrency() !== 'EUR';
 }
 
 function insertData(db: Database) {

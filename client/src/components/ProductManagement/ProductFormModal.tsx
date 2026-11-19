@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, TextInput, NumberInput, Select, Button, Group, Stack } from '@mantine/core';
+import { Modal, TextInput, NumberInput, Select, Button, Group, Stack, Text } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
@@ -7,6 +7,14 @@ import type { ProductType } from 'shared-ts';
 import { useCreateProductMutation, useUpdateProductMutation } from '../../services/product';
 import { useGetCategoriesQuery } from '../../services/categories';
 import ConfirmationModal from '../ConfirmationModal';
+import { useCurrency } from '../../hooks/useCurrency';
+import {
+  fromStoredAmount,
+  getDecimalScale,
+  hasValidPrecision,
+  parseAmountInput,
+  toStoredAmount,
+} from '../../utils/currency';
 
 interface ProductFormModalProps {
   isOpen: boolean;
@@ -17,7 +25,8 @@ interface ProductFormModalProps {
 
 interface ProductFormValues {
   name: string;
-  price: number;
+  /** Typed value (1.5 for 1,50 EUR), converted to the stored amount on submit. */
+  price: number | string;
   categoryId: number | null;
 }
 
@@ -28,6 +37,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   defaultCategoryId,
 }) => {
   const { t } = useTranslation();
+  const { currency } = useCurrency();
+  const decimalScale = getDecimalScale(currency);
   const [createProduct] = useCreateProductMutation();
   const [updateProduct] = useUpdateProductMutation();
   const { data: categories } = useGetCategoriesQuery();
@@ -40,12 +51,20 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const form = useForm<ProductFormValues>({
     initialValues: {
       name: product?.name || '',
-      price: product?.price || 0,
+      price: product ? fromStoredAmount(product.price, currency) : 0,
       categoryId: product?.categoryId || defaultCategoryId || null,
     },
     validate: {
       name: (value) => (value.trim() ? null : t('errors.required')),
-      price: (value) => (value >= 0 ? null : t('errors.min_price')),
+      // D-013: negative prices allowed (deposit return). D-010: 2 decimals max in EUR.
+      price: (value) => {
+        const amount = parseAmountInput(value);
+        if (isNaN(amount)) return t('errors.required');
+        if (!hasValidPrecision(amount, currency)) {
+          return t(currency === 'EUR' ? 'errors.max_two_decimals' : 'errors.whole_tokens');
+        }
+        return null;
+      },
       categoryId: (value) => (value !== null ? null : t('errors.required')),
     },
   });
@@ -54,7 +73,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     if (isOpen && product) {
       form.setValues({
         name: product.name,
-        price: product.price,
+        price: fromStoredAmount(product.price, currency),
         categoryId: product.categoryId,
       });
     } else if (isOpen && !product) {
@@ -86,7 +105,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     try {
       await createProduct({
         name: values.name,
-        price: values.price,
+        price: toStoredAmount(parseAmountInput(values.price), currency),
         categoryId: values.categoryId!,
       }).unwrap();
       toast.success(t('product_management.created'));
@@ -113,7 +132,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       await updateProduct({
         id: product.id,
         name: formValuesForConfirmation.name,
-        price: formValuesForConfirmation.price,
+        price: toStoredAmount(parseAmountInput(formValuesForConfirmation.price), currency),
         categoryId: formValuesForConfirmation.categoryId!,
       }).unwrap();
       toast.success(t('product_management.updated'));
@@ -159,10 +178,26 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               {...form.getInputProps('name')}
             />
             <NumberInput
-              label={t('product_management.form.price')}
+              label={t('product_management.form.price', {
+                context: currency === 'EUR' ? 'eur' : undefined,
+              })}
               placeholder="0"
               required
-              min={0}
+              inputMode={decimalScale > 0 ? 'decimal' : 'numeric'}
+              allowDecimal={decimalScale > 0}
+              decimalScale={decimalScale > 0 ? decimalScale : undefined}
+              fixedDecimalScale={decimalScale > 0}
+              decimalSeparator=","
+              allowedDecimalSeparators={['.', ',']}
+              thousandSeparator={false}
+              hideControls
+              rightSection={
+                currency === 'EUR' ? (
+                  <Text size="sm" c="dimmed">
+                    €
+                  </Text>
+                ) : undefined
+              }
               {...form.getInputProps('price')}
             />
             <Select

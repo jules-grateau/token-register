@@ -11,6 +11,7 @@ import {
   Divider,
 } from '@mantine/core';
 import CartItem from './CartItem';
+import { useCurrency } from '../../hooks/useCurrency';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   selectCartItems,
@@ -33,6 +34,7 @@ interface CartProps {
 
 const Cart: React.FC<CartProps> = ({ onClickHistory, onValidateCart }: CartProps) => {
   const { t } = useTranslation();
+  const { format } = useCurrency();
   const [isDiscountModalOpen, setIsDiscountModalOpen] = useState(false);
   const [discountModalTarget, setDiscountModalTarget] = useState<CartItemType>();
   const cartItems = useSelector(selectCartItems);
@@ -146,7 +148,7 @@ const Cart: React.FC<CartProps> = ({ onClickHistory, onValidateCart }: CartProps
                   {t('total')}
                 </Text>
                 <Text fw={700} size="lg" data-testid="item-total-price">
-                  {totalPrice} {t('tokens', { count: totalPrice })}
+                  {format(totalPrice)}
                 </Text>
               </Group>
               <Button onClick={onValidateCart} fullWidth size="lg" mt="sm">

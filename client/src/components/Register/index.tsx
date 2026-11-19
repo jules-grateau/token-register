@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Box, Flex, Menu, ActionIcon, Group, Text } from '@mantine/core';
-import { IconInfoCircle, IconPencil, IconSettings } from '@tabler/icons-react';
+import { Box, Flex, Menu, ActionIcon, Group, Stack, Text } from '@mantine/core';
+import { IconInfoCircle, IconLock, IconPencil, IconSettings } from '@tabler/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import Catalog from '../Catalog';
@@ -9,11 +9,13 @@ import OrderHistoryModal from '../OrderHistoryModal';
 import AboutModal from '../AboutModal';
 import CartConfirmationModal from '../CartConfirmationModal';
 import { toggleEditMode, selectIsEditMode } from '../../redux/editModeSlice';
+import { useCurrency } from '../../hooks/useCurrency';
 
 export function Register(): React.ReactElement {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const isEditMode = useSelector(selectIsEditMode);
+  const { currency } = useCurrency();
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isCartConfirmationModalOpen, setIsCartConfrimationModalOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -54,6 +56,25 @@ export function Register(): React.ReactElement {
               {isEditMode ? t('edit_mode.exit') : t('edit_mode.toggle')}
             </Menu.Item>
             <Menu.Divider />
+            {/* D-008: read-only, the currency is set by the instance configuration. */}
+            <Group
+              gap="sm"
+              px="sm"
+              py="xs"
+              wrap="nowrap"
+              align="flex-start"
+              data-testid="currency-info"
+            >
+              <IconLock size={20} color="var(--mantine-color-dimmed)" style={{ flex: 'none' }} />
+              <Stack gap={2}>
+                <Text size="lg">
+                  {t('currency.menu_label', { name: t(`currency.names.${currency}`) })}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  {t('currency.instance_config')}
+                </Text>
+              </Stack>
+            </Group>
             <Menu.Item
               onClick={() => setIsAboutOpen(true)}
               leftSection={<IconInfoCircle size={20} />}
