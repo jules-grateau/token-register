@@ -1,0 +1,123 @@
+name: CI/CD
+
+# - Pull requests to develop/main: tests only.
+# - Push (= merge) to develop: tests -> image :test   -> redeploy the demo/test instance.
+# - Push (= merge) to main:    tests -> image :latest -> redeploy production instances
+#   (after manual approval, configured on the "production" GitHub environment).
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Never cancel a deployment halfway; only cancel superseded PR runs.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  IMAGE: julesgrateau/token-register
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test -w=api
+      - run: npm test -w=client
+      - run: npm run build
+
+  build:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.target.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Resolve image tag from branch
+        id: target
+        run: |
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then echo "tag=latest" >> "$GITHUB_OUTPUT";
+          else echo "tag=test" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE }}
+          # :latest / :test is what the VPS runs; :sha-xxxxxxx allows rollbacks.
+          tags: |
+            type=raw,value=${{ steps.target.outputs.tag }}
+            type=sha,prefix=sha-
+
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ steps.target.outputs.tag }}
+          cache-to: type=gha,mode=max,scope=${{ steps.target.outputs.tag }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Add "Required reviewers" on the "production" environment (repo settings) so prod
+    # instances are only restarted when you approve — never in the middle of an event.
+    environment:
+      name: ${{ github.ref_name == 'main' && 'production' || 'test' }}
+      url: ${{ github.ref_name == 'main' && 'https://poule-aux-jeux-dor.julesgrateau.dev' || 'https://demo.julesgrateau.dev' }}
+    steps:
+      - name: Pull and restart the services on the VPS
+        # Pinned to a commit (not a movable tag): this third-party action receives the SSH key.
+        uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
+        env:
+          # Compose services of the VPS compose.yaml running this image tag.
+          SERVICES: ${{ github.ref_name == 'main' && 'token-register-poule token-register-atakora' || 'token-register' }}
+          DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: SERVICES,DEPLOY_PATH
+          script: |
+            set -e
+            cd "$DEPLOY_PATH"
+
+            docker compose pull $SERVICES
+            # --no-deps: only restart these services, never Traefik or the other projects.
+            docker compose up -d --no-deps $SERVICES
+
+            # The entrypoint runs DB init + migrations: a failure makes the container exit/restart.
+            sleep 20
+            FAILED=0
+            for SERVICE in $SERVICES; do
+              CONTAINER=$(docker compose ps -q "$SERVICE")
+              STATE=$(docker inspect -f '{{.State.Status}}' "$CONTAINER")
+              RESTARTS=$(docker inspect -f '{{.RestartCount}}' "$CONTAINER")
+              if [ "$STATE" != "running" ] || [ "$RESTARTS" != "0" ]; then
+                # Do not print container logs here: Actions logs are public on this repo and
+                # request logs contain Basic Auth headers. Read them on the VPS instead.
+                echo "::error::$SERVICE failed: state=$STATE restarts=$RESTARTS. On the VPS: docker compose logs --tail=100 $SERVICE"
+                FAILED=1
+              else
+                echo "$SERVICE is running."
+              fi
+            done
+
+            docker image prune -f
+            exit $FAILED
