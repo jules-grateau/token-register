@@ -2,7 +2,7 @@ name: Design review
 
 # On release PRs (develop -> main) only, and again each time develop moves (so fixes
 # get re-validated). By then develop is already deployed on the demo, so the review
-# tests the real thing:
+# tests the real thing (skipped entirely when no app file changed, see scripts/ci/app-changed.sh):
 #   1. capture  - wait for the demo deploy of the PR's commit, drive the demo with
 #                 Playwright (desktop / tablet / mobile), upload the screenshots
 #   2. publish  - push the screenshots to the `design-review-screenshots` branch so
@@ -28,11 +28,37 @@ env:
   SCREENSHOTS_BRANCH: design-review-screenshots
 
 jobs:
-  capture:
+  # Skip the whole review when the release PR, taken as a whole, doesn't touch the app.
+  # Always the whole PR (base...head), never only the new commits: a newer run cancels
+  # the one in progress (concurrency), so it must cover everything the cancelled one did.
+  changes:
     if: >-
       !github.event.pull_request.draft &&
       github.event.pull_request.head.ref == 'develop' &&
       github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      app: ${{ steps.diff.outputs.app }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Did this change touch the app?
+        id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          range="$BASE...$HEAD"
+          app=$(bash scripts/ci/app-changed.sh "$range")
+          echo "app=$app" >> "$GITHUB_OUTPUT"
+          echo "### App changed: \`$app\` (range \`$range\`)" >> "$GITHUB_STEP_SUMMARY"
+
+  capture:
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
