@@ -107,8 +107,6 @@
     "env": {
       "demo": "Demo",
       "dev": "Development"
-    },
-    "copy": "Copy details",
-    "copied": "Copied"
+    }
   }
 }

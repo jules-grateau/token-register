@@ -1,9 +1,4 @@
-import {
-  buildVersionInfo,
-  formatVersionForClipboard,
-  getAppVersionInfo,
-  toReleaseChannel,
-} from '../version';
+import { buildVersionInfo, getAppVersionInfo, toReleaseChannel } from '../version';
 
 describe('toReleaseChannel', () => {
   it('keeps known channels', () => {
@@ -41,26 +36,6 @@ describe('buildVersionInfo', () => {
 
   it('never returns an undefined version', () => {
     expect(buildVersionInfo(undefined, undefined, undefined).version).toBe('0.0.0');
-  });
-});
-
-describe('formatVersionForClipboard', () => {
-  it('formats production as the version only', () => {
-    expect(formatVersionForClipboard({ version: '1.0.0', channel: 'production' })).toBe(
-      'Token Register v1.0.0'
-    );
-  });
-
-  it('formats demo with commit and environment', () => {
-    expect(
-      formatVersionForClipboard({ version: '1.0.0', commit: 'abc1234', channel: 'demo' })
-    ).toBe('Token Register v1.0.0 (abc1234) – demo');
-  });
-
-  it('skips a missing commit', () => {
-    expect(formatVersionForClipboard({ version: '1.0.0', channel: 'development' })).toBe(
-      'Token Register v1.0.0 – development'
-    );
   });
 });
 
