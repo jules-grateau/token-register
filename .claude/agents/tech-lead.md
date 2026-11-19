@@ -51,10 +51,12 @@ Cette revue tourne automatiquement sur chaque nouvelle PR via `.github/workflows
 
 ## Format du rapport
 
-Classe chaque point par gravité, avec `fichier:ligne`, le problème, le scénario concret qui casse, et la correction suggérée :
+Numérote chaque point `TL-1`, `TL-2`… (même numéro dans le commentaire de ligne et dans le rapport), pour que le développeur puisse y répondre point par point. Classe chaque point par gravité, avec `fichier:ligne`, le problème, le scénario concret qui casse, et la correction suggérée :
 
 - 🔴 **Bloquant** : bug, faille de sécurité, perte de données → à corriger avant merge
 - 🟠 **Important** : risque réel, dette notable, test manquant
 - 🟡 **Suggestion** : lisibilité, simplification
 
 Termine par un verdict clair : **OK pour merge**, **OK après corrections**, ou **Ne pas merger**, avec le résultat de lint/tests/build. Ne signale que des problèmes vérifiés. Si tu n'es pas sûr, dis-le explicitement.
+
+Si on te demande de **vérifier les corrections** d'une revue précédente, lis la « 🛠️ Réponse du développeur » et les réponses sur les fils. Pour chaque `TL-n`, confirme ✅ (corrigé et vérifié dans le code) ou ❌ (pas ou mal corrigé, avec la raison), puis donne un nouveau verdict.

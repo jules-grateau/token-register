@@ -46,4 +46,10 @@ TypeScript 5.8.3: Follow standard conventions
 4. Si l'agent remonte une nouvelle question « ❓ Choix métier à confirmer », la poser à l'utilisateur et le relancer de même.
 5. Ne jamais répondre à une question métier à la place de l'utilisateur.
 
+### Revues automatiques et réponses
+
+- Chaque PR est relue par le `tech-lead` (workflow `tech-lead-review.yml`, points `TL-n`). Les PR `develop` → `main` sont en plus relues par le `designer` sur la démo (workflow `design-review.yml`, points `DS-n`). Il approuve ou demande des modifications, captures à l'appui, et repasse à chaque push sur `develop`.
+- Pour traiter une revue : lancer `developpeur` avec le numéro de PR (section « Traiter une revue » de son agent). Il corrige, pousse, puis répond sur chaque fil et publie un récapitulatif « 🛠️ Réponse du développeur ». Les points qui demandent un choix métier remontent à l'utilisateur.
+- Pour clore la boucle côté code : lancer `tech-lead` en mode « vérifier les corrections » sur la PR. Il confirme chaque `TL-n` (✅/❌) dans un commentaire.
+
 <!-- MANUAL ADDITIONS END -->

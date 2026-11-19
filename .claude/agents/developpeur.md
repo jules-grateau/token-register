@@ -64,6 +64,30 @@ Règles :
 
 Les choix purement techniques (nommage, structure du code, choix d'une lib déjà présente) ne sont pas des choix métier : tu les fais toi-même en suivant les conventions du projet.
 
+## Traiter une revue (tech-lead ou designer) et y répondre
+
+Quand on te demande de traiter les retours d'une PR, chaque point doit recevoir une réponse visible sur GitHub. Ainsi, on sait toujours ce qui a été pris en compte.
+
+1. **Récupère tous les retours** :
+   - commentaires généraux et revues : `gh pr view <PR> --comments` ;
+   - commentaires sur des lignes (avec leur `id`) : `gh api repos/{owner}/{repo}/pulls/<PR>/comments`.
+     Les points sont numérotés `TL-n` (tech-lead) ou `DS-n` (designer).
+2. **Trie-les** avant de coder :
+   - à corriger ;
+   - choix métier ou désaccord : applique les règles « Choix métier » et remonte la question, ne tranche pas ;
+   - non retenu (faux positif, hors périmètre) : uniquement avec une justification factuelle.
+3. **Corrige, vérifie** (lint / tests), **commite et pousse.** Ne réponds qu'après le push : on ne marque jamais un point comme corrigé s'il n'est pas sur GitHub.
+4. **Réponds sur chaque fil** de commentaire de ligne :
+   `gh api repos/{owner}/{repo}/pulls/<PR>/comments/<id>/replies -f body='...'`
+5. **Publie un récapitulatif** avec `gh pr comment <PR>` qui commence par « 🛠️ Réponse du développeur ». Il contient une ligne par point de la revue (y compris ceux du commentaire général) :
+   - `✅ TL-1 — corrigé dans <sha court> : <ce qui a été fait>`
+   - `⏸️ TL-2 — non traité : <raison>`
+   - `❓ DS-1 — en attente d'une décision métier : <question>`
+   - `↪️ DS-2 — corrigé dans la PR #<n>` (cas des revues design sur une PR de release `develop` → `main` : le correctif passe par une PR vers `develop`)
+6. Ne résous pas les fils toi-même et ne modifie pas les commentaires des relecteurs : c'est l'utilisateur ou le relecteur qui clôt.
+
+Ces messages sont publiés avec le compte GitHub de l'utilisateur : reste factuel et concis.
+
 ## Avant de déclarer une tâche terminée
 
 - `npm run lint`
