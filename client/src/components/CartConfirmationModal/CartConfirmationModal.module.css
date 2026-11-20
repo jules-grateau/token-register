@@ -1,31 +1,29 @@
-.content {
-    position: relative;
-}
-.modalFooter {
-    width: 100%;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    gap: 10px;
-    border-top: 2px solid var(--color-border);
-    padding-top: 10px;
+/* docs/design/components.md, "Encaissement". */
+
+/* Big figures (>= 24 px): total, typed amount (docs/design/typography.md). */
+.big {
+  letter-spacing: -0.02em;
 }
 
-.cartList {
-    padding: 0;
-    margin: 10px 5px;
+/* Main button disabled ("Encaisser" with no amount, "Il manque"): stays mustard, faded, like
+   "Valider" (docs/design/components.md, "Panier"); the state is also given by the change block. */
+.mainButton.mainButton:disabled,
+.mainButton.mainButton[data-disabled] {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  opacity: 0.45;
 }
 
-.cartList > li {
-    padding: 10px 0px;
+/* While saving, Mantine's loader overlay keeps the mustard background. */
+.mainButton.mainButton[data-loading] {
+  opacity: 1;
 }
 
-.cartTotal {
-    display: grid;
-    grid-template-columns: auto auto;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-    justify-content: center;
-    font-size: 1.2em;
+/* "← Montants" and the clear [✕]: ink / cream text, warm hover (no cold grey). */
+[data-mantine-color-scheme] .inkControl.inkControl {
+  color: var(--color-text);
+}
+
+[data-mantine-color-scheme] .inkControl.inkControl:hover:not(:disabled) {
+  background-color: var(--color-surface-2);
 }
