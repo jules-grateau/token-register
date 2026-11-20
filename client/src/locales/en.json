@@ -13,6 +13,8 @@
   "cart_confirmation": "Cart confirmation",
   "order": "Order",
   "order_number": "Order #{{id}} - {{date}}",
+  "order_title": "Order #{{id}}",
+  "order_line": "{{quantity}} × {{name}}",
   "order_placed": "Order #{{id}} placed",
   "delete": "Delete",
   "close": "Close",
@@ -58,10 +60,21 @@
   "clear_cart": "Clear cart",
   "minus": "Minus",
   "plus": "Plus",
+  "cart_item_actions": "More actions",
+  "view_cart": "View cart",
+  "cart_empty_short": "Cart empty",
+  "cart_cleared": "Cart cleared",
+  "undo": "Undo",
+  "product_card": {
+    "add": "Add {{name}}",
+    "edit": "Edit {{name}}"
+  },
   "edit_mode": {
     "toggle": "Edit Mode",
     "exit": "Exit Edit Mode",
-    "active": "Edit Mode Active"
+    "active": "Edit Mode Active",
+    "done": "Done",
+    "badge": "Editing"
   },
   "product_management": {
     "new": "New Product",

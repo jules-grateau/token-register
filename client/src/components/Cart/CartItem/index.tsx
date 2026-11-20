@@ -1,8 +1,14 @@
 import React from 'react';
 import type { CartItemType } from 'shared-ts';
-import { Group, Text, Menu, Paper, ActionIcon } from '@mantine/core';
+import { Group, Text, Menu, ActionIcon, Stack } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
-import { IconDotsVertical, IconMinus, IconPlus } from '@tabler/icons-react';
+import {
+  IconDiscount,
+  IconDotsVertical,
+  IconMinus,
+  IconPlus,
+  IconTrash,
+} from '@tabler/icons-react';
 import { useCurrency } from '../../../hooks/useCurrency';
 
 interface CartItemProps {
@@ -10,97 +16,118 @@ interface CartItemProps {
   onRemove?: () => void;
   onDiscount?: (item: CartItemType) => void;
   onQuantityChange?: (item: CartItemType, quantity: number) => void;
+  /** Read-only lines: prefix the name with the quantity, "2 × Name" (D-023). */
+  showQuantity?: boolean;
 }
 
-const CartItem: React.FC<CartItemProps> = ({ item, onRemove, onDiscount, onQuantityChange }) => {
+// docs/design/components.md, "Ligne de panier".
+const CartItem: React.FC<CartItemProps> = ({
+  item,
+  onRemove,
+  onDiscount,
+  onQuantityChange,
+  showQuantity = false,
+}) => {
   const { t } = useTranslation();
   const { format } = useCurrency();
 
-  const handleDiscountClick = () => {
-    onDiscount?.(item);
-  };
-
-  const handleRemoveClick = () => {
-    onRemove?.();
-  };
-
-  const handleIncrement = () => {
-    onQuantityChange?.(item, 1);
-  };
-
-  const handleDecrement = () => {
-    onQuantityChange?.(item, -1);
-  };
-
   const calcPrice = item.product.price * item.quantity - item.discountedAmount;
+  const name = showQuantity
+    ? t('order_line', { quantity: item.quantity, name: item.product.name })
+    : item.product.name;
+  const hasActions = !!(onQuantityChange || onRemove || onDiscount);
 
   return (
-    <Paper p={0} m={0} radius="sm" bg="transparent">
-      <Group justify="flex-end" gap="sm" wrap="nowrap">
-        <Group gap="xs" style={{ flex: 1 }} wrap="nowrap">
-          <Text fw={600} size="sm" flex={1} lineClamp={2}>
-            {item.product.name}
+    <Stack gap="xs" py="xs">
+      {/* A price is never truncated, a name is never cut: the name wraps. */}
+      <Group justify="space-between" align="flex-start" gap="sm" wrap="nowrap">
+        <Text fw={600} size="md" flex={1} miw={0} style={{ overflowWrap: 'anywhere' }}>
+          {name}
+        </Text>
+        <Stack gap={2} align="flex-end" style={{ flex: 'none' }}>
+          <Text fw={700} size="md" style={{ whiteSpace: 'nowrap' }}>
+            {format(calcPrice)}
           </Text>
-          {onQuantityChange && (
-            <Group gap="xs" wrap="nowrap" flex={1}>
+          {item.discountedAmount > 0 && (
+            <Group gap={4} wrap="nowrap" c="teal.4" data-testid="cart-item-discount">
+              <IconDiscount size={16} aria-hidden />
+              <Text size="sm" fw={600} c="teal.4" style={{ whiteSpace: 'nowrap' }}>
+                {format(-item.discountedAmount)}
+              </Text>
+            </Group>
+          )}
+        </Stack>
+      </Group>
+
+      {hasActions && (
+        <Group justify="space-between" wrap="nowrap" gap="sm">
+          {onQuantityChange ? (
+            <Group gap="xs" wrap="nowrap">
               <ActionIcon
-                size="lg"
+                size={44}
                 variant="outline"
-                onClick={handleDecrement}
+                onClick={() => onQuantityChange(item, -1)}
                 disabled={item.quantity <= 0}
                 aria-label={t('minus')}
               >
-                <IconMinus size={14} />
+                <IconMinus size={20} />
               </ActionIcon>
-              <Text size="sm" style={{ minWidth: 20, textAlign: 'center' }}>
+              <Text size="lg" fw={700} miw={32} ta="center">
                 {item.quantity}
               </Text>
               <ActionIcon
-                size="lg"
+                size={44}
                 variant="outline"
-                onClick={handleIncrement}
+                onClick={() => onQuantityChange(item, 1)}
                 aria-label={t('plus')}
               >
-                <IconPlus size={14} />
+                <IconPlus size={20} />
               </ActionIcon>
             </Group>
+          ) : (
+            <span />
+          )}
+
+          {(onRemove || onDiscount) && (
+            <Menu position="bottom-end" shadow="md" withArrow width={220}>
+              <Menu.Target>
+                <ActionIcon
+                  variant="subtle"
+                  color="gray"
+                  size={44}
+                  aria-label={t('cart_item_actions')}
+                >
+                  <IconDotsVertical stroke={1.5} />
+                </ActionIcon>
+              </Menu.Target>
+              <Menu.Dropdown>
+                {onDiscount && (
+                  <Menu.Item
+                    py="md"
+                    fz="md"
+                    leftSection={<IconDiscount size={20} />}
+                    onClick={() => onDiscount(item)}
+                  >
+                    {t('apply_discount')}
+                  </Menu.Item>
+                )}
+                {onRemove && (
+                  <Menu.Item
+                    py="md"
+                    fz="md"
+                    color="red"
+                    leftSection={<IconTrash size={20} />}
+                    onClick={onRemove}
+                  >
+                    {t('delete')}
+                  </Menu.Item>
+                )}
+              </Menu.Dropdown>
+            </Menu>
           )}
         </Group>
-
-        {/* A price is never truncated: the name gives way. */}
-        <Group gap={0} justify="flex-end" wrap="nowrap" style={{ flex: 'none' }}>
-          <Text
-            fw={600}
-            size="sm"
-            c={item.discountedAmount > 0 ? 'teal.8' : undefined}
-            style={{ whiteSpace: 'nowrap' }}
-          >
-            {format(calcPrice)}
-          </Text>
-        </Group>
-
-        {/* Menu Button */}
-        {(onRemove || onDiscount) && (
-          <Menu position="bottom-end" shadow="md" withArrow>
-            <Menu.Target>
-              <ActionIcon variant="transparent" color="gray" size="lg" h="100%">
-                <IconDotsVertical stroke={1.5} />
-              </ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown>
-              {onDiscount && (
-                <Menu.Item onClick={handleDiscountClick}>{t('apply_discount')}</Menu.Item>
-              )}
-              {onRemove && (
-                <Menu.Item onClick={handleRemoveClick} color="red">
-                  {t('delete')}
-                </Menu.Item>
-              )}
-            </Menu.Dropdown>
-          </Menu>
-        )}
-      </Group>
-    </Paper>
+      )}
+    </Stack>
   );
 };
 

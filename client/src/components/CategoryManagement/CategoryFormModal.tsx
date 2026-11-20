@@ -70,7 +70,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
       form.reset();
       onClose();
     } catch (err) {
-      toast.error(extractApiError(err, t('errors.unknown')));
+      toast.error(extractApiError(err, t('errors.unknown')), { autoClose: 5000 });
     }
   };
 
@@ -88,7 +88,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
       form.reset();
       onClose();
     } catch (err) {
-      toast.error(extractApiError(err, t('errors.unknown')));
+      toast.error(extractApiError(err, t('errors.unknown')), { autoClose: 5000 });
       setShowConfirmation(false);
     }
   };

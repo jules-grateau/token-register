@@ -5,6 +5,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useGetCategoriesQuery, useGetProductsByCategoryQuery } from '../../../services/categories';
 import { useGetProductsQuery } from '../../../services/product';
 import { render } from '../../../utils/testUtils';
+import { resetLayoutMode, setLayoutMode } from '../../../test/layoutMode';
+import { NARROW_TABLET_QUERY } from '../index';
 
 jest.mock('react-redux', () => ({
   useSelector: jest.fn(),
@@ -139,5 +141,92 @@ describe('Catalog', () => {
     });
     render(<Catalog />);
     expect(screen.getByText('error_loading_products')).toBeInTheDocument();
+  });
+});
+
+describe('Catalog layout per mode', () => {
+  const selectWith = (selected: number, isEditMode: boolean) =>
+    (useSelector as unknown as jest.Mock).mockImplementation((selector: any) => {
+      if (selector.name === 'selectSelectedCategory') return selected;
+      if (selector.name === 'selectIsEditMode') return isEditMode;
+      return undefined;
+    });
+
+  beforeEach(() => {
+    (useDispatch as unknown as jest.Mock).mockReturnValue(mockDispatch);
+    (useGetCategoriesQuery as jest.Mock).mockReturnValue({
+      isLoading: false,
+      isError: false,
+      currentData: mockCategories,
+      isFetching: false,
+    });
+    (useGetProductsQuery as jest.Mock).mockReturnValue({
+      isFetching: false,
+      isError: false,
+      currentData: mockProducts,
+    });
+    (useGetProductsByCategoryQuery as jest.Mock).mockReturnValue({
+      isFetching: false,
+      isError: false,
+      currentData: mockProducts,
+    });
+  });
+
+  afterEach(() => {
+    resetLayoutMode();
+    jest.clearAllMocks();
+  });
+
+  it('shows the categories as a horizontal row of tabs on a phone in portrait', () => {
+    setLayoutMode('phone-portrait');
+    selectWith(1, false);
+    render(<Catalog />);
+    expect(screen.getByRole('tablist')).toHaveAttribute('aria-orientation', 'horizontal');
+    expect(screen.getByRole('tab', { name: 'Drinks' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tabpanel')).toBeInTheDocument();
+  });
+
+  it('keeps the vertical column of categories on a wide tablet', () => {
+    selectWith(1, false);
+    render(<Catalog />);
+    expect(screen.getByRole('tablist')).toHaveAttribute('aria-orientation', 'vertical');
+  });
+
+  it('uses the row of tabs on a tablet narrower than 768 px', () => {
+    setLayoutMode('tablet', [NARROW_TABLET_QUERY]);
+    selectWith(1, false);
+    render(<Catalog />);
+    expect(screen.getByRole('tablist')).toHaveAttribute('aria-orientation', 'horizontal');
+  });
+
+  it('edit mode on a phone in portrait: toolbar for the selected category', () => {
+    setLayoutMode('phone-portrait');
+    selectWith(1, true);
+    render(<Catalog />);
+    const toolbar = screen.getByTestId('category-toolbar');
+    expect(toolbar).toHaveTextContent('Drinks');
+    expect(screen.getByRole('button', { name: 'category_management.new' })).toBeInTheDocument();
+  });
+
+  it('edit mode on a phone in portrait: no toolbar on "all categories"', () => {
+    setLayoutMode('phone-portrait');
+    selectWith(0, true);
+    render(<Catalog />);
+    expect(screen.queryByTestId('category-toolbar')).not.toBeInTheDocument();
+  });
+
+  it('edit mode on a phone in landscape: category actions at the end of the row', () => {
+    setLayoutMode('phone-landscape');
+    selectWith(1, true);
+    render(<Catalog />);
+    expect(screen.queryByTestId('category-toolbar')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'category_management.edit' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'category_management.delete' })).toBeInTheDocument();
+  });
+
+  it('never truncates category names in the column', () => {
+    selectWith(1, false);
+    render(<Catalog />);
+    expect(screen.getByText('Drinks')).not.toHaveAttribute('data-truncate');
   });
 });

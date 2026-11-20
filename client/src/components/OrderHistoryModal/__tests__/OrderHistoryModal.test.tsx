@@ -7,11 +7,13 @@ import { render } from '../../../utils/testUtils';
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, opts?: any) =>
-      opts && opts.id
-        ? `${key} (${opts.id}${opts.date ? ', ' + opts.date : ''})`
-        : opts && opts.count !== undefined
-          ? `${key} (${opts.count})`
-          : key,
+      key === 'order_line'
+        ? `${opts.quantity} × ${opts.name}`
+        : opts && opts.id
+          ? `${key} (${opts.id}${opts.date ? ', ' + opts.date : ''})`
+          : opts && opts.count !== undefined
+            ? `${key} (${opts.count})`
+            : key,
   }),
 }));
 jest.mock('react-toastify', () => ({
@@ -28,7 +30,12 @@ jest.mock('../../../services/orders', () => ({
 const refetch = jest.fn();
 const mockRemoveOrder = jest.fn();
 
-const makeItem = (productId: number, productName: string, productPrice: number, quantity: number) => ({
+const makeItem = (
+  productId: number,
+  productName: string,
+  productPrice: number,
+  quantity: number
+) => ({
   productId,
   productName,
   productPrice,
@@ -101,10 +108,16 @@ describe('OrderHistoryModal', () => {
 
   it('renders orders and order details', () => {
     render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
-    expect(screen.getByText(/order_number/i)).toBeInTheDocument();
+    expect(screen.getByText(/order_title/i)).toBeInTheDocument();
     expect(screen.getByText(/Apple/)).toBeInTheDocument();
     expect(screen.getByText(/Banana/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
+  });
+
+  it('prefixes each line with its quantity (D-023)', () => {
+    render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
+    expect(screen.getByText('2 × Apple')).toBeInTheDocument();
+    expect(screen.getByText('1 × Banana')).toBeInTheDocument();
   });
 
   it('does not render quantity controls in order items', () => {

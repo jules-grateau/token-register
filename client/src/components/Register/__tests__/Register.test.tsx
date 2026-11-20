@@ -1,10 +1,14 @@
 import { screen, fireEvent } from '@testing-library/react';
 import { Register } from '../index';
 import { render } from '../../../utils/testUtils';
+import { resetLayoutMode, setLayoutMode } from '../../../test/layoutMode';
+import { exitEditMode } from '../../../redux/editModeSlice';
 
+let mockIsEditMode = false;
+const mockDispatch = jest.fn();
 jest.mock('react-redux', () => ({
-  useSelector: () => false,
-  useDispatch: () => jest.fn(),
+  useSelector: () => mockIsEditMode,
+  useDispatch: () => mockDispatch,
 }));
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -42,5 +46,39 @@ describe('Register settings menu: currency (D-008)', () => {
     expect(await screen.findByTestId('currency-info')).toHaveTextContent(
       'currency.menu_label: currency.names.TOKEN'
     );
+  });
+});
+
+describe('Register header', () => {
+  afterEach(() => {
+    mockIsEditMode = false;
+    resetLayoutMode();
+    jest.clearAllMocks();
+  });
+
+  it('puts the history button in the header on a phone', () => {
+    setLayoutMode('phone-portrait');
+    render(<Register />);
+    expect(screen.getByRole('button', { name: 'history' })).toBeInTheDocument();
+  });
+
+  it('keeps history out of the header on a tablet (it is in the cart)', () => {
+    render(<Register />);
+    expect(screen.queryByRole('button', { name: 'history' })).not.toBeInTheDocument();
+  });
+
+  it('edit mode: "Terminer" leaves edit mode in one touch, history is hidden', () => {
+    mockIsEditMode = true;
+    setLayoutMode('phone-landscape');
+    render(<Register />);
+    expect(screen.queryByRole('button', { name: 'history' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'edit_mode.done' }));
+    expect(mockDispatch).toHaveBeenCalledWith(exitEditMode());
+  });
+
+  it('edit mode on a tablet: shows the "Édition" badge', () => {
+    mockIsEditMode = true;
+    render(<Register />);
+    expect(screen.getByText('edit_mode.badge')).toBeInTheDocument();
   });
 });

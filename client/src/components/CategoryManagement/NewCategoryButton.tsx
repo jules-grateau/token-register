@@ -15,7 +15,8 @@ function NewCategoryButton({ onClick }: NewCategoryButtonProps): React.ReactElem
       variant="default"
       radius={0}
       w="100%"
-      h={60}
+      h="auto"
+      mih={60}
       aria-label={t('category_management.new')}
       styles={{
         root: { borderStyle: 'dashed' },

@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import ConfirmationModal from '../ConfirmationModal';
 import { useCurrency } from '../../hooks/useCurrency';
+import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
+import { IconTrash } from '@tabler/icons-react';
 
 import {
   Modal,
@@ -28,6 +30,7 @@ interface OrderHistoryModalProps {
 const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
   const { format } = useCurrency();
+  const isPhone = isPhoneMode(useLayoutMode());
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
   const ordersQuery = useGetOrdersQuery({ page: currentPage, pageSize });
@@ -55,7 +58,7 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
       toast.success(t('order_removed', { id }));
       setIsConfirmationModalOpen(false);
     } catch (error) {
-      toast.error(t('error_removing_order', { error: String(error) }));
+      toast.error(t('error_removing_order', { error: String(error) }), { autoClose: 5000 });
     } finally {
       await ordersQuery.refetch();
     }
@@ -87,27 +90,20 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
               const totalItems = order.items.reduce((acc, item) => acc + item.quantity, 0);
               return (
                 <Card withBorder key={order.id}>
-                  <Stack>
-                    <Group justify="space-between">
-                      <Text fw={500}>
-                        {t('order_number', {
-                          id: order.id,
-                          date: new Date(order.date).toLocaleString(),
-                        })}
+                  <Stack gap="sm">
+                    <Stack gap={2}>
+                      <Text size="md" fw={700}>
+                        {t('order_title', { id: order.id })}
                       </Text>
-                      <Button
-                        onClick={() => onRemoveOrder(order.id)}
-                        color="red"
-                        variant="outline"
-                        size="xs"
-                      >
-                        {t('delete')}
-                      </Button>
-                    </Group>
-                    <Stack gap="xs">
+                      <Text size="sm" c="dimmed">
+                        {new Date(order.date).toLocaleString()}
+                      </Text>
+                    </Stack>
+                    <Stack gap={0}>
                       {order.items.map((item, itemIndex) => (
                         <CartItem
                           key={itemIndex}
+                          showQuantity
                           item={{
                             product: {
                               id: item.productId ?? 0,
@@ -122,13 +118,26 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
                       ))}
                     </Stack>
                     <Divider />
-                    <Group justify="space-between">
-                      <Text fw={700} style={{ whiteSpace: 'nowrap' }}>
-                        {format(totalPrice)}
-                      </Text>
-                      <Text size="sm" c="dimmed">
-                        {totalItems} {t('items', { count: totalItems })}
-                      </Text>
+                    <Group justify="space-between" wrap="nowrap">
+                      <Group gap="sm" wrap="nowrap">
+                        <Text size="lg" fw={700} style={{ whiteSpace: 'nowrap' }}>
+                          {format(totalPrice)}
+                        </Text>
+                        <Text size="md" c="dimmed">
+                          {totalItems} {t('items', { count: totalItems })}
+                        </Text>
+                      </Group>
+                      {/* D-020: deletion is kept, behind the existing confirmation. */}
+                      <Button
+                        onClick={() => onRemoveOrder(order.id)}
+                        color="red"
+                        variant="light"
+                        h={44}
+                        leftSection={<IconTrash size={20} />}
+                        style={{ flex: 'none' }}
+                      >
+                        {t('delete')}
+                      </Button>
                     </Group>
                   </Stack>
                 </Card>
@@ -144,7 +153,15 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
 
   return (
     <>
-      <Modal opened={isOpen} onClose={onClose} title={t('order_history')} size="lg" centered>
+      <Modal
+        opened={isOpen}
+        onClose={onClose}
+        title={t('order_history')}
+        size="lg"
+        centered
+        fullScreen={isPhone}
+        closeButtonProps={{ size: 'lg', 'aria-label': t('close') }}
+      >
         {renderContent()}
         {ordersData && ordersData.pagination && ordersData.pagination.totalPages > 1 && (
           <Stack mt="md" gap="sm">
