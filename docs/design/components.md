@@ -126,7 +126,8 @@ La modale ne passe plus par `ConfirmationModal` : plus de boutons « Confirmer /
 4. Un montant saisi au pavé égal au total affiche « Rien à rendre » et attend « Encaisser » : on n'enregistre jamais pendant la frappe (taper « 7,5 » pour « 7,55 » enregistrerait trop tôt).
 5. Le mode de paiement est **obligatoire, sans valeur par défaut**. Moyens : **Espèces** et **Carte** seulement. Choisir un montant d'espèces vaut choix « Espèces » : il n'y a pas de bouton « Espèces » à toucher avant (sauf total ≤ 0, voir plus bas).
 6. **Paiement mixte** : si les espèces reçues sont inférieures au total, l'écran affiche « Il reste 2,50 € » et le bouton principal devient « Reste en carte (2,50 €) », qui enregistre. Seule la part en espèces peut donner lieu à un rendu ; la carte est toujours débitée du montant exact.
-7. Après l'enregistrement : la modale se ferme, toast succès « Commande n°12 enregistrée · Espèces » (ou « · Carte », « · Espèces + Carte »), le Drawer du panier se referme en portrait (inchangé). En cas d'erreur API, la modale reste ouverte avec la saisie conservée et un toast d'erreur s'affiche (inchangé).
+7. À l'ouverture de l'encaissement, **les toasts de succès sont fermés** (celui de la vente précédente recouvrait les boutons en téléphone) ; les toasts d'erreur restent (DS-2).
+8. Après l'enregistrement : la modale se ferme, toast succès « Commande n°12 enregistrée · Espèces » (ou « · Carte », « · Espèces + Carte »), le Drawer du panier se referme en portrait (inchangé). En cas d'erreur API, la modale reste ouverte avec la saisie conservée et un toast d'erreur s'affiche (inchangé). Si l'API refuse une commande sans paiement (code `PAYMENT_REQUIRED`, D-035), le toast d'erreur invite à recharger la page (`payment_required_reload`).
 
 **Inverse (carte partielle, puis espèces avec rendu) : non proposé.** Il faudrait saisir d'abord un montant carte (un pavé et un toucher de plus) pour un cas rare en buvette. Si le client paie une partie en espèces, on part toujours des espèces : le vendeur tape la part d'espèces qu'il garde, puis « Reste en carte ».
 
@@ -191,13 +192,13 @@ Pavé intégré, jamais le clavier natif (`NumberInput` / `inputmode` exclus : i
 - Touches euros : `7 8 9 / 4 5 6 / 1 2 3 / , 0 ⌫`. Jetons : la touche « , » est remplacée par une case vide non interactive (D-012).
 - Règles de saisie : 4 chiffres maximum avant la virgule (plafond 9 999,99 € ou 9 999 jetons), 2 après (une 3e décimale est ignorée, D-010), un seul séparateur, « , » en premier donne « 0, », les zéros de tête sont supprimés. Une touche qui violerait une règle est sans effet (pas de message).
 - Affichage de la saisie : texte brut tapé suivi de « € » (« 18,5 € »), 32 / 800, `nowrap`, aligné à droite ; vide : « 0 € » en `dimmed`. Le bloc de rendu affiche, lui, le montant formaté (« Reçu 18,50 € »).
-- `[✕]` à droite de l'affichage (`ActionIcon size={44}`, `IconX`, `aria-label` « Effacer le montant ») remet la saisie à vide.
+- `[✕]` à droite de l'affichage (`ActionIcon size={44} variant="subtle" color="gray"`, `IconX`, `aria-label` « Effacer le montant ») remet la saisie à vide (gris : écart accepté).
 - Toucher une suggestion **remplace** la saisie (l'affichage montre « 20 ») ; la touche suivante du pavé recommence une nouvelle saisie. Toucher une autre suggestion remplace la précédente : on n'additionne jamais.
 - Saisie « 0 » ou vide = aucun montant (état « vide » du bloc de rendu).
 
 ### États du bloc de rendu
 
-Toujours au même endroit, `Paper radius="md" p="md" mih={96}` (hauteur réservée : l'écran ne saute pas), `role="status" aria-live="polite"`. Fond dark-6. Montants `nowrap`.
+Toujours au même endroit, `Paper radius="md" p="md" mih={96}` (**`mih={112}` en téléphone portrait**, DS-4) (hauteur réservée : l'écran ne saute pas), `role="status" aria-live="polite"`. Fond dark-6. Montants `nowrap`.
 
 | État | Quand | Contenu | Bordure / icône |
 | --- | --- | --- | --- |
@@ -230,6 +231,7 @@ Pendant l'enregistrement (`isLoading`), **tous** les boutons de la modale sont d
 
 - Aucun montant d'espèces saisi : « Carte » (`IconCreditCard`).
 - Un montant d'espèces est saisi : le libellé devient « Tout en carte (7,50 €) ». Le toucher enregistre tout en carte et ignore la saisie (correction d'un mauvais choix en 1 toucher).
+- Écart accepté (revue design PR #24) : en demi-largeur, « Tout en carte (7,50 €) » était coupé. Le bouton affiche 2 lignes comme « Appoint » : « Tout en carte » 16 / 600 (clé `payment_all_card_label`) + montant 18 / 700 `nowrap` ; `IconCreditCard` 20 ; `px="xs"` et libellé `whiteSpace: 'normal'` (DS-1). Le libellé complet `payment_all_card` reste l'`aria-label`.
 
 ### Total à 0 € ou négatif
 
@@ -249,7 +251,7 @@ Même écran, simplifié : pas de « Carte », pas de paiement mixte, rien d'enr
 
 Légende des icônes : `▭` `IconCreditCard`, `≡` `IconCash`, `◎` `IconCoins`, `✓` `IconCheck`, `⌨` `IconKeyboard`, `←` `IconArrowLeft`, `⌫` `IconBackspace`, `[✕]` `IconX` / croix de la modale.
 
-**Téléphone portrait** — `Modal fullScreen`. Corps en colonne flex sur toute la hauteur : seul le récapitulatif rétrécit (`ScrollArea` `flex: 1`, `mih={64}`) ; le pied est collé en bas, `pb` = `env(safe-area-inset-bottom)`.
+**Téléphone portrait** — `Modal fullScreen`. Corps en colonne flex sur toute la hauteur : seul le récapitulatif rétrécit (`ScrollArea` `flex: 1`, `mih={88}` pour garder 2 lignes, `offsetScrollbars` pour que la barre ne recouvre pas les prix, DS-3) ; le pied est collé en bas, `pb` = `env(safe-area-inset-bottom)`.
 
 Vue « Montants » (euros, total 7,50 €, après toucher « 20 € ») :
 ```
@@ -280,7 +282,7 @@ Vue « Pavé » (après « Autre montant », état mixte) : le récapitulatif se
 ┌──────────────────────────────────┐
 │ Encaissement                [✕]  │ 56
 ├──────────────────────────────────┤
-│ 3 articles · Total        7,50 € │ 44, 16 / total 20/800
+│ Total · 3 articles        7,50 € │ 44, 16 / total 20/800
 │ [← Montants]        5 €     [✕]  │ 44 ; saisie 32/800 à droite
 │ [  7  ][  8  ][  9  ]            │
 │ [  4  ][  5  ][  6  ]            │ 56, 24/700, SimpleGrid cols=3
@@ -294,7 +296,7 @@ Vue « Pavé » (après « Autre montant », état mixte) : le récapitulatif se
 │ [ ▭ Reste en carte (2,50 €)    ] │ 56
 └──────────────────────────────────┘
 ```
-« ← Montants » (`Button variant="subtle" h={44}`, `IconArrowLeft`) revient à la vue « Montants » en gardant la saisie.
+« ← Montants » (`Button variant="subtle" h={44}`, jaune subtil par défaut : écart accepté, `IconArrowLeft`) revient à la vue « Montants » en gardant la saisie.
 
 **Téléphone paysage** — `Modal fullScreen`, en-tête 44, deux colonnes `Group align="stretch" wrap="nowrap"` : gauche 40 % (récapitulatif qui défile, total, bloc de rendu avec montant **32 / 800** au lieu de 40), droite 60 %. Boutons h 48 (pavé h 44).
 ```
@@ -367,14 +369,14 @@ Tablette / paysage en jetons : mêmes grilles qu'en euros, la place de « Carte 
 | --- | --- | --- |
 | Modale | `Modal` `fullScreen` (téléphone), `size={720} centered` (sinon) ; `closeButtonProps={{ size: 44, 'aria-label': t('close') }}` ; titre 18 / 700 | — |
 | Lignes | `CartItem` lecture seule « 2 × Nom » (D-026) dans `ScrollArea` | — |
-| Total | `Group justify="space-between" wrap="nowrap"` : « Total · N articles » 16 + montant 24 / 800 `nowrap` (20 / 800 sur la ligne repliée) | — |
+| Total | `Group justify="space-between" wrap="nowrap"` : « Total · N articles » 16 (même ordre partout, ligne repliée comprise, DS-6) + montant 24 / 800 `nowrap` (20 / 800 sur la ligne repliée) | — |
 | Carte | `Button variant="default"`, `leftSection={<IconCreditCard size={24} />}`, 18 / 700 | h 56 / 56 / 48 |
 | Appoint | `Button variant="default"`, contenu `Stack gap={0}` : « Appoint » 16 / 600 + montant 18 / 700 `nowrap` (paysage : une ligne « Appoint 7,50 € ») | h 56 / 56 / 48 |
 | Libellé « Espèces reçues » / « Jetons reçus » | `Text` 16 `dimmed`, `leftSection` visuel `IconCash` 20 | — |
 | Suggestions | `SimpleGrid cols={4} spacing="xs"` de `Button variant="default"` 20 / 700 `nowrap`, `px={0}` ; sélectionnée : `variant="filled"` (yellow-8, texte noir 9,8:1) + `leftSection={<IconCheck size={18} />}` + `aria-pressed` | h 56 / 56 / 48 |
 | Autre montant | `Button variant="default" fullWidth`, `leftSection={<IconKeyboard size={20} />}`, 16 / 700 | h 48 / absent / 48 |
 | Pavé | `SimpleGrid cols={3}` (paysage `cols={4}`) `spacing="xs"` de `Button variant="default"` 24 / 700 ; ⌫ = `IconBackspace` 24 | h 56 / 64 / 44 |
-| Bloc de rendu | voir « États du bloc de rendu » | montant 40 / 40 / 32 |
+| Bloc de rendu | voir « États du bloc de rendu ». Montant long : en portrait, tablette et desktop, il passe sous son libellé au lieu de déborder (écart accepté) ; en paysage, montant 28 / 800 en jetons (DS-5) | montant 40 / 40 / 32 (28 en jetons) ; `mih` 112 / 96 / 96 |
 | Bouton principal | `Button fullWidth` filled, 18 / 700, icône 22 | h 56 / 56 / 48 |
 | Espacements | `Stack gap="sm"` ; 8 px minimum entre cibles | — |
 
@@ -412,6 +414,8 @@ Focus initial : sur l'affichage de la saisie (`tabIndex={-1}`, `data-autofocus`)
 | `payment_card` | Carte | Card |
 | `payment_cash` | Espèces | Cash |
 | `payment_all_card` | Tout en carte ({{amount}}) | All by card ({{amount}}) |
+| `payment_all_card_label` | Tout en carte | All by card |
+| `payment_required_reload` | Le paiement n'a pas été enregistré : rechargez la page pour utiliser la dernière version de l'appli. | The payment was not recorded: reload the page to use the latest version of the app. |
 | `payment_exact` | Appoint | Exact amount |
 | `payment_exact_aria` | Appoint, {{amount}} | Exact amount, {{amount}} |
 | `payment_cash_received` | Espèces reçues | Cash received |

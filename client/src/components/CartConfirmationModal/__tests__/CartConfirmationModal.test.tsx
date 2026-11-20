@@ -8,6 +8,7 @@ import { clearCart } from '../../../redux/cartSlice';
 import { render } from '../../../utils/testUtils';
 import type { CreateOrderRequestType } from 'shared-ts';
 import { useLayoutMode } from '../../../hooks/useLayoutMode';
+import { dismissSuccessToasts } from '../../../utils/toasts';
 
 jest.mock('react-redux', () => ({
   useSelector: jest.fn(),
@@ -33,6 +34,10 @@ jest.mock('../../../services/orders', () => ({
 jest.mock('../../../hooks/useLayoutMode', () => ({
   ...jest.requireActual<object>('../../../hooks/useLayoutMode'),
   useLayoutMode: jest.fn(),
+}));
+
+jest.mock('../../../utils/toasts', () => ({
+  dismissSuccessToasts: jest.fn(),
 }));
 
 jest.mock('react-toastify', () => ({
@@ -312,6 +317,25 @@ describe('CartConfirmationModal (Encaissement)', () => {
     expect(mockDispatch).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
     expect(changeDisplay()).toHaveTextContent('payment_remaining');
+  });
+
+  it('closes the success toast of the previous sale when it opens (DS-2)', () => {
+    renderModal();
+    expect(dismissSuccessToasts).toHaveBeenCalledTimes(1);
+  });
+
+  it('asks to reload the page when the API requires a payment (D-035)', async () => {
+    mockAddOrder.mockReturnValue({
+      unwrap: () =>
+        Promise.reject(
+          Object.assign(new Error('400'), { data: { error: 'x', code: 'PAYMENT_REQUIRED' } })
+        ),
+    });
+    renderModal();
+    fireEvent.click(button('payment_card'));
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith('payment_required_reload', { autoClose: 5000 });
+    });
   });
 
   it('disables every action while saving', () => {

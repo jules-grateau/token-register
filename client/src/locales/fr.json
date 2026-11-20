@@ -46,6 +46,7 @@
   "payment_backspace": "Effacer le dernier chiffre",
   "payment_cash_and_card": "Espèces + Carte",
   "order_placed_with_payment": "Commande n°{{id}} enregistrée · {{payment}}",
+  "payment_required_reload": "Le paiement n'a pas été enregistré : rechargez la page pour utiliser la dernière version de l'appli.",
   "payment_badge": "{{mode}} {{amount}}",
   "delete": "Supprimer",
   "close": "Fermer",

@@ -9,8 +9,10 @@ interface ChangeDisplayProps {
   state: ChangeState;
   currency: CurrencyCode;
   format: (amount: number) => string;
-  /** Phone landscape: big amounts at 32 instead of 40. */
+  /** Phone landscape: big amounts at 32 instead of 40, and 28 in tokens (DS-5). */
   compact?: boolean;
+  /** Reserved height: 112 in phone portrait (DS-4), so the screen does not jump. */
+  minHeight?: number;
   /** Initial focus target when there is no amount display (never "Carte"). */
   autoFocus?: boolean;
 }
@@ -27,11 +29,12 @@ const ChangeDisplay: React.FC<ChangeDisplayProps> = ({
   currency,
   format,
   compact = false,
+  minHeight = 96,
   autoFocus = false,
 }) => {
   const { t } = useTranslation();
   const isTokens = currency === 'TOKEN';
-  const bigAmount = compact ? 32 : 40;
+  const bigAmount = compact ? (isTokens ? 28 : 32) : 40;
 
   const receivedLine = (label: string, amount: number) => (
     <Group justify="space-between" wrap="nowrap" gap="xs">
@@ -44,8 +47,9 @@ const ChangeDisplay: React.FC<ChangeDisplayProps> = ({
     </Group>
   );
 
+  // A long amount ("12 Jetons") goes under its label instead of overflowing; in phone landscape
+  // it is 28 px in tokens so that the block stays low enough for "Encaisser" (DS-5).
   const amountLine = (label: string, amount: number, size: number, color?: string) => (
-    // Wraps: a long amount ("12 Jetons" at 40 px) goes under its label instead of overflowing.
     <Group justify="space-between" wrap="wrap" gap="xs" align="center" style={{ rowGap: 0 }}>
       <Text fz={20} fw={700} style={NOWRAP}>
         {label}
@@ -144,7 +148,7 @@ const ChangeDisplay: React.FC<ChangeDisplayProps> = ({
     <Paper
       radius="md"
       p="md"
-      mih={96}
+      mih={minHeight}
       bg="dark.6"
       style={{ border, display: 'flex', alignItems: 'center' }}
       role="status"

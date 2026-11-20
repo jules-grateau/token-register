@@ -46,6 +46,7 @@ import {
   type KeypadKey,
 } from '../../utils/payment';
 import ChangeDisplay from './ChangeDisplay';
+import { dismissSuccessToasts } from '../../utils/toasts';
 import PaymentKeypad from './PaymentKeypad';
 
 interface CartConfirmationModalProps {
@@ -56,6 +57,16 @@ interface CartConfirmationModalProps {
 }
 
 const NOWRAP = { whiteSpace: 'nowrap' } as const;
+
+/** D-035: the API answers 400 with code PAYMENT_REQUIRED when the payment is missing. */
+const isPaymentRequiredError = (error: unknown): boolean =>
+  typeof error === 'object' &&
+  error !== null &&
+  'data' in error &&
+  typeof error.data === 'object' &&
+  error.data !== null &&
+  'code' in error.data &&
+  error.data.code === 'PAYMENT_REQUIRED';
 const DIGITS = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
 
 /**
@@ -91,6 +102,8 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      // DS-2: the toast of the previous sale must not cover this one; errors stay.
+      dismissSuccessToasts();
       setInput('');
       setSelectedSuggestion(null);
       setView('amounts');
@@ -133,7 +146,11 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
       onClose();
       onOrderPlaced?.();
     } catch (error) {
-      toast.error(t('error_adding_order', { error: String(error) }), { autoClose: 5000 });
+      // D-035: an EUR instance refuses an order without payment (outdated page).
+      const message = isPaymentRequiredError(error)
+        ? t('payment_required_reload')
+        : t('error_adding_order', { error: String(error) });
+      toast.error(message, { autoClose: 5000 });
     }
   };
 
@@ -230,7 +247,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
 
   const collapsedRecap = (
     <Group justify="space-between" wrap="nowrap" mih={44}>
-      <Text fz={16}>{`${totalItems} ${t('items', { count: totalItems })} · ${t('total')}`}</Text>
+      <Text fz={16}>{`${t('total')} · ${totalItems} ${t('items', { count: totalItems })}`}</Text>
       <Text fz={20} fw={800} style={NOWRAP}>
         {format(total)}
       </Text>
@@ -243,6 +260,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
       currency={currency}
       format={format}
       compact={isLandscape}
+      minHeight={layout === 'phone-portrait' ? 112 : 96}
       autoFocus={!showKeypadView || total <= 0}
     />
   );
@@ -281,7 +299,10 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
         h={sizes.button}
         fz={18}
         fw={700}
-        leftSection={<IconCreditCard size={24} />}
+        // DS-1: narrow padding and wrapping label, so that "Tout en carte" is never cut.
+        px="xs"
+        styles={{ label: { whiteSpace: 'normal', textAlign: 'center' } }}
+        leftSection={<IconCreditCard size={received !== null ? 20 : 24} />}
         onClick={payByCard}
         loading={isLoading}
         disabled={isLoading}
@@ -499,7 +520,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
             </>
           ) : (
             <>
-              <ScrollArea style={{ flex: 1 }} mih={64} type="auto">
+              <ScrollArea style={{ flex: 1 }} mih={88} type="auto" offsetScrollbars>
                 {recapLines}
               </ScrollArea>
               {totalLine}

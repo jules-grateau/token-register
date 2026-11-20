@@ -46,6 +46,7 @@
   "payment_backspace": "Delete last digit",
   "payment_cash_and_card": "Cash + Card",
   "order_placed_with_payment": "Order #{{id}} placed · {{payment}}",
+  "payment_required_reload": "The payment was not recorded: reload the page to use the latest version of the app.",
   "payment_badge": "{{mode}} {{amount}}",
   "delete": "Delete",
   "close": "Close",
