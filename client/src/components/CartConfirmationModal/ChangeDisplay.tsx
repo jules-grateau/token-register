@@ -45,11 +45,12 @@ const ChangeDisplay: React.FC<ChangeDisplayProps> = ({
   );
 
   const amountLine = (label: string, amount: number, size: number, color?: string) => (
-    <Group justify="space-between" wrap="nowrap" gap="xs" align="center">
-      <Text fz={20} fw={700}>
+    // Wraps: a long amount ("12 Jetons" at 40 px) goes under its label instead of overflowing.
+    <Group justify="space-between" wrap="wrap" gap="xs" align="center" style={{ rowGap: 0 }}>
+      <Text fz={20} fw={700} style={NOWRAP}>
         {label}
       </Text>
-      <Text fz={size} fw={800} c={color} style={NOWRAP} lh={1.1}>
+      <Text fz={size} fw={800} c={color} style={NOWRAP} lh={1.1} ml="auto">
         {format(amount)}
       </Text>
     </Group>

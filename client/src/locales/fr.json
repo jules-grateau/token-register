@@ -19,6 +19,7 @@
   "payment_card": "Carte",
   "payment_cash": "Espèces",
   "payment_all_card": "Tout en carte ({{amount}})",
+  "payment_all_card_label": "Tout en carte",
   "payment_exact": "Appoint",
   "payment_exact_aria": "Appoint, {{amount}}",
   "payment_cash_received": "Espèces reçues",

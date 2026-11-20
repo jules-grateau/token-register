@@ -285,10 +285,23 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
         onClick={payByCard}
         loading={isLoading}
         disabled={isLoading}
-        // "Tout en carte (7,50 €)" never gets cut: it wraps on 2 lines in narrow columns.
-        styles={{ label: { whiteSpace: 'normal', textAlign: 'center', lineHeight: 1.15 } }}
+        aria-label={
+          received !== null ? t('payment_all_card', { amount: format(total) }) : undefined
+        }
       >
-        {received !== null ? t('payment_all_card', { amount: format(total) }) : t('payment_card')}
+        {received !== null ? (
+          // Two lines, like "Appoint": the one-line label is cut in a half-width button.
+          <Stack gap={0} align="center">
+            <Text fz={16} fw={600} lh={1.2}>
+              {t('payment_all_card_label')}
+            </Text>
+            <Text fz={18} fw={700} lh={1.2} style={NOWRAP}>
+              {format(total)}
+            </Text>
+          </Stack>
+        ) : (
+          t('payment_card')
+        )}
       </Button>
       {exactButton(false)}
     </SimpleGrid>

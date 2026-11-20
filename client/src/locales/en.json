@@ -19,6 +19,7 @@
   "payment_card": "Card",
   "payment_cash": "Cash",
   "payment_all_card": "All by card ({{amount}})",
+  "payment_all_card_label": "All by card",
   "payment_exact": "Exact amount",
   "payment_exact_aria": "Exact amount, {{amount}}",
   "payment_cash_received": "Cash received",
