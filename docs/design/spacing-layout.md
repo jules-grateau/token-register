@@ -1,14 +1,22 @@
-# Espacements et mises en page (charte provisoire)
+# Espacements, rayons, ombres et mises en page — Caisse Claire
 
 ## Tokens (`client/src/styles/variables.css`)
 
 | Token               | Valeur | Usage                                                                           |
 | ------------------- | ------ | ------------------------------------------------------------------------------- |
 | `--touch-min`       | 44px   | Taille minimale de toute zone interactive (largeur **et** hauteur)              |
-| `--touch-comfort`   | 56px   | Actions fréquentes quand l'espace le permet (en-tête portrait/tablette/desktop) |
-| `--cart-bar-height` | 72px   | Barre panier repliée (téléphone portrait), hors zone sûre                       |
+| `--touch-comfort`   | 56px   | Actions fréquentes quand l'espace le permet (« Valider », en-tête portrait/tablette/desktop) |
+| `--cart-bar-height` | 80px   | Barre panier repliée (téléphone portrait), hors zone sûre (était 72 : « Valider » passe à 56 de haut, 12 px de marge haut et bas). Le décalage des toasts (`--toastify-toast-bottom`) suit |
+| `--radius-control`  | 14px   | Boutons, `ActionIcon`, champs, onglets de colonne (= Mantine `md`)             |
+| `--radius-tile`     | 16px   | Pastille-icône 48 px, pastille de quantité des lignes                           |
+| `--radius-action`   | 18px   | « Valider », « Encaisser » et boutons principaux 56 px                          |
+| `--radius-card`     | 20px   | Cartes produit, cartes de commande, blocs de rendu, modales, Drawer (= Mantine `lg`) |
+| `--radius-pill`     | 999px  | Onglets de catégorie en rangée, badges (= Mantine `xl`)                         |
+| `--shadow-card`     | clair `0 1px 2px rgba(31,26,15,.08)` · sombre aucune | Cartes produit et de commande (en sombre : contour `--color-border`) |
+| `--shadow-bar`      | clair `0 -4px 16px rgba(31,26,15,.07)` · sombre `0 -4px 16px rgba(0,0,0,.4)` | Barre panier repliée |
+| `--shadow-pop`      | clair `0 8px 24px rgba(31,26,15,.14)` · sombre `0 8px 24px rgba(0,0,0,.5)` | Menus, Drawer, modales, toasts |
 
-Espacements : échelle Mantine (xs 10, sm 12, md 16, lg 20, xl 32 px). Rayons : `md` par défaut, `sm` pour les cartes, `xl` pour les onglets « pilule ». Ombres : `shadow="md"` pour menus, Drawer, barre panier ; rien d'autre.
+Espacements : échelle Mantine inchangée (xs 10, sm 12, md 16, lg 20, xl 32 px) ; grille de base 4 px. Cartes : padding 12 px, écart de grille 12 px (14 en tablette/desktop). Rayons Mantine : `xs 8, sm 12, md 14, lg 20, xl 999` (voir [colors.md](colors.md#mapping-mantine-clientsrcapptsx)) ; ne pas mélanger de valeurs libres. Ombres : celles du tableau, rien d'autre ; jamais d'ombre dure ni de glow. Pas de dégradé.
 
 ## Zones tactiles
 
@@ -37,22 +45,24 @@ Racine : `height: 100dvh` (et non `100vh`), `padding-inline: env(safe-area-inset
 
 |                 | Téléphone portrait                   | Téléphone paysage                                               | Tablette                                              | Desktop                       |
 | --------------- | ------------------------------------ | --------------------------------------------------------------- | ----------------------------------------------------- | ----------------------------- |
-| En-tête         | 56 px                                | **44 px**                                                       | 56 px                                                 | inchangé                      |
+| En-tête         | 56 px (logo, actions) **+ bandeau du nom d'asso, hauteur auto** | **44 px** (logo + nom d'asso 16 px sur 1-2 lignes) | 64 px (logo, nom d'asso 20 px sur 1-2 lignes, actions) | 64 px, idem tablette          |
 | Catégories      | Onglets pilule en rangée (60 px)     | Onglets pilule en rangée (52 px)                                | Colonne **200 px fixe** (rangée si largeur < 768)     | Colonne actuelle, `miw={200}` |
 | Grille produits | 2 colonnes                           | 3 colonnes (4 si largeur ≥ 920)                                 | 2 colonnes                                            | 3 (`md`) / 4 (`lg`), inchangé |
-| `mih` carte     | 96                                   | 72                                                              | 120                                                   | 200                           |
+| `mih` carte     | 144 (pastille 48 + nom + prix)       | 72 (disposition en ligne, pastille 32)                          | 144                                                   | 160                           |
 | Marge grille    | `sm`                                 | `xs`                                                            | `sm`                                                  | `xl`                          |
-| Panier          | **Barre repliée 72 px + Drawer bas** | **Colonne droite toujours visible** `clamp(260px, 38vw, 320px)` | Colonne droite, ratio actuel (catalogue 3 / panier 2) | inchangé                      |
+| Panier          | **Barre repliée 80 px + Drawer bas** | **Colonne droite toujours visible** `clamp(260px, 38vw, 320px)` | Colonne droite, ratio actuel (catalogue 3 / panier 2) | inchangé                      |
 | Historique      | Icône dans l'en-tête                 | Icône dans l'en-tête                                            | En-tête du panier                                     | En-tête du panier             |
 | Vider le panier | En-tête du Drawer                    | Pied du panier                                                  | En-tête du panier                                     | En-tête du panier             |
 
 ### 1. Téléphone portrait
 
-Pile verticale : en-tête 56 → onglets 60 → grille (**seule zone qui défile**) → barre panier `var(--cart-bar-height)` + `env(safe-area-inset-bottom)`, dernier élément de la colonne (dans le flux, pas en `fixed`).
+Pile verticale : en-tête 56 + bandeau du nom d'asso (auto, ≈ 32-64) → onglets 60 → grille (**seule zone qui défile**) → barre panier `var(--cart-bar-height)` + `env(safe-area-inset-bottom)`, dernier élément de la colonne (dans le flux, pas en `fixed`). Hauteur utile minimale à tenir : 360 × 640 avec un nom d'asso sur 2 lignes : la grille montre au moins une rangée complète.
 
 ```
 +--------------------------------------+
-| Token Register          [hist] [cfg] |  56   ActionIcon 56×56
+| [logo] Caisse Claire    [hist] [cfg] |  56   ActionIcon 44-56
+| Comité des fêtes de Saint-Aubin-     |  auto nom d'asso 24/800, passe à
+| sur-Loire                            |  la ligne
 +--------------------------------------+
 | (Toutes) [Boissons] [Snacks] [Desse>|  60   onglets 44, défilement horizontal
 +--------------------------------------+
@@ -66,7 +76,7 @@ Pile verticale : en-tête 56 → onglets 60 → grille (**seule zone qui défile
 | |    1,00 €      | |    2,50 €      | |
 | +----------------+ +----------------+ |
 +--------------------------------------+
-| 3 articles      [^]  [   VALIDER   ] |  72   fixe, shadow md
+| 3 articles      [^]  [   VALIDER   ] |  80   barre encre, dans le flux
 | 4,50 €                               |
 +--------------------------------------+
 ```
@@ -98,7 +108,7 @@ En-tête compact 44 px sur toute la largeur. Dessous, deux colonnes : catalogue 
 
 ```
 +------------------------------------------------------------------------------+
-| Token Register                                              [hist]  [cfg]    |  44
+| [logo] Nom d'asso                                              [hist]  [cfg]    |  44
 +------------------------------------------------+-----------------------------+
 | (Toutes) [Boissons] [Snacks] [Desserts] [Div> | Café long            3,00 € |
 +------------------------------------------------+ [ - ]  2  [ + ]         [:] |
@@ -115,7 +125,7 @@ En-tête compact 44 px sur toute la largeur. Dessous, deux colonnes : catalogue 
  <---------------- flex: 1 (≈ 465) ---------------><-- clamp(260,38vw,320) ≈ 285 -->
 ```
 
-- En-tête : 44 px, titre 18 px, `ActionIcon` 44 × 44 (historique, réglages).
+- En-tête : 44 px (logo 24 px sans nom d'appli, nom d'asso 16 / 800 sur 1-2 lignes, jamais coupé), `ActionIcon` 44 × 44 (historique, réglages).
 - Onglets : rangée de 52 px (onglets 44 + `py={4}`), au-dessus du catalogue uniquement.
 - Grille : `cols` 3, 4 si `(min-width: 920px)` ; `spacing="xs"`, `p="xs"`, `mih={72}`, `p="xs"` dans la carte.
 - Panier : `w="clamp(260px, 38vw, 320px)"`, bordure gauche, **sans en-tête** (historique dans l'en-tête global). Lignes en 2 rangées (même composant), seule zone qui défile. Pied compact d'une rangée de 60 px (`p="xs"`, `wrap="nowrap"`) : vider (`ActionIcon` 44) · pile « 3 articles » 16 px `dimmed` / total 20 px 800 · « Valider » `h={44}` `flex: 1` `miw={110}`.
@@ -126,12 +136,12 @@ En-tête compact 44 px sur toute la largeur. Dessous, deux colonnes : catalogue 
 Disposition actuelle en ligne : catalogue à gauche (`flex: 3`), panier à droite (`flex: 2`).
 
 - Catégories : colonne **200 px fixe** (`w={200}`, `flex: none`), au lieu du ratio 1/9. Si la largeur < 768 px (petites tablettes / pliables en portrait), onglets pilule en rangée au-dessus de la grille comme sur téléphone.
-- Grille : 2 colonnes, `spacing="sm"`, `p="sm"`, `mih={120}`.
+- Grille : 2 colonnes, `spacing="sm"`, `p="sm"`, `mih={144}`.
 - Panier : en-tête (historique, vider, 48 × 48), lignes 2 rangées, pied standard (Articles 16, Total 24/800, « Valider » `size="lg"`).
 
 ### 4. Desktop (≥ 992 px)
 
-Inchangé, sauf : colonne de catégories `miw={200}`, noms de catégorie qui passent à la ligne, icônes d'édition 44 px de large, tailles de texte du panier, couleurs, toasts.
+Même structure qu'avant (catégories à gauche, grille, panier à droite). Changent : en-tête 64 px avec logo et nom d'asso, colonne de catégories `miw={200}` (lignes en pilule arrondie, la sélectionnée en moutarde), noms de catégorie qui passent à la ligne, icônes d'édition 44 px de large, grille 3 (`md`) / 4 (`lg`) colonnes avec `mih={160}`, tailles de texte du panier, couleurs, toasts.
 
 ### Mode édition — téléphone portrait
 
@@ -139,7 +149,7 @@ Pas de barre panier. Une barre d'outils de catégorie (52 px) sous les onglets a
 
 ```
 +--------------------------------------+
-| Token Register   [✓ Terminer]  [cfg] |  56   bordure basse 2px jaune
+| [logo] Nom d'asso   [✓ Terminer]  [cfg] |  56   bordure basse 2px encre (moutarde en sombre)
 +--------------------------------------+
 | (Toutes) [Boissons] [Snacks] [+ Cat.>|  60   « + Nouvelle catégorie » = dernier onglet
 +--------------------------------------+
@@ -158,7 +168,7 @@ Pas de barre panier. Une barre d'outils de catégorie (52 px) sous les onglets a
 
 ```
 +------------------------------------------------------------------------------+
-| Token Register                                       [✓ Terminer]   [cfg]    |  44
+| [logo] Nom d'asso                                       [✓ Terminer]   [cfg]    |  44
 +------------------------------------------------------------------------------+
 | (Toutes) [Boissons] [Snacks] [Desserts] [+ Catégorie]  >       |  [✎]  [🗑]  |  52
 +------------------------------------------------------------------------------+
