@@ -11,6 +11,7 @@ import { extractApiError } from '../../utils/extractApiError';
 import ConfirmationModal from '../ConfirmationModal';
 import CatalogIconPicker from '../CatalogIcon/CatalogIconPicker';
 import { isCatalogIconKey } from '../../config/catalogIcons';
+import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
 
 interface CategoryFormModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
+  const isPhone = isPhoneMode(useLayoutMode());
   const [createCategory] = useCreateCategoryMutation();
   const [updateCategory] = useUpdateCategoryMutation();
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -114,7 +116,8 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
         onClose={onClose}
         title={isEditMode ? t('category_management.edit') : t('category_management.new')}
         centered
-        closeButtonProps={{ 'aria-label': t('close') }}
+        fullScreen={isPhone}
+        closeButtonProps={{ size: 44, 'aria-label': t('close') }}
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack>
@@ -128,11 +131,14 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
               value={form.values.icon}
               onChange={(icon) => form.setFieldValue('icon', icon)}
             />
-            <Group justify="flex-end" mt="md">
-              <Button variant="default" onClick={onClose}>
+            {/* docs/design/components.md, "Modales": "Annuler" left, main action right, >= 44 px. */}
+            <Group justify="flex-end" gap={8} mt="md" grow={isPhone}>
+              <Button variant="default" h={44} onClick={onClose}>
                 {t('cancel')}
               </Button>
-              <Button type="submit">{isEditMode ? t('actions.save') : t('actions.create')}</Button>
+              <Button type="submit" h={44}>
+                {isEditMode ? t('actions.save') : t('actions.create')}
+              </Button>
             </Group>
           </Stack>
         </form>

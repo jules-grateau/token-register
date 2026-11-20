@@ -50,6 +50,7 @@ export const ProductDeleteConfirm: React.FC<ProductDeleteConfirmProps> = ({
       onConfirm={() => void handleConfirm()}
       title={t('product_management.delete')}
       confirmButtonText={t('delete')}
+      destructive
     >
       <Text>{t('product_management.delete_confirm', { name: product.name })}</Text>
     </ConfirmationModal>

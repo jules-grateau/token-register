@@ -49,6 +49,7 @@ import ChangeDisplay from './ChangeDisplay';
 import { dismissSuccessToasts } from '../../utils/toasts';
 import PaymentKeypad from './PaymentKeypad';
 import classes from './CartConfirmationModal.module.css';
+import figures from '../../styles/figures.module.css';
 
 interface CartConfirmationModalProps {
   isOpen: boolean;
@@ -240,7 +241,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
   const totalLine = (
     <Group justify="space-between" wrap="nowrap">
       <Text fz={16}>{`${t('total')} · ${totalItems} ${t('items', { count: totalItems })}`}</Text>
-      <Text fz={24} fw={800} style={NOWRAP} className={classes.big}>
+      <Text fz={24} fw={800} style={NOWRAP} className={figures.big}>
         {format(total)}
       </Text>
     </Group>
@@ -407,7 +408,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
           ta="right"
           c={input === '' ? 'dimmed' : undefined}
           style={NOWRAP}
-          className={classes.big}
+          className={figures.big}
           tabIndex={-1}
           data-autofocus={showKeypadView && total > 0 ? true : undefined}
           data-testid="typed-amount"

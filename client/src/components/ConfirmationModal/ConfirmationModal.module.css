@@ -1,0 +1,8 @@
+/*
+ * Filled red button of a deletion (D-050): --color-danger-bg with --color-danger-text, white in
+ * light (6.5:1), ink red in dark (6.2:1 on #F87171). autoContrast would pick white in dark (2.8:1).
+ */
+[data-mantine-color-scheme] .destructive.destructive:not(:disabled) {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger-text);
+}

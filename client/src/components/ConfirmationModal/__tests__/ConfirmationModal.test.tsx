@@ -74,6 +74,36 @@ describe('ConfirmationModal', () => {
     expect(screen.getByRole('button', { name: /no/i })).toBeInTheDocument();
   });
 
+  it('puts "cancel" on the left and the action on the right (D-050)', () => {
+    render(
+      <ConfirmationModal isOpen={true} onClose={onClose} onConfirm={onConfirm} title="Order">
+        <div>Content</div>
+      </ConfirmationModal>
+    );
+    const buttons = screen.getAllByRole('button', { name: /^(cancel|confirm)$/ });
+    expect(buttons.map((button) => button.textContent)).toEqual(['cancel', 'confirm']);
+    expect(buttons[1]).not.toHaveAttribute('data-destructive');
+  });
+
+  it('marks the action as destructive for a deletion (D-050)', () => {
+    render(
+      <ConfirmationModal
+        isOpen={true}
+        onClose={onClose}
+        onConfirm={onConfirm}
+        title="Delete"
+        confirmButtonText="delete"
+        destructive
+      >
+        <div>Content</div>
+      </ConfirmationModal>
+    );
+    const button = screen.getByRole('button', { name: 'delete' });
+    expect(button).toHaveAttribute('data-destructive', 'true');
+    // --color-danger-bg / --color-danger-text, never autoContrast white in dark (DS-1, PR #31).
+    expect(button).toHaveClass('destructive');
+  });
+
   it('renders extraFooter if provided', () => {
     render(
       <ConfirmationModal

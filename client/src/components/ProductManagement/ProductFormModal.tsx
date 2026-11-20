@@ -10,6 +10,7 @@ import ConfirmationModal from '../ConfirmationModal';
 import CatalogIconPicker from '../CatalogIcon/CatalogIconPicker';
 import { isCatalogIconKey } from '../../config/catalogIcons';
 import { useCurrency } from '../../hooks/useCurrency';
+import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
 import {
   fromStoredAmount,
   getDecimalScale,
@@ -46,6 +47,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const { t } = useTranslation();
   const { currency } = useCurrency();
   const decimalScale = getDecimalScale(currency);
+  const isPhone = isPhoneMode(useLayoutMode());
   const [createProduct] = useCreateProductMutation();
   const [updateProduct] = useUpdateProductMutation();
   const { data: categories } = useGetCategoriesQuery();
@@ -179,7 +181,8 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         onClose={onClose}
         title={isEditMode ? t('product_management.edit') : t('product_management.new')}
         centered
-        closeButtonProps={{ 'aria-label': t('close') }}
+        fullScreen={isPhone}
+        closeButtonProps={{ size: 44, 'aria-label': t('close') }}
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack>
@@ -211,7 +214,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               hideControls
               rightSection={
                 currency === 'EUR' ? (
-                  <Text size="sm" c="dimmed">
+                  <Text size="md" c="var(--color-text-2)">
                     €
                   </Text>
                 ) : undefined
@@ -227,11 +230,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               onChange={(value) => form.setFieldValue('categoryId', value ? Number(value) : null)}
               error={form.errors.categoryId}
             />
-            <Group justify="flex-end" mt="md">
-              <Button variant="default" onClick={onClose}>
+            {/* docs/design/components.md, "Modales": "Annuler" left, main action right, >= 44 px. */}
+            <Group justify="flex-end" gap={8} mt="md" grow={isPhone}>
+              <Button variant="default" h={44} onClick={onClose}>
                 {t('cancel')}
               </Button>
-              <Button type="submit">{isEditMode ? t('actions.save') : t('actions.create')}</Button>
+              <Button type="submit" h={44}>
+                {isEditMode ? t('actions.save') : t('actions.create')}
+              </Button>
             </Group>
           </Stack>
         </form>

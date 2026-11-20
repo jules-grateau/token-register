@@ -1,0 +1,4 @@
+/* Big figures (>= 24 px): totals, typed amounts, change due (docs/design/typography.md). */
+.big {
+  letter-spacing: -0.02em;
+}

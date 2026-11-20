@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Button, Group, Stack } from '@mantine/core';
+import classes from './ConfirmationModal.module.css';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -11,8 +12,14 @@ interface ConfirmationModalProps {
   confirmButtonText?: string;
   cancelButtonText?: string;
   extraFooter?: React.ReactNode;
+  /** Deletion: the confirm button is filled red instead of mustard (D-050). */
+  destructive?: boolean;
+  /** Phone forms (discount): full screen like the other form modals. Confirmations stay centered. */
+  fullScreen?: boolean;
 }
 
+// docs/design/components.md, "Modales (hors encaissement)": "Annuler" on the left, the main
+// action on the right (D-050), buttons >= 44 px, 8 px apart.
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   isOpen,
   onClose,
@@ -22,6 +29,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   confirmButtonText,
   cancelButtonText,
   extraFooter,
+  destructive = false,
+  fullScreen = false,
 }) => {
   const { t } = useTranslation();
 
@@ -35,17 +44,25 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       onClose={onClose}
       title={title || t('confirm_operation')}
       centered
-      closeButtonProps={{ 'aria-label': t('close') }}
+      fullScreen={fullScreen}
+      closeButtonProps={{ size: 44, 'aria-label': t('close') }}
     >
       <Stack>
         {children}
         {extraFooter}
-        <Group grow mt="md">
-          <Button onClick={handleConfirm} size="md" h={44}>
-            {confirmButtonText || t('confirm')}
-          </Button>
+        <Group grow gap={8} mt="md">
           <Button onClick={onClose} variant="default" size="md" h={44}>
             {cancelButtonText || t('cancel')}
+          </Button>
+          <Button
+            onClick={handleConfirm}
+            size="md"
+            h={44}
+            color={destructive ? 'red' : undefined}
+            data-destructive={destructive || undefined}
+            className={destructive ? classes.destructive : undefined}
+          >
+            {confirmButtonText || t('confirm')}
           </Button>
         </Group>
       </Stack>
