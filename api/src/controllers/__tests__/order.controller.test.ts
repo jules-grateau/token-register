@@ -39,7 +39,7 @@ describe('OrderController', () => {
   describe('getAllOrders', () => {
     it('should return all orders from the service', async () => {
       const paginatedResponse = {
-        data: [{ id: 1, date: 123, items: [] }],
+        data: [{ id: 1, date: 123, items: [], payment: null }],
         pagination: {
           currentPage: 1,
           pageSize: 20,
@@ -87,14 +87,48 @@ describe('OrderController', () => {
         nextFunction as NextFunction
       );
 
-      expect(mockOrderService.createOrder).toHaveBeenCalledWith(mockRequest.body);
+      // Legacy format (bare array): still accepted during an update, saved without payment.
+      expect(mockOrderService.createOrder).toHaveBeenCalledWith(mockRequest.body, undefined, {
+        legacyRequest: true,
+      });
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith(newOrder);
       expect(nextFunction).not.toHaveBeenCalled();
     });
 
+    it('should pass items and payment of the { items, payment } format', async () => {
+      const items = [
+        { product: { id: 1, name: 'A', price: 250 }, quantity: 3, discountedAmount: 0 },
+      ];
+      const payment = { cashAmount: 500, cardAmount: 250 };
+      mockRequest.body = { items, payment };
+      mockOrderService.createOrder.mockResolvedValue({ id: 7 });
+
+      await controller.createOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
+
+      expect(mockOrderService.createOrder).toHaveBeenCalledWith(items, payment);
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
+    });
+
+    it('should pass a null payment when the { items } format has none', async () => {
+      mockRequest.body = { items: [] };
+      mockOrderService.createOrder.mockResolvedValue({ id: 8 });
+
+      await controller.createOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
+
+      expect(mockOrderService.createOrder).toHaveBeenCalledWith([], null);
+    });
+
     it('should return 400 if cartItems is not an array', async () => {
-      mockRequest.body = {};
+      mockRequest.body = { items: 'nope' };
       await controller.createOrder(
         mockRequest as Request,
         mockResponse as Response,

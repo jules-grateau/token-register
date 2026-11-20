@@ -1,8 +1,17 @@
 import { openDb } from '../db';
 import logger from '../utils/logger';
-import { CartItemType, OrderType, OrderItemType, PaginationParams, PaginatedOrdersResponse } from 'shared-ts';
+import {
+  CartItemType,
+  CurrencyCode,
+  OrderPaymentType,
+  OrderType,
+  OrderItemType,
+  PaginationParams,
+  PaginatedOrdersResponse,
+} from 'shared-ts';
 import { NotFoundError, ValidationError } from '../types/errors';
-import { isValidStoredAmount } from '../utils/currency';
+import { getConfiguredCurrency, isValidStoredAmount } from '../utils/currency';
+import { validateOrderPayment } from '../utils/payment';
 
 interface OrderItemDbRow {
   order_id: number;
@@ -13,9 +22,22 @@ interface OrderItemDbRow {
   category_name: string;
   quantity: number;
   discountedAmount: number;
+  cash_amount: number | null;
+  card_amount: number | null;
 }
 
+export type CreateOrderOptions = {
+  /**
+   * Old clients POST a bare array of cart items, without payment. They are still accepted
+   * while an instance is being updated (a tab left open on the previous version): the order
+   * is then saved without payment.
+   */
+  legacyRequest?: boolean;
+};
+
 export class OrderService {
+  constructor(private readonly currency: CurrencyCode = getConfiguredCurrency()) {}
+
   async getAllOrders(params?: PaginationParams): Promise<PaginatedOrdersResponse> {
     const page = params?.page ?? 1;
     const pageSize = params?.pageSize ?? 20;
@@ -48,7 +70,9 @@ export class OrderService {
               order_items.product_price,
               order_items.category_name,
               order_items.quantity,
-              order_items.discountedAmount
+              order_items.discountedAmount,
+              orders.cash_amount,
+              orders.card_amount
             FROM orders
             LEFT JOIN order_items ON orders.id = order_items.order_id
             WHERE orders.id IN (
@@ -64,7 +88,12 @@ export class OrderService {
         const { order_id, date, product_id, product_name, product_price, category_name, quantity, discountedAmount } = row;
 
         if (!orders.has(order_id)) {
-          orders.set(order_id, { id: order_id, date, items: [] });
+          // Older rows (or test doubles) may lack the payment columns: treat as no payment.
+          const cashAmount = row.cash_amount ?? null;
+          const cardAmount = row.card_amount ?? null;
+          const payment: OrderPaymentType | null =
+            cashAmount === null && cardAmount === null ? null : { cashAmount, cardAmount };
+          orders.set(order_id, { id: order_id, date, items: [], payment });
         }
 
         const order = orders.get(order_id);
@@ -104,7 +133,11 @@ export class OrderService {
     }
   }
 
-  async createOrder(cartItems: CartItemType[]): Promise<{ id: number }> {
+  async createOrder(
+    cartItems: CartItemType[],
+    payment?: OrderPaymentType | null,
+    options: CreateOrderOptions = {}
+  ): Promise<{ id: number }> {
     if (!cartItems || cartItems.length === 0) {
       throw new ValidationError('No items in the cart');
     }
@@ -163,7 +196,23 @@ export class OrderService {
         });
       }
 
-      const orderResult = await db.run('INSERT INTO orders (date) VALUES (?)', [Date.now()]);
+      // The total comes from the database snapshots, never from the request.
+      const total = snapshots.reduce(
+        (sum, { productPrice, quantity, discountedAmount }) =>
+          sum + productPrice * quantity - discountedAmount,
+        0
+      );
+      let storedPayment: OrderPaymentType | null = null;
+      if (options.legacyRequest && this.currency === 'EUR') {
+        logger.warn('Order received in the legacy format: saved without payment');
+      } else {
+        storedPayment = validateOrderPayment(payment, total, this.currency);
+      }
+
+      const orderResult = await db.run(
+        'INSERT INTO orders (date, cash_amount, card_amount) VALUES (?, ?, ?)',
+        [Date.now(), storedPayment?.cashAmount ?? null, storedPayment?.cardAmount ?? null]
+      );
       const orderId = orderResult.lastID;
 
       if (!orderId) {

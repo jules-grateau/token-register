@@ -7,7 +7,8 @@ import { toast } from 'react-toastify';
 import ConfirmationModal from '../ConfirmationModal';
 import { useCurrency } from '../../hooks/useCurrency';
 import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
-import { IconTrash } from '@tabler/icons-react';
+import { IconCash, IconCreditCard, IconTrash } from '@tabler/icons-react';
+import type { OrderPaymentType } from 'shared-ts';
 
 import {
   Modal,
@@ -20,6 +21,7 @@ import {
   Divider,
   Center,
   Pagination,
+  Badge,
 } from '@mantine/core';
 
 interface OrderHistoryModalProps {
@@ -29,7 +31,7 @@ interface OrderHistoryModalProps {
 
 const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  const { format } = useCurrency();
+  const { currency, format } = useCurrency();
   const isPhone = isPhoneMode(useLayoutMode());
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
@@ -62,6 +64,34 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
     } finally {
       await ordersQuery.refetch();
     }
+  };
+
+  // Payment badges (D-034): one per recorded mode, EUR instances only; none for older orders.
+  const renderPayment = (payment: OrderPaymentType | null) => {
+    if (currency !== 'EUR' || !payment) return null;
+    const modes = [
+      { amount: payment.cashAmount, mode: t('payment_cash'), icon: <IconCash size={16} /> },
+      { amount: payment.cardAmount, mode: t('payment_card'), icon: <IconCreditCard size={16} /> },
+    ].filter((entry) => entry.amount !== null);
+    if (modes.length === 0) return null;
+    return (
+      <Group gap="xs" data-testid="order-payment">
+        {modes.map(({ amount, mode, icon }) => (
+          <Badge
+            key={mode}
+            size="lg"
+            variant="default"
+            tt="none"
+            fz={14}
+            fw={600}
+            leftSection={icon}
+            style={{ whiteSpace: 'nowrap' }}
+          >
+            {t('payment_badge', { mode, amount: format(amount ?? 0) })}
+          </Badge>
+        ))}
+      </Group>
+    );
   };
 
   const renderContent = () => {
@@ -117,6 +147,7 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
                         />
                       ))}
                     </Stack>
+                    {renderPayment(order.payment ?? null)}
                     <Divider />
                     <Group justify="space-between" wrap="nowrap">
                       <Group gap="sm" wrap="nowrap">

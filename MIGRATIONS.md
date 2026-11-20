@@ -67,6 +67,21 @@ Converts `products.price`, `order_items.product_price` and `order_items.discount
 updates `settings.currency`. Back up the database first. Full procedure:
 [deploy/README.md > Currency](./deploy/README.md#currency).
 
+### Order payments (1.3.0)
+
+**Script**: `api/src/db/scripts/migrateDb.ts` (step `migrateOrderPayments`, runs on every start;
+logic in `api/src/db/orderPayment.ts`)
+**Schema change**: adds `orders.cash_amount INTEGER` and `orders.card_amount INTEGER`, both
+nullable, in the smallest unit (cents on EUR instances). Only missing columns are added, in one
+transaction, so the step is idempotent. New databases get them from `initDb.ts`.
+**Data**: existing orders keep `NULL` in both columns, meaning "no payment recorded". Nothing is
+backfilled. Token instances always keep `NULL` (D-033).
+**Conversion**: `convertCurrency.ts` converts both columns to euros with the history; a conversion
+to tokens is refused while an order has a recorded payment (not decided yet).
+
+Rollback: older versions ignore the two columns (they only insert `date`); they can stay. To drop
+them (SQLite >= 3.35): `ALTER TABLE orders DROP COLUMN cash_amount; ALTER TABLE orders DROP COLUMN card_amount;`
+
 ## Deployment Workflow
 
 ### Development Environment

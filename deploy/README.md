@@ -63,8 +63,11 @@ It is shown read-only in the app (⚙️ menu). Amounts are stored as whole numb
 
 - **New EUR instance**: add `CURRENCY=EUR` to the new service before its first start. It starts
   with an empty catalog (D-014) and records EUR in its database.
-- **Existing instances** (`token-register-poule`, `token-register-atakora`, demo): nothing to do.
-  On the first start of this version, the migration records `TOKEN` in their database.
+- **Production instances**: `token-register-poule` runs in tokens. `token-register-atakora` runs
+  in euros since 2026-11-19 (history converted with the command below, `CURRENCY: EUR` on its
+  service). The demo uses the `CURRENCY` of its service.
+- **Databases that predate the currency feature**: on their first start, the migration records
+  `TOKEN` in them.
 - **Safety check**: on every start, the migration compares `CURRENCY` with the currency recorded
   in the database. If they differ, the container stops before the app starts, with a
   `Currency mismatch` message in `docker logs`. Nothing is ever converted automatically.
@@ -98,3 +101,14 @@ It is shown read-only in the app (⚙️ menu). Amounts are stored as whole numb
    The command refuses to write anything if, after rounding, an order line would get a discount
    larger than its total (D-016); the preview lists those lines. Handle those orders first,
    then run the conversion again.
+
+   Recorded payments (cash / card amounts, 1.3.0) are converted with the history when going to
+   euros. Going **to tokens** is refused, and nothing is written, as long as an order has a
+   recorded payment: how to convert them is not decided yet (token instances record no payment).
+
+## Payments (1.3.0)
+
+On EUR instances, each order records the amount paid in cash and the amount paid by card
+(D-034). On the first start of 1.3.0, the migration adds two nullable columns to `orders`
+(`cash_amount`, `card_amount`); existing orders keep no payment. Nothing to do by hand: back up
+the database before deploying, as for any schema change. Token instances record no payment.

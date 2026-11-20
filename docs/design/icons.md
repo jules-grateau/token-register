@@ -26,3 +26,19 @@ Bibliothèque unique : **`@tabler/icons-react`**. Pas d'icône sur mesure pour l
 | Ouvrir / fermer le panier (portrait)            | `IconChevronUp` / `IconChevronDown`     | défaut                                         |
 | Monnaie verrouillée                             | `IconLock`                              | dimmed                                         |
 | À propos                                        | `IconInfoCircle`                        | défaut                                         |
+
+### Encaissement (voir [components.md](components.md#encaissement--cartconfirmationmodal))
+
+| Action / information                                     | Icône               | Taille                         | Couleur                                  |
+| -------------------------------------------------------- | ------------------- | ------------------------------ | ---------------------------------------- |
+| Payer par carte, « Tout en carte », « Reste en carte »   | `IconCreditCard`    | 24 (bouton Carte), 22 (pied)   | texte du bouton                          |
+| Espèces (libellé « Espèces reçues », bouton total ≤ 0)   | `IconCash`          | 20 (libellé), 24 (bouton)      | `dimmed` (libellé), texte du bouton      |
+| Monnaie à rendre / à rendre au client (bloc de rendu)    | `IconCoins`         | 28                             | yellow-8                                 |
+| Il reste à payer par carte (bloc de rendu)               | `IconCreditCard`    | 28                             | `var(--color-info-bg)`                   |
+| Il manque (jetons) / rendu élevé                         | `IconAlertTriangle` | 28 (bloc), 20 (avertissement)  | red-6 (il manque), yellow-8 (rendu élevé)|
+| Encaisser / Enregistrer / Rien à rendre / suggestion choisie | `IconCheck`     | 22 (pied), 28 (bloc), 18 (suggestion) | texte du bouton / défaut          |
+| Autre montant (ouvre le pavé)                            | `IconKeyboard`      | 20                             | texte du bouton                          |
+| Retour aux montants                                      | `IconArrowLeft`     | 20                             | texte du bouton                          |
+| Effacer le dernier chiffre                               | `IconBackspace`     | 24                             | défaut                                   |
+| Effacer le montant                                       | `IconX`             | 20                             | défaut                                   |
+| Badge de paiement (historique)                           | `IconCash` / `IconCreditCard` | 16                   | texte du badge                           |

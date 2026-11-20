@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { OrderService } from '../services/order.service';
-import { CartItemType, PaginationParams } from 'shared-ts';
+import { CartItemType, CreateOrderRequestType, PaginationParams } from 'shared-ts';
 import { ValidationError, NotFoundError } from '../types/errors';
 
 export class OrderController {
@@ -68,13 +68,23 @@ export class OrderController {
   public createOrder = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     req.log.info('Controller: Creating new order');
     try {
-      const cartItems: CartItemType[] = req.body as CartItemType[];
+      const body: unknown = req.body;
 
-      if (!Array.isArray(cartItems)) {
+      // Legacy format (clients before 1.3.0): a bare array of cart items, without payment.
+      if (Array.isArray(body)) {
+        const newOrder = await this.orderService.createOrder(body as CartItemType[], undefined, {
+          legacyRequest: true,
+        });
+        res.status(201).json(newOrder);
+        return;
+      }
+
+      const { items, payment } = (body ?? {}) as Partial<CreateOrderRequestType>;
+      if (!Array.isArray(items)) {
         res.status(400).json({ error: 'Invalid request body: Expected an array of cart items.' });
         return;
       }
-      const newOrder = await this.orderService.createOrder(cartItems);
+      const newOrder = await this.orderService.createOrder(items, payment ?? null);
       res.status(201).json(newOrder);
     } catch (error) {
       req.log.error('Controller Error: Error creating new order: %s', error);

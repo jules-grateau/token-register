@@ -1,6 +1,7 @@
 import type { Database } from 'sqlite';
 import type { CurrencyCode } from 'shared-ts';
 import { convertAmount, isCurrencyCode } from '../utils/currency';
+import { getMissingOrderPaymentColumns } from './orderPayment';
 
 const CURRENCY_KEY = 'currency';
 
@@ -126,6 +127,14 @@ export type OrderItemConversion = {
   discountAfter: number;
 };
 
+export type OrderPaymentConversion = {
+  orderId: number;
+  cashBefore: number | null;
+  cashAfter: number | null;
+  cardBefore: number | null;
+  cardAfter: number | null;
+};
+
 export type CurrencyConversionPlan = {
   from: CurrencyCode;
   to: CurrencyCode;
@@ -133,6 +142,13 @@ export type CurrencyConversionPlan = {
   orderItems: OrderItemConversion[];
   /** Lines where the rounded discount would exceed the rounded line total. */
   inconsistentOrderItems: OrderItemConversion[];
+  /** Orders with a recorded payment (cash / card amounts, D-034). */
+  orderPayments: OrderPaymentConversion[];
+  /**
+   * Converting recorded payments to tokens is not decided yet (token instances record no
+   * payment, D-033): until it is, a conversion to TOKEN with recorded payments is refused.
+   */
+  paymentsBlockConversion: boolean;
   revenueBefore: number;
   revenueAfter: number;
 };
@@ -202,7 +218,43 @@ export async function planCurrencyConversion(
     0
   );
 
-  return { from, to, products, orderItems, inconsistentOrderItems, revenueBefore, revenueAfter };
+  const orderPayments = await planOrderPaymentConversion(db, from, to);
+  const paymentsBlockConversion = to === 'TOKEN' && from !== to && orderPayments.length > 0;
+
+  return {
+    from,
+    to,
+    products,
+    orderItems,
+    inconsistentOrderItems,
+    orderPayments,
+    paymentsBlockConversion,
+    revenueBefore,
+    revenueAfter,
+  };
+}
+
+async function planOrderPaymentConversion(
+  db: Database,
+  from: CurrencyCode,
+  to: CurrencyCode
+): Promise<OrderPaymentConversion[]> {
+  // Run before the payment migration: no column, nothing to convert.
+  if ((await getMissingOrderPaymentColumns(db)).length > 0) return [];
+
+  const rows = await db.all<{ id: number; cash_amount: number | null; card_amount: number | null }[]>(
+    `SELECT id, cash_amount, card_amount FROM orders
+     WHERE cash_amount IS NOT NULL OR card_amount IS NOT NULL ORDER BY id`
+  );
+  const convert = (amount: number | null) =>
+    amount === null ? null : convertAmount(amount, from, to);
+  return rows.map((row) => ({
+    orderId: row.id,
+    cashBefore: row.cash_amount,
+    cashAfter: convert(row.cash_amount),
+    cardBefore: row.card_amount,
+    cardAfter: convert(row.card_amount),
+  }));
 }
 
 /**
@@ -224,8 +276,22 @@ export async function applyCurrencyConversion(
     );
   }
 
+  if (plan.paymentsBlockConversion) {
+    throw new Error(
+      `${plan.orderPayments.length} order(s) have a recorded payment (cash / card). ` +
+        'Converting them to tokens is not supported yet. Nothing was converted.'
+    );
+  }
+
   await db.exec('BEGIN TRANSACTION');
   try {
+    for (const payment of plan.orderPayments) {
+      await db.run('UPDATE orders SET cash_amount = ?, card_amount = ? WHERE id = ?', [
+        payment.cashAfter,
+        payment.cardAfter,
+        payment.orderId,
+      ]);
+    }
     for (const product of plan.products) {
       await db.run('UPDATE products SET price = ? WHERE id = ?', [product.after, product.id]);
     }
@@ -281,6 +347,16 @@ export function describeConversionPlan(plan: CurrencyConversionPlan): string[] {
     `Order history: ${plan.orderItems.length} order line(s) converted.`,
     `  Total revenue: ${fmtFrom(plan.revenueBefore)} -> ${fmtTo(plan.revenueAfter)}`
   );
+  if (plan.orderPayments.length > 0) {
+    lines.push(`  Recorded payments: ${plan.orderPayments.length} order(s).`);
+  }
+  if (plan.paymentsBlockConversion) {
+    lines.push(
+      '',
+      `Blocking: ${plan.orderPayments.length} order(s) have a recorded payment (cash / card). ` +
+        'Converting payments to tokens is not supported yet: the conversion will be refused.'
+    );
+  }
   if (plan.inconsistentOrderItems.length > 0) {
     lines.push(
       '',
