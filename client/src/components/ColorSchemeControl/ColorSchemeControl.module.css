@@ -1,4 +1,7 @@
-/* docs/design/components.md, "Bascule clair/sombre": 44 high, radius 14, selected = 800. */
+/*
+ * docs/design/components.md, "Bascule clair/sombre": >= 44 high, radius 14, selected = 800.
+ * Icon above the label, small side padding: "Sombre" is never cut in the 300 px menu (DS-2).
+ */
 .root {
   background-color: var(--color-surface-2);
 }
@@ -8,8 +11,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 4px;
   font-size: 16px;
   font-weight: 600;
+  white-space: nowrap;
   color: var(--color-text);
 }
 

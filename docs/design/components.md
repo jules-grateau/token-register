@@ -2,6 +2,8 @@
 
 Mise en page et critères de bascule : [spacing-layout.md](spacing-layout.md). « Mode » = valeur de `useLayoutMode()`. Couleurs : tokens de [colors.md](colors.md) (`var(--color-…)`). Rayons, ombres : [spacing-layout.md](spacing-layout.md#tokens-clientsrcstylesvariablescss). Seul l'aspect change par rapport à la charte provisoire ; comportements, tailles tactiles, textes ≥ 16 px et règles « rien n'est coupé » sont conservés.
 
+**Réglages par composant** : l'aspect global des composants Mantine (Paper, Card, Modal, Drawer, Menu, Popover, champs de saisie, croix de fermeture des modales) est défini dans `client/src/styles/theme.module.css`, branché par `classNames` dans le thème d'`App.tsx`. C'est la source de ces réglages ; un composant n'y déroge que si cette page le précise.
+
 ## En-tête global — `Register/index.tsx`
 
 Le **nom de l'association est le titre** ; le logo et « Caisse Claire » restent discrets. Fond `--color-surface` (clair) / `--color-bg` (sombre), bordure basse `--color-border` ; pas d'ombre.

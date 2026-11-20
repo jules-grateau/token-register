@@ -179,18 +179,19 @@ function Catalog(): React.ReactElement {
                 align="stretch"
                 style={{
                   minHeight: '80px',
-                  background: isSelected ? 'var(--mantine-color-dark-5)' : 'transparent',
+                  // docs/design/components.md, "Onglets catégorie": selected = mustard + ink.
+                  background: isSelected ? 'var(--color-primary)' : 'transparent',
                 }}
               >
                 {/* A category name is never cut: it wraps. */}
                 <Text
                   size={mode === 'tablet' ? 'md' : 'lg'}
-                  fw={700}
+                  fw={isSelected ? 800 : 700}
                   flex={1}
                   miw={0}
                   px={canEdit && mode === 'tablet' ? 'xs' : 'md'}
                   py="md"
-                  c="white"
+                  c={isSelected ? 'var(--color-on-primary)' : 'var(--color-text)'}
                   style={{ alignContent: 'center', overflowWrap: 'anywhere' }}
                 >
                   {category.label}
@@ -209,7 +210,10 @@ function Catalog(): React.ReactElement {
                       }}
                       aria-label={t('actions.edit')}
                     >
-                      <IconEdit size={24} color="var(--color-icon-accent)" />
+                      <IconEdit
+                        size={24}
+                        color={isSelected ? 'var(--color-on-primary)' : 'var(--color-icon-accent)'}
+                      />
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"
@@ -223,7 +227,10 @@ function Catalog(): React.ReactElement {
                       }}
                       aria-label={t('delete')}
                     >
-                      <IconTrash size={24} color="var(--mantine-color-red-6)" />
+                      <IconTrash
+                        size={24}
+                        color={isSelected ? 'var(--color-on-primary)' : 'var(--color-danger)'}
+                      />
                     </ActionIcon>
                   </Group>
                 )}
@@ -318,7 +325,7 @@ function Catalog(): React.ReactElement {
               onClick={() => setDeletingCategory(selectedCategoryData)}
               aria-label={t('category_management.delete')}
             >
-              <IconTrash size={22} color="var(--mantine-color-red-6)" />
+              <IconTrash size={22} color="var(--color-danger)" />
             </ActionIcon>
           </Group>
         )}

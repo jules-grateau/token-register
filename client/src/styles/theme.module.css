@@ -47,3 +47,12 @@
   --input-bd: var(--color-border-strong);
   --input-bd-focus: var(--color-focus);
 }
+
+/* Close button of every modal and Drawer: ink / cream, not Mantine's cold grey (DS-3). */
+[data-mantine-color-scheme] .modalClose {
+  color: var(--color-text);
+}
+
+[data-mantine-color-scheme] .modalClose:hover {
+  background-color: var(--color-surface-2);
+}

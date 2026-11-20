@@ -135,7 +135,8 @@ const cssVariablesResolver: CSSVariablesResolver = () => ({
 Les hex ci-dessus sont dans le **thème** (une seule source) ; dans les composants, on n'écrit jamais de hex : `var(--color-…)` ou `moutarde.5`, `red.5`.
 
 - `autoContrast: true` + `black: '#1F1A0F'` : tout fond moutarde reçoit un texte encre (8.1 / 9.7:1). Vérifier que le seuil par défaut (luminance 0.3) l'applique bien à `#E2A831` (luminance 0.44) ; sinon forcer `c="var(--color-on-primary)"`.
-- `defaultColorScheme` : voir « points à trancher » (README du compte rendu) ; la bascule persiste le choix de l'utilisateur.
+- `defaultColorScheme="auto"` (D-041) ; la bascule persiste le choix de l'utilisateur.
+- Variantes `light`, `subtle` et `outline` de la primaire : en clair, texte et icônes **encre** (`--mantine-color-moutarde-light-color` et `-outline` = `#1F1A0F`, fond `light` = `#F6E2A8`) ; en sombre, moutarde `#F0B93A` sur fond `#3A2F12`. Réglé dans le `cssVariablesResolver` d'`App.tsx`, pour qu'aucune variante ne donne de texte moutarde sur fond clair.
 - Valeurs de `variables.css` et du thème **identiques** ; si l'une change, l'autre change dans la même PR.
 
 ## Règles

@@ -93,6 +93,7 @@ const theme = createTheme({
         header: classes.modalHeader,
         title: classes.modalTitle,
         overlay: classes.modalOverlay,
+        close: classes.modalClose,
       },
     }),
     Drawer: Drawer.extend({
@@ -102,6 +103,7 @@ const theme = createTheme({
         header: classes.modalHeader,
         title: classes.modalTitle,
         overlay: classes.modalOverlay,
+        close: classes.modalClose,
       },
     }),
     Menu: Menu.extend({ classNames: { dropdown: classes.popoverDropdown } }),

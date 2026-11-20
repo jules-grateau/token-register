@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Center,
   SegmentedControl,
   Stack,
   Text,
@@ -45,10 +44,11 @@ const ColorSchemeControl: React.FC = () => {
         data={SCHEMES.map(({ value, icon: Icon }) => ({
           value,
           label: (
-            <Center style={{ gap: 6 }}>
+            // Icon above the label (DS-2): the label is never cut, even in a 300 px menu.
+            <Stack gap={2} align="center">
               <Icon size={20} aria-hidden="true" />
               <span>{t(`theme.${value}`)}</span>
-            </Center>
+            </Stack>
           ),
         }))}
       />
