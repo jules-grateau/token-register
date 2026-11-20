@@ -62,7 +62,9 @@ function createTables(db: Database) {
     db.exec(`
       CREATE TABLE IF NOT EXISTS orders (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date INTEGER NOT NULL
+        date INTEGER NOT NULL,
+        cash_amount INTEGER,
+        card_amount INTEGER
       )
     `);
 

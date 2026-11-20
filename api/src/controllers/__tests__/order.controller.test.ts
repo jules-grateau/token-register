@@ -39,7 +39,7 @@ describe('OrderController', () => {
   describe('getAllOrders', () => {
     it('should return all orders from the service', async () => {
       const paginatedResponse = {
-        data: [{ id: 1, date: 123, items: [] }],
+        data: [{ id: 1, date: 123, items: [], payment: null }],
         pagination: {
           currentPage: 1,
           pageSize: 20,
@@ -87,14 +87,46 @@ describe('OrderController', () => {
         nextFunction as NextFunction
       );
 
-      expect(mockOrderService.createOrder).toHaveBeenCalledWith(mockRequest.body);
+      // Bare array (clients before 1.3.0): passed without payment; the service decides (D-035).
+      expect(mockOrderService.createOrder).toHaveBeenCalledWith(mockRequest.body, undefined);
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith(newOrder);
       expect(nextFunction).not.toHaveBeenCalled();
     });
 
+    it('should pass items and payment of the { items, payment } format', async () => {
+      const items = [
+        { product: { id: 1, name: 'A', price: 250 }, quantity: 3, discountedAmount: 0 },
+      ];
+      const payment = { cashAmount: 500, cardAmount: 250 };
+      mockRequest.body = { items, payment };
+      mockOrderService.createOrder.mockResolvedValue({ id: 7 });
+
+      await controller.createOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
+
+      expect(mockOrderService.createOrder).toHaveBeenCalledWith(items, payment);
+      expect(mockResponse.status).toHaveBeenCalledWith(201);
+    });
+
+    it('should pass a null payment when the { items } format has none', async () => {
+      mockRequest.body = { items: [] };
+      mockOrderService.createOrder.mockResolvedValue({ id: 8 });
+
+      await controller.createOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
+
+      expect(mockOrderService.createOrder).toHaveBeenCalledWith([], null);
+    });
+
     it('should return 400 if cartItems is not an array', async () => {
-      mockRequest.body = {};
+      mockRequest.body = { items: 'nope' };
       await controller.createOrder(
         mockRequest as Request,
         mockResponse as Response,
@@ -122,6 +154,25 @@ describe('OrderController', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       expect(mockResponse.json).toHaveBeenCalledWith({ error: error.message });
       expect(nextFunction).not.toHaveBeenCalled();
+    });
+
+    it('should return the error code of a ValidationError (D-035)', async () => {
+      mockRequest.body = [];
+      mockOrderService.createOrder.mockRejectedValue(
+        new ValidationError('Payment is required', 'PAYMENT_REQUIRED')
+      );
+
+      await controller.createOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: 'Payment is required',
+        code: 'PAYMENT_REQUIRED',
+      });
     });
 
     it('should forward other errors to the next function', async () => {

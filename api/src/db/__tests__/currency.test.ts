@@ -11,6 +11,7 @@ import {
   setStoredCurrency,
   verifyInstanceCurrency,
 } from '../currency';
+import { addOrderPaymentColumns, getMissingOrderPaymentColumns } from '../orderPayment';
 
 async function createDb(): Promise<Database> {
   const db = await open({ filename: ':memory:', driver: sqlite3.Database });
@@ -187,6 +188,107 @@ describe('currency conversion command', () => {
     const beer = await db.get<{ price: number }>('SELECT price FROM products WHERE id = 1');
     expect(beer?.price).toBe(3);
     expect(await getStoredCurrency(db)).toBe('TOKEN');
+  });
+});
+
+describe('order payment columns (D-034)', () => {
+  let db: Database;
+
+  beforeEach(async () => {
+    db = await createDb();
+    await seedTokenData(db);
+  });
+
+  afterEach(async () => {
+    await db.close();
+  });
+
+  it('adds both columns once, keeping existing orders without payment', async () => {
+    expect(await getMissingOrderPaymentColumns(db)).toEqual(['cash_amount', 'card_amount']);
+    expect(await addOrderPaymentColumns(db)).toEqual(['cash_amount', 'card_amount']);
+    expect(await addOrderPaymentColumns(db)).toEqual([]);
+
+    const order = await db.get('SELECT cash_amount, card_amount FROM orders WHERE id = 1');
+    expect(order).toEqual({ cash_amount: null, card_amount: null });
+  });
+
+  it('adds only the missing column', async () => {
+    await db.exec('ALTER TABLE orders ADD COLUMN cash_amount INTEGER');
+    expect(await addOrderPaymentColumns(db)).toEqual(['card_amount']);
+  });
+});
+
+describe('currency conversion of recorded payments', () => {
+  let db: Database;
+
+  beforeEach(async () => {
+    db = await createDb();
+    await seedTokenData(db);
+    await addOrderPaymentColumns(db);
+    await initInstanceCurrency(db, 'TOKEN');
+  });
+
+  afterEach(async () => {
+    await db.close();
+  });
+
+  it('converts recorded payments 1 for 1 to euros', async () => {
+    await db.exec('UPDATE orders SET cash_amount = 3, card_amount = 1 WHERE id = 1');
+
+    await applyCurrencyConversion(db, await planCurrencyConversion(db, 'EUR'));
+
+    const order = await db.get('SELECT cash_amount, card_amount FROM orders WHERE id = 1');
+    expect(order).toEqual({ cash_amount: 300, card_amount: 100 });
+  });
+
+  it('leaves orders without payment untouched', async () => {
+    const plan = await planCurrencyConversion(db, 'EUR');
+    expect(plan.orderPayments).toEqual([]);
+    await applyCurrencyConversion(db, plan);
+
+    const order = await db.get('SELECT cash_amount, card_amount FROM orders WHERE id = 1');
+    expect(order).toEqual({ cash_amount: null, card_amount: null });
+  });
+
+  it('warns in the preview that the split will be cleared, without writing (D-036)', async () => {
+    await setStoredCurrency(db, 'EUR');
+    await db.exec('UPDATE order_items SET product_price = 250, discountedAmount = 0');
+    await db.exec('UPDATE orders SET cash_amount = 150, card_amount = 250 WHERE id = 1');
+
+    const plan = await planCurrencyConversion(db, 'TOKEN');
+
+    expect(plan.paymentsCleared).toBe(true);
+    expect(plan.orderPayments).toEqual([
+      { orderId: 1, cashBefore: 150, cashAfter: null, cardBefore: 250, cardAfter: null },
+    ]);
+    expect(describeConversionPlan(plan).join(' ')).toContain(
+      '1 commandes : la répartition espèces / carte sera effacée'
+    );
+    const order = await db.get('SELECT cash_amount, card_amount FROM orders WHERE id = 1');
+    expect(order).toEqual({ cash_amount: 150, card_amount: 250 });
+  });
+
+  it('clears the split and converts the totals when applied (D-036)', async () => {
+    await setStoredCurrency(db, 'EUR');
+    await db.exec('UPDATE order_items SET product_price = 250, discountedAmount = 0');
+    await db.exec('UPDATE orders SET cash_amount = 150, card_amount = 250 WHERE id = 1');
+
+    await applyCurrencyConversion(db, await planCurrencyConversion(db, 'TOKEN'));
+
+    const order = await db.get('SELECT cash_amount, card_amount FROM orders WHERE id = 1');
+    expect(order).toEqual({ cash_amount: null, card_amount: null });
+    const items = await db.all<{ product_price: number }[]>(
+      'SELECT product_price FROM order_items'
+    );
+    expect(items.map((item) => item.product_price)).toEqual([3, 3]); // 2,50 EUR -> 3 tokens
+    expect(await getStoredCurrency(db)).toBe('TOKEN');
+  });
+
+  it('gives no warning when no payment is recorded', async () => {
+    await setStoredCurrency(db, 'EUR');
+    const plan = await planCurrencyConversion(db, 'TOKEN');
+    expect(plan.paymentsCleared).toBe(false);
+    expect(describeConversionPlan(plan).join(' ')).not.toContain('D-036');
   });
 });
 
