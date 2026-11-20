@@ -43,7 +43,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 
 - **Date** : 2026-11-19
 - **Confirmée par** : Jules (responsable produit), 2026-11-19
-- **Statut** : Active
+- **Statut** : Active, précisée par D-027
 - **Domaine** : Autre
 - **Contexte** : il faut décider qui monte le numéro et quand.
 - **Décision** : la version est montée à la main dans la PR `develop` → `main`, par le développeur sur demande. La CI fait échouer la PR vers `main` si la version n'est pas supérieure à celle de `main`.
@@ -315,3 +315,138 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Décision** : le récapitulatif de confirmation affiche aussi « 2 × Bière » sur chaque ligne, comme l'historique (réponse : « Oui »).
 - **Options écartées** : le laisser tel quel.
 - **Impact** : `client/src/components/CartConfirmationModal`, `client/src/components/Cart/CartItem` (`showQuantity`).
+
+### D-027 — La version est montée dans la PR de la feature
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : D-002 prévoyait de monter la version dans la PR `develop` → `main`. Comme cette PR part de `develop` et qu'on ne commite jamais directement sur `develop`, il fallait une PR de bump séparée à chaque release (#18, #21).
+- **Décision** : la version est montée **dans la PR de la feature** qui partira en prod (réponse : « Bah oui, dans la PR de la feature c'est mieux »). S'il y a plusieurs PR dans une même release, seule la première la monte, sauf si une PR suivante change la catégorie (correctif → nouveauté : PATCH → MINOR) : elle remonte alors la version. Le type de montée (PATCH / MINOR / MAJOR) est demandé au responsable produit pendant la clarification de la feature. Une PR qui ne touche pas l'appli (docs, agents, CI de revue) ne monte pas la version. La règle de D-002 est inchangée sur le reste : montée à la main, et `version-check` fait échouer la PR vers `main` si la version n'est pas supérieure à celle de `main`.
+- **Options écartées** : PR de bump séparée vers `develop` avant chaque release ; branche `release/x.y.z` puis report de `main` dans `develop` ; calcul automatique de la version par la CI.
+- **Impact** : `README.md` (section Versioning), `.claude/agents/developpeur.md`, `CLAUDE.md`. Conséquence : la démo affiche le nouveau numéro dès le merge de la feature dans `develop`, avant la mise en prod.
+
+### D-028 — Encaissement dans la modale de confirmation, enregistrement dès le toucher
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Commandes
+- **Contexte** : l'aide au paiement (mode, montant reçu, monnaie à rendre) devait s'insérer dans la validation d'une commande sans ralentir la caisse. Avant de choisir, l'utilisateur a demandé une comparaison avec d'autres caisses (Shopify POS, Square, Loyverse).
+- **Décision** : tout se passe dans la modale de confirmation, qui devient « Encaissement » (réponse : « Enregistrer dès le toucher »). « Carte » et « Appoint » enregistrent la vente immédiatement. S'il y a de la monnaie à rendre, « À rendre » s'affiche en grand, puis on touche « Encaisser ». Un montant tapé au pavé attend toujours « Encaisser », même s'il est égal au total. La modale se ferme par la croix ou Échap, le panier restant intact.
+- **Options écartées** : « Toujours confirmer avec « Encaisser » » (Carte et Appoint ne font que sélectionner, puis « Encaisser » : un toucher de plus par vente).
+- **Impact** : `client/src/components/CartConfirmationModal`, `docs/design/components.md` (section « Encaissement »).
+
+### D-029 — Montants rapides suggérés selon le total, pavé pour la saisie libre
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Prix & jetons
+- **Contexte** : il fallait choisir les raccourcis de montant reçu.
+- **Décision** : les montants rapides sont suggérés selon le total (réponse : « Suggérés selon le total »), avec l'algorithme `suggestAmounts` de `docs/design/components.md` : « Appoint » plus 4 montants croissants, tous supérieurs au total. Un pavé intégré permet de saisir un montant libre (2 décimales au plus en euros, entiers en jetons).
+- **Options écartées** : « Billets fixes + Appoint (5/10/20/50 €) » ; « Les deux (Appoint + suggestions + billets fixes 10/20/50) ».
+- **Impact** : `client/src/utils/payment.ts` (`suggestAmounts`, saisie au pavé), `client/src/components/CartConfirmationModal`.
+
+### D-030 — Mode de paiement obligatoire, sans défaut : Espèces ou Carte
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Commandes
+- **Contexte** : il fallait décider si le mode de paiement est obligatoire, et quels moyens proposer.
+- **Décision** : sur une instance en euros, le mode de paiement est obligatoire et n'a pas de valeur par défaut (réponse : « Obligatoire, sans défaut »). Il n'y a que deux moyens, Espèces et Carte (réponse : « Espèces et Carte »). Choisir un montant d'espèces vaut choix « Espèces ». L'API refuse une nouvelle commande en euros sans mode.
+- **Options écartées** : « Facultatif (bouton « Enregistrer sans préciser ») » ; « Dernier mode présélectionné ». Pour les moyens : « + « Autre » (chèque, virement, Lydia…) ».
+- **Impact** : `api/src/utils/payment.ts`, `api/src/services/order.service.ts`, `client/src/components/CartConfirmationModal`.
+
+### D-031 — Paiement mixte : espèces d'abord, le reste en carte
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Commandes
+- **Contexte** : il fallait décider quoi faire quand les espèces reçues sont inférieures au total.
+- **Décision** : le paiement mixte espèces + carte est possible (réponse : « Paiement mixte espèces + carte »). Si les espèces reçues sont inférieures au total, l'écran affiche « Il reste X € » et le bouton « Reste en carte (X €) » enregistre la vente. Seule la part en espèces peut donner lieu à un rendu ; la carte est débitée du montant exact. On part toujours des espèces : pas de saisie d'une part carte d'abord (choix du designer).
+- **Options écartées** : « « Il manque X € », bloqué (pas de paiement mixte) » ; « Avertir mais laisser passer ».
+- **Impact** : `client/src/utils/payment.ts` (`splitCashPayment`), `client/src/components/CartConfirmationModal`, `api/src/utils/payment.ts`.
+
+### D-032 — Total à 0 € ou négatif : le mode est demandé aussi
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Commandes
+- **Contexte** : avec la consigne (D-013), une commande peut avoir un total nul ou négatif (remboursement).
+- **Décision** : le mode est demandé aussi (réponse : « Demander le mode aussi ») : Espèces ou Carte, y compris pour un remboursement. Sans suggestion ni pavé, l'écran affiche « Rien à encaisser » ou « À rendre au client X € », puis les boutons Espèces et Carte qui enregistrent immédiatement. Le mode choisi porte le total (0 ou négatif).
+- **Options écartées** : « 0 € : enregistrer sans mode ; négatif : rendre en espèces ».
+- **Impact** : `client/src/components/CartConfirmationModal`, `api/src/utils/payment.ts`.
+
+### D-033 — Instances en jetons : aide en jetons, rien d'enregistré
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Prix & jetons
+- **Contexte** : D-008 fixe la monnaie par instance ; il fallait décider si l'aide existe aussi en jetons.
+- **Décision** : l'aide existe aussi en jetons (réponses : « Aide en jetons aussi », puis « Jetons reçus / à rendre, rien d'enregistré ») : pas de mode de paiement, suggestions et pavé en nombres entiers, « Jetons à rendre ». Si les jetons reçus sont insuffisants, « Il manque X Jetons » et « Encaisser » est désactivé. Rien n'est enregistré en plus de la commande : l'API refuse un paiement envoyé sur une instance en jetons.
+- **Options écartées** : « Rien ne change » ; « Mode de paiement seulement » ; puis « Comme les euros (choix du mode et enregistrement par mode) ».
+- **Impact** : `client/src/components/CartConfirmationModal`, `api/src/utils/payment.ts`.
+
+### D-034 — Enregistrement du montant par mode, badges dans l'historique
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Commandes
+- **Contexte** : il fallait décider ce que la commande conserve du paiement (historique, futur tableau de bord de la spec 003).
+- **Décision** : d'abord « Le mode seul », précisé avec le paiement mixte en « Montant par mode ». Une commande en euros garde le montant payé en espèces et le montant payé en carte (colonnes `orders.cash_amount` et `orders.card_amount`, en centimes ; un mode non utilisé reste vide). Leur somme vaut le total. Ni le montant reçu ni la monnaie rendue ne sont enregistrés. Les anciennes commandes restent sans paiement. L'historique affiche un badge par mode avec son montant (« Espèces 5,00 € », « Carte 2,50 € »), et aucun badge pour les anciennes commandes ni en jetons. La suppression d'une commande (D-020) supprime aussi son paiement.
+- **Options écartées** : « Rien, juste une aide à l'écran » ; « Le mode + le montant reçu » ; avec le paiement mixte, « Juste « Mixte » (sans les montants) ».
+- **Impact** : `shared-ts/index.ts`, `api/src/db/orderPayment.ts`, `api/src/db/scripts/migrateDb.ts`, `api/src/db/scripts/initDb.ts`, `api/src/db/currency.ts`, `api/src/services/order.service.ts`, `client/src/components/OrderHistoryModal`, `MIGRATIONS.md`, `deploy/README.md`.
+
+### D-035 — Commande sans paiement refusée en euros, y compris l'ancien format
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Commandes
+- **Contexte** : pendant une mise à jour, un onglet resté ouvert sur une version antérieure à 1.3.0 envoie la commande sans paiement (ancien format : tableau d'articles). La première version de la PR l'acceptait et l'enregistrait sans paiement, ce qui contournait D-030 (relevé en revue, TL-1).
+- **Décision** : refuser tout de suite (réponse : « Refuser tout de suite »). Sur une instance en euros, `POST /orders` refuse une commande sans paiement (ancien format ou `payment` absent) avec une erreur 400, un message clair et le code `PAYMENT_REQUIRED`. Le client affiche alors un toast d'erreur qui invite à recharger la page. L'ancien format reste accepté sur les instances en jetons, qui n'enregistrent pas de paiement (D-033).
+- **Options écartées** : accepter l'ancien format sans paiement de façon temporaire, jusqu'à la 1.4.0.
+- **Impact** : `api/src/utils/payment.ts`, `api/src/services/order.service.ts`, `api/src/controllers/order.controller.ts`, `api/src/types/errors.ts`, `client/src/components/CartConfirmationModal`, `client/src/locales`, `deploy/README.md`, `MIGRATIONS.md`.
+
+### D-036 — Conversion euros → jetons : la répartition espèces / carte est effacée
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Prix & jetons
+- **Contexte** : la conversion D-009 arrondit chaque montant séparément ; convertis en jetons, espèces + carte ne feraient plus forcément le total (1,50 € + 1,50 € → 2 + 2 jetons pour un total de 3). La première version de la PR refusait la conversion dans ce cas (relevé en revue, TL-2). L'utilisateur a d'abord demandé : « Et pourquoi pas convertir les 3 €, donc le total ? » ; il lui a été proposé de convertir le total, d'arrondir les espèces et de mettre le reste en carte. Réponse : « Pareil, mais effacer en jetons ».
+- **Décision** : la conversion euros → jetons efface `cash_amount` et `card_amount` des commandes converties, puisqu'une instance en jetons n'enregistre pas de paiement (D-033). Les totaux des commandes sont convertis comme d'habitude (D-009). L'aperçu prévient : « N commandes : la répartition espèces / carte sera effacée ». Jetons → euros : il n'y a pas de paiement, rien à faire.
+- **Options écartées** : refuser la conversion (code provisoire de la PR) ; convertir et garder les montants ; convertir le total puis en déduire la répartition (somme toujours juste) en la gardant.
+- **Impact** : `api/src/db/currency.ts`, `api/src/db/scripts/convertCurrency.ts`, `deploy/README.md`, `MIGRATIONS.md`.
+
+### D-037 — Une PR en cours de travail reste en brouillon
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : une PR sur laquelle un agent travaille encore pouvait être mergée par erreur (cas de #14, mergée pendant une correction, d'où la PR de suite #15).
+- **Décision** : demande de l'utilisateur, « Il faudrait que le développeur fasse un truc pour que la PR ne soit pas mergeable s'il travaille dessus, que je ne merge pas par erreur ». Une PR est créée en brouillon et repasse en brouillon avant toute modification. Elle n'est mise en « prête » qu'une fois tout poussé, vert, et les réponses aux revues publiées (et, pour une modification d'interface, les captures validées par le designer). La mise en « prête » déclenche la revue du tech-lead.
+- **Options écartées** : aucune autre option présentée (mécanisme natif de GitHub retenu directement) ; un label « WIP » avec un check obligatoire aurait demandé une protection de branche.
+- **Impact** : `.claude/agents/developpeur.md`, `CLAUDE.md`.
+
+### D-038 — Réduire le coût en tokens des revues, sans perdre en qualité
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : remarque de l'utilisateur : « ça marche super mais c'est ultra cher en token ». Le designer relisait la même feature jusqu'à 3 fois (PR de feature, PR de release, puis chaque push sur `develop`), en lisant à chaque fois des dizaines de captures en haute résolution. Tous les agents tournaient sur le modèle le plus cher.
+- **Décision** :
+  - le designer relit une feature **une seule fois, sur la PR de feature**, seulement les écrans touchés, en téléphone portrait et desktop, plus EUR si des montants sont concernés (réponse : « Sur la PR de feature, ciblée ») ;
+  - sur les PR de release, un contrôle automatique **sans IA** (`check-report.mjs`) remplace la revue du designer ;
+  - les 4 optimisations proposées sont retenues : `designer` et `tech-lead` en Sonnet, captures en résolution ×1, le développeur n'ouvre pas les captures, comptes rendus des agents de 30 lignes maximum.
+- **Options écartées** : revue design seulement après le merge, sur la PR de release (problèmes découverts tard, PR de correction puis nouvelle revue complète) ; la même, mais ciblée sur les écrans de la release.
+- **Impact** : `.github/workflows/design-review.yml`, `scripts/design-review/check-report.mjs`, `scripts/design-review/capture.mjs`, `.claude/agents/*.md`, `CLAUDE.md`.

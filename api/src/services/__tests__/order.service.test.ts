@@ -149,7 +149,10 @@ describe('OrderService (unit)', () => {
     const result = await service.createOrder(cart);
 
     expect(mockExec).toHaveBeenCalledWith('BEGIN TRANSACTION');
-    expect(mockRun).toHaveBeenCalledWith('INSERT INTO orders (date) VALUES (?)', expect.any(Array));
+    expect(mockRun).toHaveBeenCalledWith(
+      'INSERT INTO orders (date, cash_amount, card_amount) VALUES (?, ?, ?)',
+      [expect.any(Number), null, null]
+    );
     expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('FROM products p'), [1]);
     expect(mockRun).toHaveBeenCalledWith(
       expect.stringContaining('INSERT INTO order_items'),
@@ -280,5 +283,129 @@ describe('OrderService (unit)', () => {
 
     await expect(service.createOrder(cart)).rejects.toThrow('Failed to create order record.');
     expect(mockExec).toHaveBeenCalledWith('ROLLBACK');
+  });
+
+  it('should return the payment of each order, or null without payment data', async () => {
+    mockGet.mockResolvedValue({ count: 2 });
+    const base = {
+      date: 123,
+      product_id: 1,
+      product_name: 'Bière',
+      product_price: 250,
+      category_name: 'Boissons',
+      quantity: 3,
+      discountedAmount: 0,
+    };
+    mockAll.mockResolvedValue([
+      { ...base, order_id: 2, cash_amount: 500, card_amount: 250 },
+      { ...base, order_id: 1, cash_amount: null, card_amount: null },
+    ]);
+
+    const result = await new OrderService('EUR').getAllOrders();
+
+    expect(result.data[0].payment).toEqual({ cashAmount: 500, cardAmount: 250 });
+    expect(result.data[1].payment).toBeNull();
+  });
+
+  describe('payment (D-030 to D-034)', () => {
+    const cart = [
+      {
+        product: { id: 1, name: 'Bière', price: 250, categoryId: 1 },
+        quantity: 3,
+        discountedAmount: 0,
+      },
+    ];
+
+    beforeEach(() => {
+      // Total = 3 × 2,50 € = 7,50 €.
+      mockGet.mockResolvedValue({ name: 'Bière', price: 250, category_name: 'Boissons' });
+      mockRun.mockResolvedValueOnce({ lastID: 12 }).mockResolvedValueOnce({});
+    });
+
+    const insertedPayment = () => {
+      const call = mockRun.mock.calls.find(([sql]) =>
+        String(sql).startsWith('INSERT INTO orders')
+      );
+      return (call?.[1] as unknown[]).slice(1);
+    };
+
+    it.each([
+      ['card', { cashAmount: null, cardAmount: 750 }, [null, 750]],
+      ['cash', { cashAmount: 750, cardAmount: null }, [750, null]],
+      ['cash + card', { cashAmount: 500, cardAmount: 250 }, [500, 250]],
+    ])('stores a %s payment on an EUR instance', async (_label, payment, expected) => {
+      await new OrderService('EUR').createOrder(cart, payment);
+      expect(insertedPayment()).toEqual(expected);
+      expect(mockExec).toHaveBeenCalledWith('COMMIT');
+    });
+
+    it.each([
+      ['missing', null],
+      ['without any mode', { cashAmount: null, cardAmount: null }],
+      ['not adding up to the total', { cashAmount: 500, cardAmount: null }],
+      ['above the total', { cashAmount: 2000, cardAmount: null }],
+      ['with a zero mode', { cashAmount: 0, cardAmount: 750 }],
+      ['with a negative mode', { cashAmount: 1000, cardAmount: -250 }],
+      ['not in whole cents', { cashAmount: 749.5, cardAmount: 0.5 }],
+    ])('rejects a payment %s on an EUR instance', async (_label, payment) => {
+      await expect(new OrderService('EUR').createOrder(cart, payment)).rejects.toThrow(
+        ValidationError
+      );
+      expect(mockExec).toHaveBeenCalledWith('ROLLBACK');
+    });
+
+    it('checks the payment against the database total, not the request', async () => {
+      const tampered = [{ ...cart[0], product: { ...cart[0].product, price: 1 } }];
+      await expect(
+        new OrderService('EUR').createOrder(tampered, { cashAmount: 3, cardAmount: null })
+      ).rejects.toThrow(ValidationError);
+    });
+
+    it.each([
+      ['a zero total, cash', 0, { cashAmount: 0, cardAmount: null }, [0, null]],
+      ['a negative total, card', -100, { cashAmount: null, cardAmount: -100 }, [null, -100]],
+    ])('stores a single mode for %s (D-032)', async (_label, price, payment, expected) => {
+      mockGet.mockResolvedValue({ name: 'Retour Eco-cup', price, category_name: 'Consigne' });
+      const refundCart = [
+        { product: { id: 2, name: 'Retour Eco-cup', price, categoryId: 1 }, quantity: 1, discountedAmount: 0 },
+      ];
+      await new OrderService('EUR').createOrder(refundCart, payment);
+      expect(insertedPayment()).toEqual(expected);
+    });
+
+    it('rejects two modes for a negative total (D-032)', async () => {
+      mockGet.mockResolvedValue({ name: 'Retour Eco-cup', price: -100, category_name: 'Consigne' });
+      const refundCart = [
+        { product: { id: 2, name: 'Retour Eco-cup', price: -100, categoryId: 1 }, quantity: 1, discountedAmount: 0 },
+      ];
+      await expect(
+        new OrderService('EUR').createOrder(refundCart, { cashAmount: -50, cardAmount: -50 })
+      ).rejects.toThrow(ValidationError);
+    });
+
+    it('refuses an order without payment on an EUR instance, asking to reload (D-035)', async () => {
+      // Bare-array body of clients before 1.3.0: no payment at all.
+      await expect(new OrderService('EUR').createOrder(cart, undefined)).rejects.toMatchObject({
+        code: 'PAYMENT_REQUIRED',
+        message: expect.stringContaining('Reload the page'),
+      });
+      expect(mockExec).toHaveBeenCalledWith('ROLLBACK');
+    });
+
+    it('still accepts an order without payment on a token instance (D-035)', async () => {
+      await new OrderService('TOKEN').createOrder(cart, undefined);
+      expect(insertedPayment()).toEqual([null, null]);
+    });
+
+    it('records no payment on a token instance (D-033)', async () => {
+      await new OrderService('TOKEN').createOrder(cart, null);
+      expect(insertedPayment()).toEqual([null, null]);
+    });
+
+    it('refuses a payment on a token instance (D-033)', async () => {
+      await expect(
+        new OrderService('TOKEN').createOrder(cart, { cashAmount: 750, cardAmount: null })
+      ).rejects.toThrow('Payments are not recorded on token instances');
+    });
   });
 });

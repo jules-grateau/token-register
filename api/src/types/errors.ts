@@ -1,3 +1,5 @@
+import type { ApiErrorCode } from 'shared-ts';
+
 export class AppError extends Error {
   constructor(message: string) {
     super(message);
@@ -6,7 +8,11 @@ export class AppError extends Error {
 }
 
 export class ValidationError extends AppError {
-  constructor(message: string) {
+  /** Optional machine-readable code, returned to the client with the message. */
+  constructor(
+    message: string,
+    public readonly code?: ApiErrorCode
+  ) {
     super(message);
   }
 }

@@ -64,6 +64,15 @@ Règles :
 
 Les choix purement techniques (nommage, structure du code, choix d'une lib déjà présente) ne sont pas des choix métier : tu les fais toi-même en suivant les conventions du projet.
 
+## PR en brouillon tant que tu travailles dessus
+
+Une PR sur laquelle tu travailles ne doit pas pouvoir être mergée par erreur.
+
+- **Nouvelle PR** : crée-la en brouillon (`gh pr create --draft`). Passe-la en « prête » (`gh pr ready <n>`) seulement quand tout est poussé : lint, tests et build verts.
+- **PR existante** : avant de modifier quoi que ce soit, vérifie qu'elle est encore ouverte (`gh pr view <n> --json state`). Si elle est mergée, travaille sur une nouvelle branche depuis `develop`. Si elle est ouverte, repasse-la en brouillon (`gh pr ready <n> --undo`), puis remets-la en « prête » une fois les corrections poussées et les réponses publiées.
+- Ne la passe jamais en « prête » tant qu'une question « ❓ Choix métier à confirmer » est ouverte. Si la PR modifie l'interface, laisse-la aussi en brouillon jusqu'à ce que le designer ait validé les captures : la session principale la passera en « prête ».
+- Le passage en « prête » relance automatiquement la revue du tech-lead. C'est une revue complète de la PR corrigée. Ne repasse la PR en brouillon que pour des points 🔴 ou 🟠. Pour de simples suggestions 🟡, traite-les ou réponds sur la PR, sans retour en brouillon (sinon on tourne en boucle).
+
 ## Traiter une revue (tech-lead ou designer) et y répondre
 
 Quand on te demande de traiter les retours d'une PR, chaque point doit recevoir une réponse visible sur GitHub. Ainsi, on sait toujours ce qui a été pris en compte.
@@ -88,6 +97,19 @@ Quand on te demande de traiter les retours d'une PR, chaque point doit recevoir 
 
 Ces messages sont publiés avec le compte GitHub de l'utilisateur : reste factuel et concis.
 
+## Numéro de version (D-002, D-027)
+
+- La version est montée **dans la PR de la feature** qui partira en prod, pas dans une PR séparée. Commande dans la section « Versioning » du README.
+- En phase 1, ajoute toujours la question : correctif (PATCH, 1.2.**1**), nouveauté (MINOR, 1.**3**.0) ou changement cassant (MAJOR) ? Donne ta recommandation. Ne choisis pas seul.
+- Avant de monter, compare avec `main` : si `develop` a déjà une version supérieure à `main` (une autre PR de la même release l'a montée), ne remonte que si ta PR change la catégorie (PATCH → MINOR, par exemple).
+- Une PR qui ne touche pas l'appli (docs, agents, workflows de revue) ne monte pas la version.
+
+## Captures pour la revue design (PR qui modifie l'interface)
+
+- Lance `scripts/design-review/capture.mjs` en local (en jetons, et en EUR si des montants sont concernés). Publie les captures sous `pr-<n>/local/` sur la branche `design-review-screenshots`.
+- **N'ouvre pas les images toi-même** : c'est le rôle du designer. Vérifie seulement `report.json` (étapes en erreur, erreurs console/JS, `overflowX`) et corrige ce qui y apparaît.
+- Dans la PR et dans ton compte rendu, liste **les écrans touchés** par ta PR (nom de fichier, tailles concernées). Le designer ne relira que ceux-là (D-038).
+
 ## Avant de déclarer une tâche terminée
 
 - `npm run lint`
@@ -96,6 +118,6 @@ Ces messages sont publiés avec le compte GitHub de l'utilisateur : reste factue
 
 ## Compte rendu
 
-Termine par un résumé court : fichiers modifiés, ce qui a été fait, résultat des tests/lint, et points d'attention pour la revue du tech lead.
+Termine par un résumé de **30 lignes maximum** : PR et SHA, ce qui a été fait, résultats des tests, du lint et du build, points d'attention. Ne recopie ni les décisions ni le détail des fichiers : ils sont dans la PR et dans `decisions.md`.
 
 Si des choix métier restent à confirmer, commence ton compte rendu par une section **« ❓ Choix métier à confirmer »** avec chaque question (contexte, options, recommandation), et indique clairement ce qui n'a pas été implémenté en attendant. Si tu as ajouté des décisions dans `docs/business/decisions.md`, liste-les.
