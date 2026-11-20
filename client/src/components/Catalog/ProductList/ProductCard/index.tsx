@@ -92,7 +92,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             aria-label={t('actions.edit')}
             style={{ borderRight: '1px solid var(--mantine-color-default-border)' }}
           >
-            <IconEdit size={22} color="var(--mantine-primary-color-filled)" />
+            <IconEdit size={22} color="var(--color-icon-accent)" />
           </ActionIcon>
           <ActionIcon
             variant="subtle"

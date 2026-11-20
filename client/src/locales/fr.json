@@ -159,6 +159,15 @@
       "dev": "Développement"
     }
   },
+  "app": {
+    "tagline": "Une caisse simple, claire et nette."
+  },
+  "theme": {
+    "label": "Apparence",
+    "auto": "Auto",
+    "light": "Clair",
+    "dark": "Sombre"
+  },
   "currency": {
     "menu_label": "Monnaie : {{name}}",
     "names": {

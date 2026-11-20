@@ -188,7 +188,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 
 - **Date** : 2026-11-19
 - **Confirmée par** : Jules (responsable produit), 2026-11-19
-- **Statut** : Active
+- **Statut** : Remplacée par D-039
 - **Domaine** : Autre
 - **Contexte** : le nom de l'appli évoque les jetons alors qu'une instance peut être en euros.
 - **Décision** : on garde « Token Register » (en-tête et « À propos ») ; seuls les libellés de prix dépendent de la monnaie. Une refonte de l'identité (logo, nom, direction artistique) est prévue plus tard.
@@ -320,7 +320,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 
 - **Date** : 2026-11-20
 - **Confirmée par** : Jules (responsable produit), 2026-11-20
-- **Statut** : Active
+- **Statut** : Active, précisée par D-042
 - **Domaine** : Autre
 - **Contexte** : D-002 prévoyait de monter la version dans la PR `develop` → `main`. Comme cette PR part de `develop` et qu'on ne commite jamais directement sur `develop`, il fallait une PR de bump séparée à chaque release (#18, #21).
 - **Décision** : la version est montée **dans la PR de la feature** qui partira en prod (réponse : « Bah oui, dans la PR de la feature c'est mieux »). S'il y a plusieurs PR dans une même release, seule la première la monte, sauf si une PR suivante change la catégorie (correctif → nouveauté : PATCH → MINOR) : elle remonte alors la version. Le type de montée (PATCH / MINOR / MAJOR) est demandé au responsable produit pendant la clarification de la feature. Une PR qui ne touche pas l'appli (docs, agents, CI de revue) ne monte pas la version. La règle de D-002 est inchangée sur le reste : montée à la main, et `version-check` fait échouer la PR vers `main` si la version n'est pas supérieure à celle de `main`.
@@ -450,3 +450,85 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - les 4 optimisations proposées sont retenues : `designer` et `tech-lead` en Sonnet, captures en résolution ×1, le développeur n'ouvre pas les captures, comptes rendus des agents de 30 lignes maximum.
 - **Options écartées** : revue design seulement après le merge, sur la PR de release (problèmes découverts tard, PR de correction puis nouvelle revue complète) ; la même, mais ciblée sur les écrans de la release.
 - **Impact** : `.github/workflows/design-review.yml`, `scripts/design-review/check-report.mjs`, `scripts/design-review/capture.mjs`, `.claude/agents/*.md`, `CLAUDE.md`.
+
+### D-039 — Refonte de l'identité : « Caisse Claire »
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : D-015 gardait « Token Register » en attendant une refonte de l'identité. Ce nom évoque les jetons alors qu'une instance peut être en euros, et l'appli sert aussi bien la nourriture que la boisson.
+- **Décision** : l'appli s'appelle **« Caisse Claire »** (réponse : « Vas pour Caisse Claire »), avec l'accroche « Une caisse simple, claire et nette. ». Direction artistique E : moutarde + encre, police Manrope, logo en ticket de caisse sur un carré moutarde (charte dans `docs/design/`). Parcours de choix :
+  - trois directions proposées : A Comptoir, B Tampon, C Tournée ;
+  - « J'aime bien le jaune moutarde » : rangée D, sur la base de A ;
+  - « J'aime beaucoup tout, sauf le vert » : structure D2, en encre ;
+  - les noms Guinguette, Buvette et Tchin sont écartés (« C'est pas forcément pour la buvette, y'a de la nourriture aussi. C'est juste un logiciel de caisse simple ») ;
+  - puis cinq noms neutres sont proposés, dont « Caisse Claire ».
+- **Options écartées** : garder « Token Register » (D-015) ; directions B Tampon et C Tournée ; noms Guinguette, Buvette, Tchin ; variante verte.
+- **Impact** : `docs/design/`, `client/src/assets/brand/`, `client/src/App.tsx` (thème), `client/src/styles/variables.css`, `client/src/config/version.ts` (`APP_NAME`), `client/index.html`, `client/src/components/Register`, `client/src/components/AboutModal`, `README.md`. Livraison en quatre étapes (socle, vente, encaissement, historique / édition / modales), voir D-042.
+
+### D-040 — Nom de l'association : réglage de l'instance
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : demande de l'utilisateur : « dans l'appli, vers le logo, ça serait cool d'avoir le nom du client affiché aussi ». Les clients sont des associations. Il fallait décider où se règle ce nom, et quoi afficher sans nom.
+- **Décision** : le nom vient de la configuration de l'instance (réponse : « Config de l'instance ») : variable d'environnement `CLIENT_NAME`, transmise au client par `/config.js` et réglée par l'admin, comme la monnaie (D-008). C'est le titre de l'en-tête, à côté du logo, et il n'est jamais tronqué. Sans nom configuré, l'en-tête n'affiche que le logo et « Caisse Claire ». Le titre de l'onglet est « Asso · Caisse Claire », ou « Caisse Claire » sans nom. « À propos » affiche Caisse Claire et la version, pas le nom de l'association.
+- **Options écartées** : réglage modifiable dans l'appli.
+- **Impact** : `api/src/utils/runtimeConfig.ts`, `api/src/server.ts`, `client/src/config/client.ts`, `client/src/main.tsx`, `client/src/components/Register`, `deploy/README.md`, `api/.env.example`, `client/.env.example`.
+
+### D-041 — Thème clair ou sombre : suit le téléphone, bascule dans le menu ⚙️
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : la nouvelle charte a un thème clair et un thème sombre, au choix ; les instances actuelles sont en sombre.
+- **Décision** : par défaut, l'appli suit le réglage du téléphone ou de l'ordinateur (réponse : « Suivre le téléphone »). Le menu ⚙️ propose Auto / Clair / Sombre (réponse : « Menu ⚙️ : Auto / Clair / Sombre ») ; le choix s'applique tout de suite et reste mémorisé sur l'appareil.
+- **Options écartées** : clair forcé ; sombre forcé ; icône de bascule dans l'en-tête.
+- **Impact** : `client/src/App.tsx`, `client/index.html`, `client/src/components/ColorSchemeControl`, `client/src/components/Register`.
+
+### D-042 — Refonte : une seule mise en prod à la fin, en 2.0.0
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : la refonte est livrée en quatre étapes. Mettre chaque étape en prod montrerait un mélange de l'ancien et du nouveau visuel. D-027 demande de monter la version dans la PR de la feature.
+- **Décision** : les étapes 1 à 4 sont mergées dans `develop`, puis partent en prod en une seule release après l'étape 4 (réponse : « Une seule fois, à la fin »). La version passe en **2.0.0 dans la PR de l'étape 4** (réponse : « 2.0.0 à la release finale ») ; les PR des étapes 1 à 3 ne la montent pas. Précision de D-027 pour cette refonte.
+- **Options écartées** : une mise en prod par étape ; version 1.4.0.
+- **Impact** : PR des étapes 1 à 4 de la refonte. Entre deux étapes, la démo montre le mélange ancien / nouveau.
+
+### D-043 — Le nom technique reste « token-register »
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : le renommage en Caisse Claire (D-039) pouvait toucher le dépôt, l'image Docker, les conteneurs et les packages.
+- **Décision** : on garde « token-register » pour le dépôt, l'image Docker `julesgrateau/token-register`, les conteneurs et les packages (réponse : « On garde token-register »). Seul ce que voient les utilisateurs passe à Caisse Claire : l'appli, `README.md`, `deploy/README.md` et les noms affichés. `specs/` et `.specify/` ne changent pas.
+- **Options écartées** : renommer aussi le dépôt, l'image et les conteneurs.
+- **Impact** : `README.md`, `deploy/README.md` ; aucun changement de CI ni de déploiement.
+
+### D-044 — Une icône par produit sur la carte produit
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active (à implémenter à l'étape 2 de la refonte)
+- **Domaine** : Catalogue
+- **Contexte** : la charte prévoit une pastille sur chaque carte produit ; il fallait choisir ce qu'elle contient.
+- **Décision** : chaque produit a sa propre icône (réponse : « Une icône par produit »). La liste des icônes, l'icône par défaut et la façon de la choisir seront clarifiées à l'étape 2.
+- **Options écartées** : l'initiale du produit ; pas de pastille.
+- **Impact** : étape 2 de la refonte (carte produit, données produit).
+
+### D-045 — Badge de quantité sur la carte produit
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active (à implémenter à l'étape 2 de la refonte)
+- **Domaine** : Catalogue
+- **Contexte** : la charte propose d'afficher sur la carte produit combien d'exemplaires sont déjà dans le panier.
+- **Décision** : un badge affiche sur la carte du produit la quantité déjà dans le panier (réponse : « Oui »).
+- **Options écartées** : pas de badge.
+- **Impact** : étape 2 de la refonte (carte produit).

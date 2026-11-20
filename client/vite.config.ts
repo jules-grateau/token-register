@@ -22,13 +22,17 @@ function resolveCommit(): string {
 }
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
-  plugins: [react()],
-  define: {
-    __APP_VERSION__: JSON.stringify(version),
-    __APP_COMMIT__: JSON.stringify(resolveCommit()),
-    __APP_CHANNEL__: JSON.stringify(process.env.RELEASE_CHANNEL ?? 'development'),
-    // Local/dev currency (client/.env). In Docker, /config.js provides it at runtime.
-    __APP_CURRENCY__: JSON.stringify(loadEnv(mode, process.cwd(), 'VITE_').VITE_CURRENCY ?? ''),
-  },
-}));
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), 'VITE_');
+  return {
+    plugins: [react()],
+    define: {
+      __APP_VERSION__: JSON.stringify(version),
+      __APP_COMMIT__: JSON.stringify(resolveCommit()),
+      __APP_CHANNEL__: JSON.stringify(process.env.RELEASE_CHANNEL ?? 'development'),
+      // Local/dev currency and client name (client/.env). In Docker, /config.js provides them.
+      __APP_CURRENCY__: JSON.stringify(env.VITE_CURRENCY ?? ''),
+      __APP_CLIENT_NAME__: JSON.stringify(env.VITE_CLIENT_NAME ?? ''),
+    },
+  };
+});

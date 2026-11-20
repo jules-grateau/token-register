@@ -159,6 +159,15 @@
       "dev": "Development"
     }
   },
+  "app": {
+    "tagline": "A simple, clear and neat register."
+  },
+  "theme": {
+    "label": "Appearance",
+    "auto": "Auto",
+    "light": "Light",
+    "dark": "Dark"
+  },
   "currency": {
     "menu_label": "Currency: {{name}}",
     "names": {

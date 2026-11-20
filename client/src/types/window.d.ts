@@ -2,6 +2,7 @@ export interface AppConfig {
   VITE_BASE_API_URL?: string;
   VITE_DEFAULT_LANGUAGE?: string;
   VITE_CURRENCY?: string;
+  VITE_CLIENT_NAME?: string;
 }
 
 declare global {

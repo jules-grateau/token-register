@@ -1,11 +1,25 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="/src/assets/brand/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Caisse à Jeton</title>
-    <script src="/config.js"></script> <!-- Only available in production -->
+    <title>Caisse Claire</title>
+    <script src="/config.js"></script>
+    <!-- Only available in production -->
+    <script>
+      // D-041: apply the stored color scheme (or the device one) before the first paint.
+      try {
+        var stored = localStorage.getItem('caisse-claire-color-scheme');
+        var scheme =
+          stored === 'light' || stored === 'dark'
+            ? stored
+            : window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+        document.documentElement.setAttribute('data-mantine-color-scheme', scheme);
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

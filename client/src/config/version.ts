@@ -1,8 +1,8 @@
 // Version info injected at build time by Vite (`define` in vite.config.ts).
 // The `typeof` guards keep this module usable where nothing is injected (Jest).
 
-/** Product name, shown in the About modal. */
-export const APP_NAME = 'Token Register';
+/** Product name (D-039), shown in the header, the tab title and the About modal. */
+export const APP_NAME = 'Caisse Claire';
 
 export type ReleaseChannel = 'production' | 'demo' | 'development';
 
