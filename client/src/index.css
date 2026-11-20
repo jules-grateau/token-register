@@ -7,15 +7,26 @@ body,
   width: 100vw;
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
   box-sizing: border-box;
   overflow: hidden;
+}
+
+/* Aligned amounts and quantities everywhere (docs/design/typography.md); Manrope has tnum. */
+body {
+  font-variant-numeric: tabular-nums;
 }
 
 *,
 *:before,
 *:after {
   box-sizing: inherit;
+}
+
+/* Focus ring (docs/design/colors.md, "Règles"): never removed, 2 px, offset 2 px. */
+.mantine-focus-auto:focus-visible,
+.mantine-focus-always:focus {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 /* react-toastify forces bottom: 0 under 480 px: keep toasts above the phone cart bar. */
@@ -27,10 +38,5 @@ body,
   padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
   display: flex;
   height: 100%;
-  width: 100;
-}
-
-.new-category-button:hover {
-  background-color: var(--mantine-color-dark-6);
-  border-color: var(--mantine-color-blue-6);
+  width: 100%;
 }

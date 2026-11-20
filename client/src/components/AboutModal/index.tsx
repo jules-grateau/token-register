@@ -13,6 +13,7 @@ import {
 import { useMediaQuery } from '@mantine/hooks';
 import { useTranslation } from 'react-i18next';
 import { APP_NAME, getAppVersionInfo } from '../../config/version';
+import logoUrl from '../../assets/brand/logo.svg';
 
 interface AboutModalProps {
   isOpen: boolean;
@@ -27,11 +28,11 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
 
   const envBadge =
     info.channel === 'demo' ? (
-      <Badge variant="light" color="orange">
+      <Badge variant="light" tt="none">
         {t('about.env.demo')}
       </Badge>
     ) : info.channel === 'development' ? (
-      <Badge variant="light" color="gray">
+      <Badge variant="default" tt="none">
         {t('about.env.dev')}
       </Badge>
     ) : null;
@@ -43,23 +44,32 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
       title={t('about.title')}
       centered
       fullScreen={isMobile}
-      closeButtonProps={{ size: 'lg' }}
+      closeButtonProps={{ size: 44 }}
     >
-      <Stack>
-        <Title order={3}>{APP_NAME}</Title>
-        <Group gap="sm">
-          <Text size="xl" fw={700}>
+      {/* docs/design/components.md, "À propos" (D-040: app name and version, not the client). */}
+      <Stack align="center" gap="xs" ta="center">
+        <img src={logoUrl} width={64} height={64} alt="" aria-hidden />
+        <Title order={2} fz={24} fw={800}>
+          {APP_NAME}
+        </Title>
+        <Text c="dimmed">{t('app.tagline')}</Text>
+        <Group gap="sm" justify="center">
+          <Text size="sm" c="dimmed" style={{ fontVariantNumeric: 'tabular-nums' }}>
             {t('about.version', { version: info.version })}
           </Text>
           {envBadge}
         </Group>
         {info.commit && (
-          <Group gap="sm">
-            <Text c="dimmed">{t('about.commit')}</Text>
-            <Text ff="monospace">{info.commit}</Text>
+          <Group gap="sm" justify="center">
+            <Text size="sm" c="dimmed">
+              {t('about.commit')}
+            </Text>
+            <Text size="sm" ff="monospace">
+              {info.commit}
+            </Text>
           </Group>
         )}
-        <Flex justify="flex-end" mt="md">
+        <Flex justify="flex-end" mt="md" w="100%">
           <Button size="lg" fullWidth={isMobile} onClick={onClose}>
             {t('close')}
           </Button>

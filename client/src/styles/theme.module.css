@@ -1,0 +1,49 @@
+/*
+ * Global look of the Mantine base components (docs/design/components.md, spacing-layout.md).
+ * Wired through `classNames` in the theme (App.tsx). Selectors repeat Mantine's specificity
+ * so that these rules, loaded after @mantine/core/styles.css, win.
+ */
+
+/* Paper and Card: surface, warm border, soft shadow in light only (--shadow-card). */
+[data-mantine-color-scheme] .paper,
+[data-mantine-color-scheme] .card {
+  --paper-border-color: var(--color-border);
+  background-color: var(--color-surface);
+}
+
+.card {
+  box-shadow: var(--shadow-card);
+}
+
+/* Modals and Drawer: surface, --shadow-pop, warm overlay, title 18 / 700. */
+.modalContent {
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-pop);
+}
+
+.modalHeader {
+  background-color: var(--color-surface);
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.modalOverlay {
+  --overlay-bg: var(--color-overlay);
+}
+
+/* Menus and popovers: surface, warm border, --shadow-pop. */
+[data-mantine-color-scheme] .popoverDropdown {
+  --popover-border-color: var(--color-border);
+  --popover-shadow: var(--shadow-pop);
+  background-color: var(--color-surface);
+}
+
+/* Inputs: surface 2, strong border (a control, >= 3:1), focus border in the focus color. */
+[data-mantine-color-scheme] .inputWrapper[data-variant='default'] {
+  --input-bg: var(--color-surface-2);
+  --input-bd: var(--color-border-strong);
+  --input-bd-focus: var(--color-focus);
+}

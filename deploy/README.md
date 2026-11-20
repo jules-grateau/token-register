@@ -107,6 +107,22 @@ It is shown read-only in the app (⚙️ menu). Amounts are stored as whole numb
    order totals are converted as usual. The preview warns first: "N commandes : la répartition
    espèces / carte sera effacée".
 
+## Client name
+
+The app is called **Caisse Claire** (D-039). The name of the association using an instance is
+shown in the header, next to the logo, and in the browser tab ("Asso · Caisse Claire"). It is set
+by the `CLIENT_NAME` environment variable of its service in `compose.yaml` (D-040), and cannot be
+changed in the app.
+
+- Optional: without `CLIENT_NAME` (or with a blank value), the header shows the logo and
+  "Caisse Claire" only.
+- The name is never truncated: a long name wraps and the header grows. Keep it under 80
+  characters.
+- Quotes and accents are fine (`CLIENT_NAME: "L'amicale des pompiers"`). Restart the service
+  (`docker compose up -d --no-deps <service>`) to apply a change; no data is touched.
+- The technical names do not change (D-043): image `julesgrateau/token-register`, services
+  `token-register-*`.
+
 ## Payments (1.3.0)
 
 On EUR instances, each order records the amount paid in cash and the amount paid by card

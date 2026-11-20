@@ -20,6 +20,7 @@ jest.mock('../../Cart', () => () => null);
 jest.mock('../../OrderHistoryModal', () => () => null);
 jest.mock('../../CartConfirmationModal', () => () => null);
 jest.mock('../../AboutModal', () => () => null);
+jest.mock('../../ColorSchemeControl', () => () => <div data-testid="color-scheme-control" />);
 
 const openSettingsMenu = () => fireEvent.click(screen.getByLabelText('edit_mode.toggle'));
 
@@ -37,6 +38,12 @@ describe('Register settings menu: currency (D-008)', () => {
     expect(info).toHaveTextContent('currency.menu_label: currency.names.EUR');
     expect(info).toHaveTextContent('currency.instance_config');
     expect(info.closest('[role="menuitem"]')).toBeNull();
+  });
+
+  it('offers the light / dark switch (D-041)', async () => {
+    render(<Register />);
+    openSettingsMenu();
+    expect(await screen.findByTestId('color-scheme-control')).toBeInTheDocument();
   });
 
   it('shows tokens when no currency is configured', async () => {
@@ -81,4 +88,53 @@ describe('Register header', () => {
     render(<Register />);
     expect(screen.getByText('edit_mode.badge')).toBeInTheDocument();
   });
+});
+
+describe('Register header: client name (D-040)', () => {
+  const LONG_NAME = 'Amicale des pompiers de Val-de-Sèvre-en-Gâtine';
+
+  afterEach(() => {
+    window.APP_CONFIG = undefined;
+    resetLayoutMode();
+  });
+
+  it.each(['phone-portrait', 'tablet', 'desktop'] as const)(
+    '%s: the client name is the title, "Caisse Claire" stays next to the logo',
+    (mode) => {
+      if (mode !== 'tablet') setLayoutMode(mode);
+      window.APP_CONFIG = { VITE_CLIENT_NAME: LONG_NAME };
+      render(<Register />);
+
+      expect(screen.getByRole('heading', { level: 1, name: LONG_NAME })).toBeInTheDocument();
+      expect(screen.getByText('Caisse Claire')).toBeInTheDocument();
+    }
+  );
+
+  it('phone landscape: the logo alone carries "Caisse Claire"', () => {
+    setLayoutMode('phone-landscape');
+    window.APP_CONFIG = { VITE_CLIENT_NAME: LONG_NAME };
+    render(<Register />);
+
+    expect(screen.getByRole('heading', { level: 1, name: LONG_NAME })).toBeInTheDocument();
+    expect(screen.queryByText('Caisse Claire')).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Caisse Claire' })).toBeInTheDocument();
+  });
+
+  it('never truncates a long client name', () => {
+    window.APP_CONFIG = { VITE_CLIENT_NAME: LONG_NAME };
+    render(<Register />);
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(LONG_NAME);
+  });
+
+  it.each(['phone-portrait', 'phone-landscape', 'tablet'] as const)(
+    '%s without a client name: "Caisse Claire" takes the title, shown once',
+    (mode) => {
+      if (mode !== 'tablet') setLayoutMode(mode);
+      render(<Register />);
+
+      expect(screen.getByRole('heading', { level: 1, name: 'Caisse Claire' })).toBeInTheDocument();
+      expect(screen.getAllByText('Caisse Claire')).toHaveLength(1);
+    }
+  );
 });

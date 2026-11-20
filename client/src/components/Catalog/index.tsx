@@ -209,7 +209,7 @@ function Catalog(): React.ReactElement {
                       }}
                       aria-label={t('actions.edit')}
                     >
-                      <IconEdit size={24} color="var(--mantine-primary-color-filled)" />
+                      <IconEdit size={24} color="var(--color-icon-accent)" />
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"
@@ -310,7 +310,7 @@ function Catalog(): React.ReactElement {
               onClick={() => handleEditCategory(selectedCategoryData)}
               aria-label={t('category_management.edit')}
             >
-              <IconEdit size={22} color="var(--mantine-primary-color-filled)" />
+              <IconEdit size={22} color="var(--color-icon-accent)" />
             </ActionIcon>
             <ActionIcon
               variant="subtle"
@@ -383,7 +383,7 @@ function Catalog(): React.ReactElement {
                 <Button
                   variant="light"
                   h={44}
-                  leftSection={<IconEdit size={20} color="var(--mantine-primary-color-filled)" />}
+                  leftSection={<IconEdit size={20} color="var(--color-icon-accent)" />}
                   onClick={() => handleEditCategory(selectedCategoryData)}
                 >
                   {t('actions.edit')}

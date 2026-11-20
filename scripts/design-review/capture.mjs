@@ -6,8 +6,11 @@
 // (e.g. a local EUR instance); the instance needs a category with at least 2 products.
 //
 // Env: APP_URL (e.g. https://demo.julesgrateau.dev), BASIC_AUTH_USER, BASIC_AUTH_PASS,
-//      OUT_DIR (default ./design-review-output)
-// Output: <OUT_DIR>/<viewport>/<NN-step>.png + <OUT_DIR>/report.json
+//      OUT_DIR (default ./design-review-output),
+//      COLOR_SCHEMES (default "light,dark": the app follows the device scheme, D-041),
+//      ONLY_VIEWPORTS / ONLY_STEPS (optional comma lists, to capture only the screens a PR
+//      touches, D-038; e.g. ONLY_VIEWPORTS=mobile,desktop ONLY_STEPS=home,settings-menu)
+// Output: <OUT_DIR>/<viewport>-<scheme>/<NN-step>.png + <OUT_DIR>/report.json
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,6 +19,16 @@ const APP_URL = (process.env.APP_URL ?? 'http://localhost:3000').replace(/\/$/, 
 const USER = process.env.BASIC_AUTH_USER;
 const PASS = process.env.BASIC_AUTH_PASS;
 const OUT_DIR = path.resolve(process.env.OUT_DIR ?? 'design-review-output');
+const list = (value) =>
+  value
+    ? value
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean)
+    : null;
+const COLOR_SCHEMES = list(process.env.COLOR_SCHEMES) ?? ['light', 'dark'];
+const ONLY_VIEWPORTS = list(process.env.ONLY_VIEWPORTS);
+const ONLY_STEPS = list(process.env.ONLY_STEPS);
 const AUTH = 'Basic ' + Buffer.from(`${USER}:${PASS}`).toString('base64');
 
 async function api(method, route) {
@@ -116,7 +129,11 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
   ['payment-modal', async (page) => checkout(page)],
   [
     'payment-suggested-change',
-    async (page) => dialog(page).getByRole('button', { name: /^Reçu / }).nth(1).click(),
+    async (page) =>
+      dialog(page)
+        .getByRole('button', { name: /^Reçu / })
+        .nth(1)
+        .click(),
   ],
   [
     // Amount typed on the keypad, below the total: "Il reste" (EUR) or "Il manque" (tokens).
@@ -132,7 +149,9 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
     'order-placed-mixed-or-change',
     async (page, { currency }) => {
       if (currency === 'EUR') {
-        await dialog(page).getByRole('button', { name: /^Reste en carte/ }).click();
+        await dialog(page)
+          .getByRole('button', { name: /^Reste en carte/ })
+          .click();
       } else {
         await dialog(page).getByRole('button', { name: '0', exact: true }).click();
         await dialog(page).getByRole('button', { name: '0', exact: true }).click();
@@ -155,7 +174,9 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
     'order-placed-exact',
     async (page) => {
       await sellOne(page, second);
-      await dialog(page).getByRole('button', { name: /^Appoint/ }).click();
+      await dialog(page)
+        .getByRole('button', { name: /^Appoint/ })
+        .click();
       await waitForToast(page);
     },
   ],
@@ -182,6 +203,15 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
       await openCartIfCollapsed(page);
       await page.getByRole('button', { name: 'Vider le panier' }).last().click();
       await page.waitForTimeout(600); // toast animation
+    },
+  ],
+  [
+    // Settings menu: edit mode, light / dark switch (D-041), currency, "À propos".
+    'settings-menu',
+    async (page) => {
+      await closeOverlays(page);
+      await page.getByRole('button', { name: 'Mode Édition', exact: true }).click();
+      await page.waitForTimeout(300);
     },
   ],
   [
@@ -243,11 +273,18 @@ async function run() {
   const browser = await chromium.launch();
 
   try {
-    for (const [name, options] of Object.entries(VIEWPORTS)) {
+    const runs = Object.entries(VIEWPORTS)
+      .filter(([viewport]) => !ONLY_VIEWPORTS || ONLY_VIEWPORTS.includes(viewport))
+      .flatMap(([viewport, options]) =>
+        COLOR_SCHEMES.map((colorScheme) => [viewport, colorScheme, options])
+      );
+    for (const [viewport, colorScheme, options] of runs) {
+      const name = `${viewport}-${colorScheme}`;
       const dir = path.join(OUT_DIR, name);
       fs.mkdirSync(dir, { recursive: true });
       const context = await browser.newContext({
         ...options,
+        colorScheme,
         locale: 'fr-FR',
         httpCredentials: { username: USER, password: PASS },
       });
@@ -268,7 +305,11 @@ async function run() {
       report.currency = currency;
 
       for (const [i, [step, action, { only, currency: onlyCurrency } = {}]] of STEPS.entries()) {
-        if ((only && !only.includes(name)) || (onlyCurrency && onlyCurrency !== currency)) {
+        if (
+          (only && !only.includes(viewport)) ||
+          (onlyCurrency && onlyCurrency !== currency) ||
+          (ONLY_STEPS && !ONLY_STEPS.includes(step))
+        ) {
           vp.steps.push({ step, skipped: true });
           continue;
         }
