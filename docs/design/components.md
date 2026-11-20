@@ -250,6 +250,8 @@ Un seul bouton principal en bas, toujours présent, `Button fullWidth` filled (m
 | Il manque (jetons) | « Encaisser » désactivé | — |
 | Total ≤ 0 | pas de bouton principal (voir plus bas) | — |
 
+**Désactivé** (« Encaisser » vide / « Il manque ») : même style que « Valider » du panier, moutarde estompée (`disabled`, `opacity: 0.45`), pas le gris Mantine (décision revue PR #30). Un contrôle désactivé est exempté de contraste ; l'état est porté par le bloc de rendu (« Choisissez… » / « Il manque »). Ne pas descendre sous 0.45 pour que le libellé reste lisible.
+
 Pendant l'enregistrement (`isLoading`), **tous** les boutons de la modale sont désactivés et « Encaisser » / « Carte » / « Appoint » portent `loading` (anti double toucher).
 
 ### Bouton « Carte »
@@ -294,7 +296,7 @@ Vue « Montants » (euros, total 7,50 €, après toucher « 20 € ») :
 │ [⌨ Autre montant               ] │ 48
 │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
 │ ┃ ◎ Reçu               20,00 € ┃ │ bloc de rendu
-│ ┃   À rendre         12,50 €   ┃ │ 40/800, bordure yellow-8
+│ ┃   À rendre         12,50 €   ┃ │ 40/800, fond primary-tint, 2 px text (clair) / primary (sombre)
 │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ │
 ├──────────────────────────────────┤
 │ [ ✓ Encaisser                  ] │ 56
@@ -314,7 +316,7 @@ Vue « Pavé » (après « Autre montant », état mixte) : le récapitulatif se
 │ [  1  ][  2  ][  3  ]            │
 │ [  ,  ][  0  ][  ⌫  ]            │
 │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
-│ ┃ ▭ Espèces reçues      5,00 € ┃ │ bordure info
+│ ┃ ▭ Espèces reçues      5,00 € ┃ │ fond surface-2, 2 px text
 │ ┃   Il reste            2,50 € ┃ │ 32/800
 │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ │
 ├──────────────────────────────────┤
@@ -402,7 +404,7 @@ Tablette / paysage en jetons : mêmes grilles qu'en euros, la place de « Carte 
 | Autre montant | `Button variant="default" fullWidth`, `leftSection={<IconKeyboard size={20} />}`, 16 / 700 | h 48 / absent / 48 |
 | Pavé | `SimpleGrid cols={3}` (paysage `cols={4}`) `spacing="xs"` de `Button variant="default"` 24 / 700 ; ⌫ = `IconBackspace` 24 | h 56 / 64 / 44 |
 | Bloc de rendu | voir « États du bloc de rendu ». Montant long : en portrait, tablette et desktop, il passe sous son libellé au lieu de déborder (écart accepté) ; en paysage, montant 28 / 800 en jetons (DS-5) | montant 40 / 40 / 32 (28 en jetons) ; `mih` 112 / 96 / 96 |
-| Bouton principal | `Button fullWidth` filled, 18 / 700, icône 22 | h 56 / 56 / 48 |
+| Bouton principal | `Button fullWidth` filled, 18 / **800** (aligné sur « Valider », décision revue PR #30), icône 22 | h 56 / 56 / 48 |
 | Espacements | `Stack gap="sm"` ; 8 px minimum entre cibles | — |
 
 Tokens utilisés : `--color-primary`, `--color-primary-tint`, `--color-icon-accent`, `--color-danger(-tint)`, `--color-success`, `--color-text(-2)`, `--color-surface(-2)`, `--color-border(-strong)`. Boutons « Carte », « Appoint » et pavé : `variant="default"` (fond `--color-surface`, contour `--color-border`, texte `--color-text`).
