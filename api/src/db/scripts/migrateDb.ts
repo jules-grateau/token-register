@@ -2,6 +2,7 @@ import { openDb } from '../index';
 import logger from '../../utils/logger';
 import { getConfiguredCurrency } from '../../utils/currency';
 import { initInstanceCurrency } from '../currency';
+import { addOrderPaymentColumns } from '../orderPayment';
 
 /**
  * Migration: Add snapshot columns to order_items table
@@ -141,8 +142,30 @@ async function migrateInstanceCurrency() {
   }
 }
 
+/**
+ * Migration: payment of an order (D-034)
+ *
+ * Adds orders.cash_amount and orders.card_amount (INTEGER, nullable, smallest unit).
+ * Existing orders keep NULL: no payment recorded. Idempotent, in one transaction.
+ */
+async function migrateOrderPayments() {
+  logger.info('Checking order payment columns...');
+  const db = await openDb();
+  try {
+    const added = await addOrderPaymentColumns(db);
+    logger.info(
+      added.length > 0
+        ? `Added order payment columns: ${added.join(', ')}`
+        : 'Order payment columns already exist'
+    );
+  } finally {
+    await db.close();
+  }
+}
+
 void migrateOrderItems()
   .then(() => migrateInstanceCurrency())
+  .then(() => migrateOrderPayments())
   .then(() => {
     console.log('='.repeat(50));
     console.log('Migration script completed successfully');

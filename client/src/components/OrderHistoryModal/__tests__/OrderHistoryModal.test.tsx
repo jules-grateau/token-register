@@ -9,11 +9,13 @@ jest.mock('react-i18next', () => ({
     t: (key: string, opts?: any) =>
       key === 'order_line'
         ? `${opts.quantity} × ${opts.name}`
-        : opts && opts.id
-          ? `${key} (${opts.id}${opts.date ? ', ' + opts.date : ''})`
-          : opts && opts.count !== undefined
-            ? `${key} (${opts.count})`
-            : key,
+        : key === 'payment_badge'
+          ? `${opts.mode} ${opts.amount}`
+          : opts && opts.id
+            ? `${key} (${opts.id}${opts.date ? ', ' + opts.date : ''})`
+            : opts && opts.count !== undefined
+              ? `${key} (${opts.count})`
+              : key,
   }),
 }));
 jest.mock('react-toastify', () => ({
@@ -159,5 +161,53 @@ describe('OrderHistoryModal', () => {
       expect(toast.error).toHaveBeenCalled();
     });
     expect(refetch).toHaveBeenCalled();
+  });
+
+  describe('payment badges (D-034)', () => {
+    const withPayment = (payment: unknown) => ({
+      ...mockOrders,
+      data: [{ ...mockOrders.data[0], payment }],
+    });
+    const mockQuery = (data: unknown) =>
+      (useGetOrdersQuery as jest.Mock).mockReturnValue({
+        data,
+        isFetching: false,
+        error: undefined,
+        refetch,
+      });
+
+    afterEach(() => {
+      window.APP_CONFIG = undefined;
+    });
+
+    it('shows one badge per recorded mode on an EUR instance', () => {
+      window.APP_CONFIG = { VITE_CURRENCY: 'EUR' };
+      mockQuery(withPayment({ cashAmount: 500, cardAmount: 250 }));
+      render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
+      const badges = screen.getByTestId('order-payment');
+      expect(within(badges).getByText(/payment_cash 5,00/)).toBeInTheDocument();
+      expect(within(badges).getByText(/payment_card 2,50/)).toBeInTheDocument();
+    });
+
+    it('shows the single mode of a zero total', () => {
+      window.APP_CONFIG = { VITE_CURRENCY: 'EUR' };
+      mockQuery(withPayment({ cashAmount: 0, cardAmount: null }));
+      render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
+      expect(screen.getByText(/payment_cash 0,00/)).toBeInTheDocument();
+      expect(screen.queryByText(/payment_card/)).not.toBeInTheDocument();
+    });
+
+    it('shows no badge for older orders or on token instances', () => {
+      window.APP_CONFIG = { VITE_CURRENCY: 'EUR' };
+      mockQuery(withPayment(null));
+      const { unmount } = render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
+      expect(screen.queryByTestId('order-payment')).not.toBeInTheDocument();
+      unmount();
+
+      window.APP_CONFIG = undefined;
+      mockQuery(withPayment({ cashAmount: 5, cardAmount: null }));
+      render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
+      expect(screen.queryByTestId('order-payment')).not.toBeInTheDocument();
+    });
   });
 });

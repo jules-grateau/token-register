@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type {
-  CartItemType,
+  CreateOrderRequestType,
   PostAPIResponseType,
   PaginatedOrdersResponse,
   PaginationParams,
@@ -20,11 +20,11 @@ export const ordersApi = createApi({
     },
   }),
   endpoints: (build) => ({
-    addOrder: build.mutation<number, CartItemType[]>({
-      query: (cart: CartItemType[]) => ({
+    addOrder: build.mutation<number, CreateOrderRequestType>({
+      query: (order: CreateOrderRequestType) => ({
         url: '',
         method: 'POST',
-        body: cart,
+        body: order,
       }),
       transformResponse: (response: PostAPIResponseType) => response.id,
     }),
