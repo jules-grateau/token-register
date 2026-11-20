@@ -53,7 +53,12 @@ TypeScript 5.8.3: Follow standard conventions
 
 ### Revues automatiques et réponses
 
-- Chaque PR est relue par le `tech-lead` (workflow `tech-lead-review.yml`, points `TL-n`). Les PR `develop` → `main` sont en plus relues par le `designer` sur la démo (workflow `design-review.yml`, points `DS-n`). Il approuve ou demande des modifications, captures à l'appui, et repasse à chaque push sur `develop`.
+- Chaque PR est relue par le `tech-lead` (workflow `tech-lead-review.yml`, points `TL-n`). Le `designer` relit **une seule fois**, sur la PR de feature qui modifie l'interface, et seulement les écrans touchés, en téléphone portrait et desktop, plus EUR si des montants sont concernés (D-038). Ses points sont numérotés `DS-n`. Sur les PR `develop` → `main`, il n'y a plus de designer : le workflow `design-review.yml` (« Release smoke check ») parcourt la démo et bloque, sans coût, sur une étape en échec, une erreur JS ou un débordement.
+- Coût en tokens (D-038) :
+  - `designer` et `tech-lead` tournent en Sonnet (`model: sonnet`), le développeur hérite du modèle de la session ;
+  - les captures sont en résolution ×1, et le développeur ne les ouvre pas ;
+  - les comptes rendus des agents font 30 lignes maximum ;
+  - quand on relance un agent, on lui donne la liste précise des écrans ou des fichiers à regarder.
 - Pour traiter une revue : lancer `developpeur` avec le numéro de PR (section « Traiter une revue » de son agent). Il corrige, pousse, puis répond sur chaque fil et publie un récapitulatif « 🛠️ Réponse du développeur ». Les points qui demandent un choix métier remontent à l'utilisateur.
 - Pour clore la boucle côté code : lancer `tech-lead` en mode « vérifier les corrections » sur la PR. Il confirme chaque `TL-n` (✅/❌) dans un commentaire.
 
@@ -65,12 +70,12 @@ Une PR n'est mergeable que quand elle est prête. Le développeur crée ses PR e
 
 L'utilisateur n'a pas à demander de traiter les revues. Après chaque `gh pr create` dans une session :
 
-0. La PR est créée en brouillon : le workflow `Tech-lead review` ignore les brouillons et ne tourne pas encore. Une fois tout poussé et lint/tests/build verts, la passer en « prête » (`gh pr ready <PR>`) : c'est ce qui déclenche la revue.
-1. Attendre la fin du workflow `Tech-lead review` sur la PR (en arrière-plan) (`gh run list --workflow tech-lead-review.yml --branch <branche>`), puis lire la revue : `gh pr view <PR> --comments` et `gh api repos/{owner}/{repo}/pulls/<PR>/comments`.
-2. S'il y a des points 🔴 ou 🟠 : repasser la PR en brouillon, lancer `developpeur` pour les traiter et y répondre, puis la remettre en « prête ». Ce passage relance une revue complète du tech-lead sur la PR corrigée. S'il n'y a que des 🟡 : pas de retour en brouillon. Le développeur les traite ou y répond sur la PR (⏸️ avec raison), et c'est tout. Seuls les points qui demandent un choix métier remontent à l'utilisateur, groupés.
-3. S'il n'y a rien à traiter : le dire en une ligne.
-4. Ne présenter le travail comme terminé qu'une fois la revue traitée et les réponses publiées, avec un résumé des points et de leur statut (✅ / ⏸️ / ❓).
+1. La PR est créée en brouillon : le workflow `Tech-lead review` ignore les brouillons et ne tourne pas encore. Une fois tout poussé et lint/tests/build verts, la passer en « prête » (`gh pr ready <PR>`) : c'est ce qui déclenche la revue.
+2. Attendre la fin du workflow `Tech-lead review` sur la PR (en arrière-plan) (`gh run list --workflow tech-lead-review.yml --branch <branche>`), puis lire la revue : `gh pr view <PR> --comments` et `gh api repos/{owner}/{repo}/pulls/<PR>/comments`.
+3. S'il y a des points 🔴 ou 🟠 : repasser la PR en brouillon, lancer `developpeur` pour les traiter et y répondre, puis la remettre en « prête ». Ce passage relance une revue complète du tech-lead sur la PR corrigée. S'il n'y a que des 🟡 : pas de retour en brouillon. Le développeur les traite ou y répond sur la PR (⏸️ avec raison), et c'est tout. Seuls les points qui demandent un choix métier remontent à l'utilisateur, groupés.
+4. S'il n'y a rien à traiter : le dire en une ligne.
+5. Ne présenter le travail comme terminé qu'une fois la revue traitée et les réponses publiées, avec un résumé des points et de leur statut (✅ / ⏸️ / ❓).
 
-Même chose pour une revue design (`DS-n`) sur une PR `develop` → `main` : les correctifs passent par une PR vers `develop`, et la réponse est publiée sur la PR de release.
+Pour une PR de feature qui modifie l'interface : après la revue du tech-lead, faire relire par le `designer` les écrans touchés par la PR (revue ciblée, une seule fois). La PR ne passe en « prête » qu'après sa validation. Si le contrôle automatique d'une release échoue, la correction passe par une PR vers `develop`.
 
 <!-- MANUAL ADDITIONS END -->

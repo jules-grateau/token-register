@@ -436,3 +436,17 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Décision** : demande de l'utilisateur, « Il faudrait que le développeur fasse un truc pour que la PR ne soit pas mergeable s'il travaille dessus, que je ne merge pas par erreur ». Une PR est créée en brouillon et repasse en brouillon avant toute modification. Elle n'est mise en « prête » qu'une fois tout poussé, vert, et les réponses aux revues publiées (et, pour une modification d'interface, les captures validées par le designer). La mise en « prête » déclenche la revue du tech-lead.
 - **Options écartées** : aucune autre option présentée (mécanisme natif de GitHub retenu directement) ; un label « WIP » avec un check obligatoire aurait demandé une protection de branche.
 - **Impact** : `.claude/agents/developpeur.md`, `CLAUDE.md`.
+
+### D-038 — Réduire le coût en tokens des revues, sans perdre en qualité
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : remarque de l'utilisateur : « ça marche super mais c'est ultra cher en token ». Le designer relisait la même feature jusqu'à 3 fois (PR de feature, PR de release, puis chaque push sur `develop`), en lisant à chaque fois des dizaines de captures en haute résolution. Tous les agents tournaient sur le modèle le plus cher.
+- **Décision** :
+  - le designer relit une feature **une seule fois, sur la PR de feature**, seulement les écrans touchés, en téléphone portrait et desktop, plus EUR si des montants sont concernés (réponse : « Sur la PR de feature, ciblée ») ;
+  - sur les PR de release, un contrôle automatique **sans IA** (`check-report.mjs`) remplace la revue du designer ;
+  - les 4 optimisations proposées sont retenues : `designer` et `tech-lead` en Sonnet, captures en résolution ×1, le développeur n'ouvre pas les captures, comptes rendus des agents de 30 lignes maximum.
+- **Options écartées** : revue design seulement après le merge, sur la PR de release (problèmes découverts tard, PR de correction puis nouvelle revue complète) ; la même, mais ciblée sur les écrans de la release.
+- **Impact** : `.github/workflows/design-review.yml`, `scripts/design-review/check-report.mjs`, `scripts/design-review/capture.mjs`, `.claude/agents/*.md`, `CLAUDE.md`.
