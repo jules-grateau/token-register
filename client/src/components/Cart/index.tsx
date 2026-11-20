@@ -334,7 +334,8 @@ const Cart: React.FC<CartProps> = ({
           onClick={onClickHistory}
           aria-label={t('history')}
         >
-          <IconHistory stroke={1.5} size={28} />
+          {/* docs/design/icons.md: history icon in --color-text (Mantine gray looked disabled). */}
+          <IconHistory stroke={1.5} size={28} color="var(--color-text)" />
         </ActionIcon>
         {clearButton(48)}
       </Group>
