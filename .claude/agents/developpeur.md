@@ -104,6 +104,12 @@ Ces messages sont publiés avec le compte GitHub de l'utilisateur : reste factue
 - Avant de monter, compare avec `main` : si `develop` a déjà une version supérieure à `main` (une autre PR de la même release l'a montée), ne remonte que si ta PR change la catégorie (PATCH → MINOR, par exemple).
 - Une PR qui ne touche pas l'appli (docs, agents, workflows de revue) ne monte pas la version.
 
+## Captures pour la revue design (PR qui modifie l'interface)
+
+- Lance `scripts/design-review/capture.mjs` en local (en jetons, et en EUR si des montants sont concernés). Publie les captures sous `pr-<n>/local/` sur la branche `design-review-screenshots`.
+- **N'ouvre pas les images toi-même** : c'est le rôle du designer. Vérifie seulement `report.json` (étapes en erreur, erreurs console/JS, `overflowX`) et corrige ce qui y apparaît.
+- Dans la PR et dans ton compte rendu, liste **les écrans touchés** par ta PR (nom de fichier, tailles concernées). Le designer ne relira que ceux-là (D-038).
+
 ## Avant de déclarer une tâche terminée
 
 - `npm run lint`
@@ -112,6 +118,6 @@ Ces messages sont publiés avec le compte GitHub de l'utilisateur : reste factue
 
 ## Compte rendu
 
-Termine par un résumé court : fichiers modifiés, ce qui a été fait, résultat des tests/lint, et points d'attention pour la revue du tech lead.
+Termine par un résumé de **30 lignes maximum** : PR et SHA, ce qui a été fait, résultats des tests, du lint et du build, points d'attention. Ne recopie ni les décisions ni le détail des fichiers : ils sont dans la PR et dans `decisions.md`.
 
 Si des choix métier restent à confirmer, commence ton compte rendu par une section **« ❓ Choix métier à confirmer »** avec chaque question (contexte, options, recommandation), et indique clairement ce qui n'a pas été implémenté en attendant. Si tu as ajouté des décisions dans `docs/business/decisions.md`, liste-les.
