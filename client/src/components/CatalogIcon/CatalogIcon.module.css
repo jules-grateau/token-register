@@ -1,0 +1,77 @@
+/* docs/design/icons.md, "Pastille-icône" and "Affichage dans la pastille". */
+.tile {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-tile);
+  background-color: var(--color-primary-tint);
+  /* Ink in light (13.5:1), mustard in dark (7.3:1). */
+  color: var(--color-icon-accent);
+}
+
+.tile[data-size='sm'] {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+/* Deposit (negative price): danger tile, 5.3:1 in both schemes. */
+.tile[data-deposit] {
+  background-color: var(--color-danger-tint);
+  color: var(--color-danger);
+}
+
+/* docs/design/icons.md, "Sélecteur d'icône (formulaire produit)". */
+.option {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 48px;
+  height: 48px;
+  border-radius: var(--radius-tile);
+  border: 2px solid transparent;
+  background-color: var(--color-primary-tint);
+  color: var(--color-icon-accent);
+}
+
+.option:hover {
+  border-color: var(--color-border-strong);
+}
+
+/* Selected: mustard fill + ink border + check, not the color alone. */
+.option[aria-pressed='true'] {
+  background-color: var(--color-primary);
+  border-color: var(--color-text);
+  color: var(--color-on-primary);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.none {
+  grid-column: span 2;
+  padding: 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.check {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-text);
+  color: var(--color-bg);
+}

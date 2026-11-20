@@ -2,11 +2,11 @@
   "cart": "Cart",
   "history": "History",
   "checkout": "Checkout",
-  "items_one": "Item",
-  "items_other": "Items",
+  "items_one": "item",
+  "items_other": "items",
   "tokens_one": "Token",
   "tokens_other": "Tokens",
-  "currency_symbol": "Token",
+  "currency_symbol": "Tokens",
   "currency_symbol_eur": "€",
   "your_cart_is_empty": "Your cart is empty.",
   "order_history": "Order History",
@@ -99,7 +99,45 @@
   "undo": "Undo",
   "product_card": {
     "add": "Add {{name}}",
-    "edit": "Edit {{name}}"
+    "edit": "Edit {{name}}",
+    "add_in_cart": "Add {{name}}, {{count}} in the cart"
+  },
+  "icon_picker": {
+    "label": "Icon",
+    "none": "None",
+    "choose": "Choose an icon",
+    "hide": "Hide the icons"
+  },
+  "catalog_icons": {
+    "beer": "Beer",
+    "wine": "Wine",
+    "cocktail": "Cocktail",
+    "soft_drink": "Soft drink",
+    "bottle": "Bottle",
+    "water": "Water",
+    "coffee": "Coffee",
+    "hot_drink": "Hot drink / tea",
+    "milk": "Milk",
+    "cup": "Cup",
+    "sandwich": "Sandwich",
+    "burger": "Burger",
+    "hot_dog": "Hot dog / sausage",
+    "pizza": "Pizza",
+    "salad": "Salad",
+    "soup": "Soup",
+    "meat": "Meat",
+    "grill": "Grill",
+    "cheese": "Cheese",
+    "snack": "Snack / chips / fries",
+    "cookie": "Cookie / crepe",
+    "cake": "Cake",
+    "ice_cream": "Ice cream",
+    "candy": "Candy",
+    "fruit": "Fruit",
+    "deposit": "Deposit",
+    "ticket": "Ticket",
+    "tshirt": "T-shirt",
+    "goodies": "Goodies / gift"
   },
   "edit_mode": {
     "toggle": "Edit Mode",
@@ -158,6 +196,15 @@
       "demo": "Demo",
       "dev": "Development"
     }
+  },
+  "app": {
+    "tagline": "A simple, clear and neat register."
+  },
+  "theme": {
+    "label": "Appearance",
+    "auto": "Auto",
+    "light": "Light",
+    "dark": "Dark"
   },
   "currency": {
     "menu_label": "Currency: {{name}}",

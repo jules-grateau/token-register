@@ -106,9 +106,30 @@ describe('CategoryController', () => {
 
       await controller.addCategory(mockRequest as Request, mockResponse as Response, nextFunction);
 
-      expect(mockCategoryService.addCategory).toHaveBeenCalledWith({ name: 'Snacks' });
+      expect(mockCategoryService.addCategory).toHaveBeenCalledWith({ name: 'Snacks', icon: null });
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith({ id: 123 });
+    });
+
+    it('should add a category with a known icon key (D-047)', async () => {
+      mockRequest.body = { name: 'Boissons', icon: 'beer' };
+      mockCategoryService.addCategory.mockResolvedValue(5);
+
+      await controller.addCategory(mockRequest as Request, mockResponse as Response, nextFunction);
+
+      expect(mockCategoryService.addCategory).toHaveBeenCalledWith({
+        name: 'Boissons',
+        icon: 'beer',
+      });
+    });
+
+    it('should return 400 for an icon outside the whitelist (D-047)', async () => {
+      mockRequest.body = { name: 'Boissons', icon: 'IconBeer' };
+
+      await controller.addCategory(mockRequest as Request, mockResponse as Response, nextFunction);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockCategoryService.addCategory).not.toHaveBeenCalled();
     });
 
     it('should return 400 if name is missing', async () => {
@@ -140,6 +161,32 @@ describe('CategoryController', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(204);
       expect(mockResponse.send).toHaveBeenCalled();
       expect(nextFunction).not.toHaveBeenCalled();
+    });
+
+    it('should pass the icon to the service, and refuse an unknown key (D-047)', async () => {
+      mockRequest.params = { categoryId: '1' };
+      mockCategoryService.updateCategory.mockResolvedValue(undefined);
+
+      mockRequest.body = { name: 'Boissons', icon: null };
+      await controller.updateCategory(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      );
+      expect(mockCategoryService.updateCategory).toHaveBeenLastCalledWith(1, {
+        name: 'Boissons',
+        icon: null,
+      });
+
+      mockCategoryService.updateCategory.mockClear();
+      mockRequest.body = { name: 'Boissons', icon: 'beers' };
+      await controller.updateCategory(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction
+      );
+      expect(mockResponse.status).toHaveBeenLastCalledWith(400);
+      expect(mockCategoryService.updateCategory).not.toHaveBeenCalled();
     });
 
     it('should return 400 for an invalid category ID', async () => {

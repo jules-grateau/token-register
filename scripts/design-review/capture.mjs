@@ -6,8 +6,11 @@
 // (e.g. a local EUR instance); the instance needs a category with at least 2 products.
 //
 // Env: APP_URL (e.g. https://demo.julesgrateau.dev), BASIC_AUTH_USER, BASIC_AUTH_PASS,
-//      OUT_DIR (default ./design-review-output)
-// Output: <OUT_DIR>/<viewport>/<NN-step>.png + <OUT_DIR>/report.json
+//      OUT_DIR (default ./design-review-output),
+//      COLOR_SCHEMES (default "light,dark": the app follows the device scheme, D-041),
+//      ONLY_VIEWPORTS / ONLY_STEPS (optional comma lists, to capture only the screens a PR
+//      touches, D-038; e.g. ONLY_VIEWPORTS=mobile,desktop ONLY_STEPS=home,settings-menu)
+// Output: <OUT_DIR>/<viewport>-<scheme>/<NN-step>.png + <OUT_DIR>/report.json
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -16,10 +19,24 @@ const APP_URL = (process.env.APP_URL ?? 'http://localhost:3000').replace(/\/$/, 
 const USER = process.env.BASIC_AUTH_USER;
 const PASS = process.env.BASIC_AUTH_PASS;
 const OUT_DIR = path.resolve(process.env.OUT_DIR ?? 'design-review-output');
+const list = (value) =>
+  value
+    ? value
+        .split(',')
+        .map((v) => v.trim())
+        .filter(Boolean)
+    : null;
+const COLOR_SCHEMES = list(process.env.COLOR_SCHEMES) ?? ['light', 'dark'];
+const ONLY_VIEWPORTS = list(process.env.ONLY_VIEWPORTS);
+const ONLY_STEPS = list(process.env.ONLY_STEPS);
 const AUTH = 'Basic ' + Buffer.from(`${USER}:${PASS}`).toString('base64');
 
-async function api(method, route) {
-  const res = await fetch(`${APP_URL}/api${route}`, { method, headers: { Authorization: AUTH } });
+async function api(method, route, body) {
+  const res = await fetch(`${APP_URL}/api${route}`, {
+    method,
+    headers: { Authorization: AUTH, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
   if (!res.ok) throw new Error(`${method} ${route} -> ${res.status} ${await res.text()}`);
   return res.status === 204 ? null : res.json();
 }
@@ -33,7 +50,11 @@ async function pickData() {
     const products = await api('GET', `/categories/${category.id}/products`);
     const positive = products.filter((p) => p.price > 0);
     if (!picked && positive.length >= 2)
-      picked = { category: category.name, products: positive.map((p) => p.name) };
+      picked = {
+        category: category.name,
+        products: positive.map((p) => p.name),
+        sample: positive[0],
+      };
     negative ??= products.find((p) => p.price < 0)?.name ?? null;
   }
   if (!picked)
@@ -51,10 +72,21 @@ const VIEWPORTS = {
   'mobile-landscape': { ...devices['iPhone 13 landscape'], deviceScaleFactor: 1 },
 };
 
-// Closes whatever modal, Drawer or menu is open, and lets the transition end.
+// Closes whatever modal, Drawer or menu is open, and lets the transition end. A confirmation
+// opened over another modal (delete an order from the history) needs one Escape per layer.
 async function closeOverlays(page) {
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    if (
+      !(await page
+        .getByRole('dialog')
+        .first()
+        .isVisible()
+        .catch(() => false))
+    )
+      return;
+  }
 }
 
 async function openSettingsItem(page, item) {
@@ -96,7 +128,20 @@ async function waitForToast(page) {
 // (that is a finding too) and the run continues with the next one.
 // `only`: viewports where the step makes sense; `currency`: instances where it does
 // (EUR or TOKEN). It is skipped elsewhere.
-const buildSteps = ({ category, products: [first, second], negative }) => [
+// The history shows 20 orders per page: past that, the pagination appears (DS-4 of PR #31).
+// Orders created here are deleted at the end with the others.
+const HISTORY_ORDERS = 21;
+async function fillHistory(product, currency, createdOrderIds) {
+  const { pagination } = await api('GET', '/orders?page=1&pageSize=20');
+  const items = [{ product, quantity: 1, discountedAmount: 0 }];
+  const payment = currency === 'EUR' ? { cashAmount: null, cardAmount: product.price } : undefined;
+  for (let n = pagination.totalCount; n < HISTORY_ORDERS; n++) {
+    const order = await api('POST', '/orders', { items, payment });
+    if (order?.id) createdOrderIds.push(order.id);
+  }
+}
+
+const buildSteps = ({ category, products: [first, second], negative, sample }) => [
   ['home', async () => {}],
   [
     'category-selected',
@@ -116,7 +161,11 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
   ['payment-modal', async (page) => checkout(page)],
   [
     'payment-suggested-change',
-    async (page) => dialog(page).getByRole('button', { name: /^Reçu / }).nth(1).click(),
+    async (page) =>
+      dialog(page)
+        .getByRole('button', { name: /^Reçu / })
+        .nth(1)
+        .click(),
   ],
   [
     // Amount typed on the keypad, below the total: "Il reste" (EUR) or "Il manque" (tokens).
@@ -132,7 +181,9 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
     'order-placed-mixed-or-change',
     async (page, { currency }) => {
       if (currency === 'EUR') {
-        await dialog(page).getByRole('button', { name: /^Reste en carte/ }).click();
+        await dialog(page)
+          .getByRole('button', { name: /^Reste en carte/ })
+          .click();
       } else {
         await dialog(page).getByRole('button', { name: '0', exact: true }).click();
         await dialog(page).getByRole('button', { name: '0', exact: true }).click();
@@ -155,7 +206,9 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
     'order-placed-exact',
     async (page) => {
       await sellOne(page, second);
-      await dialog(page).getByRole('button', { name: /^Appoint/ }).click();
+      await dialog(page)
+        .getByRole('button', { name: /^Appoint/ })
+        .click();
       await waitForToast(page);
     },
   ],
@@ -169,9 +222,17 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
   ],
   [
     'order-history',
-    async (page) => {
+    async (page, { currency, createdOrderIds }) => {
       await closeOverlays(page);
+      await fillHistory(sample, currency, createdOrderIds);
       await page.getByRole('button', { name: 'Historique' }).first().click();
+    },
+  ],
+  [
+    // Confirmation over the history (D-020, D-050): not confirmed, the order stays.
+    'order-delete-confirm',
+    async (page) => {
+      await dialog(page).getByRole('button', { name: 'Supprimer', exact: true }).first().click();
     },
   ],
   [
@@ -182,6 +243,15 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
       await openCartIfCollapsed(page);
       await page.getByRole('button', { name: 'Vider le panier' }).last().click();
       await page.waitForTimeout(600); // toast animation
+    },
+  ],
+  [
+    // Settings menu: edit mode, light / dark switch (D-041), currency, "À propos".
+    'settings-menu',
+    async (page) => {
+      await closeOverlays(page);
+      await page.getByRole('button', { name: 'Mode Édition', exact: true }).click();
+      await page.waitForTimeout(300);
     },
   ],
   [
@@ -229,6 +299,39 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
     async (page) => {
       await closeOverlays(page);
       await page.getByRole('tabpanel').getByRole('button', { name: 'Nouveau Produit' }).click();
+      // Unfold the icon picker (D-046), so that the grid of icons is reviewed too.
+      await dialog(page).getByRole('button', { name: 'Choisir une icône' }).click();
+    },
+  ],
+  [
+    'new-category-form',
+    async (page) => {
+      await closeOverlays(page);
+      // Dashed last tab (row of tabs) or NewCategoryButton (column of tabs).
+      await page.getByRole('button', { name: 'Nouvelle Catégorie' }).first().click();
+    },
+  ],
+  [
+    // Not confirmed: the product stays.
+    'product-delete-confirm',
+    async (page) => {
+      await closeOverlays(page);
+      await page
+        .getByRole('tabpanel')
+        .getByRole('button', { name: 'Supprimer', exact: true })
+        .first()
+        .click();
+    },
+  ],
+  [
+    'discount-modal',
+    async (page) => {
+      await closeOverlays(page);
+      await page.getByRole('button', { name: 'Terminer' }).click();
+      await page.getByRole('tabpanel').getByText(first, { exact: true }).first().click();
+      await openCartIfCollapsed(page);
+      await page.getByRole('button', { name: "Plus d'actions" }).last().click();
+      await page.getByRole('menuitem', { name: 'Appliquer une réduction' }).click();
     },
   ],
 ];
@@ -243,11 +346,18 @@ async function run() {
   const browser = await chromium.launch();
 
   try {
-    for (const [name, options] of Object.entries(VIEWPORTS)) {
+    const runs = Object.entries(VIEWPORTS)
+      .filter(([viewport]) => !ONLY_VIEWPORTS || ONLY_VIEWPORTS.includes(viewport))
+      .flatMap(([viewport, options]) =>
+        COLOR_SCHEMES.map((colorScheme) => [viewport, colorScheme, options])
+      );
+    for (const [viewport, colorScheme, options] of runs) {
+      const name = `${viewport}-${colorScheme}`;
       const dir = path.join(OUT_DIR, name);
       fs.mkdirSync(dir, { recursive: true });
       const context = await browser.newContext({
         ...options,
+        colorScheme,
         locale: 'fr-FR',
         httpCredentials: { username: USER, password: PASS },
       });
@@ -268,14 +378,18 @@ async function run() {
       report.currency = currency;
 
       for (const [i, [step, action, { only, currency: onlyCurrency } = {}]] of STEPS.entries()) {
-        if ((only && !only.includes(name)) || (onlyCurrency && onlyCurrency !== currency)) {
+        if (
+          (only && !only.includes(viewport)) ||
+          (onlyCurrency && onlyCurrency !== currency) ||
+          (ONLY_STEPS && !ONLY_STEPS.includes(step))
+        ) {
           vp.steps.push({ step, skipped: true });
           continue;
         }
         const file = path.join(dir, `${String(i + 1).padStart(2, '0')}-${step}.png`);
         let error = null;
         try {
-          await action(page, { currency });
+          await action(page, { currency, createdOrderIds });
           await page.waitForLoadState('networkidle');
           await page.waitForTimeout(300); // let transitions settle
         } catch (e) {

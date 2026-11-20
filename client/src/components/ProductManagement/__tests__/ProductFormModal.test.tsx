@@ -1,6 +1,7 @@
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { ProductFormModal } from '../ProductFormModal';
 import { render } from '../../../utils/testUtils';
+import { useLayoutMode } from '../../../hooks/useLayoutMode';
 
 const mockCreateProduct = jest.fn();
 const mockUpdateProduct = jest.fn();
@@ -17,6 +18,12 @@ jest.mock('react-toastify', () => ({
 jest.mock('../../../services/product', () => ({
   useCreateProductMutation: () => [mockCreateProduct],
   useUpdateProductMutation: () => [mockUpdateProduct],
+}));
+jest.mock('../../../hooks/useLayoutMode', () => ({
+  ...jest.requireActual<typeof import('../../../hooks/useLayoutMode')>(
+    '../../../hooks/useLayoutMode'
+  ),
+  useLayoutMode: jest.fn(() => 'desktop'),
 }));
 jest.mock('../../../services/categories', () => ({
   useGetCategoriesQuery: () => ({ data: [{ id: 4, name: 'Eco-cup' }] }),
@@ -42,6 +49,7 @@ const fillAndSubmit = (name: string, price: string) => {
 describe('ProductFormModal', () => {
   beforeEach(() => {
     mockCreateProduct.mockReturnValue({ unwrap: () => Promise.resolve(1) });
+    (useLayoutMode as jest.Mock).mockReturnValue('desktop');
   });
 
   afterEach(() => {
@@ -60,6 +68,7 @@ describe('ProductFormModal', () => {
         name: 'Retour Eco-cup',
         price: -1,
         categoryId: 4,
+        icon: null,
       })
     );
   });
@@ -72,8 +81,49 @@ describe('ProductFormModal', () => {
     fillAndSubmit('Bière', '2,50');
 
     await waitFor(() =>
-      expect(mockCreateProduct).toHaveBeenCalledWith({ name: 'Bière', price: 250, categoryId: 4 })
+      expect(mockCreateProduct).toHaveBeenCalledWith({
+        name: 'Bière',
+        price: 250,
+        categoryId: 4,
+        icon: null,
+      })
     );
+  });
+
+  it('has no icon by default and sends the chosen icon key (D-046)', async () => {
+    renderForm();
+    expect(screen.getByTestId('icon-picker-current')).toHaveTextContent('icon_picker.none');
+
+    fireEvent.click(screen.getByRole('button', { name: 'icon_picker.choose' }));
+    expect(screen.getByRole('button', { name: /icon_picker.none/ })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'catalog_icons.beer' }));
+    expect(screen.getByRole('button', { name: 'catalog_icons.beer' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+
+    fillAndSubmit('Bière', '3');
+
+    await waitFor(() =>
+      expect(mockCreateProduct).toHaveBeenCalledWith({
+        name: 'Bière',
+        price: 3,
+        categoryId: 4,
+        icon: 'beer',
+      })
+    );
+  });
+
+  it('offers the 29 icons of the closed list, "Aucune" first', () => {
+    renderForm();
+    fireEvent.click(screen.getByRole('button', { name: 'icon_picker.choose' }));
+    const options = screen.getAllByRole('button', { pressed: false });
+    expect(
+      options.filter((b) => /^catalog_icons\./.test(b.getAttribute('aria-label') ?? ''))
+    ).toHaveLength(29);
   });
 
   it('accepts a negative price in euros', async () => {
@@ -87,7 +137,27 @@ describe('ProductFormModal', () => {
         name: 'Retour Eco-cup',
         price: -100,
         categoryId: 4,
+        icon: null,
       })
     );
+  });
+
+  // docs/design/components.md, "Modales (hors encaissement)": full screen on phones only.
+  it.each([
+    ['phone-portrait', true],
+    ['phone-landscape', true],
+    ['desktop', false],
+  ])('in %s, full screen is %s', (mode, fullScreen) => {
+    (useLayoutMode as jest.Mock).mockReturnValue(mode);
+    renderForm();
+    const content = screen.getByRole('dialog').closest('[data-full-screen]');
+    expect(content !== null).toBe(fullScreen);
+  });
+
+  it('puts "cancel" before the main action', () => {
+    renderForm();
+    const cancel = screen.getByRole('button', { name: 'cancel' });
+    const create = screen.getByRole('button', { name: 'actions.create' });
+    expect(cancel.compareDocumentPosition(create) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

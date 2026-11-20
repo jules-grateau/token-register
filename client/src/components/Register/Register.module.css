@@ -1,0 +1,54 @@
+/* Global header: docs/design/components.md, "En-tête global". */
+.header {
+  flex: none;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+:where([data-mantine-color-scheme='dark']) .header {
+  background-color: var(--color-bg);
+}
+
+/* Edit mode: 2 px bottom border, ink in light, mustard in dark. */
+.header[data-edit-mode] {
+  border-bottom: 2px solid var(--color-icon-accent);
+}
+
+/* Client name: the screen title. Never truncated, wraps and the header grows (D-021). */
+.clientName {
+  margin: 0;
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.clientName[data-size='large'] {
+  letter-spacing: -0.02em;
+}
+
+.appName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-2);
+  white-space: nowrap;
+}
+
+.logo {
+  display: block;
+  flex: none;
+}
+
+/* "Édition" badge: ink fill and cream text in light, mustard outline and text in dark. */
+.editBadge {
+  background-color: var(--color-text);
+  color: var(--color-bg);
+  border: 1px solid var(--color-text);
+}
+
+:where([data-mantine-color-scheme='dark']) .editBadge {
+  background-color: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}

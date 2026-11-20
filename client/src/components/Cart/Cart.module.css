@@ -14,3 +14,53 @@
     animation: none;
   }
 }
+
+/* docs/design/components.md, "Panier". */
+.amount {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ink bar: phone portrait collapsed cart, phone landscape footer. No border on cream (light). */
+[data-mantine-color-scheme] .bar.bar {
+  background-color: var(--color-bar);
+  box-shadow: var(--shadow-bar);
+  border: none;
+}
+
+[data-mantine-color-scheme='dark'] .bar.bar {
+  border-top: 1px solid var(--color-border);
+}
+
+/* Controls on the ink bar: cream hover tint and cream focus ring. */
+.onBar:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-on-bar) 12%, transparent);
+}
+
+.onBar:focus-visible {
+  outline: 2px solid var(--color-focus-on-bar);
+  outline-offset: 2px;
+}
+
+/* "Valider" disabled: stays mustard, faded; the state is also given by "Panier vide". */
+.checkout.checkout:disabled,
+.checkout.checkout[data-disabled] {
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  opacity: 0.45;
+}
+
+.bar .checkout:focus-visible {
+  outline: 2px solid var(--color-focus-on-bar);
+  outline-offset: 2px;
+}
+
+/* Drawer handle (phone portrait). */
+.handle {
+  flex: none;
+  width: 40px;
+  height: 4px;
+  margin: 8px auto 0;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-border-strong);
+}

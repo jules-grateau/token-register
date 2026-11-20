@@ -45,7 +45,8 @@ function createTables(db: Database) {
     db.exec(`
     CREATE TABLE IF NOT EXISTS categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL
+      name TEXT NOT NULL,
+      icon TEXT
     )
   `);
 
@@ -55,6 +56,7 @@ function createTables(db: Database) {
         name TEXT NOT NULL,
         price INTEGER NOT NULL,
         category_id INTEGER NOT NULL,
+        icon TEXT,
         FOREIGN KEY (category_id) REFERENCES categories (id)
       )
     `);
@@ -110,36 +112,47 @@ function shouldSeedSampleCatalog(): boolean {
   return getConfiguredCurrency() !== 'EUR';
 }
 
+// Sample catalog of token instances and of the demo. Icons: keys of docs/design/icons.md.
 function insertData(db: Database) {
-  db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [1, 'Boissons']);
-  db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [2, 'Salé']);
-  db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [3, 'Sucré']);
-  db.run(`INSERT OR IGNORE INTO categories (id,name) VALUES (?,?)`, [4, 'Eco-cup']);
+  const categories = [
+    { id: 1, name: 'Boissons', icon: 'beer' },
+    { id: 2, name: 'Salé', icon: 'sandwich' },
+    { id: 3, name: 'Sucré', icon: 'cake' },
+    { id: 4, name: 'Eco-cup', icon: 'deposit' },
+  ];
+  for (const category of categories) {
+    db.run(`INSERT OR IGNORE INTO categories (id, name, icon) VALUES (?, ?, ?)`, [
+      category.id,
+      category.name,
+      category.icon,
+    ]);
+  }
 
   const products = [
-    { name: 'Bière', price: 3, category_id: 1 },
-    { name: 'Soda/Jus de fruit', price: 2, category_id: 1 },
-    { name: 'Eau', price: 1, category_id: 1 },
-    { name: 'Café/Thé', price: 1, category_id: 1 },
-    { name: 'Sandwich Jambon beurre', price: 3, category_id: 2 },
-    { name: 'Sandwich Rillette poulet', price: 3, category_id: 2 },
-    { name: 'Sandwich Camembert', price: 3, category_id: 2 },
-    { name: 'Croque Monsieur', price: 2, category_id: 2 },
-    { name: 'Chips', price: 1, category_id: 2 },
-    { name: 'Barre chocolatée', price: 1, category_id: 3 },
-    { name: 'Bonbons', price: 1, category_id: 3 },
-    { name: 'Dessert', price: 2, category_id: 3 },
-    { name: 'Crêpes', price: 2, category_id: 3 },
-    { name: 'Eco-cup', price: 1, category_id: 4 },
-    { name: 'Retour Eco-cup', price: -1, category_id: 4 },
+    { name: 'Bière', price: 3, category_id: 1, icon: 'beer' },
+    { name: 'Soda/Jus de fruit', price: 2, category_id: 1, icon: 'soft_drink' },
+    { name: 'Eau', price: 1, category_id: 1, icon: 'water' },
+    { name: 'Café/Thé', price: 1, category_id: 1, icon: 'coffee' },
+    { name: 'Sandwich Jambon beurre', price: 3, category_id: 2, icon: 'sandwich' },
+    { name: 'Sandwich Rillette poulet', price: 3, category_id: 2, icon: 'sandwich' },
+    { name: 'Sandwich Camembert', price: 3, category_id: 2, icon: 'cheese' },
+    { name: 'Croque Monsieur', price: 2, category_id: 2, icon: 'sandwich' },
+    { name: 'Chips', price: 1, category_id: 2, icon: 'snack' },
+    { name: 'Barre chocolatée', price: 1, category_id: 3, icon: 'candy' },
+    { name: 'Bonbons', price: 1, category_id: 3, icon: 'candy' },
+    { name: 'Dessert', price: 2, category_id: 3, icon: 'cake' },
+    { name: 'Crêpes', price: 2, category_id: 3, icon: 'cookie' },
+    { name: 'Eco-cup', price: 1, category_id: 4, icon: 'cup' },
+    { name: 'Retour Eco-cup', price: -1, category_id: 4, icon: 'deposit' },
   ];
 
   // Insert products
   for (const product of products) {
-    db.run(`INSERT INTO products (name, price, category_id) VALUES (?, ?, ?)`, [
+    db.run(`INSERT INTO products (name, price, category_id, icon) VALUES (?, ?, ?, ?)`, [
       product.name,
       product.price,
       product.category_id,
+      product.icon,
     ]);
   }
   logger.info('Categories and products inserted');

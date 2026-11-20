@@ -24,7 +24,8 @@ describe('AboutModal', () => {
     mockInfo({ version: '1.2.0', channel: 'production' });
     render(<AboutModal isOpen={true} onClose={jest.fn()} />);
 
-    expect(screen.getByText('Token Register')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Caisse Claire' })).toBeInTheDocument();
+    expect(screen.getByText('app.tagline')).toBeInTheDocument();
     expect(screen.getByText('about.version 1.2.0')).toBeInTheDocument();
     expect(screen.queryByText('about.env.demo')).not.toBeInTheDocument();
     expect(screen.queryByText('about.env.dev')).not.toBeInTheDocument();
@@ -47,6 +48,16 @@ describe('AboutModal', () => {
     expect(screen.getByText('about.env.dev')).toBeInTheDocument();
     expect(screen.queryByText('about.commit')).not.toBeInTheDocument();
     expect(screen.queryByText(/undefined/)).not.toBeInTheDocument();
+  });
+
+  it('shows the app, not the client name (D-040)', () => {
+    window.APP_CONFIG = { VITE_CLIENT_NAME: 'Comité des fêtes' };
+    mockInfo({ version: '1.2.0', channel: 'production' });
+    render(<AboutModal isOpen={true} onClose={jest.fn()} />);
+
+    expect(screen.getByRole('heading', { name: 'Caisse Claire' })).toBeInTheDocument();
+    expect(screen.queryByText('Comité des fêtes')).not.toBeInTheDocument();
+    window.APP_CONFIG = undefined;
   });
 
   it('only offers the close button as action', () => {

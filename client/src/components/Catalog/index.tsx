@@ -30,6 +30,8 @@ import NewCategoryButton from '../CategoryManagement/NewCategoryButton';
 import CategoryFormModal from '../CategoryManagement/CategoryFormModal';
 import CategoryDeleteConfirm from '../CategoryManagement/CategoryDeleteConfirm';
 import { useLayoutMode, type LayoutMode } from '../../hooks/useLayoutMode';
+import { getCatalogIcon } from '../../config/catalogIcons';
+import classes from './Catalog.module.css';
 
 export const ALL_CATEGORIES_ID = 0;
 
@@ -44,6 +46,14 @@ interface CategoryTab {
   value: string;
   id: number;
   categoryData?: CategoryType;
+}
+
+/** D-047: optional category icon, 20 px before the name, in the tab's text color. */
+function categoryIcon(category: CategoryTab): React.ReactNode {
+  const IconComponent = getCatalogIcon(category.categoryData?.icon);
+  return IconComponent ? (
+    <IconComponent size={20} stroke={2} aria-hidden style={{ flex: 'none' }} />
+  ) : null;
 }
 
 function gridProps(mode: LayoutMode, isWideLandscape: boolean, isEditMode: boolean) {
@@ -171,30 +181,44 @@ function Catalog(): React.ReactElement {
           const canEdit = isEditMode && category.id !== ALL_CATEGORIES_ID && categoryData;
 
           return (
-            <Tabs.Tab key={category.value} value={category.value} w="100%" p={0}>
+            <Tabs.Tab
+              key={category.value}
+              value={category.value}
+              w="100%"
+              className={classes.columnTab}
+            >
               <Group
                 justify="space-between"
                 wrap="nowrap"
                 gap={0}
                 align="stretch"
                 style={{
-                  minHeight: '80px',
-                  background: isSelected ? 'var(--mantine-color-dark-5)' : 'transparent',
+                  minHeight: 56,
+                  // docs/design/components.md, "Onglets catégorie": selected = mustard + ink.
+                  background: isSelected ? 'var(--color-primary)' : 'transparent',
                 }}
               >
                 {/* A category name is never cut: it wraps. */}
-                <Text
-                  size={mode === 'tablet' ? 'md' : 'lg'}
-                  fw={700}
+                <Group
+                  gap={8}
+                  wrap="nowrap"
                   flex={1}
                   miw={0}
                   px={canEdit && mode === 'tablet' ? 'xs' : 'md'}
-                  py="md"
-                  c="white"
-                  style={{ alignContent: 'center', overflowWrap: 'anywhere' }}
+                  py="sm"
+                  c={isSelected ? 'var(--color-on-primary)' : 'var(--color-text)'}
                 >
-                  {category.label}
-                </Text>
+                  {categoryIcon(category)}
+                  <Text
+                    size={mode === 'tablet' ? 'md' : 'lg'}
+                    fw={isSelected ? 800 : 700}
+                    miw={0}
+                    c="inherit"
+                    style={{ overflowWrap: 'anywhere' }}
+                  >
+                    {category.label}
+                  </Text>
+                </Group>
                 {canEdit && (
                   <Group gap={0} wrap="nowrap" align="stretch" onClick={(e) => e.stopPropagation()}>
                     <ActionIcon
@@ -209,7 +233,10 @@ function Catalog(): React.ReactElement {
                       }}
                       aria-label={t('actions.edit')}
                     >
-                      <IconEdit size={24} color="var(--mantine-primary-color-filled)" />
+                      <IconEdit
+                        size={24}
+                        color={isSelected ? 'var(--color-on-primary)' : 'var(--color-icon-accent)'}
+                      />
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"
@@ -223,7 +250,10 @@ function Catalog(): React.ReactElement {
                       }}
                       aria-label={t('delete')}
                     >
-                      <IconTrash size={24} color="var(--mantine-color-red-6)" />
+                      <IconTrash
+                        size={24}
+                        color={isSelected ? 'var(--color-on-primary)' : 'var(--color-danger)'}
+                      />
                     </ActionIcon>
                   </Group>
                 )}
@@ -263,7 +293,8 @@ function Catalog(): React.ReactElement {
                         h={44}
                         px="md"
                         fz="md"
-                        fw={700}
+                        className={classes.pill}
+                        leftSection={categoryIcon(category)}
                         style={{ whiteSpace: 'nowrap', flex: 'none' }}
                       >
                         {category.label}
@@ -310,7 +341,7 @@ function Catalog(): React.ReactElement {
               onClick={() => handleEditCategory(selectedCategoryData)}
               aria-label={t('category_management.edit')}
             >
-              <IconEdit size={22} color="var(--mantine-primary-color-filled)" />
+              <IconEdit size={22} color="var(--color-icon-accent)" />
             </ActionIcon>
             <ActionIcon
               variant="subtle"
@@ -318,7 +349,7 @@ function Catalog(): React.ReactElement {
               onClick={() => setDeletingCategory(selectedCategoryData)}
               aria-label={t('category_management.delete')}
             >
-              <IconTrash size={22} color="var(--mantine-color-red-6)" />
+              <IconTrash size={22} color="var(--color-danger)" />
             </ActionIcon>
           </Group>
         )}
@@ -353,6 +384,7 @@ function Catalog(): React.ReactElement {
             renderRowTabs()
           ) : (
             <Tabs.List
+              className={classes.columnList}
               style={
                 mode === 'tablet'
                   ? { width: 200, flex: 'none' }
@@ -361,7 +393,7 @@ function Catalog(): React.ReactElement {
             >
               <ScrollArea h="100%">
                 <Loader isLoading={categoriesQuery.isFetching} />
-                <Stack gap="xs">{renderColumnTabs()}</Stack>
+                <Stack gap={8}>{renderColumnTabs()}</Stack>
               </ScrollArea>
             </Tabs.List>
           )}
@@ -383,7 +415,7 @@ function Catalog(): React.ReactElement {
                 <Button
                   variant="light"
                   h={44}
-                  leftSection={<IconEdit size={20} color="var(--mantine-primary-color-filled)" />}
+                  leftSection={<IconEdit size={20} color="var(--color-icon-accent)" />}
                   onClick={() => handleEditCategory(selectedCategoryData)}
                 >
                   {t('actions.edit')}

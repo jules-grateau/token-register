@@ -59,6 +59,7 @@ export const CategoryDeleteConfirm: React.FC<CategoryDeleteConfirmProps> = ({
       onConfirm={() => void handleConfirm()}
       title={t('category_management.delete')}
       confirmButtonText={t('delete')}
+      destructive
     >
       <Text>
         {productCount > 0

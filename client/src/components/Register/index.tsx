@@ -18,6 +18,11 @@ import CartConfirmationModal from '../CartConfirmationModal';
 import { toggleEditMode, exitEditMode, selectIsEditMode } from '../../redux/editModeSlice';
 import { useCurrency } from '../../hooks/useCurrency';
 import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
+import ColorSchemeControl from '../ColorSchemeControl';
+import { APP_NAME } from '../../config/version';
+import { getClientName } from '../../config/client';
+import logoUrl from '../../assets/brand/logo.svg';
+import classes from './Register.module.css';
 
 // Layout per mode: docs/design/spacing-layout.md. Header: docs/design/components.md.
 export function Register(): React.ReactElement {
@@ -31,10 +36,6 @@ export function Register(): React.ReactElement {
   const [isCartConfirmationModalOpen, setIsCartConfrimationModalOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
-
-  // Header action size: 56 (portrait), 44 (landscape); tablet and desktop keep 60 x full height.
-  const phoneIconSize = mode === 'phone-landscape' ? 44 : 56;
-  const headerHeight = mode === 'phone-landscape' ? 44 : isPhone ? 56 : undefined;
 
   const cart = (
     <Cart
@@ -91,113 +92,149 @@ export function Register(): React.ReactElement {
     );
   };
 
+  // Header pieces. Without a client name, "Caisse Claire" takes the title slot (D-040).
+  const clientName = getClientName();
+  const titleSize = mode === 'phone-portrait' ? 24 : mode === 'phone-landscape' ? 16 : 20;
+  // Phone landscape shows the logo alone: it then carries the app name for screen readers.
+  const logoCarriesName = mode === 'phone-landscape' && Boolean(clientName);
+  const logo = (
+    <img
+      src={logoUrl}
+      width={mode === 'phone-landscape' ? 24 : 28}
+      height={mode === 'phone-landscape' ? 24 : 28}
+      className={classes.logo}
+      alt={logoCarriesName ? APP_NAME : ''}
+      aria-hidden={logoCarriesName ? undefined : true}
+    />
+  );
+  const title = (
+    <h1
+      className={classes.clientName}
+      data-size={titleSize >= 24 ? 'large' : undefined}
+      style={{ fontSize: titleSize }}
+    >
+      {clientName ?? APP_NAME}
+    </h1>
+  );
+  const actions = (
+    <Group gap="xs" wrap="nowrap" align="center" style={{ flex: 'none' }}>
+      {isEditMode && !isPhone && (
+        <Badge size="lg" tt="none" className={classes.editBadge}>
+          {t('edit_mode.badge')}
+        </Badge>
+      )}
+      {isEditMode && (
+        <Button
+          h={44}
+          leftSection={<IconCheck size={20} />}
+          onClick={() => dispatch(exitEditMode())}
+        >
+          {t('edit_mode.done')}
+        </Button>
+      )}
+      {isPhone && !isEditMode && (
+        <ActionIcon
+          variant="subtle"
+          size={44}
+          onClick={() => setIsOrderModalOpen(true)}
+          aria-label={t('history')}
+        >
+          <IconHistory size={26} stroke={1.5} />
+        </ActionIcon>
+      )}
+      <Menu width={300} position="bottom-end">
+        <Menu.Target>
+          <ActionIcon variant="subtle" size={44} aria-label={t('edit_mode.toggle')}>
+            <IconSettings size={26} stroke={1.5} />
+          </ActionIcon>
+        </Menu.Target>
+        <Menu.Dropdown p="xs">
+          <Menu.Item
+            onClick={() => dispatch(toggleEditMode())}
+            leftSection={<IconPencil size={20} />}
+            py="md"
+            style={{ fontSize: 'var(--mantine-font-size-lg)' }}
+          >
+            {isEditMode ? t('edit_mode.exit') : t('edit_mode.toggle')}
+          </Menu.Item>
+          <Menu.Divider />
+          <ColorSchemeControl />
+          <Menu.Divider />
+          {/* D-008: read-only, the currency is set by the instance configuration. */}
+          <Group
+            gap="sm"
+            px="sm"
+            py="xs"
+            wrap="nowrap"
+            align="flex-start"
+            data-testid="currency-info"
+          >
+            <IconLock size={20} color="var(--mantine-color-dimmed)" style={{ flex: 'none' }} />
+            <Stack gap={2}>
+              <Text size="lg">
+                {t('currency.menu_label', { name: t(`currency.names.${currency}`) })}
+              </Text>
+              <Text size="xs" c="dimmed">
+                {t('currency.instance_config')}
+              </Text>
+            </Stack>
+          </Group>
+          <Menu.Item
+            onClick={() => setIsAboutOpen(true)}
+            leftSection={<IconInfoCircle size={20} />}
+            py="md"
+            style={{ fontSize: 'var(--mantine-font-size-lg)' }}
+          >
+            {t('about.menu')}
+          </Menu.Item>
+        </Menu.Dropdown>
+      </Menu>
+    </Group>
+  );
+
   return (
     <Flex direction="column" style={{ height: '100%', width: '100%' }}>
-      {/* Global Header */}
-      <Group
-        bg="var(--mantine-color-default)"
-        style={{
-          borderBottom: isEditMode
-            ? '2px solid var(--mantine-primary-color-filled)'
-            : '1px solid var(--mantine-color-default-border)',
-          flex: 'none',
-        }}
-        h={headerHeight}
-        justify="space-between"
-        align="stretch"
-        gap={0}
-        wrap="nowrap"
+      {/* Global header: docs/design/components.md, "En-tête global" (D-040). */}
+      <Box
+        component="header"
+        className={classes.header}
+        data-edit-mode={isEditMode || undefined}
+        px={isPhone ? 8 : 'md'}
       >
-        <Text
-          size={mode === 'phone-landscape' ? 'lg' : 'xl'}
-          fw={700}
-          c="orange"
-          px="md"
-          py={isPhone ? 0 : 'md'}
-          style={{ alignContent: 'center', whiteSpace: 'nowrap' }}
-        >
-          Token Register
-        </Text>
-        <Group gap="xs" wrap="nowrap" align="center">
-          {isEditMode && !isPhone && (
-            <Badge size="lg" color="yellow">
-              {t('edit_mode.badge')}
-            </Badge>
-          )}
-          {isEditMode && (
-            <Button
-              h={44}
-              color="yellow"
-              leftSection={<IconCheck size={20} />}
-              onClick={() => dispatch(exitEditMode())}
-            >
-              {t('edit_mode.done')}
-            </Button>
-          )}
-          {isPhone && !isEditMode && (
-            <ActionIcon
-              variant="subtle"
-              size={phoneIconSize}
-              radius={0}
-              onClick={() => setIsOrderModalOpen(true)}
-              aria-label={t('history')}
-            >
-              <IconHistory size={28} stroke={1.5} />
-            </ActionIcon>
-          )}
-          <Menu shadow="md" width={280}>
-            <Menu.Target>
-              <ActionIcon
-                variant="subtle"
-                w={isPhone ? phoneIconSize : 60}
-                h={isPhone ? phoneIconSize : '100%'}
-                radius={0}
-                aria-label={t('edit_mode.toggle')}
-              >
-                <IconSettings size={28} />
-              </ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown p="xs">
-              <Menu.Item
-                onClick={() => dispatch(toggleEditMode())}
-                leftSection={<IconPencil size={20} />}
-                py="md"
-                style={{ fontSize: 'var(--mantine-font-size-lg)' }}
-              >
-                {isEditMode ? t('edit_mode.exit') : t('edit_mode.toggle')}
-              </Menu.Item>
-              <Menu.Divider />
-              {/* D-008: read-only, the currency is set by the instance configuration. */}
-              <Group
-                gap="sm"
-                px="sm"
-                py="xs"
-                wrap="nowrap"
-                align="flex-start"
-                data-testid="currency-info"
-              >
-                <IconLock size={20} color="var(--mantine-color-dimmed)" style={{ flex: 'none' }} />
-                <Stack gap={2}>
-                  <Text size="lg">
-                    {t('currency.menu_label', { name: t(`currency.names.${currency}`) })}
-                  </Text>
-                  <Text size="xs" c="dimmed">
-                    {t('currency.instance_config')}
-                  </Text>
-                </Stack>
+        {mode === 'phone-portrait' ? (
+          <>
+            <Group h={56} justify="space-between" wrap="nowrap" gap="sm" pl={8}>
+              <Group gap="xs" wrap="nowrap">
+                {logo}
+                {clientName && <span className={classes.appName}>{APP_NAME}</span>}
               </Group>
-              <Menu.Item
-                onClick={() => setIsAboutOpen(true)}
-                leftSection={<IconInfoCircle size={20} />}
-                py="md"
-                style={{ fontSize: 'var(--mantine-font-size-lg)' }}
-              >
-                {t('about.menu')}
-              </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-        </Group>
-      </Group>
+              {actions}
+            </Group>
+            <Box px={8} pb={8}>
+              {title}
+            </Box>
+          </>
+        ) : (
+          <Group
+            mih={mode === 'phone-landscape' ? 44 : 64}
+            py={mode === 'phone-landscape' ? 0 : 'xs'}
+            justify="space-between"
+            wrap="nowrap"
+            gap="sm"
+          >
+            <Group gap="sm" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+              <Group gap="xs" wrap="nowrap" style={{ flex: 'none' }}>
+                {logo}
+                {clientName && mode !== 'phone-landscape' && (
+                  <span className={classes.appName}>{APP_NAME}</span>
+                )}
+              </Group>
+              <Box style={{ flex: 1, minWidth: 0 }}>{title}</Box>
+            </Group>
+            {actions}
+          </Group>
+        )}
+      </Box>
 
       {/* Main Content */}
       {renderMain()}

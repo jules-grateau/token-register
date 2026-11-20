@@ -19,7 +19,7 @@ export const NewProductCard: React.FC<NewProductCardProps> = ({ onClick }) => {
   return (
     <Card
       withBorder
-      radius="sm"
+      radius="lg"
       p={0}
       h="auto"
       mih={CARD_MIN_HEIGHT[mode]}
@@ -33,7 +33,7 @@ export const NewProductCard: React.FC<NewProductCardProps> = ({ onClick }) => {
         aria-label={t('product_management.new')}
       >
         <Stack gap="xs" align="center" justify="center" h="100%">
-          <IconPlus size={isDesktop ? 48 : 32} stroke={1.5} />
+          <IconPlus size={isDesktop ? 48 : 32} stroke={1.5} color="var(--color-icon-accent)" />
           <Text fw={700} size={isDesktop ? 'lg' : 'md'} ta="center">
             {t('product_management.new')}
           </Text>

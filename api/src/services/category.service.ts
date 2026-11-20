@@ -21,7 +21,10 @@ export class CategoryService {
     let db;
     try {
       db = await openDb();
-      const result = await db.run(`INSERT INTO categories (name) VALUES (?)`, [category.name]);
+      const result = await db.run(`INSERT INTO categories (name, icon) VALUES (?, ?)`, [
+        category.name,
+        category.icon ?? null,
+      ]);
       if (!result.lastID) {
         throw new Error('Failed to create the category');
       }
@@ -38,10 +41,15 @@ export class CategoryService {
     let db;
     try {
       db = await openDb();
-      const result = await db.run('UPDATE categories SET name = ? WHERE id = ?', [
-        category.name,
-        categoryId,
-      ]);
+      // icon: undefined keeps the current icon, null removes it (D-047).
+      const result =
+        category.icon === undefined
+          ? await db.run('UPDATE categories SET name = ? WHERE id = ?', [category.name, categoryId])
+          : await db.run('UPDATE categories SET name = ?, icon = ? WHERE id = ?', [
+              category.name,
+              category.icon,
+              categoryId,
+            ]);
 
       if (result.changes === 0) {
         throw new NotFoundError(`Category with ID ${categoryId} not found.`);

@@ -60,6 +60,7 @@ TypeScript 5.8.3: Follow standard conventions
   - les comptes rendus des agents font 30 lignes maximum ;
   - quand on relance un agent, on lui donne la liste précise des écrans ou des fichiers à regarder.
 - Pour traiter une revue : lancer `developpeur` avec le numéro de PR (section « Traiter une revue » de son agent). Il corrige, pousse, puis répond sur chaque fil et publie un récapitulatif « 🛠️ Réponse du développeur ». Les points qui demandent un choix métier remontent à l'utilisateur.
+- Points reportés : tout point légitime laissé « pour plus tard » devient une issue GitHub (label `suivi`, plus `tech` ou `design`), avec le lien vers le commentaire d'origine. La réponse sur la PR cite l'issue (`📌 … — reporté → #n`). `⏸️` ne sert qu'aux points non retenus. Cela vaut pour le développeur comme pour la session principale. Le tech-lead et le designer, qui ne lancent pas de commandes, signalent seulement le point. La PR qui le traite met `Closes #n`. Liste : `gh issue list --label suivi`.
 - Pour clore la boucle côté code : lancer `tech-lead` en mode « vérifier les corrections » sur la PR. Il confirme chaque `TL-n` (✅/❌) dans un commentaire.
 
 ### PR en brouillon pendant le travail
@@ -72,9 +73,9 @@ L'utilisateur n'a pas à demander de traiter les revues. Après chaque `gh pr cr
 
 1. La PR est créée en brouillon : le workflow `Tech-lead review` ignore les brouillons et ne tourne pas encore. Une fois tout poussé et lint/tests/build verts, la passer en « prête » (`gh pr ready <PR>`) : c'est ce qui déclenche la revue.
 2. Attendre la fin du workflow `Tech-lead review` sur la PR (en arrière-plan) (`gh run list --workflow tech-lead-review.yml --branch <branche>`), puis lire la revue : `gh pr view <PR> --comments` et `gh api repos/{owner}/{repo}/pulls/<PR>/comments`.
-3. S'il y a des points 🔴 ou 🟠 : repasser la PR en brouillon, lancer `developpeur` pour les traiter et y répondre, puis la remettre en « prête ». Ce passage relance une revue complète du tech-lead sur la PR corrigée. S'il n'y a que des 🟡 : pas de retour en brouillon. Le développeur les traite ou y répond sur la PR (⏸️ avec raison), et c'est tout. Seuls les points qui demandent un choix métier remontent à l'utilisateur, groupés.
+3. S'il y a des points 🔴 ou 🟠 : repasser la PR en brouillon, lancer `developpeur` pour les traiter et y répondre, puis la remettre en « prête ». Ce passage relance une revue complète du tech-lead sur la PR corrigée. S'il n'y a que des 🟡 : pas de retour en brouillon. Le développeur les traite ou y répond sur la PR (⏸️ avec raison si non retenu, 📌 + issue si reporté), et c'est tout. Seuls les points qui demandent un choix métier remontent à l'utilisateur, groupés.
 4. S'il n'y a rien à traiter : le dire en une ligne.
-5. Ne présenter le travail comme terminé qu'une fois la revue traitée et les réponses publiées, avec un résumé des points et de leur statut (✅ / ⏸️ / ❓).
+5. Ne présenter le travail comme terminé qu'une fois la revue traitée et les réponses publiées, avec un résumé des points et de leur statut (✅ / 📌 / ⏸️ / ❓).
 
 Pour une PR de feature qui modifie l'interface : après la revue du tech-lead, faire relire par le `designer` les écrans touchés par la PR (revue ciblée, une seule fois). La PR ne passe en « prête » qu'après sa validation. Si le contrôle automatique d'une release échoue, la correction passe par une PR vers `develop`.
 

@@ -3,6 +3,7 @@ import { ProductService } from '../services/product.service';
 import { ProductType } from 'shared-ts';
 import { NotFoundError } from '../types/errors';
 import { isValidStoredAmount } from '../utils/currency';
+import { INVALID_ICON_MESSAGE, isValidIconField } from '../utils/catalogIcons';
 
 // D-010 / D-012: prices are whole numbers in the smallest unit (tokens or cents).
 const INVALID_PRICE_MESSAGE =
@@ -43,7 +44,7 @@ export class ProductController {
   public createProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     req.log.info('Controller: Creating new product');
     try {
-      const { name, price, categoryId } = req.body as ProductType;
+      const { name, price, categoryId, icon } = req.body as ProductType;
       if (!name || typeof price !== 'number' || !categoryId) {
         res.status(400).json({ error: 'Missing or invalid product fields' });
         return;
@@ -52,7 +53,17 @@ export class ProductController {
         res.status(400).json({ error: INVALID_PRICE_MESSAGE });
         return;
       }
-      const id = await this.productService.addProduct({ name, price, categoryId });
+      // D-046: the icon is optional; when given, it must be a known key.
+      if (!isValidIconField(icon)) {
+        res.status(400).json({ error: INVALID_ICON_MESSAGE });
+        return;
+      }
+      const id = await this.productService.addProduct({
+        name,
+        price,
+        categoryId,
+        icon: icon ?? null,
+      });
       res.status(201).json({ id });
     } catch (error) {
       req.log.error('Controller Error: Error creating product: %s', error);
@@ -79,6 +90,10 @@ export class ProductController {
       }
       if ('price' in productUpdate && !isValidStoredAmount(productUpdate.price)) {
         res.status(400).json({ error: INVALID_PRICE_MESSAGE });
+        return;
+      }
+      if (!isValidIconField(productUpdate.icon)) {
+        res.status(400).json({ error: INVALID_ICON_MESSAGE });
         return;
       }
 

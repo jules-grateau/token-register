@@ -70,10 +70,39 @@ describe('ProductService (unit)', () => {
     const id = await service.addProduct(product);
 
     expect(mockRun).toHaveBeenCalledWith(
-      `INSERT INTO products (name, price, category_id) VALUES (?, ?, ?)`,
-      [product.name, product.price, product.categoryId]
+      `INSERT INTO products (name, price, category_id, icon) VALUES (?, ?, ?, ?)`,
+      [product.name, product.price, product.categoryId, null]
     );
     expect(id).toBe(123);
+  });
+
+  it('should store the icon key of a new product (D-046)', async () => {
+    mockRun.mockResolvedValue({ lastID: 7 });
+
+    const service = new ProductService();
+    await service.addProduct({ name: 'Bière', price: 3, categoryId: 1, icon: 'beer' });
+
+    expect(mockRun).toHaveBeenCalledWith(
+      `INSERT INTO products (name, price, category_id, icon) VALUES (?, ?, ?, ?)`,
+      ['Bière', 3, 1, 'beer']
+    );
+  });
+
+  it('should update or clear the icon of a product (D-046)', async () => {
+    mockRun.mockResolvedValue({ changes: 1 });
+
+    const service = new ProductService();
+    await service.updateProduct(1, { icon: 'coffee' });
+    expect(mockRun).toHaveBeenLastCalledWith('UPDATE products SET icon = ? WHERE id = ?', [
+      'coffee',
+      1,
+    ]);
+
+    await service.updateProduct(1, { icon: null });
+    expect(mockRun).toHaveBeenLastCalledWith('UPDATE products SET icon = ? WHERE id = ?', [
+      null,
+      1,
+    ]);
   });
 
   it('should throw if lastID is falsy', async () => {

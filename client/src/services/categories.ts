@@ -28,10 +28,10 @@ export const categoriesApi = createApi({
       invalidatesTags: ['Categories'],
     }),
     updateCategory: build.mutation<void, CategoryType>({
-      query: ({ id, name }) => ({
+      query: ({ id, name, icon }) => ({
         url: `/${id}`,
         method: 'PUT',
-        body: { name },
+        body: { name, icon: icon ?? null },
       }),
       invalidatesTags: ['Categories'],
     }),

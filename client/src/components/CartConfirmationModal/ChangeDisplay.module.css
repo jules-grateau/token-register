@@ -1,0 +1,63 @@
+/*
+ * docs/design/components.md, "États du bloc de rendu". Selectors repeat the theme's specificity
+ * (`[data-mantine-color-scheme] .paper`, theme.module.css) so that the state colors win.
+ */
+[data-mantine-color-scheme] .block.block {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-card);
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+}
+
+/* "Rien à rendre" */
+[data-mantine-color-scheme] .block[data-state='no-change'] {
+  border: 2px solid var(--color-border-strong);
+}
+
+/* "À rendre" (and "À rendre élevé"), "À rendre au client": ink border in light, mustard in dark. */
+[data-mantine-color-scheme] .block[data-state='change'],
+[data-mantine-color-scheme] .block[data-state='refund'] {
+  background-color: var(--color-primary-tint);
+  border: 2px solid var(--color-text);
+}
+
+[data-mantine-color-scheme='dark'] .block[data-state='change'],
+[data-mantine-color-scheme='dark'] .block[data-state='refund'] {
+  border-color: var(--color-primary);
+}
+
+/* "Il reste" (euros) */
+[data-mantine-color-scheme] .block[data-state='remaining'] {
+  border: 2px solid var(--color-text);
+}
+
+/* "Il manque" (tokens) */
+[data-mantine-color-scheme] .block[data-state='missing'] {
+  background-color: var(--color-danger-tint);
+  border: 2px solid var(--color-danger);
+}
+
+.label {
+  color: var(--color-text-2);
+}
+
+.amount {
+  white-space: nowrap;
+}
+
+.accent {
+  color: var(--color-icon-accent);
+}
+
+.success {
+  color: var(--color-success);
+}
+
+.ink {
+  color: var(--color-text);
+}
+
+.danger {
+  color: var(--color-danger);
+}

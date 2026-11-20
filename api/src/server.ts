@@ -11,6 +11,7 @@ import { CategoryService } from './services/category.service';
 import { ProductService } from './services/product.service';
 import { OrderService } from './services/order.service';
 import { getConfiguredCurrency } from './utils/currency';
+import { buildRuntimeConfigScript, getConfiguredClientName } from './utils/runtimeConfig';
 import { openDb } from './db';
 import { verifyInstanceCurrency } from './db/currency';
 
@@ -18,6 +19,8 @@ dotenv.config();
 const API_ROUTE = '/api';
 // D-008: instance currency, fixed by configuration. Throws on an invalid value.
 const CURRENCY = getConfiguredCurrency();
+// D-040: client (association) name shown in the header, fixed by configuration.
+const CLIENT_NAME = getConfiguredClientName();
 const app = express();
 
 app.use(pinoHttp({ logger }));
@@ -50,13 +53,14 @@ if (process.env.NODE_ENV === 'production') {
 
   app.get('/config.js', (req, res) => {
     res.type('application/javascript');
-    res.send(`
-      window.APP_CONFIG = {
-        VITE_BASE_API_URL: "${runtimeClientApiUrl}",
-        VITE_DEFAULT_LANGUAGE: "${runtimeClientDefaultLang}",
-        VITE_CURRENCY: "${CURRENCY}"
-      };
-    `);
+    res.send(
+      buildRuntimeConfigScript({
+        apiUrl: runtimeClientApiUrl,
+        defaultLanguage: runtimeClientDefaultLang,
+        currency: CURRENCY,
+        clientName: CLIENT_NAME,
+      })
+    );
   });
 } else {
   app.get('/', (req, res) => {

@@ -107,6 +107,38 @@ describe('CartConfirmationModal (Encaissement)', () => {
     expect(button('payment_collect')).toBeDisabled();
   });
 
+  // The colors of the change block hang on `data-state` (ChangeDisplay.module.css).
+  it('exposes the state of the change block for its colors', () => {
+    const { unmount } = renderModal();
+    expect(changeDisplay()).toHaveAttribute('data-state', 'empty');
+    press('5');
+    expect(changeDisplay()).toHaveAttribute('data-state', 'remaining');
+    press(',', '5');
+    expect(changeDisplay()).toHaveAttribute('data-state', 'remaining');
+    fireEvent.click(button('payment_clear_amount'));
+    press('7', ',', '5');
+    expect(changeDisplay()).toHaveAttribute('data-state', 'no-change');
+    fireEvent.click(button(/payment_received_aria.*20,00/));
+    expect(changeDisplay()).toHaveAttribute('data-state', 'change');
+    unmount();
+
+    mockTotal = -200;
+    const negative = renderModal();
+    expect(changeDisplay()).toHaveAttribute('data-state', 'refund');
+    negative.unmount();
+
+    mockTotal = 0;
+    const zero = renderModal();
+    expect(changeDisplay()).toHaveAttribute('data-state', 'nothing-due');
+    zero.unmount();
+
+    setCurrency();
+    mockTotal = 7;
+    renderModal();
+    press('5');
+    expect(changeDisplay()).toHaveAttribute('data-state', 'missing');
+  });
+
   describe('euros', () => {
     it('saves a card payment at once (D-028)', async () => {
       renderModal();

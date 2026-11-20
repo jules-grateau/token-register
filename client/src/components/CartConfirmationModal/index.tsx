@@ -48,6 +48,8 @@ import {
 import ChangeDisplay from './ChangeDisplay';
 import { dismissSuccessToasts } from '../../utils/toasts';
 import PaymentKeypad from './PaymentKeypad';
+import classes from './CartConfirmationModal.module.css';
+import figures from '../../styles/figures.module.css';
 
 interface CartConfirmationModalProps {
   isOpen: boolean;
@@ -239,7 +241,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
   const totalLine = (
     <Group justify="space-between" wrap="nowrap">
       <Text fz={16}>{`${t('total')} · ${totalItems} ${t('items', { count: totalItems })}`}</Text>
-      <Text fz={24} fw={800} style={NOWRAP}>
+      <Text fz={24} fw={800} style={NOWRAP} className={figures.big}>
         {format(total)}
       </Text>
     </Group>
@@ -387,6 +389,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
         <Button
           variant="subtle"
           h={44}
+          className={classes.inkControl}
           leftSection={<IconArrowLeft size={20} />}
           onClick={() => setView('amounts')}
           disabled={isLoading}
@@ -405,6 +408,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
           ta="right"
           c={input === '' ? 'dimmed' : undefined}
           style={NOWRAP}
+          className={figures.big}
           tabIndex={-1}
           data-autofocus={showKeypadView && total > 0 ? true : undefined}
           data-testid="typed-amount"
@@ -413,8 +417,8 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
         </Text>
         <ActionIcon
           variant="subtle"
-          color="gray"
           size={44}
+          className={classes.inkControl}
           onClick={clearInput}
           aria-label={t('payment_clear_amount')}
           disabled={isLoading}
@@ -440,7 +444,9 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
       fullWidth
       h={sizes.button}
       fz={18}
-      fw={700}
+      fw={800}
+      radius={18}
+      className={classes.mainButton}
       leftSection={mainAction.icon}
       onClick={payCash}
       disabled={!mainAction.enabled || isLoading}
@@ -483,7 +489,9 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
       fullWidth
       h={sizes.button}
       fz={18}
-      fw={700}
+      fw={800}
+      radius={18}
+      className={classes.mainButton}
       leftSection={<IconCheck size={22} />}
       onClick={() => void submit(null)}
       loading={isLoading}

@@ -3,6 +3,7 @@ import logger from '../../utils/logger';
 import { getConfiguredCurrency } from '../../utils/currency';
 import { initInstanceCurrency } from '../currency';
 import { addOrderPaymentColumns } from '../orderPayment';
+import { addCatalogIconColumns } from '../catalogIcons';
 
 /**
  * Migration: Add snapshot columns to order_items table
@@ -30,7 +31,7 @@ async function migrateOrderItems() {
   try {
     // Check if migration is already complete
     const tableInfo = await db.all<Array<{ name: string }>>('PRAGMA table_info(order_items)');
-    const columnNames = tableInfo.map(col => col.name);
+    const columnNames = tableInfo.map((col) => col.name);
 
     const hasProductName = columnNames.includes('product_name');
     const hasProductPrice = columnNames.includes('product_price');
@@ -102,7 +103,7 @@ async function migrateOrderItems() {
     if (orphanResult.changes && orphanResult.changes > 0) {
       logger.warn(
         `Found ${orphanResult.changes} orphaned order items (products already deleted). ` +
-        `Set fallback values for historical preservation.`
+          `Set fallback values for historical preservation.`
       );
     } else {
       logger.info('No orphaned order items found');
@@ -111,7 +112,6 @@ async function migrateOrderItems() {
     await db.exec('COMMIT');
     logger.info('Migration completed successfully!');
     logger.info('order_items table now includes: product_name, product_price, category_name');
-
   } catch (error) {
     await db.exec('ROLLBACK');
     logger.error('Migration failed, rolled back transaction:', error);
@@ -163,9 +163,31 @@ async function migrateOrderPayments() {
   }
 }
 
+/**
+ * Migration: catalog icons (D-046, D-047)
+ *
+ * Adds products.icon and categories.icon (TEXT, nullable: key of a catalog icon). Existing rows
+ * keep NULL: no icon. Idempotent, in one transaction.
+ */
+async function migrateCatalogIcons() {
+  logger.info('Checking catalog icon columns...');
+  const db = await openDb();
+  try {
+    const added = await addCatalogIconColumns(db);
+    logger.info(
+      added.length > 0
+        ? `Added icon column to: ${added.join(', ')}`
+        : 'Catalog icon columns already exist'
+    );
+  } finally {
+    await db.close();
+  }
+}
+
 void migrateOrderItems()
   .then(() => migrateInstanceCurrency())
   .then(() => migrateOrderPayments())
+  .then(() => migrateCatalogIcons())
   .then(() => {
     console.log('='.repeat(50));
     console.log('Migration script completed successfully');

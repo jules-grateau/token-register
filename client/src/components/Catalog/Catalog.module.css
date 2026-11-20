@@ -1,0 +1,42 @@
+/* docs/design/components.md, "Onglets catégorie". */
+
+/* Row of pills (phones, tablets < 768 px). */
+.pill.pill {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.pill.pill:hover {
+  background-color: var(--color-surface-2);
+}
+
+/* Selected: mustard + ink, 800: the weight and the fill carry the state, not the color alone. */
+.pill.pill[data-active] {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
+  font-weight: 800;
+}
+
+/* Column (tablet >= 768, desktop): background column, rounded lines, no side indicator. */
+.columnList.columnList {
+  background-color: var(--color-bg);
+  padding: var(--mantine-spacing-sm);
+}
+
+.columnList.columnList::before {
+  display: none;
+}
+
+.columnTab.columnTab {
+  border: none;
+  border-radius: var(--radius-control);
+  padding: 0;
+  overflow: hidden;
+}
+
+.columnTab.columnTab:hover {
+  background-color: var(--color-surface-2);
+}

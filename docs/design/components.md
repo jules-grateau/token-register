@@ -1,25 +1,39 @@
-# Composants (charte provisoire)
+# Composants — Caisse Claire
 
-Mise en page et critères de bascule : [spacing-layout.md](spacing-layout.md). « Mode » = valeur de `useLayoutMode()`.
+Mise en page et critères de bascule : [spacing-layout.md](spacing-layout.md). « Mode » = valeur de `useLayoutMode()`. Couleurs : tokens de [colors.md](colors.md) (`var(--color-…)`). Rayons, ombres : [spacing-layout.md](spacing-layout.md#tokens-clientsrcstylesvariablescss). Seul l'aspect change par rapport à la charte provisoire ; comportements, tailles tactiles, textes ≥ 16 px et règles « rien n'est coupé » sont conservés.
+
+**Réglages par composant** : l'aspect global des composants Mantine (Paper, Card, Modal, Drawer, Menu, Popover, champs de saisie, croix de fermeture des modales) est défini dans `client/src/styles/theme.module.css`, branché par `classNames` dans le thème d'`App.tsx`. C'est la source de ces réglages ; un composant n'y déroge que si cette page le précise.
 
 ## En-tête global — `Register/index.tsx`
 
-|            | Portrait                          | Paysage | Tablette / desktop             |
-| ---------- | --------------------------------- | ------- | ------------------------------ |
-| Hauteur    | 56                                | 44      | 56 (desktop inchangé)          |
-| Titre      | `xl`, 700, orange, `nowrap`       | `lg`    | `xl`                           |
-| Historique | `ActionIcon` 56×56, `IconHistory` | 44×44   | absent (dans le panier)        |
-| Réglages   | `ActionIcon` 56×56                | 44×44   | inchangé (60 × pleine hauteur) |
+Le **nom de l'association est le titre** ; le logo et « Caisse Claire » restent discrets. Fond `--color-surface` (clair) / `--color-bg` (sombre), bordure basse `--color-border` ; pas d'ombre.
 
-**Mode édition** (tous modes) : l'icône historique disparaît ; un `Button` « Terminer » (`leftSection={<IconCheck size={20} />}`, `color="yellow"` filled → texte noir, `h={44}`) apparaît à gauche des réglages et quitte le mode édition en 1 toucher ; bordure basse de l'en-tête 2 px `var(--mantine-primary-color-filled)`. En tablette/desktop, ajouter avant le bouton un `Badge size="lg" color="yellow"` « Édition ». Le texte du bouton porte l'information, pas la couleur seule.
+|  | Portrait | Paysage | Tablette / desktop |
+| --- | --- | --- | --- |
+| Structure | rangée 56 (logo + « Caisse Claire » à gauche, actions à droite) **puis** bandeau du nom d'asso (hauteur auto, `px` 16, `pb` 8) | une rangée 44 : logo 24 · nom d'asso · actions | une rangée 64 : logo 28 + « Caisse Claire » · nom d'asso · actions |
+| Logo | `logo.svg` 28 px, `aria-hidden` | 24 px | 28 px |
+| Nom de l'appli | « Caisse Claire » 14 / 700 `--color-text-2` | masqué (logo seul, `aria-label` « Caisse Claire ») | 14 / 700 |
+| **Nom de l'asso** | 24 / 800, `--color-text`, passe à la ligne, jamais coupé | 16 / 800 sur 1-2 lignes | 20 / 800 sur 1-2 lignes |
+| Historique | `ActionIcon` 44×44 (`variant="subtle"`, `radius` 14), `IconHistory` | 44×44 | absent (dans le panier) |
+| Réglages | `ActionIcon` 44×44, `IconSettings` | 44×44 | 44×44 (`IconSettings`) |
+
+- **Sans nom d'asso configuré** : « Caisse Claire » prend la place du nom d'asso (24 / 800 portrait, 20 tablette-desktop, 16 paysage) et la ligne « Caisse Claire » 14 px disparaît ; le logo reste.
+- Le nom d'asso n'est ni un lien ni un bouton ; il est dans un `<h1>`. Longueur maximale conseillée : 80 caractères.
+- Cas de test : « Comité des fêtes de Saint-Aubin-sur-Loire », « Amicale des pompiers de Val-de-Sèvre-en-Gâtine », 360 px de large, paysage inclus.
+
+**Menu réglages** (⚙️, `Menu` ou page) : voir « Bascule clair/sombre » et « À propos » plus bas ; éléments `py="md"` (16 px), icône + texte.
+
+**Mode édition** (tous modes) : l'icône historique disparaît ; un `Button` « Terminer » (`leftSection={<IconCheck size={20} />}`, moutarde filled → texte encre, `h={44}`, `radius={14}`) apparaît à gauche des réglages et quitte le mode édition en 1 toucher ; bordure basse de l'en-tête 2 px `--color-text` (clair) / `--color-primary` (sombre). En tablette/desktop, ajouter avant le bouton un `Badge size="lg"` « Édition » : clair fond encre texte crème, sombre contour moutarde 1 px texte moutarde, `variant` custom, `tt="none"`. Le texte du bouton et du badge porte l'information, pas la couleur seule.
 
 ## Onglets catégorie — `Catalog/index.tsx`
 
 On garde `Tabs` (sémantique, tests) dans tous les modes.
 
-**Rangée pilule** (portrait, paysage, tablette < 768 px) : `Tabs orientation="horizontal" variant="pills"`, `Tabs.List` dans `ScrollArea scrollbars="x" type="never"` avec un dégradé de 24 px sur le bord droit (de transparent à la couleur de fond) pour signaler le défilement. Chaque `Tabs.Tab` : `h={44}`, `radius="xl"`, `px="md"`, texte 16 / 700 `nowrap`, jamais tronqué. Sélectionné : fond yellow-8, texte noir. Rangée : `py={8}` (portrait, 60 px) ou `py={4}` (paysage, 52 px), `px="sm"`, `gap="xs"`. L'onglet sélectionné est ramené dans la zone visible (`scrollIntoView({ inline: 'nearest' })`).
+**Rangée pilule** (portrait, paysage, tablette < 768 px) : `Tabs orientation="horizontal" variant="pills"`, `Tabs.List` dans `ScrollArea scrollbars="x" type="never"` avec un dégradé de 24 px sur le bord droit (de transparent à la couleur de fond) pour signaler le défilement. Chaque `Tabs.Tab` : `h={44}`, `radius="xl"` (pilule), `px="md"` (18 px), texte 16 `nowrap`, jamais tronqué. Non sélectionné : fond `--color-surface`, contour 1 px `--color-border`, texte `--color-text`, 600. **Sélectionné : fond moutarde `--color-primary`, texte `--color-on-primary`, 800** (en plus de `aria-selected` : la graisse et le fond portent l'information, pas la couleur seule). Rangée : `py={8}` (portrait, 60 px) ou `py={4}` (paysage, 52 px), `px="sm"`, `gap="xs"`. L'onglet sélectionné est ramené dans la zone visible (`scrollIntoView({ inline: 'nearest' })`).
 
-**Colonne** (tablette ≥ 768, desktop) : tablette `w={200}` fixe ; desktop ratio actuel avec `miw={200}`. Tab `mih={80}`, nom 16–18 / 700 qui passe à la ligne (supprimer `truncate`), `overflowWrap: 'anywhere'`.
+**Icône de catégorie** (D-047, facultative) : icône Tabler de la liste fermée ([icons.md](icons.md#icônes-produit)) **20 px avant le nom**, `stroke` 2, `aria-hidden`, couleur du texte de l'onglet (`currentColor` : encre `--color-text` non sélectionné, `--color-on-primary` sélectionné, dans les deux thèmes). Rendu identique dans la rangée pilule (`leftSection` du `Tabs.Tab`) et dans la colonne (`Group gap={8}` icône + nom). Sans icône : le nom seul, pas d'initiale ; « Toutes » n'a pas d'icône.
+
+**Colonne** (tablette ≥ 768, desktop) : tablette `w={200}` fixe ; desktop ratio actuel avec `miw={200}`. Fond de colonne `--color-bg`, `p="sm"`, `gap` 8 px. Tab : ligne arrondie `--radius-control` (14), `mih={56}` (80 si le nom tient sur 2 lignes), nom 16–18 / 700 qui passe à la ligne (supprimer `truncate`), `overflowWrap: 'anywhere'`. Sélectionnée : fond moutarde + texte encre 800 (plus de filet orange à gauche) ; survol / appui `--color-surface-2`.
 
 **Édition des catégories :**
 
@@ -33,19 +47,22 @@ On garde `Tabs` (sémantique, tests) dans tous les modes.
 Structure (plus de `<button>` imbriqué) :
 
 ```tsx
-<Card withBorder radius="sm" p={0} h="auto" mih={MIH[mode]}>   // 96 / 72 / 120 / 200
-  <UnstyledButton onClick={isEditMode ? onEdit : onAdd} flex={1} p={PAD[mode]}  // sm / xs / sm / lg
+<Card withBorder radius="lg" p={0} h="auto" mih={MIH[mode]}>   // 144 / 72 / 144 / 160
+  <UnstyledButton onClick={isEditMode ? onEdit : onAdd} flex={1} p={PAD[mode]}  // 12 (xs 8 en paysage)
                   aria-label={isEditMode ? 'Modifier <nom>' : 'Ajouter <nom>'}>
-    <Stack gap="xs" align="center" justify="center" h="100%">
-      <Text fw={700} size={mode === 'desktop' ? 'lg' : 'md'} ta="center"
-            style={{ overflowWrap: 'anywhere' }}>{name}</Text>      // pas de lineClamp
-      <Text fw={700} size="lg" style={{ whiteSpace: 'nowrap' }}>{price}</Text>
+    <Stack gap="xs" align="flex-start" justify="space-between" h="100%">   // paysage : Group en ligne
+      <Tile />                                                    // pastille-icône, voir icons.md
+      <Stack gap={2}>
+        <Text fw={600} size={mode === 'desktop' ? 'lg' : 'md'}
+              style={{ overflowWrap: 'anywhere' }}>{name}</Text>  // pas de lineClamp
+        <Text fw={800} fz={20} style={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>{price}</Text>
+      </Stack>
     </Stack>
   </UnstyledButton>
   {isEditMode && (
     <Group gap={0} grow h={48} style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}>
-      <ActionIcon variant="subtle" radius={0} h={48} aria-label="Modifier">  <IconEdit size={22} color="var(--mantine-primary-color-filled)" />
-      <ActionIcon variant="subtle" radius={0} h={48} aria-label="Supprimer"> <IconTrash size={22} color="var(--mantine-color-red-6)" />
+      <ActionIcon variant="subtle" radius={0} h={48} aria-label="Modifier">  <IconEdit size={22} color="var(--color-icon-accent)" />
+      <ActionIcon variant="subtle" radius={0} h={48} aria-label="Supprimer"> <IconTrash size={22} color="var(--color-danger)" />
     </Group>
   )}
 </Card>
@@ -53,9 +70,13 @@ Structure (plus de `<button>` imbriqué) :
 
 - **Toucher la carte en mode édition ouvre la modification** (même action que ✎).
 - Le nom n'est jamais coupé : la carte grandit ; la grille (`SimpleGrid`) aligne la hauteur des cartes d'une même rangée.
-- États : survol / appui = fond `var(--mantine-color-dark-5)` ; focus ring Mantine visible.
+- **Aspect** : fond `--color-surface`, contour 1 px `--color-border`, rayon 20 (`--radius-card`), `--shadow-card` en clair (en sombre : contour seul, pas d'ombre). Texte aligné à gauche : pastille en haut, nom (16 / 600) puis prix (20 / 800 `nowrap`, tabulaire) en bas.
+- **Pastille** : voir [icons.md](icons.md#pastille-icône). Contenu décoratif (`aria-hidden`).
+- **Pastille de quantité** (D-045, D-048 ; masquée en mode édition) : quantité de la ligne du produit dans le panier, remise comprise ; si le produit est déjà dans le panier, une pastille ronde 28 px (`min-width`, 14 / 800) en haut à droite de la carte affiche la quantité (clair : fond encre, texte crème ; sombre : fond moutarde, texte encre) et la carte prend un contour 2 px `--color-text` (clair) / `--color-primary` (sombre). L'`aria-label` devient « Ajouter <nom>, 2 dans le panier ». Dérivée du panier, aucun nouvel état.
+- **Consigne (prix négatif)** : contour **pointillé** 1.5 px `--color-danger` (2 px pointillé `--color-danger` quand elle est dans le panier, en clair comme en sombre), pastille `--color-danger-tint` + `IconRecycle`, prix en `--color-danger` avec le signe « − » : trois signaux, pas la couleur seule.
+- États : survol / appui = fond `--color-surface-2` ; focus : anneau `--color-focus` 2 px (offset 2), jamais supprimé.
 
-**Nouveau produit — `NewProductCard`** : même `Card`/`UnstyledButton`, `mih` identique à la carte produit (plus de `h` fixe), bordure pointillée, `IconPlus` 32 (téléphone, tablette) / 48 (desktop), libellé `md` (téléphone, tablette) / `lg` (desktop), 700, passe à la ligne.
+**Nouveau produit — `NewProductCard`** : même `Card`/`UnstyledButton`, `mih` identique à la carte produit (plus de `h` fixe), fond `--color-bg`, contour **pointillé** 1.5 px `--color-border-strong`, `IconPlus` 32 (téléphone, tablette) / 48 (desktop) en `--color-icon-accent`, libellé `md` (téléphone, tablette) / `lg` (desktop), 700, passe à la ligne.
 
 ## Ligne de panier — `Cart/CartItem`
 
@@ -63,36 +84,40 @@ Deux rangées, tous modes :
 
 ```
 Rangée 1 :  [Nom (16/600, flex:1, minWidth:0, passe à la ligne)]   [Prix (16/700, nowrap, flex:none)]
-            sous le prix, si remise : [IconDiscount 16] −0,50 €  (14/600, teal-4)
-Rangée 2 :  [ − ] 2 [ + ]   (ActionIcon size={44} variant="outline", icônes 20 ; quantité 18/700 miw 32)      [⋮ 44×44]
+            sous le prix, si remise : [IconDiscount 16] −0,50 €  (14/600, `--color-success`)
+Rangée 2 :  [ − ] 2 [ + ]   (ActionIcon size={44}, radius 14, icônes 20 ; quantité 18/800 miw 32)      [⋮ 44×44]
 ```
 
-- Ligne : `Stack gap="xs" py="xs"` ; séparateur `Divider` entre lignes.
-- Menu ⋮ : `ActionIcon size={44} aria-label="Plus d'actions"` ; `Menu width={220} position="bottom-end"` ; items `py="md"` 16 px : « Appliquer une remise » (`IconDiscount`), « Supprimer » (`IconTrash`, `color="red"`).
+- Ligne : `Stack gap="xs" py="xs"` ; séparateur `Divider` (`--color-border`) entre lignes.
+- Boutons de quantité : **−** = `variant="light"` (fond `--color-primary-tint`, icône `--color-text` en clair / `--color-primary` en sombre) ; **+** = filled moutarde, icône `--color-on-primary`. Prix en tabulaire.
+- Menu ⋮ : `ActionIcon size={44} variant="subtle" aria-label="Plus d'actions"` ; `Menu width={220} position="bottom-end"` (fond `--color-surface`, `--shadow-pop`, rayon 14) ; items `py="md"` 16 px : « Appliquer une remise » (`IconDiscount`), « Supprimer » (`IconTrash`, `color="red"`).
 - **Lecture seule** (historique D-023, récapitulatif de confirmation D-026) : une seule rangée, nom préfixé de la quantité « 2 × Café long » + prix.
 
 ## Panier
 
-**Pied standard** (tablette, desktop, Drawer) : `Stack gap="sm" p="md"`, bordure haute. « Articles » 16 `dimmed` / nombre seul 16 / 500 (« Articles … 3 ») ; « Total » 24 / 800 et montant 24 / 800 `nowrap` ; `Button size="lg" fullWidth` « Valider ». Panier vide (tablette, desktop, Drawer) : message « Votre panier est vide » et pied masqué.
+**Panneau du panier** (tablette, desktop, Drawer) : fond `--color-surface`, bordure gauche `--color-border` (tablette, desktop).
 
-**En-tête du panier** (tablette, desktop) : historique et vider, `ActionIcon` 48×48. Vider : `IconTrash` red-6, `aria-label` « Vider le panier », désactivé si panier vide.
+**Pied standard** (tablette, desktop, Drawer) : `Stack gap="sm" p="md"`, bordure haute `--color-border`. « Articles » 16 `--color-text-2` / nombre seul 16 / 600 (« Articles … 3 ») ; « Total » 24 / 800 et montant 24 / 800 `nowrap` tabulaire ; `Button size="lg" fullWidth` « Valider » (moutarde, texte encre, `h` 56, rayon `--radius-action`, 18 / 800, `IconArrowRight` 22 à droite du texte). Panier vide (tablette, desktop, Drawer) : message « Votre panier est vide » (`--color-text-2`) et pied masqué.
 
-**Barre repliée** (portrait) : `Paper` en dernier élément de la colonne de la page (dans le flux, pas en `fixed` : il ne recouvre jamais la grille), `h` = `calc(var(--cart-bar-height) + env(safe-area-inset-bottom))`, `pb` = `env(safe-area-inset-bottom)`, `px="md"`, `shadow="md"`, bordure haute. Contenu `Group wrap="nowrap"` :
+**En-tête du panier** (tablette, desktop) : historique et vider, `ActionIcon` 48×48 `variant="subtle"`. Vider : `IconTrash` `--color-danger`, `aria-label` « Vider le panier », désactivé si panier vide.
 
-- zone gauche `UnstyledButton` (`flex: 1`, ouvre le Drawer, `aria-label` « Voir le panier ») : « N articles » 16 `dimmed` au-dessus du total 20 / 800 `nowrap` ; panier vide : « Panier vide » `dimmed` ;
-- `ActionIcon size={44}` `IconChevronUp` (ouvre aussi) ;
-- `Button size="lg"` « Valider » (désactivé si vide).
+**Barre repliée** (portrait) : `Paper` **encre** (`--color-bar`) en dernier élément de la colonne de la page (dans le flux, pas en `fixed` : il ne recouvre jamais la grille), `h` = `calc(var(--cart-bar-height) + env(safe-area-inset-bottom))` (80 + zone sûre), `pb` = `env(safe-area-inset-bottom)`, `px="md"`, `--shadow-bar`, pas de bordure (encre sur crème) en clair, bordure haute `--color-border` en sombre. Contenu `Group wrap="nowrap"` :
+
+- zone gauche `UnstyledButton` (`flex: 1`, ouvre le Drawer, `aria-label` « Voir le panier ») : « N articles » 14-16 `--color-on-bar-2` au-dessus du total 26 / 800 `--color-on-bar` `nowrap` ; panier vide : « Panier vide » `--color-on-bar-2` ;
+- `ActionIcon size={44}` `IconChevronUp` `--color-on-bar` (ouvre aussi) ;
+- `Button` « Valider » **moutarde** (`--color-primary`, texte `--color-on-primary`, `h={56}`, `radius` 18, 18 / 800, `IconArrowRight`), désactivé si vide (`disabled`, `opacity: 0.45` ; un contrôle désactivé est exempté de contraste, l'état est aussi porté par « Panier vide »).
+- Focus dans la barre : `--color-focus-on-bar`.
 
 **Pulsation à l'ajout** (portrait) : quand le nombre d'articles augmente, le total passe en `scale(1.08)` puis revient (150 ms, `ease-out`). Rien avec `prefers-reduced-motion: reduce`.
 
-**Drawer** (portrait) : `Drawer position="bottom" size="85%" radius="md"` (coins hauts), titre « Panier » 18 / 700, en-tête : vider (`ActionIcon` 44) + fermeture (44). Corps : lignes (seule zone qui défile) + pied standard. « Valider » ouvre la confirmation par-dessus ; après une vente réussie, le Drawer se referme (**le panier est replié après chaque vente**) ; si on annule la confirmation, on revient au Drawer.
+**Drawer** (portrait) : `Drawer position="bottom" size="85%" radius="lg"` (coins hauts 20), fond `--color-surface`, `--shadow-pop`, poignée 40 × 4 `--color-border-strong`, titre « Panier » 18 / 700, en-tête : vider (`ActionIcon` 44) + fermeture (44). Corps : lignes (seule zone qui défile) + pied standard. « Valider » ouvre la confirmation par-dessus ; après une vente réussie, le Drawer se referme (**le panier est replié après chaque vente**) ; si on annule la confirmation, on revient au Drawer.
 
-**Colonne droite compacte** (paysage) : voir [spacing-layout.md](spacing-layout.md#2-téléphone-paysage). Pas d'en-tête ; pied d'une rangée de 60 px : vider 44 · « N articles » / total 20 / 800 · « Valider » `h={44}` `flex: 1` `miw={110}`.
+**Colonne droite compacte** (paysage) : voir [spacing-layout.md](spacing-layout.md#2-téléphone-paysage). Pas d'en-tête ; pied d'une rangée de 60 px, fond encre `--color-bar` (comme la barre portrait) : vider 44 (`--color-on-bar`, icône danger interdite sur encre : `IconTrash` `--color-on-bar`) · « N articles » `--color-on-bar-2` / total 20 / 800 `--color-on-bar` · « Valider » moutarde `h={44}` `flex: 1` `miw={110}`.
 
 ## Vider le panier + toast « Annuler »
 
 1. Toucher « vider » vide **immédiatement** le panier (pas de confirmation).
-2. Toast `toast.info` (style info, `toastId: 'cart-cleared'`, un seul à la fois) : « Panier vidé » + `Button variant="outline" h={44}` « Annuler », couleur `var(--color-info-text)` (texte et bordure, 6.7:1).
+2. Toast `toast.info` (style info, `toastId: 'cart-cleared'`, un seul à la fois) : « Panier vidé » + `Button variant="outline" h={44}` « Annuler », couleur `var(--color-info-text)` (texte et bordure ; le toast info est l'encre inversée, 15.9:1 en clair, 15.1:1 en sombre).
 3. Options du toast : `autoClose: 5000`, `closeOnClick: false`, `pauseOnHover: true`, `closeButton: false` (la croix chevauchait « Annuler »).
 4. « Annuler » remet l'ancien panier (lignes, quantités, remises), puis ferme le toast sans autre message.
 5. Si le panier est modifié pendant ces 5 s (ajout d'un produit), le toast reste et « Annuler » **fusionne** (D-019) : l'ancien panier revient et les produits ajoutés entre-temps restent, après les anciennes lignes. Un produit présent dans les deux paniers voit ses quantités **et** ses montants de remise additionnés (D-024 : 2 × Bière −1 € + 1 × Bière −0,50 € → 3 × Bière −1,50 €).
@@ -102,10 +127,10 @@ Rangée 2 :  [ − ] 2 [ + ]   (ActionIcon size={44} variant="outline", icônes 
 ## Historique — `OrderHistoryModal`
 
 - `Modal fullScreen` en téléphone (portrait et paysage), `size="lg" centered` sinon.
-- Carte de commande `Card withBorder` :
-  - en-tête : « Commande #12 » 16 / 700, date en dessous 14 `dimmed` ; **aucun bouton** ;
+- Fond de la modale `--color-bg` ; carte de commande `Card withBorder radius="lg"` fond `--color-surface`, `--shadow-card` en clair :
+  - en-tête : « Commande #12 » 16 / 700, date en dessous 14 `--color-text-2` ; **aucun bouton** ;
   - lignes en lecture seule (16 px) ;
-  - pied `Group justify="space-between" wrap="nowrap"` : total 18 / 700 `nowrap` + « N articles » 16 `dimmed` ; à droite `Button color="red" variant="light" h={44} leftSection={<IconTrash size={20} />}` « Supprimer ».
+  - pied `Group justify="space-between" wrap="nowrap"` : total 18 / 800 `nowrap` + « N articles » 16 `--color-text-2` ; à droite `Button color="red" variant="light" h={44} leftSection={<IconTrash size={20} />}` « Supprimer » (fond `--color-danger-tint`, texte `--color-danger`).
 - La **confirmation existante est conservée** (`ConfirmationModal`) ; ses boutons ≥ 44 px, « Annuler » en `variant="default"` (action non destructive).
 - **Paiement** (instances en euros, commandes passées par l'écran « Encaissement ») : entre les lignes et le pied, `Group gap="xs"` de `Badge size="lg" variant="default" tt="none" fz={14} fw={600}`, un par mode dont le montant est non nul, ou le seul mode choisi si le total est ≤ 0 :
   - « Espèces 5,00 € », `leftSection={<IconCash size={16} />}` ;
@@ -192,30 +217,30 @@ Pavé intégré, jamais le clavier natif (`NumberInput` / `inputmode` exclus : i
 - Touches euros : `7 8 9 / 4 5 6 / 1 2 3 / , 0 ⌫`. Jetons : la touche « , » est remplacée par une case vide non interactive (D-012).
 - Règles de saisie : 4 chiffres maximum avant la virgule (plafond 9 999,99 € ou 9 999 jetons), 2 après (une 3e décimale est ignorée, D-010), un seul séparateur, « , » en premier donne « 0, », les zéros de tête sont supprimés. Une touche qui violerait une règle est sans effet (pas de message).
 - Affichage de la saisie : texte brut tapé suivi de « € » (« 18,5 € »), 32 / 800, `nowrap`, aligné à droite ; vide : « 0 € » en `dimmed`. Le bloc de rendu affiche, lui, le montant formaté (« Reçu 18,50 € »).
-- `[✕]` à droite de l'affichage (`ActionIcon size={44} variant="subtle" color="gray"`, `IconX`, `aria-label` « Effacer le montant ») remet la saisie à vide (gris : écart accepté).
+- `[✕]` à droite de l'affichage (`ActionIcon size={44} variant="subtle"`, `IconX` `--color-text`, `aria-label` « Effacer le montant ») remet la saisie à vide.
 - Toucher une suggestion **remplace** la saisie (l'affichage montre « 20 ») ; la touche suivante du pavé recommence une nouvelle saisie. Toucher une autre suggestion remplace la précédente : on n'additionne jamais.
 - Saisie « 0 » ou vide = aucun montant (état « vide » du bloc de rendu).
 
 ### États du bloc de rendu
 
-Toujours au même endroit, `Paper radius="md" p="md" mih={96}` (**`mih={112}` en téléphone portrait**, DS-4) (hauteur réservée : l'écran ne saute pas), `role="status" aria-live="polite"`. Fond dark-6. Montants `nowrap`.
+Toujours au même endroit, `Paper radius="md" p="md" mih={96}` (**`mih={112}` en téléphone portrait**, DS-4) (hauteur réservée : l'écran ne saute pas), `role="status" aria-live="polite"`. Fond `--color-surface-2`, rayon 20 (`--radius-card`). Montants `nowrap`, tabulaires. Sous-libellés « Reçu », « Espèces reçues » en `--color-text-2` ; montants principaux en `--color-text`.
 
-| État | Quand | Contenu | Bordure / icône |
+| État | Quand | Contenu | Fond / bordure / icône |
 | --- | --- | --- | --- |
-| **Vide** | aucun montant | « Choisissez Carte ou le montant reçu » (jetons : « Choisissez le nombre de jetons reçus ») 16 `dimmed` | 1 px `default-border`, pas d'icône |
-| **À rendre** | reçu > total | ligne 1 : « Reçu » 16 `dimmed` + « 20,00 € » 18 / 700 ; ligne 2 : « À rendre » 20 / 700 + montant **40 / 800** blanc | 2 px yellow-8 ; `IconCoins` 28 yellow-8 |
-| **À rendre élevé** | rendu > 100 € (euros seulement) | idem + ligne « Rendu élevé : vérifiez le montant reçu » 16 / 600, `IconAlertTriangle` 20 yellow-8. Non bloquant | 2 px yellow-8 |
-| **Rien à rendre** | reçu = total (pavé) | « Reçu 7,50 € » + « Rien à rendre » 24 / 800 | 2 px `default-border` ; `IconCheck` 28 |
-| **Il reste** (euros) | 0 < reçu < total | « Espèces reçues 5,00 € » + « Il reste » 20 / 700 + montant **32 / 800** blanc | 2 px `var(--color-info-bg)` ; `IconCreditCard` 28 `var(--color-info-bg)` |
-| **Il manque** (jetons) | 0 < reçu < total | « Reçu 5 Jetons » + « Il manque » 20 / 700 + montant 32 / 800 red-4 | 2 px red-6 ; `IconAlertTriangle` 28 red-6 |
-| **À rendre au client** | total < 0 | « À rendre au client » 20 / 700 + montant (valeur absolue) **40 / 800** | 2 px yellow-8 ; `IconCoins` 28 yellow-8 |
-| **Rien à encaisser** | total = 0 | « Rien à encaisser » 20 / 700 | 1 px `default-border` |
+| **Vide** | aucun montant | « Choisissez Carte ou le montant reçu » (jetons : « Choisissez le nombre de jetons reçus ») 16 `--color-text-2` | fond `surface-2`, 1 px `--color-border`, pas d'icône |
+| **À rendre** | reçu > total | ligne 1 : « Reçu » 16 `--color-text-2` + « 20,00 € » 18 / 700 ; ligne 2 : « À rendre » 20 / 700 + montant **40 / 800** `--color-text` | fond `--color-primary-tint`, 2 px `--color-text` (clair) / `--color-primary` (sombre) ; `IconCoins` 28 `--color-icon-accent` |
+| **À rendre élevé** | rendu > 100 € (euros seulement) | idem + ligne « Rendu élevé : vérifiez le montant reçu » 16 / 600, `IconAlertTriangle` 20 `--color-icon-accent`. Non bloquant | idem « À rendre » |
+| **Rien à rendre** | reçu = total (pavé) | « Reçu 7,50 € » + « Rien à rendre » 24 / 800 | fond `surface-2`, 2 px `--color-border-strong` ; `IconCheck` 28 `--color-success` |
+| **Il reste** (euros) | 0 < reçu < total | « Espèces reçues 5,00 € » + « Il reste » 20 / 700 + montant **32 / 800** `--color-text` | fond `surface-2`, 2 px `--color-text` ; `IconCreditCard` 28 `--color-text` |
+| **Il manque** (jetons) | 0 < reçu < total | « Reçu 5 Jetons » + « Il manque » 20 / 700 + montant 32 / 800 `--color-danger` | fond `--color-danger-tint`, 2 px `--color-danger` ; `IconAlertTriangle` 28 `--color-danger` |
+| **À rendre au client** | total < 0 | « À rendre au client » 20 / 700 + montant (valeur absolue) **40 / 800** | idem « À rendre » |
+| **Rien à encaisser** | total = 0 | « Rien à encaisser » 20 / 700 | fond `surface-2`, 1 px `--color-border` |
 
-Contrastes : red-4 #FF8787 sur dark-6 5,9:1 ; bordures yellow-8 6,4:1, info #89B4F8 6,4:1, red-6 4,1:1 (≥ 3:1 pour un élément graphique). Chaque état se lit par son texte et son icône, jamais par la seule couleur.
+Contrastes : `text` sur `primary-tint` 13.5:1 (clair) / 11.5:1 (sombre) ; `danger` sur `danger-tint` 5.2:1 / 5.4:1 ; bordures `text` 15.9:1 (clair), `primary` 9.5:1 (sombre), `danger` ≥ 3:1. Chaque état se lit par son texte et son icône, jamais par la seule couleur (le rouge de « Il manque » est doublé du mot « Il manque » et de `IconAlertTriangle`).
 
 ### Bouton principal (pied)
 
-Un seul bouton principal en bas, toujours présent, `Button fullWidth` filled (yellow-8, texte noir), 18 / 700 :
+Un seul bouton principal en bas, toujours présent, `Button fullWidth` filled (moutarde `--color-primary`, texte `--color-on-primary`, rayon `--radius-action`), 18 / 800 :
 
 | État du bloc | Bouton | Action |
 | --- | --- | --- |
@@ -224,6 +249,8 @@ Un seul bouton principal en bas, toujours présent, `Button fullWidth` filled (y
 | Il reste (euros) | « Reste en carte (2,50 €) », `IconCreditCard` | enregistre (mixte) |
 | Il manque (jetons) | « Encaisser » désactivé | — |
 | Total ≤ 0 | pas de bouton principal (voir plus bas) | — |
+
+**Désactivé** (« Encaisser » vide / « Il manque ») : même style que « Valider » du panier, moutarde estompée (`disabled`, `opacity: 0.45`), pas le gris Mantine (décision revue PR #30). Un contrôle désactivé est exempté de contraste ; l'état est porté par le bloc de rendu (« Choisissez… » / « Il manque »). Ne pas descendre sous 0.45 pour que le libellé reste lisible.
 
 Pendant l'enregistrement (`isLoading`), **tous** les boutons de la modale sont désactivés et « Encaisser » / « Carte » / « Appoint » portent `loading` (anti double toucher).
 
@@ -269,7 +296,7 @@ Vue « Montants » (euros, total 7,50 €, après toucher « 20 € ») :
 │ [⌨ Autre montant               ] │ 48
 │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
 │ ┃ ◎ Reçu               20,00 € ┃ │ bloc de rendu
-│ ┃   À rendre         12,50 €   ┃ │ 40/800, bordure yellow-8
+│ ┃   À rendre         12,50 €   ┃ │ 40/800, fond primary-tint, 2 px text (clair) / primary (sombre)
 │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ │
 ├──────────────────────────────────┤
 │ [ ✓ Encaisser                  ] │ 56
@@ -289,14 +316,14 @@ Vue « Pavé » (après « Autre montant », état mixte) : le récapitulatif se
 │ [  1  ][  2  ][  3  ]            │
 │ [  ,  ][  0  ][  ⌫  ]            │
 │ ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓ │
-│ ┃ ▭ Espèces reçues      5,00 € ┃ │ bordure info
+│ ┃ ▭ Espèces reçues      5,00 € ┃ │ fond surface-2, 2 px text
 │ ┃   Il reste            2,50 € ┃ │ 32/800
 │ ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛ │
 ├──────────────────────────────────┤
 │ [ ▭ Reste en carte (2,50 €)    ] │ 56
 └──────────────────────────────────┘
 ```
-« ← Montants » (`Button variant="subtle" h={44}`, jaune subtil par défaut : écart accepté, `IconArrowLeft`) revient à la vue « Montants » en gardant la saisie.
+« ← Montants » (`Button variant="subtle" h={44}`, texte `--color-text`, `IconArrowLeft`) revient à la vue « Montants » en gardant la saisie.
 
 **Téléphone paysage** — `Modal fullScreen`, en-tête 44, deux colonnes `Group align="stretch" wrap="nowrap"` : gauche 40 % (récapitulatif qui défile, total, bloc de rendu avec montant **32 / 800** au lieu de 40), droite 60 %. Boutons h 48 (pavé h 44).
 ```
@@ -373,14 +400,14 @@ Tablette / paysage en jetons : mêmes grilles qu'en euros, la place de « Carte 
 | Carte | `Button variant="default"`, `leftSection={<IconCreditCard size={24} />}`, 18 / 700 | h 56 / 56 / 48 |
 | Appoint | `Button variant="default"`, contenu `Stack gap={0}` : « Appoint » 16 / 600 + montant 18 / 700 `nowrap` (paysage : une ligne « Appoint 7,50 € ») | h 56 / 56 / 48 |
 | Libellé « Espèces reçues » / « Jetons reçus » | `Text` 16 `dimmed`, `leftSection` visuel `IconCash` 20 | — |
-| Suggestions | `SimpleGrid cols={4} spacing="xs"` de `Button variant="default"` 20 / 700 `nowrap`, `px={0}` ; sélectionnée : `variant="filled"` (yellow-8, texte noir 9,8:1) + `leftSection={<IconCheck size={18} />}` + `aria-pressed` | h 56 / 56 / 48 |
+| Suggestions | `SimpleGrid cols={4} spacing="xs"` de `Button variant="default"` 20 / 700 `nowrap`, `px={0}` ; sélectionnée : `variant="filled"` (moutarde, texte encre 8,1:1 clair / 9,7:1 sombre) + `leftSection={<IconCheck size={18} />}` + `aria-pressed` | h 56 / 56 / 48 |
 | Autre montant | `Button variant="default" fullWidth`, `leftSection={<IconKeyboard size={20} />}`, 16 / 700 | h 48 / absent / 48 |
 | Pavé | `SimpleGrid cols={3}` (paysage `cols={4}`) `spacing="xs"` de `Button variant="default"` 24 / 700 ; ⌫ = `IconBackspace` 24 | h 56 / 64 / 44 |
 | Bloc de rendu | voir « États du bloc de rendu ». Montant long : en portrait, tablette et desktop, il passe sous son libellé au lieu de déborder (écart accepté) ; en paysage, montant 28 / 800 en jetons (DS-5) | montant 40 / 40 / 32 (28 en jetons) ; `mih` 112 / 96 / 96 |
-| Bouton principal | `Button fullWidth` filled, 18 / 700, icône 22 | h 56 / 56 / 48 |
+| Bouton principal | `Button fullWidth` filled, 18 / **800** (aligné sur « Valider », décision revue PR #30), icône 22 | h 56 / 56 / 48 |
 | Espacements | `Stack gap="sm"` ; 8 px minimum entre cibles | — |
 
-Aucune nouvelle couleur ni nouveau token : yellow-8, red-4 / red-6, `--color-info-bg`, `default-border`, dark-6.
+Tokens utilisés : `--color-primary`, `--color-primary-tint`, `--color-icon-accent`, `--color-danger(-tint)`, `--color-success`, `--color-text(-2)`, `--color-surface(-2)`, `--color-border(-strong)`. Boutons « Carte », « Appoint » et pavé : `variant="default"` (fond `--color-surface`, contour `--color-border`, texte `--color-text`).
 
 ### Clavier physique (desktop, et toute taille si un clavier est branché)
 
@@ -454,4 +481,29 @@ Focus initial : sur l'affichage de la saisie (`tabIndex={-1}`, `data-autofocus`)
 | `limit`                           | 3                                                                                                                    |
 | `hideProgressBar`, `closeOnClick` | `true`, `true` (sauf toast « Annuler »)                                                                              |
 
-Décalage bas : `--toastify-toast-bottom` dans `variables.css` (au-dessus de la barre panier en portrait, 16 px ailleurs). Ne recouvre jamais l'en-tête ni le titre / la croix des modales.
+Décalage bas : `--toastify-toast-bottom` dans `variables.css` (au-dessus de la barre panier en portrait : `calc(var(--cart-bar-height) + env(safe-area-inset-bottom) + 12px)`, 16 px ailleurs). Ne recouvre jamais l'en-tête ni le titre / la croix des modales.
+
+**Aspect** : couleurs des tokens `--color-success-bg/-text`, `--color-danger-bg/-text`, `--color-info-bg/-text` (voir [colors.md](colors.md#tokens)), rayon 16, `--shadow-pop`, texte 16 / 600, icône d'état react-toastify conservée (succès ✓, erreur !, info i) : l'état ne dépend jamais de la couleur seule. L'info est l'encre inversée (pas de bleu).
+
+## Modales (hors encaissement)
+
+`Modal` Mantine : fond `--color-surface`, rayon 20 (`--radius-card`), `--shadow-pop`, overlay `rgba(31,26,15,.5)` (clair) / `rgba(0,0,0,.65)` (sombre) ; plein écran sur téléphone. En-tête : titre 18 / 700, croix `closeButtonProps={{ size: 44 }}` `--color-text`. Pas de bordure d'en-tête. Pied d'actions : boutons ≥ 44 px, `gap` 8 px, action principale moutarde à droite, « Annuler » `variant="default"` ; action destructive `color="red"` (`variant="light"` sauf confirmation finale `filled`). `ConfirmationModal` et formulaires produit / catégorie / remise suivent ces règles.
+
+**Gabarits (PR #31, étape 4, validés)** :
+
+- **Confirmations** (`ConfirmationModal`, suppression de commande / produit / catégorie) : modale **centrée, jamais plein écran**, même sur téléphone (petit contenu, le contexte reste visible derrière). « Annuler » `variant="default"` à gauche, action à droite (D-050) ; suppression = `color="red"` **plein** (`filled`). En sombre, le texte du bouton rouge plein est `--color-danger-text` (`#3A0B0B`, 6.2:1), jamais du blanc (≈ 2.8:1 sur `#F87171`).
+- **Formulaires produit / catégorie, remise, « À propos »** : `fullScreen` sur téléphone ; sur desktop, modale centrée étroite (largeur du formulaire laissée libre pour l'instant, non spécifiée).
+- **Pagination de l'historique** : boutons 44 × 44 px, écart 8 px ; page active moutarde (`--color-primary`, texte encre), les autres `variant="default"`.
+- **« Nouvelle catégorie »** (mode édition) : `--radius-control`, bordure pointillée 1.5 px `--color-border-strong`, fond `--color-bg`, icône `IconPlus` + libellé 16 / 600 ; même famille que la carte « Nouveau Produit ».
+- **`SegmentedControl` de la remise** (Montant fixe / Pourcentage) : même style que la bascule du thème (`h` 44, rayon 14, sélectionné moutarde + texte encre 800). Les libellés peuvent passer sur deux lignes à 360 px ; ne jamais les tronquer.
+- **Non décrits à ce jour** : états vide, erreur et chargement de l'historique ; largeur des formulaires desktop.
+
+Champs : fond `--color-surface-2`, contour 1 px `--color-border-strong` (≥ 3:1, c'est un contrôle de saisie), rayon 14, `h` 48, texte 16 ; focus = anneau `--color-focus` 2 px.
+
+## « À propos »
+
+Modale ou page ouverte depuis le menu ⚙️ (`IconInfoCircle`, « À propos »). Contenu centré : `logo.svg` 64 px, « Caisse Claire » 24 / 800, accroche « Une caisse simple, claire et nette. » 16 `--color-text-2`, puis numéro de version 14 `--color-text-2` tabulaire (et lien vers les mentions s'il existe). Ne remplace pas le nom de l'association de l'en-tête.
+
+## Bascule clair/sombre — menu réglages
+
+Dans le menu ⚙️, une entrée « Apparence » avec trois choix en `SegmentedControl` (`h` 44, rayon 14, sélectionné = moutarde + texte encre 800, libellés **et** icônes : `IconSun` « Clair », `IconMoon` « Sombre », `IconDeviceDesktop` « Auto ») : « Auto » suit `prefers-color-scheme`. Via `useMantineColorScheme()` ; le choix est mémorisé par Mantine (`localStorage`). Le changement est immédiat, sans rechargement ; tous les écrans doivent être vérifiés dans les deux thèmes (contrastes de [colors.md](colors.md#contrastes-attendus)). L'état courant se lit par le libellé et l'icône, pas par la couleur seule.

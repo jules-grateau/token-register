@@ -1,47 +1,99 @@
+/*
+ * Design tokens, Caisse Claire (docs/design/colors.md, spacing-layout.md).
+ * :root = light scheme, [data-mantine-color-scheme='dark'] = dark scheme.
+ * Same values as the Mantine theme in App.tsx: change both in the same PR.
+ */
 :root {
-  --color-primary-bg: #FFCA28;
-  --color-primary-text: #202124;
-  --color-primary-bg-hover: #FFC107;
-  --color-primary-bg-active: #FFB300;
+  --color-bg: #fbf5e6;
+  --color-surface: #ffffff;
+  --color-surface-2: #f4ecd6;
+  --color-text: #1f1a0f;
+  --color-text-2: #5e5644;
+  --color-border: #eadfc4;
+  --color-border-strong: #8a7f66;
+  --color-primary: #e2a831;
+  --color-on-primary: #1f1a0f;
+  --color-primary-tint: #f6e2a8;
+  --color-bar: #1f1a0f;
+  --color-on-bar: #fbf5e6;
+  --color-on-bar-2: #d9cfb4;
+  --color-success: #166534;
+  --color-success-tint: #ddf3e2;
+  --color-danger: #b91c1c;
+  --color-danger-tint: #fbe4e4;
+  --color-icon-accent: #1f1a0f;
+  --color-focus: #1f1a0f;
+  --color-focus-on-bar: #fbf5e6;
 
-  --color-secondary-bg: #3C4043;
-  --color-secondary-text: #E8EAED;
-  --color-secondary-bg-hover: #4E5155;
-  --color-secondary-bg-active: #5F6368;
+  /* Toasts and info states */
+  --color-success-bg: #166534;
+  --color-success-text: #ffffff;
+  --color-danger-bg: #b91c1c;
+  --color-danger-text: #ffffff;
+  --color-info-bg: #1f1a0f;
+  --color-info-text: #fbf5e6;
 
-  --color-secondary-light-bg: rgba(138, 180, 248, 0.08);
-  --color-secondary-light-text: #E8EAED;
-  --color-secondary-light-bg-hover: rgba(138, 180, 248, 0.12);
-  --color-secondary-light-bg-active: rgba(138, 180, 248, 0.16);
+  /* Modal overlay (components.md, "Modales") */
+  --color-overlay: rgba(31, 26, 15, 0.5);
 
-  --color-success-bg: #81C995;
-  --color-success-text: #1E3E23;
-  --color-success-bg-hover: #6FB07F;
-  --color-success-bg-active: #5A9A6A;
+  /* Shadows */
+  --shadow-card: 0 1px 2px rgba(31, 26, 15, 0.08);
+  --shadow-bar: 0 -4px 16px rgba(31, 26, 15, 0.07);
+  --shadow-pop: 0 8px 24px rgba(31, 26, 15, 0.14);
 
-  --color-danger-bg: #F28B82;
-  --color-danger-text: #461A17;
-  --color-danger-bg-hover: #E4756D;
-  --color-danger-bg-active: #D96059;
-  
-  --color-info-bg: #89B4F8;
-  --color-info-text: #172A4F;
-  --color-info-bg-hover: #73A3E2;
-  --color-info-bg-active: #5E92D6;
-
-  --color-border: #5F6368;
-  --color-border-light: #9AA0A6;
+  /* Radii */
+  --radius-control: 14px;
+  --radius-tile: 16px;
+  --radius-action: 18px;
+  --radius-card: 20px;
+  --radius-pill: 999px;
 
   /* Touch targets and layout (docs/design/spacing-layout.md) */
   --touch-min: 44px;
   --touch-comfort: 56px;
-  --cart-bar-height: 72px;
+  /* Collapsed cart bar (docs/design/components.md, "Barre repliée"). */
+  --cart-bar-height: 80px;
+}
+
+[data-mantine-color-scheme='dark'] {
+  --color-bg: #16130c;
+  --color-surface: #211c12;
+  --color-surface-2: #2a2418;
+  --color-text: #f6efdc;
+  --color-text-2: #b7ad93;
+  --color-border: #3a3220;
+  --color-border-strong: #7c7358;
+  --color-primary: #f0b93a;
+  --color-on-primary: #1f1a0f;
+  --color-primary-tint: #3a2f12;
+  --color-bar: #0e0c07;
+  --color-on-bar: #f6efdc;
+  --color-on-bar-2: #b7ad93;
+  --color-success: #4ade80;
+  --color-success-tint: #17301f;
+  --color-danger: #f87171;
+  --color-danger-tint: #3a2022;
+  --color-icon-accent: #f0b93a;
+  --color-focus: #f0b93a;
+  --color-focus-on-bar: #f0b93a;
+
+  --color-success-bg: #4ade80;
+  --color-success-text: #0b2a17;
+  --color-danger-bg: #f87171;
+  --color-danger-text: #3a0b0b;
+  --color-info-bg: #f6efdc;
+  --color-info-text: #16130c;
+
+  --color-overlay: rgba(0, 0, 0, 0.65);
+
+  --shadow-card: none;
+  --shadow-bar: 0 -4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
 
 /*
- * react-toastify, theme="colored" (docs/design/colors.md, components.md).
+ * react-toastify, theme="colored" (docs/design/components.md, "Toasts").
  * Scoped on .Toastify so it wins over the variables toastify injects on :root.
- * Contrasts: success 6.1:1, error 6.2:1, info 6.7:1.
  */
 .Toastify {
   --toastify-color-success: var(--color-success-bg);
@@ -50,8 +102,16 @@
   --toastify-text-color-error: var(--color-danger-text);
   --toastify-color-info: var(--color-info-bg);
   --toastify-text-color-info: var(--color-info-text);
+  --toastify-font-family: inherit;
 
   --toastify-toast-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+.Toastify__toast {
+  border-radius: 16px;
+  box-shadow: var(--shadow-pop);
+  font-size: 16px;
+  font-weight: 600;
 }
 
 /* Phone portrait: keep toasts above the collapsed cart bar. */

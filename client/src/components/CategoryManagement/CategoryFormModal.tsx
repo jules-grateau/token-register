@@ -4,11 +4,14 @@ import { useForm } from '@mantine/form';
 import { useTranslation } from 'react-i18next';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
-import type { CategoryType } from 'shared-ts';
+import type { CatalogIconKey, CategoryType } from 'shared-ts';
 import { useCreateCategoryMutation, useUpdateCategoryMutation } from '../../services/categories';
 import { setSelectedCategory } from '../../redux/selectedCategorySlice';
 import { extractApiError } from '../../utils/extractApiError';
 import ConfirmationModal from '../ConfirmationModal';
+import CatalogIconPicker from '../CatalogIcon/CatalogIconPicker';
+import { isCatalogIconKey } from '../../config/catalogIcons';
+import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
 
 interface CategoryFormModalProps {
   isOpen: boolean;
@@ -18,7 +21,12 @@ interface CategoryFormModalProps {
 
 interface CategoryFormValues {
   name: string;
+  /** D-047: optional, "Aucune" (null) by default. */
+  icon: CatalogIconKey | null;
 }
+
+const iconOf = (category?: CategoryType | null): CatalogIconKey | null =>
+  isCatalogIconKey(category?.icon) ? category.icon : null;
 
 export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
   isOpen,
@@ -27,6 +35,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
+  const isPhone = isPhoneMode(useLayoutMode());
   const [createCategory] = useCreateCategoryMutation();
   const [updateCategory] = useUpdateCategoryMutation();
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -38,6 +47,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
   const form = useForm<CategoryFormValues>({
     initialValues: {
       name: category?.name || '',
+      icon: iconOf(category),
     },
     validate: {
       name: (value) => (value.trim() ? null : t('errors.required')),
@@ -46,7 +56,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
 
   useEffect(() => {
     if (isOpen && category) {
-      form.setValues({ name: category.name });
+      form.setValues({ name: category.name, icon: iconOf(category) });
     } else if (isOpen && !category) {
       form.reset();
     }
@@ -64,7 +74,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
 
   const handleCreate = async (values: CategoryFormValues) => {
     try {
-      const newCategory = await createCategory({ name: values.name }).unwrap();
+      const newCategory = await createCategory({ name: values.name, icon: values.icon }).unwrap();
       toast.success(t('category_management.created'));
       dispatch(setSelectedCategory(newCategory.id));
       form.reset();
@@ -81,6 +91,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
       await updateCategory({
         id: category.id,
         name: formValuesForConfirmation.name,
+        icon: formValuesForConfirmation.icon,
       }).unwrap();
       toast.success(t('category_management.updated'));
       setShowConfirmation(false);
@@ -105,7 +116,8 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
         onClose={onClose}
         title={isEditMode ? t('category_management.edit') : t('category_management.new')}
         centered
-        closeButtonProps={{ 'aria-label': t('close') }}
+        fullScreen={isPhone}
+        closeButtonProps={{ size: 44, 'aria-label': t('close') }}
       >
         <form onSubmit={form.onSubmit(handleSubmit)}>
           <Stack>
@@ -115,11 +127,18 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
               required
               {...form.getInputProps('name')}
             />
-            <Group justify="flex-end" mt="md">
-              <Button variant="default" onClick={onClose}>
+            <CatalogIconPicker
+              value={form.values.icon}
+              onChange={(icon) => form.setFieldValue('icon', icon)}
+            />
+            {/* docs/design/components.md, "Modales": "Annuler" left, main action right, >= 44 px. */}
+            <Group justify="flex-end" gap={8} mt="md" grow={isPhone}>
+              <Button variant="default" h={44} onClick={onClose}>
                 {t('cancel')}
               </Button>
-              <Button type="submit">{isEditMode ? t('actions.save') : t('actions.create')}</Button>
+              <Button type="submit" h={44}>
+                {isEditMode ? t('actions.save') : t('actions.create')}
+              </Button>
             </Group>
           </Stack>
         </form>

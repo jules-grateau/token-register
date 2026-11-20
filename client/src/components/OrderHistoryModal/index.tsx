@@ -9,6 +9,7 @@ import { useCurrency } from '../../hooks/useCurrency';
 import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
 import { IconCash, IconCreditCard, IconTrash } from '@tabler/icons-react';
 import type { OrderPaymentType } from 'shared-ts';
+import classes from './OrderHistoryModal.module.css';
 
 import {
   Modal,
@@ -105,7 +106,7 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
     }
 
     if (error) {
-      return <Text c="red">{t('error_loading_orders')}</Text>;
+      return <Text className={classes.error}>{t('error_loading_orders')}</Text>;
     }
 
     if (ordersData && ordersData.data && ordersData.data.length > 0) {
@@ -119,13 +120,13 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
               );
               const totalItems = order.items.reduce((acc, item) => acc + item.quantity, 0);
               return (
-                <Card withBorder key={order.id}>
+                <Card withBorder radius="lg" key={order.id}>
                   <Stack gap="sm">
                     <Stack gap={2}>
                       <Text size="md" fw={700}>
                         {t('order_title', { id: order.id })}
                       </Text>
-                      <Text size="sm" c="dimmed">
+                      <Text size="sm" className={classes.secondary}>
                         {new Date(order.date).toLocaleString()}
                       </Text>
                     </Stack>
@@ -151,10 +152,10 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
                     <Divider />
                     <Group justify="space-between" wrap="nowrap">
                       <Group gap="sm" wrap="nowrap">
-                        <Text size="lg" fw={700} style={{ whiteSpace: 'nowrap' }}>
+                        <Text fz={18} fw={800} className={classes.amount}>
                           {format(totalPrice)}
                         </Text>
-                        <Text size="md" c="dimmed">
+                        <Text size="md" className={classes.secondary}>
                           {totalItems} {t('items', { count: totalItems })}
                         </Text>
                       </Group>
@@ -191,7 +192,8 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
         size="lg"
         centered
         fullScreen={isPhone}
-        closeButtonProps={{ size: 'lg', 'aria-label': t('close') }}
+        closeButtonProps={{ size: 44, 'aria-label': t('close') }}
+        classNames={{ content: classes.content, header: classes.header }}
       >
         {renderContent()}
         {ordersData && ordersData.pagination && ordersData.pagination.totalPages > 1 && (
@@ -202,8 +204,11 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
               total={ordersData.pagination.totalPages}
               siblings={1}
               boundaries={1}
+              gap={8}
+              classNames={{ control: classes.control, dots: classes.dots }}
+              style={{ alignSelf: 'center' }}
             />
-            <Text size="sm" c="dimmed" ta="center">
+            <Text size="sm" ta="center" className={classes.secondary}>
               {t('showing', {
                 count: ordersData.data.length,
                 total: ordersData.pagination.totalCount,
@@ -217,6 +222,8 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
         onClose={() => setIsConfirmationModalOpen(false)}
         onConfirm={() => void onConfirmRemoveOrder(selectedOrder)}
         title={t('confirmation')}
+        confirmButtonText={t('delete')}
+        destructive
       >
         <Stack align="center">
           {isRemoveLoading && <Loader isLoading={true} />}
