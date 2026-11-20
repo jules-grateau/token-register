@@ -70,8 +70,8 @@ Une PR sur laquelle tu travailles ne doit pas pouvoir être mergée par erreur.
 
 - **Nouvelle PR** : crée-la en brouillon (`gh pr create --draft`). Passe-la en « prête » (`gh pr ready <n>`) seulement quand tout est poussé : lint, tests et build verts.
 - **PR existante** : avant de modifier quoi que ce soit, vérifie qu'elle est encore ouverte (`gh pr view <n> --json state`). Si elle est mergée, travaille sur une nouvelle branche depuis `develop`. Si elle est ouverte, repasse-la en brouillon (`gh pr ready <n> --undo`), puis remets-la en « prête » une fois les corrections poussées et les réponses publiées.
-- Ne la passe jamais en « prête » tant qu'une question « ❓ Choix métier à confirmer » est ouverte.
-- Le passage en « prête » relance automatiquement la revue du tech-lead. Après une correction, c'est cette revue qui vérifie tes corrections : pour de simples suggestions 🟡, ne repasse pas la PR en brouillon, réponds sur la PR et c'est tout (sinon on tourne en boucle).
+- Ne la passe jamais en « prête » tant qu'une question « ❓ Choix métier à confirmer » est ouverte. Si la PR modifie l'interface, laisse-la aussi en brouillon jusqu'à ce que le designer ait validé les captures : la session principale la passera en « prête ».
+- Le passage en « prête » relance automatiquement la revue du tech-lead. C'est une revue complète de la PR corrigée. Ne repasse la PR en brouillon que pour des points 🔴 ou 🟠. Pour de simples suggestions 🟡, traite-les ou réponds sur la PR, sans retour en brouillon (sinon on tourne en boucle).
 
 ## Traiter une revue (tech-lead ou designer) et y répondre
 
