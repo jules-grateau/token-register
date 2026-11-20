@@ -88,6 +88,13 @@ Quand on te demande de traiter les retours d'une PR, chaque point doit recevoir 
 
 Ces messages sont publiés avec le compte GitHub de l'utilisateur : reste factuel et concis.
 
+## Numéro de version (D-002, D-027)
+
+- La version est montée **dans la PR de la feature** qui partira en prod, pas dans une PR séparée. Commande dans la section « Versioning » du README.
+- En phase 1, ajoute toujours la question : correctif (PATCH, 1.2.**1**), nouveauté (MINOR, 1.**3**.0) ou changement cassant (MAJOR) ? Donne ta recommandation. Ne choisis pas seul.
+- Avant de monter, compare avec `main` : si `develop` a déjà une version supérieure à `main` (une autre PR de la même release l'a montée), ne remonte que si ta PR change la catégorie (PATCH → MINOR, par exemple).
+- Une PR qui ne touche pas l'appli (docs, agents, workflows de revue) ne monte pas la version.
+
 ## Avant de déclarer une tâche terminée
 
 - `npm run lint`

@@ -304,7 +304,10 @@ The app version follows `MAJOR.MINOR.PATCH` (e.g. `1.2.3`). The **root `package.
 source of truth; the `api` and `client` workspaces carry the same number. It is shown in the app
 under ⚙️ > "About" (with the commit hash and a "Demo" badge on the demo instance).
 
-**Bump it by hand in every release PR (`develop` → `main`)**, from the repo root:
+**Bump it by hand in the feature PR that will be released** (D-027), from the repo root. If a
+release contains several PRs, only the first one bumps, unless a later one changes the category
+(e.g. a fix release that gets a new feature: PATCH → MINOR). PRs that don't touch the app (docs,
+agents, review workflows) don't bump. The release PR `develop` → `main` itself needs no change:
 
 ```sh
 npm version <new-version> --workspaces --include-workspace-root --no-git-tag-version --allow-same-version

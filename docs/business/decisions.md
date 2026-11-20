@@ -43,7 +43,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 
 - **Date** : 2026-11-19
 - **Confirmée par** : Jules (responsable produit), 2026-11-19
-- **Statut** : Active
+- **Statut** : Active, précisée par D-027
 - **Domaine** : Autre
 - **Contexte** : il faut décider qui monte le numéro et quand.
 - **Décision** : la version est montée à la main dans la PR `develop` → `main`, par le développeur sur demande. La CI fait échouer la PR vers `main` si la version n'est pas supérieure à celle de `main`.
@@ -315,3 +315,14 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Décision** : le récapitulatif de confirmation affiche aussi « 2 × Bière » sur chaque ligne, comme l'historique (réponse : « Oui »).
 - **Options écartées** : le laisser tel quel.
 - **Impact** : `client/src/components/CartConfirmationModal`, `client/src/components/Cart/CartItem` (`showQuantity`).
+
+### D-027 — La version est montée dans la PR de la feature
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : D-002 prévoyait de monter la version dans la PR `develop` → `main`. Comme cette PR part de `develop` et qu'on ne commite jamais directement sur `develop`, il fallait une PR de bump séparée à chaque release (#18, #21).
+- **Décision** : la version est montée **dans la PR de la feature** qui partira en prod (réponse : « Bah oui, dans la PR de la feature c'est mieux »). S'il y a plusieurs PR dans une même release, seule la première la monte, sauf si une PR suivante change la catégorie (correctif → nouveauté : PATCH → MINOR) : elle remonte alors la version. Le type de montée (PATCH / MINOR / MAJOR) est demandé au responsable produit pendant la clarification de la feature. Une PR qui ne touche pas l'appli (docs, agents, CI de revue) ne monte pas la version. La règle de D-002 est inchangée sur le reste : montée à la main, et `version-check` fait échouer la PR vers `main` si la version n'est pas supérieure à celle de `main`.
+- **Options écartées** : PR de bump séparée vers `develop` avant chaque release ; branche `release/x.y.z` puis report de `main` dans `develop` ; calcul automatique de la version par la CI.
+- **Impact** : `README.md` (section Versioning), `.claude/agents/developpeur.md`, `CLAUDE.md`. Conséquence : la démo affiche le nouveau numéro dès le merge de la feature dans `develop`, avant la mise en prod.
