@@ -45,13 +45,22 @@ const CartItem: React.FC<CartItemProps> = ({
           {name}
         </Text>
         <Stack gap={2} align="flex-end" style={{ flex: 'none' }}>
-          <Text fw={700} size="md" style={{ whiteSpace: 'nowrap' }}>
+          <Text
+            fw={700}
+            size="md"
+            style={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
+          >
             {format(calcPrice)}
           </Text>
           {item.discountedAmount > 0 && (
-            <Group gap={4} wrap="nowrap" c="teal.4" data-testid="cart-item-discount">
+            <Group gap={4} wrap="nowrap" c="var(--color-success)" data-testid="cart-item-discount">
               <IconDiscount size={16} aria-hidden />
-              <Text size="sm" fw={600} c="teal.4" style={{ whiteSpace: 'nowrap' }}>
+              <Text
+                size="sm"
+                fw={600}
+                c="var(--color-success)"
+                style={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
+              >
                 {format(-item.discountedAmount)}
               </Text>
             </Group>
@@ -65,19 +74,27 @@ const CartItem: React.FC<CartItemProps> = ({
             <Group gap="xs" wrap="nowrap">
               <ActionIcon
                 size={44}
-                variant="outline"
+                radius={14}
+                variant="light"
                 onClick={() => onQuantityChange(item, -1)}
                 disabled={item.quantity <= 0}
                 aria-label={t('minus')}
               >
                 <IconMinus size={20} />
               </ActionIcon>
-              <Text size="lg" fw={700} miw={32} ta="center">
+              <Text
+                fz={18}
+                fw={800}
+                miw={32}
+                ta="center"
+                style={{ fontVariantNumeric: 'tabular-nums' }}
+              >
                 {item.quantity}
               </Text>
               <ActionIcon
                 size={44}
-                variant="outline"
+                radius={14}
+                variant="filled"
                 onClick={() => onQuantityChange(item, 1)}
                 aria-label={t('plus')}
               >
@@ -89,15 +106,16 @@ const CartItem: React.FC<CartItemProps> = ({
           )}
 
           {(onRemove || onDiscount) && (
-            <Menu position="bottom-end" shadow="md" withArrow width={220}>
+            <Menu position="bottom-end" width={220} radius={14}>
               <Menu.Target>
                 <ActionIcon
                   variant="subtle"
                   color="gray"
                   size={44}
+                  radius={14}
                   aria-label={t('cart_item_actions')}
                 >
-                  <IconDotsVertical stroke={1.5} />
+                  <IconDotsVertical size={20} color="var(--color-text-2)" />
                 </ActionIcon>
               </Menu.Target>
               <Menu.Dropdown>
@@ -105,7 +123,7 @@ const CartItem: React.FC<CartItemProps> = ({
                   <Menu.Item
                     py="md"
                     fz="md"
-                    leftSection={<IconDiscount size={20} />}
+                    leftSection={<IconDiscount size={20} color="var(--color-success)" />}
                     onClick={() => onDiscount(item)}
                   >
                     {t('apply_discount')}

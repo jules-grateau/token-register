@@ -259,6 +259,8 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
     async (page) => {
       await closeOverlays(page);
       await page.getByRole('tabpanel').getByRole('button', { name: 'Nouveau Produit' }).click();
+      // Unfold the icon picker (D-046), so that the grid of icons is reviewed too.
+      await dialog(page).getByRole('button', { name: 'Choisir une icône' }).click();
     },
   ],
 ];

@@ -60,6 +60,7 @@ describe('ProductFormModal', () => {
         name: 'Retour Eco-cup',
         price: -1,
         categoryId: 4,
+        icon: null,
       })
     );
   });
@@ -72,8 +73,49 @@ describe('ProductFormModal', () => {
     fillAndSubmit('Bière', '2,50');
 
     await waitFor(() =>
-      expect(mockCreateProduct).toHaveBeenCalledWith({ name: 'Bière', price: 250, categoryId: 4 })
+      expect(mockCreateProduct).toHaveBeenCalledWith({
+        name: 'Bière',
+        price: 250,
+        categoryId: 4,
+        icon: null,
+      })
     );
+  });
+
+  it('has no icon by default and sends the chosen icon key (D-046)', async () => {
+    renderForm();
+    expect(screen.getByTestId('icon-picker-current')).toHaveTextContent('icon_picker.none');
+
+    fireEvent.click(screen.getByRole('button', { name: 'icon_picker.choose' }));
+    expect(screen.getByRole('button', { name: /icon_picker.none/ })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'catalog_icons.beer' }));
+    expect(screen.getByRole('button', { name: 'catalog_icons.beer' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+
+    fillAndSubmit('Bière', '3');
+
+    await waitFor(() =>
+      expect(mockCreateProduct).toHaveBeenCalledWith({
+        name: 'Bière',
+        price: 3,
+        categoryId: 4,
+        icon: 'beer',
+      })
+    );
+  });
+
+  it('offers the 29 icons of the closed list, "Aucune" first', () => {
+    renderForm();
+    fireEvent.click(screen.getByRole('button', { name: 'icon_picker.choose' }));
+    const options = screen.getAllByRole('button', { pressed: false });
+    expect(
+      options.filter((b) => /^catalog_icons\./.test(b.getAttribute('aria-label') ?? ''))
+    ).toHaveLength(29);
   });
 
   it('accepts a negative price in euros', async () => {
@@ -87,6 +129,7 @@ describe('ProductFormModal', () => {
         name: 'Retour Eco-cup',
         price: -100,
         categoryId: 4,
+        icon: null,
       })
     );
   });

@@ -3,10 +3,12 @@ import { Modal, TextInput, NumberInput, Select, Button, Group, Stack, Text } fro
 import { useForm } from '@mantine/form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import type { ProductType } from 'shared-ts';
+import type { CatalogIconKey, ProductType } from 'shared-ts';
 import { useCreateProductMutation, useUpdateProductMutation } from '../../services/product';
 import { useGetCategoriesQuery } from '../../services/categories';
 import ConfirmationModal from '../ConfirmationModal';
+import CatalogIconPicker from '../CatalogIcon/CatalogIconPicker';
+import { isCatalogIconKey } from '../../config/catalogIcons';
 import { useCurrency } from '../../hooks/useCurrency';
 import {
   fromStoredAmount,
@@ -28,7 +30,12 @@ interface ProductFormValues {
   /** Typed value (1.5 for 1,50 EUR), converted to the stored amount on submit. */
   price: number | string;
   categoryId: number | null;
+  /** D-046: optional, "Aucune" (null) by default. */
+  icon: CatalogIconKey | null;
 }
+
+const iconOf = (product?: ProductType | null): CatalogIconKey | null =>
+  isCatalogIconKey(product?.icon) ? product.icon : null;
 
 export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   isOpen,
@@ -53,6 +60,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       name: product?.name || '',
       price: product ? fromStoredAmount(product.price, currency) : 0,
       categoryId: product?.categoryId || defaultCategoryId || null,
+      icon: iconOf(product),
     },
     validate: {
       name: (value) => (value.trim() ? null : t('errors.required')),
@@ -75,12 +83,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         name: product.name,
         price: fromStoredAmount(product.price, currency),
         categoryId: product.categoryId,
+        icon: iconOf(product),
       });
     } else if (isOpen && !product) {
       form.setValues({
         name: '',
         price: 0,
         categoryId: defaultCategoryId || null,
+        icon: null,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -107,6 +117,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         name: values.name,
         price: toStoredAmount(parseAmountInput(values.price), currency),
         categoryId: values.categoryId!,
+        icon: values.icon,
       }).unwrap();
       toast.success(t('product_management.created'));
       form.reset();
@@ -134,6 +145,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         name: formValuesForConfirmation.name,
         price: toStoredAmount(parseAmountInput(formValuesForConfirmation.price), currency),
         categoryId: formValuesForConfirmation.categoryId!,
+        icon: formValuesForConfirmation.icon,
       }).unwrap();
       toast.success(t('product_management.updated'));
       setShowConfirmation(false);
@@ -176,6 +188,12 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               placeholder={t('product_management.form.name')}
               required
               {...form.getInputProps('name')}
+            />
+            <CatalogIconPicker
+              value={form.values.icon}
+              onChange={(icon) => form.setFieldValue('icon', icon)}
+              previewName={form.values.name}
+              isDeposit={parseAmountInput(form.values.price) < 0}
             />
             <NumberInput
               label={t('product_management.form.price', {

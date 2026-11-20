@@ -515,7 +515,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 
 - **Date** : 2026-11-20
 - **Confirmée par** : Jules (responsable produit), 2026-11-20
-- **Statut** : Active (à implémenter à l'étape 2 de la refonte)
+- **Statut** : Active, précisée par D-046
 - **Domaine** : Catalogue
 - **Contexte** : la charte prévoit une pastille sur chaque carte produit ; il fallait choisir ce qu'elle contient.
 - **Décision** : chaque produit a sa propre icône (réponse : « Une icône par produit »). La liste des icônes, l'icône par défaut et la façon de la choisir seront clarifiées à l'étape 2.
@@ -526,9 +526,42 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 
 - **Date** : 2026-11-20
 - **Confirmée par** : Jules (responsable produit), 2026-11-20
-- **Statut** : Active (à implémenter à l'étape 2 de la refonte)
+- **Statut** : Active, précisée par D-048
 - **Domaine** : Catalogue
 - **Contexte** : la charte propose d'afficher sur la carte produit combien d'exemplaires sont déjà dans le panier.
 - **Décision** : un badge affiche sur la carte du produit la quantité déjà dans le panier (réponse : « Oui »).
 - **Options écartées** : pas de badge.
 - **Impact** : étape 2 de la refonte (carte produit).
+
+### D-046 — Icônes produit : facultatives, initiale par défaut, liste fermée
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active (précise D-044)
+- **Domaine** : Catalogue
+- **Contexte** : D-044 donne une icône à chaque produit, sans dire ce qu'affiche un produit qui n'en a pas (poule, atakora, nouveaux produits), si elle est obligatoire, ce que devient une consigne ni d'où viennent les icônes.
+- **Décision** : un produit sans icône affiche son **initiale** (réponse : « Son initiale ») ; rien n'est écrit en base (`NULL`), aucune icône n'est attribuée aux produits existants. L'icône est **facultative** (réponse : « Non, facultatif ») : « Aucune » est présélectionnée dans le formulaire. Une consigne (prix négatif) garde l'icône choisie, et prend l'icône recyclage si aucune n'est choisie (réponse : « Celle choisie, recyclage par défaut »). Les icônes viennent d'une **liste fermée** de 29 clés (`docs/design/icons.md`, réponse : « Oui, ça suffit ») ; l'API refuse toute autre valeur.
+- **Options écartées** : icône générique par défaut ; icône devinée d'après le nom lors de la migration ; icône obligatoire ; consigne toujours en recyclage ; icônes sur mesure (crêpe, frites, chips).
+- **Impact** : `products.icon` (migration `api/src/db/catalogIcons.ts`), `api/src/utils/catalogIcons.ts`, `shared-ts` (`CatalogIconKey`), `client/src/config/catalogIcons.ts`, `client/src/components/CatalogIcon`, `ProductCard`, `ProductFormModal`, `docs/design/icons.md`, `MIGRATIONS.md`.
+
+### D-047 — Icône facultative par catégorie, dans son onglet
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Catalogue
+- **Contexte** : avec une icône par produit (D-044, D-046), la question se posait d'en donner une aussi aux catégories.
+- **Décision** : une catégorie peut avoir une icône (réponse : « Oui »), **facultative**, prise dans la même liste fermée que les produits, affichée **dans son onglet** avant le nom. Une catégorie sans icône n'affiche que son nom (pas d'initiale).
+- **Options écartées** : pas d'icône de catégorie.
+- **Impact** : `categories.icon` (même migration que D-046), `api/src/controllers/category.controller.ts`, `api/src/services/category.service.ts`, `client/src/components/Catalog`, `CategoryFormModal`, `docs/design/components.md`.
+
+### D-048 — Badge de quantité : toute la quantité de la ligne, remise comprise
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active (précise D-045)
+- **Domaine** : Catalogue
+- **Contexte** : D-045 ajoute un badge de quantité sur la carte produit ; le panier n'a qu'une ligne par produit, remise comprise, et il fallait dire ce que le badge compte.
+- **Décision** : le badge affiche la quantité totale de la ligne du produit dans le panier, **remise comprise** (réponse : « Oui, toute la quantité »). Il est masqué en mode édition.
+- **Options écartées** : exclure les articles remisés.
+- **Impact** : `client/src/components/Catalog/ProductList`, `ProductCard`, `docs/design/components.md`.

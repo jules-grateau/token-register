@@ -51,8 +51,8 @@
   /* Touch targets and layout (docs/design/spacing-layout.md) */
   --touch-min: 44px;
   --touch-comfort: 56px;
-  /* Collapsed cart bar: 80 in the new charter, applied with the sale screen (step 2). */
-  --cart-bar-height: 72px;
+  /* Collapsed cart bar (docs/design/components.md, "Barre repliée"). */
+  --cart-bar-height: 80px;
 }
 
 [data-mantine-color-scheme='dark'] {

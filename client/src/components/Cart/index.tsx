@@ -11,6 +11,7 @@ import {
   Divider,
   Drawer,
   UnstyledButton,
+  type ButtonProps,
 } from '@mantine/core';
 import CartItem from './CartItem';
 import { useCurrency } from '../../hooks/useCurrency';
@@ -26,7 +27,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import type { CartItemType } from 'shared-ts';
 import DiscountModal, { type DiscountDetails } from '../DiscountModal';
-import { IconChevronUp, IconHistory, IconTrash } from '@tabler/icons-react';
+import { IconArrowRight, IconChevronUp, IconHistory, IconTrash } from '@tabler/icons-react';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { useClearCartWithUndo } from '../../hooks/useClearCartWithUndo';
 import classes from './Cart.module.css';
@@ -39,7 +40,7 @@ interface CartProps {
   onDrawerOpenChange?: (open: boolean) => void;
 }
 
-const BORDER = '1px solid var(--mantine-color-default-border)';
+const BORDER = '1px solid var(--color-border)';
 
 // docs/design/components.md, "Panier". Layout per mode: docs/design/spacing-layout.md.
 const Cart: React.FC<CartProps> = ({
@@ -89,22 +90,44 @@ const Cart: React.FC<CartProps> = ({
 
   const itemsLabel = `${totalItems} ${t('items', { count: totalItems })}`;
 
-  const clearButton = (size: number) => (
+  // On the ink bar (phone landscape), the danger icon is not allowed: --color-on-bar.
+  const clearButton = (size: number, onBar = false) => (
     <ActionIcon
       variant="subtle"
-      color="red"
+      color={onBar ? 'gray' : 'red'}
       size={size}
+      radius={14}
       onClick={clearCartWithUndo}
       disabled={isEmpty}
       aria-label={t('clear_cart')}
+      className={onBar ? classes.onBar : undefined}
     >
-      <IconTrash size={24} color={isEmpty ? undefined : 'var(--mantine-color-red-6)'} />
+      <IconTrash
+        size={24}
+        color={isEmpty ? undefined : onBar ? 'var(--color-on-bar)' : 'var(--color-danger)'}
+      />
     </ActionIcon>
+  );
+
+  // "Valider": mustard, ink text, 18 / 800, arrow on the right of the text.
+  const checkoutButton = (props: ButtonProps & { style?: React.CSSProperties }) => (
+    <Button
+      onClick={onValidateCart}
+      disabled={isEmpty}
+      radius={18}
+      fz={18}
+      fw={800}
+      rightSection={<IconArrowRight size={22} aria-hidden />}
+      className={classes.checkout}
+      {...props}
+    >
+      {t('checkout')}
+    </Button>
   );
 
   const lines = isEmpty ? (
     <Center style={{ flex: 1 }} m={0} p="md">
-      <Text size="md" style={{ fontStyle: 'italic' }}>
+      <Text size="md" c="var(--color-text-2)">
         {t('your_cart_is_empty')}
       </Text>
     </Center>
@@ -129,10 +152,10 @@ const Cart: React.FC<CartProps> = ({
   const standardFooter = !isEmpty && (
     <Stack gap="sm" p="md" style={{ borderTop: BORDER, flex: 'none' }}>
       <Group justify="space-between">
-        <Text size="md" c="dimmed">
+        <Text size="md" c="var(--color-text-2)">
           {t('total_items')}
         </Text>
-        <Text fw={500} size="md" data-testid="cart-total-item">
+        <Text fw={600} size="md" data-testid="cart-total-item">
           {totalItems}
         </Text>
       </Group>
@@ -140,13 +163,11 @@ const Cart: React.FC<CartProps> = ({
         <Text fz={24} fw={800}>
           {t('total')}
         </Text>
-        <Text fz={24} fw={800} data-testid="item-total-price" style={{ whiteSpace: 'nowrap' }}>
+        <Text fz={24} fw={800} data-testid="item-total-price" className={classes.amount}>
           {format(totalPrice)}
         </Text>
       </Group>
-      <Button onClick={onValidateCart} fullWidth size="lg">
-        {t('checkout')}
-      </Button>
+      {checkoutButton({ fullWidth: true, h: 56 })}
     </Stack>
   );
 
@@ -163,37 +184,41 @@ const Cart: React.FC<CartProps> = ({
     const openDrawer = () => onDrawerOpenChange?.(true);
     return (
       <>
+        {/* Ink bar in the page flow, never fixed over the grid (docs/design, "Barre repliée"). */}
         <Paper
           radius={0}
-          shadow="md"
           px="md"
           w="100%"
           h="calc(var(--cart-bar-height) + env(safe-area-inset-bottom))"
-          style={{ borderTop: BORDER, flex: 'none', paddingBottom: 'env(safe-area-inset-bottom)' }}
+          className={classes.bar}
+          style={{ flex: 'none', paddingBottom: 'env(safe-area-inset-bottom)' }}
           data-testid="cart-bar"
         >
           <Group wrap="nowrap" h="100%" gap="sm">
             <UnstyledButton
               onClick={openDrawer}
               aria-label={t('view_cart')}
+              className={classes.onBar}
               style={{ flex: 1, minWidth: 0 }}
               h="100%"
             >
               {isEmpty ? (
-                <Text size="md" c="dimmed">
+                <Text size="md" c="var(--color-on-bar-2)">
                   {t('cart_empty_short')}
                 </Text>
               ) : (
                 <Stack gap={0}>
-                  <Text size="md" c="dimmed">
+                  <Text size="md" c="var(--color-on-bar-2)">
                     {itemsLabel}
                   </Text>
                   <Text
                     key={pulseKey}
-                    className={pulseKey > 0 ? classes.pulse : undefined}
-                    fz={20}
+                    className={pulseKey > 0 ? `${classes.amount} ${classes.pulse}` : classes.amount}
+                    fz={26}
                     fw={800}
-                    style={{ whiteSpace: 'nowrap', transformOrigin: 'left center' }}
+                    lh={1.2}
+                    c="var(--color-on-bar)"
+                    style={{ transformOrigin: 'left center' }}
                     data-testid="cart-bar-total"
                   >
                     {format(totalPrice)}
@@ -201,12 +226,18 @@ const Cart: React.FC<CartProps> = ({
                 </Stack>
               )}
             </UnstyledButton>
-            <ActionIcon variant="subtle" size={44} onClick={openDrawer} aria-label={t('view_cart')}>
-              <IconChevronUp size={24} />
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size={44}
+              radius={14}
+              onClick={openDrawer}
+              aria-label={t('view_cart')}
+              className={classes.onBar}
+            >
+              <IconChevronUp size={24} color="var(--color-on-bar)" />
             </ActionIcon>
-            <Button size="lg" onClick={onValidateCart} disabled={isEmpty}>
-              {t('checkout')}
-            </Button>
+            {checkoutButton({ h: 56, style: { flex: 'none' } })}
           </Group>
         </Paper>
 
@@ -219,8 +250,9 @@ const Cart: React.FC<CartProps> = ({
           styles={{ content: { display: 'flex', flexDirection: 'column', overflow: 'hidden' } }}
         >
           <Drawer.Overlay />
-          <Drawer.Content radius="md">
-            <Drawer.Header style={{ borderBottom: BORDER }} py="xs">
+          <Drawer.Content radius="lg">
+            <div className={classes.handle} aria-hidden />
+            <Drawer.Header style={{ borderBottom: BORDER }} pt={4} pb="xs">
               <Drawer.Title fz={18} fw={700}>
                 {t('cart')}
               </Drawer.Title>
@@ -253,19 +285,31 @@ const Cart: React.FC<CartProps> = ({
         style={{ borderLeft: BORDER, flexDirection: 'column', minHeight: 0 }}
       >
         {lines}
-        <Group wrap="nowrap" gap="xs" p="xs" mih={60} style={{ borderTop: BORDER, flex: 'none' }}>
-          {clearButton(44)}
+        {/* Compact footer: one 60 px ink row, like the phone portrait bar. */}
+        <Group
+          wrap="nowrap"
+          gap="xs"
+          p="xs"
+          mih={60}
+          className={classes.bar}
+          style={{ flex: 'none' }}
+        >
+          {clearButton(44, true)}
           <Stack gap={0} style={{ flex: 'none' }}>
-            <Text size="md" c="dimmed" data-testid="cart-total-item">
+            <Text size="md" c="var(--color-on-bar-2)" data-testid="cart-total-item">
               {itemsLabel}
             </Text>
-            <Text fz={20} fw={800} data-testid="item-total-price" style={{ whiteSpace: 'nowrap' }}>
+            <Text
+              fz={20}
+              fw={800}
+              c="var(--color-on-bar)"
+              data-testid="item-total-price"
+              className={classes.amount}
+            >
               {format(totalPrice)}
             </Text>
           </Stack>
-          <Button h={44} miw={110} style={{ flex: 1 }} onClick={onValidateCart} disabled={isEmpty}>
-            {t('checkout')}
-          </Button>
+          {checkoutButton({ h: 44, miw: 110, style: { flex: 1 } })}
         </Group>
         {discountModal}
       </Paper>
@@ -279,10 +323,17 @@ const Cart: React.FC<CartProps> = ({
       p={0}
       display="flex"
       flex={1}
-      style={{ border: BORDER, flexDirection: 'column', minHeight: 0 }}
+      style={{ borderLeft: BORDER, flexDirection: 'column', minHeight: 0 }}
     >
       <Group justify="flex-end" p={4} gap="xs" style={{ borderBottom: BORDER, flex: 'none' }}>
-        <ActionIcon variant="subtle" size={48} onClick={onClickHistory} aria-label={t('history')}>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size={48}
+          radius={14}
+          onClick={onClickHistory}
+          aria-label={t('history')}
+        >
           <IconHistory stroke={1.5} size={28} />
         </ActionIcon>
         {clearButton(48)}
