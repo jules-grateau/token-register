@@ -12,7 +12,7 @@
   background-color: var(--color-surface-2);
 }
 
-/* Selected: mustard + ink, 800: the weight and the fill carry the state, not the color alone. */
+/* Selected: ink fill + white text, 800: the weight and the fill carry the state, not the color alone. */
 .pill.pill[data-active] {
   background-color: var(--color-primary);
   border-color: var(--color-primary);
@@ -20,10 +20,15 @@
   font-weight: 800;
 }
 
-/* Column (tablet >= 768, desktop): background column, rounded lines, no side indicator. */
+/*
+ * Column (tablet >= 768, desktop, D-051): surface column, straight lines stuck together, 1 px
+ * border under each line (the last one too) and on the right. Selected line: surface 2, 3 px
+ * ink accent on the left, text 800.
+ */
 .columnList.columnList {
-  background-color: var(--color-bg);
-  padding: var(--mantine-spacing-sm);
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  padding: 0;
 }
 
 .columnList.columnList::before {
@@ -32,11 +37,29 @@
 
 .columnTab.columnTab {
   border: none;
-  border-radius: var(--radius-control);
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
   padding: 0;
   overflow: hidden;
+  color: var(--color-text);
 }
 
 .columnTab.columnTab:hover {
+  background-color: var(--color-bg);
+}
+
+.columnTab.columnTab:active,
+.columnTab.columnTab[data-active] {
   background-color: var(--color-surface-2);
+}
+
+.columnTab.columnTab[data-active] {
+  border-bottom-color: var(--color-border);
+  box-shadow: inset 3px 0 0 var(--color-primary);
+}
+
+.columnTab.columnTab:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+  border-radius: 0;
 }

@@ -1,8 +1,8 @@
 # Couleurs — Caisse Claire
 
-Deux couleurs : **moutarde** (l'action) et **encre** (le texte, la barre panier, les repères forts). Le succès et le danger sont fonctionnels. Schémas **clair** et **sombre**, au choix de l'utilisateur (`colorScheme`, voir « Bascule de thème » dans [components.md](components.md#bascule-clairsombre--menu-réglages)). Les ratios ci-dessous sont calculés (WCAG 2.x) ; le script de contraste du dépôt fait foi.
+Palette **« Graphite + olive »** (D-051, remplace la moutarde de D-039) : des neutres graphite, une **encre** pour l'action, le texte, la barre panier et les repères forts, et l'**olive en touches** seulement (pastilles-icônes et logo). Le succès et le danger sont fonctionnels. Schémas **clair** et **sombre**, au choix de l'utilisateur (`colorScheme`, voir « Bascule de thème » dans [components.md](components.md#bascule-clairsombre--menu-réglages)). Les ratios ci-dessous sont calculés (WCAG 2.x) ; le script de contraste du dépôt fait foi.
 
-> **Règle d'or** : en clair, la moutarde est un **fond** (texte encre dessus), jamais un texte ni un trait seul (2.1:1 sur blanc). En sombre, elle peut être texte, icône, trait ou fond.
+> **Règle d'or** : l'olive ne sert **qu'aux pastilles-icônes produit et au logo**, via leurs tokens dédiés (`--color-icon-tile`, `--color-tile-icon`, `--color-logo`, `--color-logo-glyph`). Jamais pour un bouton, un état, un texte ou une sélection. L'olive-tint est proche de `--color-success-tint` : ne pas les mélanger.
 
 ## Tokens
 
@@ -10,27 +10,33 @@ Variables CSS dans `client/src/styles/variables.css` : `:root` (clair) et `[data
 
 | Rôle | Variable | Clair | Sombre | Usage |
 | --- | --- | --- | --- | --- |
-| Fond | `--color-bg` | `#FBF5E6` | `#16130C` | `body`, zone catalogue |
-| Surface | `--color-surface` | `#FFFFFF` | `#211C12` | cartes, en-tête, modales, Drawer |
-| Surface 2 | `--color-surface-2` | `#F4ECD6` | `#2A2418` | survol / appui, bloc de rendu, champ de saisie |
-| Texte | `--color-text` | `#1F1A0F` | `#F6EFDC` | tout le texte courant, l'« encre » |
-| Texte 2 | `--color-text-2` | `#5E5644` | `#B7AD93` | `dimmed` : « Articles », date, libellés annexes |
-| Bordure | `--color-border` | `#EADFC4` | `#3A3220` | séparateurs, contours de carte (décoratif) |
-| Bordure forte | `--color-border-strong` | `#8A7F66` | `#7C7358` | contours **utiles** : carte « Nouveau produit » en pointillés, icônes sans fond |
-| **Primaire (moutarde)** | `--color-primary` | `#E2A831` | `#F0B93A` | « Valider », onglet sélectionné, « Terminer », logo |
-| Sur primaire | `--color-on-primary` | `#1F1A0F` | `#1F1A0F` | texte et icônes sur moutarde (toujours encre) |
-| Teinte moutarde | `--color-primary-tint` | `#F6E2A8` | `#3A2F12` | pastille-icône, bouton `−` de quantité, état « À rendre » |
-| Barre (encre) | `--color-bar` | `#1F1A0F` | `#0E0C07` | barre panier repliée (portrait), pied de panier compact |
-| Sur barre | `--color-on-bar` | `#FBF5E6` | `#F6EFDC` | total, texte dans la barre |
-| Sur barre 2 | `--color-on-bar-2` | `#D9CFB4` | `#B7AD93` | « N articles » dans la barre |
+| Fond | `--color-bg` | `#F5F4F1` | `#141413` | `body`, zone catalogue, survol d'une ligne de la colonne |
+| Surface | `--color-surface` | `#FFFFFF` | `#1E1D1B` | cartes, en-tête, modales, Drawer, colonne des catégories |
+| Surface 2 | `--color-surface-2` | `#ECEAE5` | `#282725` | survol / appui, ligne choisie de la colonne, bloc de rendu, champ de saisie |
+| Texte | `--color-text` | `#1C1B19` | `#F2EFE8` | tout le texte courant |
+| Texte 2 | `--color-text-2` | `#57534E` | `#B3AFA6` | `dimmed` : « Articles », date, libellés annexes |
+| Bordure | `--color-border` | `#DDDAD3` | `#3A3834` | séparateurs, filets de la colonne, contours de carte (décoratif) |
+| Bordure forte | `--color-border-strong` | `#85817A` | `#7A766E` | contours **utiles** : carte « Nouveau produit » en pointillés, icônes sans fond |
+| **Primaire (encre)** | `--color-primary` | `#26241F` | `#F2EFE8` | « Valider » (desktop, tablette, Drawer), pilule choisie, liseré de la ligne choisie, badge de quantité, contour « dans le panier », « Terminer » |
+| Sur primaire | `--color-on-primary` | `#FFFFFF` | `#1C1B19` | texte et icônes sur primaire |
+| Teinte primaire | `--color-primary-tint` | `#E7E4DC` | `#2E2D2A` | **neutre** : état « À rendre », bouton `−` de quantité, option choisie du sélecteur d'icône, variante `light` de Mantine |
+| Primaire sur barre | `--color-primary-on-bar` | `#F5F4F1` | `#F2EFE8` | « Valider » dans la barre panier (téléphone) : l'encre ne se verrait pas sur la barre |
+| Sur primaire sur barre | `--color-on-primary-on-bar` | `#1C1B19` | `#1C1B19` | texte de ce « Valider » |
+| Barre (encre) | `--color-bar` | `#1C1B19` | `#0C0C0B` | barre panier repliée (portrait), pied de panier compact |
+| Sur barre | `--color-on-bar` | `#F5F4F1` | `#F2EFE8` | total, texte dans la barre |
+| Sur barre 2 | `--color-on-bar-2` | `#CFCCC4` | `#B3AFA6` | « N articles » dans la barre, survol de « Valider » sur la barre |
 | Succès | `--color-success` | `#166534` | `#4ADE80` | remise (avec `IconDiscount`), « Rien à rendre » |
 | Teinte succès | `--color-success-tint` | `#DDF3E2` | `#17301F` | fond de badge de succès |
 | Danger | `--color-danger` | `#B91C1C` | `#F87171` | supprimer, vider, prix négatif (consigne), « Il manque » |
 | Teinte danger | `--color-danger-tint` | `#FBE4E4` | `#3A2022` | pastille de la consigne, bouton « Supprimer » (historique) |
-| Info (neutre) | `--color-info-bg` / `--color-info-text` | `#1F1A0F` / `#FBF5E6` | `#F6EFDC` / `#16130C` | toasts d'information (« Panier vidé »). **Pas de bleu** : l'info est l'encre inversée |
-| Icône d'accent | `--color-icon-accent` | `#1F1A0F` | `#F0B93A` | icône « Modifier », `IconCoins` du rendu : encre en clair, moutarde en sombre |
-| Focus | `--color-focus` | `#1F1A0F` | `#F0B93A` | anneau de focus 2 px + `outline-offset: 2px` |
-| Focus sur barre | `--color-focus-on-bar` | `#FBF5E6` | `#F0B93A` | anneau dans la barre panier (encre sur encre invisible) |
+| Info (neutre) | `--color-info-bg` / `--color-info-text` | `#1C1B19` / `#F5F4F1` | `#F2EFE8` / `#141413` | toasts d'information (« Panier vidé »). **Pas de bleu** : l'info est l'encre inversée |
+| Icône d'accent | `--color-icon-accent` | `#26241F` | `#F2EFE8` | encre : icônes « Modifier », « Ajouter », `IconCoins` du rendu |
+| **Pastille (olive)** | `--color-icon-tile` | `#EBEFC6` | `#2B3012` | fond des pastilles-icônes produit et des options du sélecteur d'icône |
+| Icône de pastille (olive) | `--color-tile-icon` | `#5C7316` | `#B5CC55` | icône et initiale dans la pastille |
+| **Logo (olive)** | `--color-logo` | `#5C7316` | `#B5CC55` | carré du logo |
+| Glyphe du logo | `--color-logo-glyph` | `#FFFFFF` | `#1C1B19` | ticket du logo |
+| Focus | `--color-focus` | `#1C1B19` | `#F2EFE8` | anneau de focus 2 px + `outline-offset: 2px` |
+| Focus sur barre | `--color-focus-on-bar` | `#F5F4F1` | `#F2EFE8` | anneau dans la barre panier (encre sur encre invisible) |
 
 Toasts (react-toastify, branchés via `--toastify-*`) :
 
@@ -38,9 +44,9 @@ Toasts (react-toastify, branchés via `--toastify-*`) :
 | --- | --- | --- | --- |
 | Succès `--color-success-bg` / `-text` | `#166534` / `#4ADE80` | `#FFFFFF` / `#0B2A17` | 7.1 / 8.7 |
 | Erreur `--color-danger-bg` / `-text` | `#B91C1C` / `#F87171` | `#FFFFFF` / `#3A0B0B` | 6.5 / 6.2 |
-| Info `--color-info-bg` / `-text` | `#1F1A0F` / `#F6EFDC` | `#FBF5E6` / `#16130C` | 15.9 / 15.1 |
+| Info `--color-info-bg` / `-text` | `#1C1B19` / `#F2EFE8` | `#F5F4F1` / `#141413` | 15.6 / 16.1 |
 
-Les anciennes variables `--color-primary-*` / `--color-secondary-*` (palette Google) sont **supprimées** : `ErrorBoundary` passe sur les tokens ci-dessus.
+L'overlay des modales et les ombres utilisent l'encre `rgba(28, 27, 25, …)`.
 
 ## Contrastes attendus
 
@@ -48,100 +54,76 @@ Texte ≥ 4.5:1 ; icônes, bordures utiles, anneau de focus ≥ 3:1.
 
 | Paire | Clair | Sombre | Exigence |
 | --- | --- | --- | --- |
-| `text` sur `bg` | 15.9 | 16.2 | 4.5 |
-| `text` sur `surface` | 17.3 | 14.8 | 4.5 |
-| `text` sur `surface-2` | 14.7 | 13.7 | 4.5 |
-| `text-2` sur `bg` | 6.7 | 8.3 | 4.5 |
-| `text-2` sur `surface` | 7.3 | 7.6 | 4.5 |
-| `text-2` sur `surface-2` | 6.2 | 6.9 | 4.5 |
-| `on-primary` (encre) sur `primary` | 8.1 | 9.7 | 4.5 |
-| `text` sur `primary-tint` | 13.5 | 11.6 (crème) | 4.5 |
-| `primary` sur `primary-tint` (icône, sombre) | n/a (clair : icône encre) | 7.3 | 3 |
-| `primary` sur `surface` / `bg` (sombre : texte, trait) | **interdit** (2.1) | 9.5 / 10.3 | 3 / 4.5 |
-| `on-bar` sur `bar` | 15.9 | 17 | 4.5 |
-| `on-bar-2` sur `bar` | 11.2 | 8 | 4.5 |
-| `primary` (bouton « Valider ») sur `bar` | 8.1 | 10.8 | 3 |
-| `success` sur `surface` / `surface-2` | 7.1 / 6.1 | 9.7 / 8.8 | 4.5 |
-| `danger` sur `surface` / `surface-2` | 6.5 / 5.5 | 6.1 / 5.6 | 4.5 |
-| `danger` sur `danger-tint` | 5.2 | 5.4 | 4.5 |
-| `border-strong` sur `surface` / `bg` / `surface-2` | 4.0 / 3.6 / 3.4 | 3.6 / 3.9 / 3.3 | 3 |
-| `focus` sur `bg` / `surface` | 15.9 / 17.3 | 10.3 / 9.5 | 3 |
+| `text` sur `bg` | 15.6 | 16.1 | 4.5 |
+| `text` sur `surface` | 17.2 | 14.7 | 4.5 |
+| `text` sur `surface-2` | 14.3 | 13.0 | 4.5 |
+| `text-2` sur `bg` | 6.9 | 8.4 | 4.5 |
+| `text-2` sur `surface` | 7.6 | 7.7 | 4.5 |
+| `text-2` sur `surface-2` | 6.3 | 6.8 | 4.5 |
+| `on-primary` sur `primary` | 15.5 | 15.0 | 4.5 |
+| `text` sur `primary-tint` | 13.5 | 12.0 | 4.5 |
+| `primary` (liseré) sur `surface-2` | 12.9 | 13.0 | 3 |
+| `on-bar` sur `bar` | 15.6 | 17.0 | 4.5 |
+| `on-bar-2` sur `bar` | 10.7 | 8.9 | 4.5 |
+| `primary-on-bar` (« Valider ») sur `bar` | 15.6 | 17.0 | 3 |
+| `on-primary-on-bar` sur `primary-on-bar` | 15.6 | 15.0 | 4.5 |
+| `tile-icon` sur `icon-tile` (olive) | 4.5 | 7.6 | 3 (initiale : 4.5, 22 / 800) |
+| `tile-icon` sur `primary-tint` (option choisie du sélecteur) | 4.2 | 7.7 | 3 |
+| `logo-glyph` sur `logo` | 5.4 | 9.6 | 3 |
+| `logo` sur `bg` / `surface` | 4.9 / 5.4 | 10.3 / 9.4 | 3 |
+| `success` sur `surface` / `surface-2` | 7.1 / 5.9 | 9.7 / 8.6 | 4.5 |
+| `danger` sur `surface` / `surface-2` | 6.5 / 5.4 | 6.1 / 5.4 | 4.5 |
+| `danger` sur `danger-tint` | 5.3 | 5.4 | 4.5 |
+| `border-strong` sur `surface` / `bg` / `surface-2` | 3.9 / 3.5 / 3.2 | 3.7 / 4.1 / 3.3 | 3 |
+| `focus` sur `bg` / `surface` / `surface-2` | 15.6 / 17.2 / 14.3 | 16.1 / 14.7 / 13.0 | 3 |
 
-`--color-border` (`#EADFC4` / `#3A3220`) est **décoratif** (< 3:1) : il ne doit jamais être la seule marque d'un élément interactif sans libellé. Un bouton avec texte, une carte avec nom et prix n'ont pas besoin d'un contour à 3:1.
+`--color-border` (`#DDDAD3` / `#3A3834`, 1.4:1) est **décoratif** : il ne doit jamais être la seule marque d'un élément interactif sans libellé. Un bouton avec texte, une carte avec nom et prix n'ont pas besoin d'un contour à 3:1.
 
 ## Mapping Mantine (`client/src/App.tsx`)
 
-### Palette `moutarde` (10 nuances)
+### Palette `encre` (10 nuances)
 
 | Index | Hex | Rôle |
 | --- | --- | --- |
-| 0 | `#FDF7E4` | fond très clair |
-| 1 | `#F9EBC0` | état « À rendre » (clair) |
-| 2 | `#F6E2A8` | `--color-primary-tint` (clair) |
-| 3 | `#F2D27C` | survol des fonds teintés |
-| 4 | `#F0B93A` | **primaire sombre** |
-| 5 | `#E2A831` | **primaire clair** |
-| 6 | `#C48F1F` | appui (clair) |
-| 7 | `#9C7016` | |
-| 8 | `#6F500F` | |
-| 9 | `#3A2F12` | `--color-primary-tint` (sombre) |
+| 0 | `#F7F6F3` | fond très clair |
+| 1 | `#F2EFE8` | **primaire sombre** |
+| 2 | `#E7E4DC` | `--color-primary-tint` (clair) ; survol du primaire en sombre |
+| 3 | `#CFCCC4` | |
+| 4 | `#A8A49C` | |
+| 5 | `#85817A` | |
+| 6 | `#57534E` | |
+| 7 | `#3A3834` | |
+| 8 | `#26241F` | **primaire clair** |
+| 9 | `#1C1B19` | survol du primaire en clair |
 
-Trick : `primaryShade: { light: 5, dark: 4 }` donne `#E2A831` en clair et `#F0B93A` en sombre. La même astuce vaut pour `red` et `green` (danger et succès aux index 5 en clair / 4 en sombre) : `color="red"` donne ainsi `#B91C1C` en clair et `#F87171` en sombre.
+`primaryShade: { light: 8, dark: 1 }` donne `#26241F` en clair et `#F2EFE8` en sombre. `red` et `green` gardent leurs index 5 en clair / 4 en sombre via `color="red"` / `color="green"`.
 
 ```ts
-const moutarde: MantineColorsTuple = ['#FDF7E4','#F9EBC0','#F6E2A8','#F2D27C','#F0B93A','#E2A831','#C48F1F','#9C7016','#6F500F','#3A2F12'];
-const red: MantineColorsTuple    = ['#FEF2F2','#FBE4E4','#FBCACA','#F9A8A8','#F87171','#B91C1C','#991B1B','#7F1D1D','#5F1515','#3A0B0B'];
-const green: MantineColorsTuple  = ['#F0FDF4','#DDF3E2','#BBE8C8','#8FD9A8','#4ADE80','#166534','#14532D','#0F3D22','#0B2A17','#071A0E'];
-// Neutres sombres chauds : index 0 = texte, 1 = texte 2, 4 = bordure, 5 = surface 2, 6 = surface, 7 = fond, 8 = barre
-const dark: MantineColorsTuple   = ['#F6EFDC','#B7AD93','#7C7358','#5A523F','#3A3220','#2A2418','#211C12','#16130C','#0E0C07','#0A0905'];
+const encre: MantineColorsTuple = ['#F7F6F3','#F2EFE8','#E7E4DC','#CFCCC4','#A8A49C','#85817A','#57534E','#3A3834','#26241F','#1C1B19'];
+// Neutres sombres graphite : 0 texte, 1 texte 2, 2 bordure forte, 4 bordure, 5 surface 2, 6 surface, 7 fond, 8 barre
+const dark: MantineColorsTuple  = ['#F2EFE8','#B3AFA6','#7A766E','#5A5751','#3A3834','#282725','#1E1D1B','#141413','#0C0C0B','#080807'];
 
 const theme = createTheme({
-  primaryColor: 'moutarde',
-  primaryShade: { light: 5, dark: 4 },
-  colors: { moutarde, red, green, dark },
-  black: '#1F1A0F',            // texte sur moutarde (autoContrast)
-  white: '#FFFFFF',
-  autoContrast: true,          // texte encre sur moutarde, blanc sur danger / succès clair
-  fontFamily: 'Manrope, system-ui, sans-serif',
-  headings: { fontFamily: 'Manrope, system-ui, sans-serif', fontWeight: '800' },
-  defaultRadius: 'md',
-  radius: { xs: '8px', sm: '12px', md: '14px', lg: '20px', xl: '999px' },
+  primaryColor: 'encre',
+  primaryShade: { light: 8, dark: 1 },
+  colors: { encre, red, green, dark },
+  black: '#1C1B19',   // texte sur le primaire clair du schéma sombre (autoContrast)
+  white: '#FFFFFF',   // texte sur le primaire encre du schéma clair (autoContrast)
+  autoContrast: true,
+  // ...
 });
-
-const cssVariablesResolver: CSSVariablesResolver = () => ({
-  variables: {},
-  light: {
-    '--mantine-color-body': '#FBF5E6',
-    '--mantine-color-text': '#1F1A0F',
-    '--mantine-color-dimmed': '#5E5644',
-    '--mantine-color-default': '#FFFFFF',
-    '--mantine-color-default-hover': '#F4ECD6',
-    '--mantine-color-default-color': '#1F1A0F',
-    '--mantine-color-default-border': '#EADFC4',
-  },
-  dark: {
-    '--mantine-color-body': '#16130C',
-    '--mantine-color-text': '#F6EFDC',
-    '--mantine-color-dimmed': '#B7AD93',
-    '--mantine-color-default': '#211C12',
-    '--mantine-color-default-hover': '#2A2418',
-    '--mantine-color-default-color': '#F6EFDC',
-    '--mantine-color-default-border': '#3A3220',
-  },
-});
-// <MantineProvider theme={theme} cssVariablesResolver={cssVariablesResolver} defaultColorScheme="light">
 ```
 
-Les hex ci-dessus sont dans le **thème** (une seule source) ; dans les composants, on n'écrit jamais de hex : `var(--color-…)` ou `moutarde.5`, `red.5`.
+Le `cssVariablesResolver` d'`App.tsx` fixe `body`, `text`, `dimmed`, `default*` et `error` sur les tokens ci-dessus, et les variantes `light` / `subtle` / `outline` de la primaire : fond `light` = `--color-primary-tint` (`#E7E4DC` / `#2E2D2A`), texte et contour encre (`#1C1B19` / `#26241F` en clair, `#F2EFE8` en sombre). **Jamais d'olive** dans ces variantes.
 
-- `autoContrast: true` + `black: '#1F1A0F'` : tout fond moutarde reçoit un texte encre (8.1 / 9.7:1). Vérifier que le seuil par défaut (luminance 0.3) l'applique bien à `#E2A831` (luminance 0.44) ; sinon forcer `c="var(--color-on-primary)"`.
+- `autoContrast: true` : texte blanc sur l'encre `#26241F` (clair), encre `#1C1B19` sur le crème `#F2EFE8` (sombre).
 - `defaultColorScheme="auto"` (D-041) ; la bascule persiste le choix de l'utilisateur.
-- Variantes `light`, `subtle` et `outline` de la primaire : en clair, texte et icônes **encre** (`--mantine-color-moutarde-light-color` et `-outline` = `#1F1A0F`, fond `light` = `#F6E2A8`) ; en sombre, moutarde `#F0B93A` sur fond `#3A2F12`. Réglé dans le `cssVariablesResolver` d'`App.tsx`, pour qu'aucune variante ne donne de texte moutarde sur fond clair.
 - Valeurs de `variables.css` et du thème **identiques** ; si l'une change, l'autre change dans la même PR.
+- Dans les composants, jamais de hex : `var(--color-…)` ou `color="encre"`, `red.5`.
 
 ## Règles
 
 - Jamais de hex ni de nom CSS (`"red"`) dans un composant : `c="red.5"`, `var(--mantine-color-red-5)` ou `var(--color-danger)`.
-- Une information de couleur est toujours doublée : icône, texte ou forme (onglet sélectionné = fond plein **et** `aria-selected` ; remise = `IconDiscount` + signe « − » ; consigne = signe « − » + icône recyclage + bordure pointillée).
-- Anneau de focus : jamais supprimé ; `outline: 2px solid var(--color-focus)` avec `outline-offset: 2px`, `--color-focus-on-bar` dans la barre panier.
-- Pas de dégradé, pas de bordure d'accent sur un seul côté, pas de couleur par mode de paiement.
+- Une information de couleur est toujours doublée : icône, texte, graisse ou forme (ligne choisie de la colonne = fond `surface-2` + liseré **et** texte 800 + `aria-selected` ; remise = `IconDiscount` + signe « − » ; consigne = signe « − » + icône recyclage + bordure pointillée).
+- Anneau de focus : jamais supprimé ; `outline: 2px solid var(--color-focus)` avec `outline-offset: 2px` (ou `-2px` sur les lignes de la colonne), `--color-focus-on-bar` dans la barre panier.
+- Pas de dégradé, pas de couleur par mode de paiement. Seule bordure d'accent sur un côté : le liseré 3 px de la ligne choisie de la colonne des catégories (D-051).

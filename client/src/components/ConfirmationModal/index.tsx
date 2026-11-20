@@ -12,7 +12,7 @@ interface ConfirmationModalProps {
   confirmButtonText?: string;
   cancelButtonText?: string;
   extraFooter?: React.ReactNode;
-  /** Deletion: the confirm button is filled red instead of mustard (D-050). */
+  /** Deletion: the confirm button is filled red instead of ink (D-050). */
   destructive?: boolean;
   /** Phone forms (discount): full screen like the other form modals. Confirmations stay centered. */
   fullScreen?: boolean;

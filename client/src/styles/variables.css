@@ -4,42 +4,51 @@
  * Same values as the Mantine theme in App.tsx: change both in the same PR.
  */
 :root {
-  --color-bg: #fbf5e6;
+  --color-bg: #f5f4f1;
   --color-surface: #ffffff;
-  --color-surface-2: #f4ecd6;
-  --color-text: #1f1a0f;
-  --color-text-2: #5e5644;
-  --color-border: #eadfc4;
-  --color-border-strong: #8a7f66;
-  --color-primary: #e2a831;
-  --color-on-primary: #1f1a0f;
-  --color-primary-tint: #f6e2a8;
-  --color-bar: #1f1a0f;
-  --color-on-bar: #fbf5e6;
-  --color-on-bar-2: #d9cfb4;
+  --color-surface-2: #eceae5;
+  --color-text: #1c1b19;
+  --color-text-2: #57534e;
+  --color-border: #dddad3;
+  --color-border-strong: #85817a;
+  --color-primary: #26241f;
+  --color-on-primary: #ffffff;
+  --color-primary-tint: #e7e4dc;
+  /* "Valider" on the ink bar (phone): the ink primary would not show on the bar. */
+  --color-primary-on-bar: #f5f4f1;
+  --color-on-primary-on-bar: #1c1b19;
+  --color-bar: #1c1b19;
+  --color-on-bar: #f5f4f1;
+  --color-on-bar-2: #cfccc4;
   --color-success: #166534;
   --color-success-tint: #ddf3e2;
   --color-danger: #b91c1c;
   --color-danger-tint: #fbe4e4;
-  --color-icon-accent: #1f1a0f;
-  --color-focus: #1f1a0f;
-  --color-focus-on-bar: #fbf5e6;
+  --color-icon-accent: #26241f;
+  --color-focus: #1c1b19;
+  --color-focus-on-bar: #f5f4f1;
+
+  /* Olive, touches only (D-051): product icon tiles and the logo, nowhere else. */
+  --color-icon-tile: #ebefc6;
+  --color-tile-icon: #5c7316;
+  --color-logo: #5c7316;
+  --color-logo-glyph: #ffffff;
 
   /* Toasts and info states */
   --color-success-bg: #166534;
   --color-success-text: #ffffff;
   --color-danger-bg: #b91c1c;
   --color-danger-text: #ffffff;
-  --color-info-bg: #1f1a0f;
-  --color-info-text: #fbf5e6;
+  --color-info-bg: #1c1b19;
+  --color-info-text: #f5f4f1;
 
   /* Modal overlay (components.md, "Modales") */
-  --color-overlay: rgba(31, 26, 15, 0.5);
+  --color-overlay: rgba(28, 27, 25, 0.5);
 
   /* Shadows */
-  --shadow-card: 0 1px 2px rgba(31, 26, 15, 0.08);
-  --shadow-bar: 0 -4px 16px rgba(31, 26, 15, 0.07);
-  --shadow-pop: 0 8px 24px rgba(31, 26, 15, 0.14);
+  --shadow-card: 0 1px 2px rgba(28, 27, 25, 0.08);
+  --shadow-bar: 0 -4px 16px rgba(28, 27, 25, 0.07);
+  --shadow-pop: 0 8px 24px rgba(28, 27, 25, 0.14);
 
   /* Radii */
   --radius-control: 14px;
@@ -56,33 +65,40 @@
 }
 
 [data-mantine-color-scheme='dark'] {
-  --color-bg: #16130c;
-  --color-surface: #211c12;
-  --color-surface-2: #2a2418;
-  --color-text: #f6efdc;
-  --color-text-2: #b7ad93;
-  --color-border: #3a3220;
-  --color-border-strong: #7c7358;
-  --color-primary: #f0b93a;
-  --color-on-primary: #1f1a0f;
-  --color-primary-tint: #3a2f12;
-  --color-bar: #0e0c07;
-  --color-on-bar: #f6efdc;
-  --color-on-bar-2: #b7ad93;
+  --color-bg: #141413;
+  --color-surface: #1e1d1b;
+  --color-surface-2: #282725;
+  --color-text: #f2efe8;
+  --color-text-2: #b3afa6;
+  --color-border: #3a3834;
+  --color-border-strong: #7a766e;
+  --color-primary: #f2efe8;
+  --color-on-primary: #1c1b19;
+  --color-primary-tint: #2e2d2a;
+  --color-primary-on-bar: #f2efe8;
+  --color-on-primary-on-bar: #1c1b19;
+  --color-bar: #0c0c0b;
+  --color-on-bar: #f2efe8;
+  --color-on-bar-2: #b3afa6;
   --color-success: #4ade80;
   --color-success-tint: #17301f;
   --color-danger: #f87171;
   --color-danger-tint: #3a2022;
-  --color-icon-accent: #f0b93a;
-  --color-focus: #f0b93a;
-  --color-focus-on-bar: #f0b93a;
+  --color-icon-accent: #f2efe8;
+  --color-focus: #f2efe8;
+  --color-focus-on-bar: #f2efe8;
+
+  --color-icon-tile: #2b3012;
+  --color-tile-icon: #b5cc55;
+  --color-logo: #b5cc55;
+  --color-logo-glyph: #1c1b19;
 
   --color-success-bg: #4ade80;
   --color-success-text: #0b2a17;
   --color-danger-bg: #f87171;
   --color-danger-text: #3a0b0b;
-  --color-info-bg: #f6efdc;
-  --color-info-text: #16130c;
+  --color-info-bg: #f2efe8;
+  --color-info-text: #141413;
 
   --color-overlay: rgba(0, 0, 0, 0.65);
 

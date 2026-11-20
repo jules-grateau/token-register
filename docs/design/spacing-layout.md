@@ -7,7 +7,7 @@
 | `--touch-min`       | 44px   | Taille minimale de toute zone interactive (largeur **et** hauteur)              |
 | `--touch-comfort`   | 56px   | Actions fréquentes quand l'espace le permet (« Valider », en-tête portrait/tablette/desktop) |
 | `--cart-bar-height` | 80px   | Barre panier repliée (téléphone portrait), hors zone sûre (était 72 : « Valider » passe à 56 de haut, 12 px de marge haut et bas). Le décalage des toasts (`--toastify-toast-bottom`) suit |
-| `--radius-control`  | 14px   | Boutons, `ActionIcon`, champs, onglets de colonne (= Mantine `md`)             |
+| `--radius-control`  | 14px   | Boutons, `ActionIcon`, champs (= Mantine `md`) ; lignes de colonne sans arrondi           |
 | `--radius-tile`     | 16px   | Pastille-icône 48 px, pastille de quantité des lignes                           |
 | `--radius-action`   | 18px   | « Valider », « Encaisser » et boutons principaux 56 px                          |
 | `--radius-card`     | 20px   | Cartes produit, cartes de commande, blocs de rendu, modales, Drawer (= Mantine `lg`) |
@@ -141,7 +141,7 @@ Disposition actuelle en ligne : catalogue à gauche (`flex: 3`), panier à droit
 
 ### 4. Desktop (≥ 992 px)
 
-Même structure qu'avant (catégories à gauche, grille, panier à droite). Changent : en-tête 64 px avec logo et nom d'asso, colonne de catégories `miw={200}` (lignes en pilule arrondie, la sélectionnée en moutarde), noms de catégorie qui passent à la ligne, icônes d'édition 44 px de large, grille 3 (`md`) / 4 (`lg`) colonnes avec `mih={160}`, tailles de texte du panier, couleurs, toasts.
+Même structure qu'avant (catégories à gauche, grille, panier à droite). Changent : en-tête 64 px avec logo et nom d'asso, colonne de catégories `miw={200}` (lignes droites collées, la sélectionnée en `--color-surface-2` + liseré encre, D-051), noms de catégorie qui passent à la ligne, icônes d'édition 44 px de large, grille 3 (`md`) / 4 (`lg`) colonnes avec `mih={160}`, tailles de texte du panier, couleurs, toasts.
 
 ### Mode édition — téléphone portrait
 
@@ -149,7 +149,7 @@ Pas de barre panier. Une barre d'outils de catégorie (52 px) sous les onglets a
 
 ```
 +--------------------------------------+
-| [logo] Nom d'asso   [✓ Terminer]  [cfg] |  56   bordure basse 2px encre (moutarde en sombre)
+| [logo] Nom d'asso   [✓ Terminer]  [cfg] |  56   bordure basse 2px `--color-text`
 +--------------------------------------+
 | (Toutes) [Boissons] [Snacks] [+ Cat.>|  60   « + Nouvelle catégorie » = dernier onglet
 +--------------------------------------+

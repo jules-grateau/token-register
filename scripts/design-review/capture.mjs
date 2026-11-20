@@ -68,6 +68,7 @@ const VIEWPORTS = {
   // deviceScaleFactor 1: same layout and text sizes as on the device, but ~5x fewer
   // image tokens for the designer review than retina captures (D-038).
   tablet: { ...devices['iPad (gen 7)'], deviceScaleFactor: 1 },
+  'tablet-landscape': { ...devices['iPad (gen 7) landscape'], deviceScaleFactor: 1 },
   mobile: { ...devices['iPhone 13'], deviceScaleFactor: 1 },
   'mobile-landscape': { ...devices['iPhone 13 landscape'], deviceScaleFactor: 1 },
 };

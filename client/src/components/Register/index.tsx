@@ -21,7 +21,7 @@ import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
 import ColorSchemeControl from '../ColorSchemeControl';
 import { APP_NAME } from '../../config/version';
 import { getClientName } from '../../config/client';
-import logoUrl from '../../assets/brand/logo.svg';
+import BrandLogo from '../BrandLogo';
 import classes from './Register.module.css';
 
 // Layout per mode: docs/design/spacing-layout.md. Header: docs/design/components.md.
@@ -98,13 +98,10 @@ export function Register(): React.ReactElement {
   // Phone landscape shows the logo alone: it then carries the app name for screen readers.
   const logoCarriesName = mode === 'phone-landscape' && Boolean(clientName);
   const logo = (
-    <img
-      src={logoUrl}
-      width={mode === 'phone-landscape' ? 24 : 28}
-      height={mode === 'phone-landscape' ? 24 : 28}
+    <BrandLogo
+      size={mode === 'phone-landscape' ? 24 : 28}
       className={classes.logo}
-      alt={logoCarriesName ? APP_NAME : ''}
-      aria-hidden={logoCarriesName ? undefined : true}
+      label={logoCarriesName ? APP_NAME : undefined}
     />
   );
   const title = (

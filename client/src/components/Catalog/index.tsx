@@ -192,11 +192,9 @@ function Catalog(): React.ReactElement {
                 wrap="nowrap"
                 gap={0}
                 align="stretch"
-                style={{
-                  minHeight: 56,
-                  // docs/design/components.md, "Onglets catégorie": selected = mustard + ink.
-                  background: isSelected ? 'var(--color-primary)' : 'transparent',
-                }}
+                // docs/design/components.md, "Onglets catégorie": the selected line (surface 2 +
+                // ink accent) is drawn by Catalog.module.css.
+                style={{ minHeight: 56 }}
               >
                 {/* A category name is never cut: it wraps. */}
                 <Group
@@ -206,7 +204,7 @@ function Catalog(): React.ReactElement {
                   miw={0}
                   px={canEdit && mode === 'tablet' ? 'xs' : 'md'}
                   py="sm"
-                  c={isSelected ? 'var(--color-on-primary)' : 'var(--color-text)'}
+                  c="var(--color-text)"
                 >
                   {categoryIcon(category)}
                   <Text
@@ -233,10 +231,7 @@ function Catalog(): React.ReactElement {
                       }}
                       aria-label={t('actions.edit')}
                     >
-                      <IconEdit
-                        size={24}
-                        color={isSelected ? 'var(--color-on-primary)' : 'var(--color-icon-accent)'}
-                      />
+                      <IconEdit size={24} color="var(--color-icon-accent)" />
                     </ActionIcon>
                     <ActionIcon
                       variant="subtle"
@@ -250,10 +245,7 @@ function Catalog(): React.ReactElement {
                       }}
                       aria-label={t('delete')}
                     >
-                      <IconTrash
-                        size={24}
-                        color={isSelected ? 'var(--color-on-primary)' : 'var(--color-danger)'}
-                      />
+                      <IconTrash size={24} color="var(--color-danger)" />
                     </ActionIcon>
                   </Group>
                 )}
@@ -393,7 +385,7 @@ function Catalog(): React.ReactElement {
             >
               <ScrollArea h="100%">
                 <Loader isLoading={categoriesQuery.isFetching} />
-                <Stack gap={8}>{renderColumnTabs()}</Stack>
+                <Stack gap={0}>{renderColumnTabs()}</Stack>
               </ScrollArea>
             </Tabs.List>
           )}

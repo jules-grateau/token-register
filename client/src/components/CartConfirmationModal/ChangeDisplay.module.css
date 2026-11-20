@@ -15,7 +15,7 @@
   border: 2px solid var(--color-border-strong);
 }
 
-/* "À rendre" (and "À rendre élevé"), "À rendre au client": ink border in light, mustard in dark. */
+/* "À rendre" (and "À rendre élevé"), "À rendre au client": ink border in light, primary (cream) in dark. */
 [data-mantine-color-scheme] .block[data-state='change'],
 [data-mantine-color-scheme] .block[data-state='refund'] {
   background-color: var(--color-primary-tint);

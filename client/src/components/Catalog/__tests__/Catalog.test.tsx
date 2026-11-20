@@ -224,6 +224,19 @@ describe('Catalog layout per mode', () => {
     expect(screen.getByRole('tablist')).toHaveAttribute('aria-orientation', 'vertical');
   });
 
+  it('column (D-051): the selected line is flagged for the CSS, no inline fill, text weight 800', () => {
+    selectWith(1, false);
+    render(<Catalog />);
+    const drinks = screen.getByRole('tab', { name: 'Drinks' });
+    const all = screen.getByRole('tab', { name: 'all_categories' });
+    expect(drinks).toHaveAttribute('data-active');
+    expect(all).not.toHaveAttribute('data-active');
+    // Surface 2 + ink accent come from Catalog.module.css, not from an inline background.
+    expect(drinks.querySelector('[style*="background"]')).toBeNull();
+    expect(screen.getByText('Drinks')).toHaveStyle({ fontWeight: '800' });
+    expect(screen.getByText('all_categories')).toHaveStyle({ fontWeight: '700' });
+  });
+
   it('uses the row of tabs on a tablet narrower than 768 px', () => {
     setLayoutMode('tablet', [NARROW_TABLET_QUERY]);
     selectWith(1, false);
