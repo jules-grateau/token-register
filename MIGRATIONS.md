@@ -77,7 +77,9 @@ transaction, so the step is idempotent. New databases get them from `initDb.ts`.
 **Data**: existing orders keep `NULL` in both columns, meaning "no payment recorded". Nothing is
 backfilled. Token instances always keep `NULL` (D-033).
 **Conversion**: `convertCurrency.ts` converts both columns to euros with the history; a conversion
-to tokens is refused while an order has a recorded payment (not decided yet).
+to tokens clears them (D-036), and the preview says how many orders lose their cash / card split.
+**API**: from 1.3.0, an EUR instance refuses an order without payment (D-035), including the
+bare-array body of older clients: reload open tabs after the deploy.
 
 Rollback: older versions ignore the two columns (they only insert `date`); they can stay. To drop
 them (SQLite >= 3.35): `ALTER TABLE orders DROP COLUMN cash_amount; ALTER TABLE orders DROP COLUMN card_amount;`

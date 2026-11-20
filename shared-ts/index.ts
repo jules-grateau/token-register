@@ -39,6 +39,9 @@ export type OrderType = {
   payment: OrderPaymentType | null;
 };
 
+/** Machine-readable error codes returned by the API next to `error`. */
+export type ApiErrorCode = 'PAYMENT_REQUIRED';
+
 /** Body of POST /orders. `payment` is required on EUR instances and refused on token ones. */
 export type CreateOrderRequestType = {
   items: CartItemType[];

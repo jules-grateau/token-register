@@ -145,10 +145,10 @@ export type CurrencyConversionPlan = {
   /** Orders with a recorded payment (cash / card amounts, D-034). */
   orderPayments: OrderPaymentConversion[];
   /**
-   * Converting recorded payments to tokens is not decided yet (token instances record no
-   * payment, D-033): until it is, a conversion to TOKEN with recorded payments is refused.
+   * D-036: token instances record no payment (D-033), so a conversion to TOKEN clears the
+   * cash / card split of these orders (their totals are converted as usual, D-009).
    */
-  paymentsBlockConversion: boolean;
+  paymentsCleared: boolean;
   revenueBefore: number;
   revenueAfter: number;
 };
@@ -219,7 +219,7 @@ export async function planCurrencyConversion(
   );
 
   const orderPayments = await planOrderPaymentConversion(db, from, to);
-  const paymentsBlockConversion = to === 'TOKEN' && from !== to && orderPayments.length > 0;
+  const paymentsCleared = to === 'TOKEN' && from !== to && orderPayments.length > 0;
 
   return {
     from,
@@ -228,7 +228,7 @@ export async function planCurrencyConversion(
     orderItems,
     inconsistentOrderItems,
     orderPayments,
-    paymentsBlockConversion,
+    paymentsCleared,
     revenueBefore,
     revenueAfter,
   };
@@ -242,12 +242,15 @@ async function planOrderPaymentConversion(
   // Run before the payment migration: no column, nothing to convert.
   if ((await getMissingOrderPaymentColumns(db)).length > 0) return [];
 
-  const rows = await db.all<{ id: number; cash_amount: number | null; card_amount: number | null }[]>(
+  const rows = await db.all<
+    { id: number; cash_amount: number | null; card_amount: number | null }[]
+  >(
     `SELECT id, cash_amount, card_amount FROM orders
      WHERE cash_amount IS NOT NULL OR card_amount IS NOT NULL ORDER BY id`
   );
+  // D-036: to tokens, the split is cleared; to euros, amounts are converted 1 for 1 (D-009).
   const convert = (amount: number | null) =>
-    amount === null ? null : convertAmount(amount, from, to);
+    amount === null || to === 'TOKEN' ? null : convertAmount(amount, from, to);
   return rows.map((row) => ({
     orderId: row.id,
     cashBefore: row.cash_amount,
@@ -273,13 +276,6 @@ export async function applyCurrencyConversion(
         'than their total after rounding. Nothing was converted (D-016). ' +
         'Handle the orders listed in the preview first, then run the ' +
         'conversion again.'
-    );
-  }
-
-  if (plan.paymentsBlockConversion) {
-    throw new Error(
-      `${plan.orderPayments.length} order(s) have a recorded payment (cash / card). ` +
-        'Converting them to tokens is not supported yet. Nothing was converted.'
     );
   }
 
@@ -350,11 +346,12 @@ export function describeConversionPlan(plan: CurrencyConversionPlan): string[] {
   if (plan.orderPayments.length > 0) {
     lines.push(`  Recorded payments: ${plan.orderPayments.length} order(s).`);
   }
-  if (plan.paymentsBlockConversion) {
+  if (plan.paymentsCleared) {
+    // Wording confirmed by the product owner (D-036).
     lines.push(
       '',
-      `Blocking: ${plan.orderPayments.length} order(s) have a recorded payment (cash / card). ` +
-        'Converting payments to tokens is not supported yet: the conversion will be refused.'
+      `Warning (D-036): ${plan.orderPayments.length} commandes : la répartition espèces / carte ` +
+        'sera effacée (token instances record no payment).'
     );
   }
   if (plan.inconsistentOrderItems.length > 0) {

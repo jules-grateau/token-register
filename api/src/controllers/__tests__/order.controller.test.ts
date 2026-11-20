@@ -87,10 +87,8 @@ describe('OrderController', () => {
         nextFunction as NextFunction
       );
 
-      // Legacy format (bare array): still accepted during an update, saved without payment.
-      expect(mockOrderService.createOrder).toHaveBeenCalledWith(mockRequest.body, undefined, {
-        legacyRequest: true,
-      });
+      // Bare array (clients before 1.3.0): passed without payment; the service decides (D-035).
+      expect(mockOrderService.createOrder).toHaveBeenCalledWith(mockRequest.body, undefined);
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith(newOrder);
       expect(nextFunction).not.toHaveBeenCalled();
@@ -156,6 +154,25 @@ describe('OrderController', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(400);
       expect(mockResponse.json).toHaveBeenCalledWith({ error: error.message });
       expect(nextFunction).not.toHaveBeenCalled();
+    });
+
+    it('should return the error code of a ValidationError (D-035)', async () => {
+      mockRequest.body = [];
+      mockOrderService.createOrder.mockRejectedValue(
+        new ValidationError('Payment is required', 'PAYMENT_REQUIRED')
+      );
+
+      await controller.createOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        error: 'Payment is required',
+        code: 'PAYMENT_REQUIRED',
+      });
     });
 
     it('should forward other errors to the next function', async () => {

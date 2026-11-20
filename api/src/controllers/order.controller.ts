@@ -70,11 +70,10 @@ export class OrderController {
     try {
       const body: unknown = req.body;
 
-      // Legacy format (clients before 1.3.0): a bare array of cart items, without payment.
+      // Bare array (clients before 1.3.0): no payment. Accepted on token instances only; an
+      // EUR instance refuses it with PAYMENT_REQUIRED (D-035).
       if (Array.isArray(body)) {
-        const newOrder = await this.orderService.createOrder(body as CartItemType[], undefined, {
-          legacyRequest: true,
-        });
+        const newOrder = await this.orderService.createOrder(body as CartItemType[], undefined);
         res.status(201).json(newOrder);
         return;
       }
@@ -89,7 +88,9 @@ export class OrderController {
     } catch (error) {
       req.log.error('Controller Error: Error creating new order: %s', error);
       if (error instanceof ValidationError) {
-        res.status(400).json({ error: error.message });
+        res
+          .status(400)
+          .json(error.code ? { error: error.message, code: error.code } : { error: error.message });
       } else {
         next(error);
       }

@@ -103,8 +103,9 @@ It is shown read-only in the app (⚙️ menu). Amounts are stored as whole numb
    then run the conversion again.
 
    Recorded payments (cash / card amounts, 1.3.0) are converted with the history when going to
-   euros. Going **to tokens** is refused, and nothing is written, as long as an order has a
-   recorded payment: how to convert them is not decided yet (token instances record no payment).
+   euros. Going **to tokens**, they are cleared, since token instances record no payment (D-036);
+   order totals are converted as usual. The preview warns first: "N commandes : la répartition
+   espèces / carte sera effacée".
 
 ## Payments (1.3.0)
 
@@ -112,3 +113,8 @@ On EUR instances, each order records the amount paid in cash and the amount paid
 (D-034). On the first start of 1.3.0, the migration adds two nullable columns to `orders`
 (`cash_amount`, `card_amount`); existing orders keep no payment. Nothing to do by hand: back up
 the database before deploying, as for any schema change. Token instances record no payment.
+
+From 1.3.0, an EUR instance **refuses an order without payment** (D-035), including the format
+sent by older versions of the app. A tab left open on the previous version gets an error until the
+page is reloaded: after deploying an EUR instance (atakora), ask the cashiers to reload the page.
+Token instances (poule) still accept the old format.

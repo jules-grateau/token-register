@@ -26,15 +26,6 @@ interface OrderItemDbRow {
   card_amount: number | null;
 }
 
-export type CreateOrderOptions = {
-  /**
-   * Old clients POST a bare array of cart items, without payment. They are still accepted
-   * while an instance is being updated (a tab left open on the previous version): the order
-   * is then saved without payment.
-   */
-  legacyRequest?: boolean;
-};
-
 export class OrderService {
   constructor(private readonly currency: CurrencyCode = getConfiguredCurrency()) {}
 
@@ -135,8 +126,7 @@ export class OrderService {
 
   async createOrder(
     cartItems: CartItemType[],
-    payment?: OrderPaymentType | null,
-    options: CreateOrderOptions = {}
+    payment?: OrderPaymentType | null
   ): Promise<{ id: number }> {
     if (!cartItems || cartItems.length === 0) {
       throw new ValidationError('No items in the cart');
@@ -202,12 +192,7 @@ export class OrderService {
           sum + productPrice * quantity - discountedAmount,
         0
       );
-      let storedPayment: OrderPaymentType | null = null;
-      if (options.legacyRequest && this.currency === 'EUR') {
-        logger.warn('Order received in the legacy format: saved without payment');
-      } else {
-        storedPayment = validateOrderPayment(payment, total, this.currency);
-      }
+      const storedPayment = validateOrderPayment(payment, total, this.currency);
 
       const orderResult = await db.run(
         'INSERT INTO orders (date, cash_amount, card_amount) VALUES (?, ?, ?)',

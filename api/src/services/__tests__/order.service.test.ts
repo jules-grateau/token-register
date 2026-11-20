@@ -383,8 +383,17 @@ describe('OrderService (unit)', () => {
       ).rejects.toThrow(ValidationError);
     });
 
-    it('saves a legacy request without payment on an EUR instance', async () => {
-      await new OrderService('EUR').createOrder(cart, undefined, { legacyRequest: true });
+    it('refuses an order without payment on an EUR instance, asking to reload (D-035)', async () => {
+      // Bare-array body of clients before 1.3.0: no payment at all.
+      await expect(new OrderService('EUR').createOrder(cart, undefined)).rejects.toMatchObject({
+        code: 'PAYMENT_REQUIRED',
+        message: expect.stringContaining('Reload the page'),
+      });
+      expect(mockExec).toHaveBeenCalledWith('ROLLBACK');
+    });
+
+    it('still accepts an order without payment on a token instance (D-035)', async () => {
+      await new OrderService('TOKEN').createOrder(cart, undefined);
       expect(insertedPayment()).toEqual([null, null]);
     });
 
