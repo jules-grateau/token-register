@@ -364,7 +364,11 @@ function Catalog(): React.ReactElement {
           radius={isRow ? 'xl' : undefined}
           autoContrast
           // Column: names wrap instead of widening the 200 px column (never truncated).
-          styles={isRow ? undefined : { tab: { whiteSpace: 'normal' }, tabLabel: { minWidth: 0 } }}
+          styles={
+            isRow
+              ? undefined
+              : { tab: { whiteSpace: 'normal' }, tabLabel: { minWidth: 0, flex: 1 } }
+          }
           value={String(selectedCategory)}
           onChange={(value) => value && dispatch(setSelectedCategory(Number(value)))}
           display="flex"

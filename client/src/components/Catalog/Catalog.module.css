@@ -42,6 +42,9 @@
   padding: 0;
   overflow: hidden;
   color: var(--color-text);
+  /* Names start on the left, also when they wrap on 2 lines (DS-2 of PR #43). */
+  justify-content: flex-start;
+  text-align: left;
 }
 
 .columnTab.columnTab:hover {

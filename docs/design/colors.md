@@ -77,6 +77,8 @@ Texte ≥ 4.5:1 ; icônes, bordures utiles, anneau de focus ≥ 3:1.
 | `border-strong` sur `surface` / `bg` / `surface-2` | 3.9 / 3.5 / 3.2 | 3.7 / 4.1 / 3.3 | 3 |
 | `focus` sur `bg` / `surface` / `surface-2` | 15.6 / 17.2 / 14.3 | 16.1 / 14.7 / 13.0 | 3 |
 
+**Option choisie du sélecteur d'icône** : l'icône reste olive (`--color-tile-icon`) sur `--color-primary-tint`, soit 4.2:1 en clair et 7.7:1 en sombre. Une icône n'exige que 3:1 ; le choix est aussi porté par le contour 2 px, la coche et `aria-pressed`.
+
 `--color-border` (`#DDDAD3` / `#3A3834`, 1.4:1) est **décoratif** : il ne doit jamais être la seule marque d'un élément interactif sans libellé. Un bouton avec texte, une carte avec nom et prix n'ont pas besoin d'un contour à 3:1.
 
 ## Mapping Mantine (`client/src/App.tsx`)
@@ -116,7 +118,7 @@ const theme = createTheme({
 
 Le `cssVariablesResolver` d'`App.tsx` fixe `body`, `text`, `dimmed`, `default*` et `error` sur les tokens ci-dessus, et les variantes `light` / `subtle` / `outline` de la primaire : fond `light` = `--color-primary-tint` (`#E7E4DC` / `#2E2D2A`), texte et contour encre (`#1C1B19` / `#26241F` en clair, `#F2EFE8` en sombre). **Jamais d'olive** dans ces variantes.
 
-- `autoContrast: true` : texte blanc sur l'encre `#26241F` (clair), encre `#1C1B19` sur le crème `#F2EFE8` (sombre).
+- `autoContrast: true` ne suffit pas : Mantine choisit la couleur du texte d'après la nuance du schéma **clair** et laisserait du blanc sur le crème du sombre (1.2:1). Les `Button` et `ActionIcon` pleins de la primaire et la page active de `Pagination` reçoivent donc `--color-on-primary` (blanc en clair, encre en sombre) via les `vars` du thème (`client/src/styles/primaryContrast.ts`). Les boutons rouges (suppression), gris ou verts gardent le contraste de Mantine.
 - `defaultColorScheme="auto"` (D-041) ; la bascule persiste le choix de l'utilisateur.
 - Valeurs de `variables.css` et du thème **identiques** ; si l'une change, l'autre change dans la même PR.
 - Dans les composants, jamais de hex : `var(--color-…)` ou `color="encre"`, `red.5`.

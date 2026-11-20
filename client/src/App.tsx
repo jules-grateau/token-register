@@ -1,11 +1,14 @@
 import {
+  ActionIcon,
   Badge,
+  Button,
   Card,
   Drawer,
   Input,
   MantineProvider,
   Menu,
   Modal,
+  Pagination,
   Paper,
   Popover,
   createTheme,
@@ -17,6 +20,7 @@ import { Bounce, ToastContainer } from 'react-toastify';
 import { Register } from './components/Register';
 import { useLayoutMode } from './hooks/useLayoutMode';
 import classes from './styles/theme.module.css';
+import { actionIconVars, buttonVars, paginationVars } from './styles/primaryContrast';
 
 // docs/design/colors.md, "Mapping Mantine". Same values as styles/variables.css.
 // Ink primary (D-051): shade 8 in light (#26241F), shade 1 in dark (#F2EFE8).
@@ -88,6 +92,10 @@ const theme = createTheme({
     Paper: Paper.extend({ classNames: { root: classes.paper } }),
     Card: Card.extend({ defaultProps: { radius: 'lg' }, classNames: { root: classes.card } }),
     Badge: Badge.extend({ defaultProps: { radius: 'xl' } }),
+    // Filled primary: --color-on-primary text in both schemes (styles/primaryContrast.ts).
+    Button: Button.extend({ vars: buttonVars }),
+    ActionIcon: ActionIcon.extend({ vars: actionIconVars }),
+    Pagination: Pagination.extend({ vars: paginationVars }),
     Modal: Modal.extend({
       defaultProps: { radius: 'lg' },
       classNames: {
