@@ -65,8 +65,9 @@ Une PR n'est mergeable que quand elle est prête. Le développeur crée ses PR e
 
 L'utilisateur n'a pas à demander de traiter les revues. Après chaque `gh pr create` dans une session :
 
-1. Attendre la fin du workflow `Tech-lead review` sur la PR (`gh run list --workflow tech-lead-review.yml --branch <branche>`), puis lire la revue : `gh pr view <PR> --comments` et `gh api repos/{owner}/{repo}/pulls/<PR>/comments`.
-2. S'il y a des points `TL-n` (🔴, 🟠 ou 🟡) : lancer `developpeur` sur la PR pour les traiter et y répondre. Seuls les points qui demandent un choix métier remontent à l'utilisateur, groupés.
+0. La PR est créée en brouillon : le workflow `Tech-lead review` ignore les brouillons et ne tourne pas encore. Une fois tout poussé et lint/tests/build verts, la passer en « prête » (`gh pr ready <PR>`) : c'est ce qui déclenche la revue.
+1. Attendre la fin du workflow `Tech-lead review` sur la PR (en arrière-plan) (`gh run list --workflow tech-lead-review.yml --branch <branche>`), puis lire la revue : `gh pr view <PR> --comments` et `gh api repos/{owner}/{repo}/pulls/<PR>/comments`.
+2. S'il y a des points `TL-n` (🔴, 🟠 ou 🟡) : repasser la PR en brouillon, lancer `developpeur` sur la PR pour les traiter et y répondre, puis la remettre en « prête ». La revue relancée par ce passage vérifie les corrections (mode « vérifier les corrections » du tech-lead). Seuls les points qui demandent un choix métier remontent à l'utilisateur, groupés.
 3. S'il n'y a rien à traiter : le dire en une ligne.
 4. Ne présenter le travail comme terminé qu'une fois la revue traitée et les réponses publiées, avec un résumé des points et de leur statut (✅ / ⏸️ / ❓).
 

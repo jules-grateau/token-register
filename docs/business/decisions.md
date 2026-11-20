@@ -326,3 +326,14 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Décision** : la version est montée **dans la PR de la feature** qui partira en prod (réponse : « Bah oui, dans la PR de la feature c'est mieux »). S'il y a plusieurs PR dans une même release, seule la première la monte, sauf si une PR suivante change la catégorie (correctif → nouveauté : PATCH → MINOR) : elle remonte alors la version. Le type de montée (PATCH / MINOR / MAJOR) est demandé au responsable produit pendant la clarification de la feature. Une PR qui ne touche pas l'appli (docs, agents, CI de revue) ne monte pas la version. La règle de D-002 est inchangée sur le reste : montée à la main, et `version-check` fait échouer la PR vers `main` si la version n'est pas supérieure à celle de `main`.
 - **Options écartées** : PR de bump séparée vers `develop` avant chaque release ; branche `release/x.y.z` puis report de `main` dans `develop` ; calcul automatique de la version par la CI.
 - **Impact** : `README.md` (section Versioning), `.claude/agents/developpeur.md`, `CLAUDE.md`. Conséquence : la démo affiche le nouveau numéro dès le merge de la feature dans `develop`, avant la mise en prod.
+
+### D-037 — Une PR en cours de travail reste en brouillon
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : une PR sur laquelle un agent travaille encore pouvait être mergée par erreur (cas de #14, mergée pendant une correction, d'où la PR de suite #15).
+- **Décision** : demande de l'utilisateur, « Il faudrait que le développeur fasse un truc pour que la PR ne soit pas mergeable s'il travaille dessus, que je ne merge pas par erreur ». Une PR est créée en brouillon et repasse en brouillon avant toute modification. Elle n'est mise en « prête » qu'une fois tout poussé, vert, et les réponses aux revues publiées (et, pour une modification d'interface, les captures validées par le designer). La mise en « prête » déclenche la revue du tech-lead.
+- **Options écartées** : aucune autre option présentée (mécanisme natif de GitHub retenu directement) ; un label « WIP » avec un check obligatoire aurait demandé une protection de branche.
+- **Impact** : `.claude/agents/developpeur.md`, `CLAUDE.md`.
