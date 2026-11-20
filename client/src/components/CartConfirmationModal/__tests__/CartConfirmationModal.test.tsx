@@ -14,7 +14,12 @@ jest.mock('react-redux', () => ({
 
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string, opts?: any) => (opts ? `${key} (${JSON.stringify(opts)})` : key),
+    t: (key: string, opts?: any) =>
+      key === 'order_line'
+        ? `${opts.quantity} × ${opts.name}`
+        : opts
+          ? `${key} (${JSON.stringify(opts)})`
+          : key,
   }),
 }));
 
@@ -27,6 +32,7 @@ jest.mock('react-toastify', () => ({
   toast: {
     success: jest.fn(),
     error: jest.fn(),
+    dismiss: jest.fn(),
   },
 }));
 
@@ -67,8 +73,9 @@ describe('CartConfirmationModal', () => {
   it('renders correctly with cart items when isOpen is true', () => {
     render(<CartConfirmationModal isOpen={true} onClose={mockOnClose} />);
     expect(screen.getByText('cart_confirmation')).toBeInTheDocument();
-    expect(screen.getByText('Product A')).toBeInTheDocument();
-    expect(screen.getByText('Product B')).toBeInTheDocument();
+    // D-026: the recap shows each line's quantity, like the history (D-023).
+    expect(screen.getByText('2 × Product A')).toBeInTheDocument();
+    expect(screen.getByText('1 × Product B')).toBeInTheDocument();
     expect(screen.getByText(/3/)).toBeInTheDocument();
     expect(screen.getByText(/150/)).toBeInTheDocument();
   });
@@ -102,6 +109,8 @@ describe('CartConfirmationModal', () => {
       );
       expect(mockOnClose).toHaveBeenCalledTimes(1);
     });
+    // D-025: placing an order closes the "Panier vidé – Annuler" toast.
+    expect(toast.dismiss).toHaveBeenCalledWith('cart-cleared');
   });
 
   it('handles failed order placement on confirm', async () => {

@@ -39,6 +39,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const { t } = useTranslation();
   const { format } = useCurrency();
   const mode = useLayoutMode();
+  // Phone landscape: compact cards, so that 8 to 9 products fit (docs/design).
+  const isCompact = mode === 'phone-landscape';
+  const lineHeight = isCompact ? 1.25 : undefined;
 
   // D-022: in edit mode, touching the card opens its edit form.
   const handleMainClick = () => (isEditMode ? onEdit?.(product) : onClick());
@@ -54,18 +57,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           name: product.name,
         })}
       >
-        <Stack gap="xs" align="center" justify="center" h="100%">
+        <Stack gap={isCompact ? 4 : 'xs'} align="center" justify="center" h="100%">
           {/* D-021: a name is never cut, the card grows. A price never wraps. */}
           <Text
             fw={700}
             size={mode === 'desktop' ? 'lg' : 'md'}
             ta="center"
+            lh={lineHeight}
             style={{ overflowWrap: 'anywhere' }}
           >
             {product.name}
           </Text>
           {product.price !== undefined && (
-            <Text fw={700} size="lg" style={{ whiteSpace: 'nowrap' }}>
+            <Text fw={700} size="lg" lh={lineHeight} style={{ whiteSpace: 'nowrap' }}>
               {format(product.price)}
             </Text>
           )}

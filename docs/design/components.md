@@ -69,15 +69,15 @@ Rangée 2 :  [ − ] 2 [ + ]   (ActionIcon size={44} variant="outline", icônes 
 
 - Ligne : `Stack gap="xs" py="xs"` ; séparateur `Divider` entre lignes.
 - Menu ⋮ : `ActionIcon size={44} aria-label="Plus d'actions"` ; `Menu width={220} position="bottom-end"` ; items `py="md"` 16 px : « Appliquer une remise » (`IconDiscount`), « Supprimer » (`IconTrash`, `color="red"`).
-- **Lecture seule** (historique, sans handlers) : une seule rangée, nom préfixé de la quantité « 2 × Café long » + prix.
+- **Lecture seule** (historique D-023, récapitulatif de confirmation D-026) : une seule rangée, nom préfixé de la quantité « 2 × Café long » + prix.
 
 ## Panier
 
-**Pied standard** (tablette, desktop, Drawer) : `Stack gap="sm" p="md"`, bordure haute. « Articles » 16 `dimmed` / nombre 16 / 500 ; « Total » 24 / 800 et montant 24 / 800 `nowrap` ; `Button size="lg" fullWidth` « Valider » (désactivé si panier vide).
+**Pied standard** (tablette, desktop, Drawer) : `Stack gap="sm" p="md"`, bordure haute. « Articles » 16 `dimmed` / nombre seul 16 / 500 (« Articles … 3 ») ; « Total » 24 / 800 et montant 24 / 800 `nowrap` ; `Button size="lg" fullWidth` « Valider ». Panier vide (tablette, desktop, Drawer) : message « Votre panier est vide » et pied masqué.
 
 **En-tête du panier** (tablette, desktop) : historique et vider, `ActionIcon` 48×48. Vider : `IconTrash` red-6, `aria-label` « Vider le panier », désactivé si panier vide.
 
-**Barre repliée** (portrait) : `Paper` fixé en bas, `h` = `calc(var(--cart-bar-height) + env(safe-area-inset-bottom))`, `pb` = `env(safe-area-inset-bottom)`, `px="md"`, `shadow="md"`, bordure haute. Contenu `Group wrap="nowrap"` :
+**Barre repliée** (portrait) : `Paper` en dernier élément de la colonne de la page (dans le flux, pas en `fixed` : il ne recouvre jamais la grille), `h` = `calc(var(--cart-bar-height) + env(safe-area-inset-bottom))`, `pb` = `env(safe-area-inset-bottom)`, `px="md"`, `shadow="md"`, bordure haute. Contenu `Group wrap="nowrap"` :
 
 - zone gauche `UnstyledButton` (`flex: 1`, ouvre le Drawer, `aria-label` « Voir le panier ») : « N articles » 16 `dimmed` au-dessus du total 20 / 800 `nowrap` ; panier vide : « Panier vide » `dimmed` ;
 - `ActionIcon size={44}` `IconChevronUp` (ouvre aussi) ;
@@ -87,16 +87,17 @@ Rangée 2 :  [ − ] 2 [ + ]   (ActionIcon size={44} variant="outline", icônes 
 
 **Drawer** (portrait) : `Drawer position="bottom" size="85%" radius="md"` (coins hauts), titre « Panier » 18 / 700, en-tête : vider (`ActionIcon` 44) + fermeture (44). Corps : lignes (seule zone qui défile) + pied standard. « Valider » ouvre la confirmation par-dessus ; après une vente réussie, le Drawer se referme (**le panier est replié après chaque vente**) ; si on annule la confirmation, on revient au Drawer.
 
-**Colonne droite compacte** (paysage) : voir [spacing-layout.md](spacing-layout.md#2-téléphone-paysage). Pas d'en-tête ; pied d'une rangée de 60 px : vider 44 · « N articles » / total 20 / 800 · « Valider » `h={44}` `flex: 1`.
+**Colonne droite compacte** (paysage) : voir [spacing-layout.md](spacing-layout.md#2-téléphone-paysage). Pas d'en-tête ; pied d'une rangée de 60 px : vider 44 · « N articles » / total 20 / 800 · « Valider » `h={44}` `flex: 1` `miw={110}`.
 
 ## Vider le panier + toast « Annuler »
 
 1. Toucher « vider » vide **immédiatement** le panier (pas de confirmation).
 2. Toast `toast.info` (style info, `toastId: 'cart-cleared'`, un seul à la fois) : « Panier vidé » + `Button variant="outline" h={44}` « Annuler », couleur `var(--color-info-text)` (texte et bordure, 6.7:1).
-3. Options du toast : `autoClose: 5000`, `closeOnClick: false`, `pauseOnHover: true`.
+3. Options du toast : `autoClose: 5000`, `closeOnClick: false`, `pauseOnHover: true`, `closeButton: false` (la croix chevauchait « Annuler »).
 4. « Annuler » remet l'ancien panier (lignes, quantités, remises), puis ferme le toast sans autre message.
-5. Si le panier est modifié pendant ces 5 s (ajout d'un produit), le toast reste et « Annuler » **fusionne** (D-019) : l'ancien panier revient et les produits ajoutés entre-temps restent, après les anciennes lignes. Un produit présent dans les deux paniers voit ses quantités additionnées. Cas d'un tel produit avec une remise : en attente d'une décision métier.
-6. Un nouveau vidage pendant que le toast est affiché remplace l'offre d'annulation précédente (un seul toast à la fois).
+5. Si le panier est modifié pendant ces 5 s (ajout d'un produit), le toast reste et « Annuler » **fusionne** (D-019) : l'ancien panier revient et les produits ajoutés entre-temps restent, après les anciennes lignes. Un produit présent dans les deux paniers voit ses quantités **et** ses montants de remise additionnés (D-024 : 2 × Bière −1 € + 1 × Bière −0,50 € → 3 × Bière −1,50 €).
+6. Dès qu'une commande est validée, le toast se ferme et l'annulation n'est plus possible (D-025).
+7. Un nouveau vidage pendant que le toast est affiché remplace l'offre d'annulation précédente (un seul toast à la fois).
 
 ## Historique — `OrderHistoryModal`
 
@@ -105,7 +106,11 @@ Rangée 2 :  [ − ] 2 [ + ]   (ActionIcon size={44} variant="outline", icônes 
   - en-tête : « Commande #12 » 16 / 700, date en dessous 14 `dimmed` ; **aucun bouton** ;
   - lignes en lecture seule (16 px) ;
   - pied `Group justify="space-between" wrap="nowrap"` : total 18 / 700 `nowrap` + « N articles » 16 `dimmed` ; à droite `Button color="red" variant="light" h={44} leftSection={<IconTrash size={20} />}` « Supprimer ».
-- La **confirmation existante est conservée** (`ConfirmationModal`) ; ses boutons ≥ 44 px.
+- La **confirmation existante est conservée** (`ConfirmationModal`) ; ses boutons ≥ 44 px, « Annuler » en `variant="default"` (action non destructive).
+
+## Récapitulatif de confirmation — `CartConfirmationModal`
+
+- Lignes en lecture seule « 2 × Nom » (D-026) ; total 20 px gras `nowrap`.
 
 ## Toasts — `ToastContainer` dans `App.tsx`
 

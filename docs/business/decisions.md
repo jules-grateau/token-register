@@ -232,7 +232,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 
 - **Date** : 2026-11-20
 - **Confirmée par** : Jules (responsable produit), 2026-11-20
-- **Statut** : Active
+- **Statut** : Active, précisée par D-024 et D-025
 - **Domaine** : Commandes
 - **Contexte** : « Vider le panier » vidait tout en un toucher, sans retour possible ; agrandir le bouton augmente le risque d'erreur.
 - **Décision** : le panier est vidé immédiatement, puis un toast « Panier vidé – Annuler » reste 5 s. Si le panier a été modifié pendant ces 5 s, « Annuler » fusionne (réponse : « Fusionner ») : l'ancien panier revient et les produits ajoutés entre-temps restent. Un produit sans remise présent dans les deux paniers voit ses quantités additionnées.
@@ -282,3 +282,36 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Décision** : chaque ligne de l'historique affiche sa quantité devant le nom : « 2 × Bière ».
 - **Options écartées** : aucune (réponse : « Oui »).
 - **Impact** : `client/src/components/OrderHistoryModal`, `client/src/components/Cart/CartItem` (`showQuantity`).
+
+### D-024 — « Annuler » : les remises d'un même produit s'additionnent
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Remises
+- **Contexte** : D-019 ne disait pas ce que devient la remise quand un même produit est dans l'ancien panier et dans le nouveau au moment de « Annuler ».
+- **Décision** : on additionne les quantités **et** les montants de remise (réponse : « Additionner »). Exemple : 2 × Bière (-1 €), vider, 1 × Bière (-0,50 €), « Annuler » → 3 × Bière (-1,50 €).
+- **Options écartées** : garder la remise de l'ancien panier ; ne pas fusionner ce cas.
+- **Impact** : `client/src/redux/cartSlice.tsx` (`restore`), `docs/design/components.md`.
+
+### D-025 — Plus d'annulation du vidage après une vente
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Commandes
+- **Contexte** : le toast « Panier vidé – Annuler » pouvait encore être affiché après la validation d'une commande ; « Annuler » aurait remis dans le panier des produits d'avant la vente.
+- **Décision** : dès qu'une commande est validée, le toast « Panier vidé – Annuler » se ferme et l'annulation n'est plus possible (réponse : « Fermer le toast à la validation »).
+- **Options écartées** : laisser l'annulation possible.
+- **Impact** : `client/src/components/CartConfirmationModal`.
+
+### D-026 — Quantité affichée dans le récapitulatif de confirmation
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Commandes
+- **Contexte** : la modale de confirmation du panier listait les lignes sans leur quantité ; D-023 l'ajoutait seulement à l'historique.
+- **Décision** : le récapitulatif de confirmation affiche aussi « 2 × Bière » sur chaque ligne, comme l'historique (réponse : « Oui »).
+- **Options écartées** : le laisser tel quel.
+- **Impact** : `client/src/components/CartConfirmationModal`, `client/src/components/Cart/CartItem` (`showQuantity`).

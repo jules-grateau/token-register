@@ -48,7 +48,7 @@ Racine : `height: 100dvh` (et non `100vh`), `padding-inline: env(safe-area-inset
 
 ### 1. Téléphone portrait
 
-Pile verticale : en-tête 56 → onglets 60 → grille (**seule zone qui défile**) → barre panier fixe `var(--cart-bar-height)` + `env(safe-area-inset-bottom)`.
+Pile verticale : en-tête 56 → onglets 60 → grille (**seule zone qui défile**) → barre panier `var(--cart-bar-height)` + `env(safe-area-inset-bottom)`, dernier élément de la colonne (dans le flux, pas en `fixed`).
 
 ```
 +--------------------------------------+
@@ -118,7 +118,7 @@ En-tête compact 44 px sur toute la largeur. Dessous, deux colonnes : catalogue 
 - En-tête : 44 px, titre 18 px, `ActionIcon` 44 × 44 (historique, réglages).
 - Onglets : rangée de 52 px (onglets 44 + `py={4}`), au-dessus du catalogue uniquement.
 - Grille : `cols` 3, 4 si `(min-width: 920px)` ; `spacing="xs"`, `p="xs"`, `mih={72}`, `p="xs"` dans la carte.
-- Panier : `w="clamp(260px, 38vw, 320px)"`, bordure gauche, **sans en-tête** (historique dans l'en-tête global). Lignes en 2 rangées (même composant), seule zone qui défile. Pied compact d'une rangée de 60 px (`p="xs"`, `wrap="nowrap"`) : vider (`ActionIcon` 44) · pile « 3 articles » 16 px `dimmed` / total 20 px 800 · « Valider » `h={44}` `flex: 1`.
+- Panier : `w="clamp(260px, 38vw, 320px)"`, bordure gauche, **sans en-tête** (historique dans l'en-tête global). Lignes en 2 rangées (même composant), seule zone qui défile. Pied compact d'une rangée de 60 px (`p="xs"`, `wrap="nowrap"`) : vider (`ActionIcon` 44) · pile « 3 articles » 16 px `dimmed` / total 20 px 800 · « Valider » `h={44}` `flex: 1` `miw={110}`.
 - Mode édition : pas de panier ; catalogue pleine largeur, grille 4 colonnes ; actions de catégorie en bout de rangée d'onglets (voir maquette édition).
 
 ### 3. Tablette (576 – 991 px, hors téléphone paysage)

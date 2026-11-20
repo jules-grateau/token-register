@@ -48,7 +48,13 @@ export function useClearCartWithUndo(): () => void {
       dispatch(restoreCart(previous));
       toast.dismiss(CART_CLEARED_TOAST_ID);
     };
-    const options = { autoClose: 5000, closeOnClick: false, pauseOnHover: true };
+    // No close button: it overlapped "Annuler" (the toast closes by itself after 5 s).
+    const options = {
+      autoClose: 5000,
+      closeOnClick: false,
+      pauseOnHover: true,
+      closeButton: false,
+    };
     // One toast at a time: a new clear replaces the previous undo offer.
     if (toast.isActive(CART_CLEARED_TOAST_ID)) {
       toast.update(CART_CLEARED_TOAST_ID, {

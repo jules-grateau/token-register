@@ -15,6 +15,7 @@ import { Group, Stack, Text, ScrollArea } from '@mantine/core';
 import ConfirmationModal from '../ConfirmationModal';
 import Loader from '../Loader';
 import { useCurrency } from '../../hooks/useCurrency';
+import { CART_CLEARED_TOAST_ID } from '../../hooks/useClearCartWithUndo';
 
 interface CartConfirmationModalProps {
   isOpen: boolean;
@@ -44,6 +45,8 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
       const id = await addOrder(cartItems).unwrap();
       dispatch(clearCart());
       void ordersQuery.refetch();
+      // D-025: once an order is placed, emptying the cart can no longer be undone.
+      toast.dismiss(CART_CLEARED_TOAST_ID);
       toast.success(t('order_placed', { id }));
       onClose();
       onOrderPlaced?.();
@@ -60,7 +63,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
   const modalFooter = (
     <Group justify="space-between">
       <Text fw={700}>{`${totalItems} ${t('items', { count: totalItems })}`}</Text>
-      <Text fw={700} style={{ whiteSpace: 'nowrap' }}>
+      <Text fz={20} fw={700} style={{ whiteSpace: 'nowrap' }}>
         {format(totalPrice)}
       </Text>
     </Group>
@@ -82,7 +85,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
           <ScrollArea.Autosize mah={300}>
             <Stack>
               {cartItems.map((item, index) => (
-                <CartItem key={index} item={item} />
+                <CartItem key={index} item={item} showQuantity />
               ))}
             </Stack>
           </ScrollArea.Autosize>

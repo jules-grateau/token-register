@@ -53,6 +53,7 @@ describe('useClearCartWithUndo (D-019)', () => {
       autoClose: 5000,
       closeOnClick: false,
       pauseOnHover: true,
+      closeButton: false,
     });
   });
 

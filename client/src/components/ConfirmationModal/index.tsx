@@ -44,7 +44,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           <Button onClick={handleConfirm} size="md" h={44}>
             {confirmButtonText || t('confirm')}
           </Button>
-          <Button onClick={onClose} color="red" variant="outline" size="md" h={44}>
+          <Button onClick={onClose} variant="default" size="md" h={44}>
             {cancelButtonText || t('cancel')}
           </Button>
         </Group>

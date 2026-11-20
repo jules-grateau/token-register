@@ -133,7 +133,7 @@ const Cart: React.FC<CartProps> = ({
           {t('total_items')}
         </Text>
         <Text fw={500} size="md" data-testid="cart-total-item">
-          {itemsLabel}
+          {totalItems}
         </Text>
       </Group>
       <Group justify="space-between" wrap="nowrap">
@@ -263,7 +263,7 @@ const Cart: React.FC<CartProps> = ({
               {format(totalPrice)}
             </Text>
           </Stack>
-          <Button h={44} style={{ flex: 1 }} onClick={onValidateCart} disabled={isEmpty}>
+          <Button h={44} miw={110} style={{ flex: 1 }} onClick={onValidateCart} disabled={isEmpty}>
             {t('checkout')}
           </Button>
         </Group>

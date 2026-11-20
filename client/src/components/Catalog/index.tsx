@@ -297,6 +297,7 @@ function Catalog(): React.ReactElement {
             w={24}
             style={{
               pointerEvents: 'none',
+              zIndex: 1,
               background: 'linear-gradient(to right, transparent, var(--mantine-color-body))',
             }}
           />

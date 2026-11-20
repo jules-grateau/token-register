@@ -114,4 +114,14 @@ describe('cartSlice restore (D-019: "Annuler" merges)', () => {
     );
     expect(nextState.items.map((item) => item.discountedAmount)).toEqual([5, 1]);
   });
+
+  it('adds quantities and discount amounts of a product in both carts (D-024)', () => {
+    // 2 x Apple (-1), emptied, 1 x Apple (-0.50), "Annuler" -> 3 x Apple (-1.50).
+    const current = { items: [{ product: product1, quantity: 1, discountedAmount: 50 }] };
+    const nextState = cartReducer(
+      current,
+      restoreCart([{ product: product1, quantity: 2, discountedAmount: 100 }])
+    );
+    expect(nextState.items).toEqual([{ product: product1, quantity: 3, discountedAmount: 150 }]);
+  });
 });

@@ -18,6 +18,11 @@ body,
   box-sizing: inherit;
 }
 
+/* react-toastify forces bottom: 0 under 480 px: keep toasts above the phone cart bar. */
+.Toastify__toast-container--bottom-center {
+  bottom: var(--toastify-toast-bottom) !important;
+}
+
 .app-container {
   padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
   display: flex;
