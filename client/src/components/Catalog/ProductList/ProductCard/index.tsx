@@ -1,9 +1,25 @@
 import React from 'react';
 import type { ProductType } from 'shared-ts';
 import { useTranslation } from 'react-i18next';
-import { Text, Stack, Group, Button } from '@mantine/core';
+import { Text, Stack, Group, Card, UnstyledButton, ActionIcon } from '@mantine/core';
 import { IconEdit, IconTrash } from '@tabler/icons-react';
 import { useCurrency } from '../../../../hooks/useCurrency';
+import { useLayoutMode, type LayoutMode } from '../../../../hooks/useLayoutMode';
+import classes from './ProductCard.module.css';
+
+// docs/design/spacing-layout.md: card min height and padding per layout mode.
+export const CARD_MIN_HEIGHT: Record<LayoutMode, number> = {
+  'phone-portrait': 96,
+  'phone-landscape': 72,
+  tablet: 120,
+  desktop: 200,
+};
+export const CARD_PADDING: Record<LayoutMode, 'xs' | 'sm' | 'lg'> = {
+  'phone-portrait': 'sm',
+  'phone-landscape': 'xs',
+  tablet: 'sm',
+  desktop: 'lg',
+};
 
 interface ProductCardProps {
   product: ProductType;
@@ -22,90 +38,70 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const { t } = useTranslation();
   const { format } = useCurrency();
+  const mode = useLayoutMode();
 
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onEdit?.(product);
-  };
-
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete?.(product);
-  };
+  // D-022: in edit mode, touching the card opens its edit form.
+  const handleMainClick = () => (isEditMode ? onEdit?.(product) : onClick());
 
   return (
-    <Button
-      onClick={onClick}
-      mih={{ base: 100, md: 200 }}
-      variant="default"
-      radius="sm"
-      p={0}
-      styles={{
-        label: { whiteSpace: 'normal', height: '100%', width: '100%' },
-        inner: { height: '100%', width: '100%' },
-      }}
-      style={{ position: 'relative', overflow: 'hidden' }}
-    >
-      <Stack
-        gap={0}
-        align="center"
-        justify="space-between"
-        style={{ width: '100%', height: '100%' }}
+    <Card withBorder radius="sm" p={0} h="auto" mih={CARD_MIN_HEIGHT[mode]}>
+      <UnstyledButton
+        onClick={handleMainClick}
+        className={classes.main}
+        flex={1}
+        p={CARD_PADDING[mode]}
+        aria-label={t(isEditMode ? 'product_card.edit' : 'product_card.add', {
+          name: product.name,
+        })}
       >
-        <Stack
-          gap="sm"
-          align="center"
-          justify="center"
-          p={{ base: 'sm', md: 'lg' }}
-          style={{ flex: 1, maxWidth: '100%' }}
-        >
-          {/* A price is never truncated: the name gives way (2 lines max). */}
-          <Text fw={700} size="lg" ta="center" lineClamp={2}>
+        <Stack gap="xs" align="center" justify="center" h="100%">
+          {/* D-021: a name is never cut, the card grows. A price never wraps. */}
+          <Text
+            fw={700}
+            size={mode === 'desktop' ? 'lg' : 'md'}
+            ta="center"
+            style={{ overflowWrap: 'anywhere' }}
+          >
             {product.name}
           </Text>
           {product.price !== undefined && (
-            <Text size="sm" fw={600} style={{ whiteSpace: 'nowrap' }}>
+            <Text fw={700} size="lg" style={{ whiteSpace: 'nowrap' }}>
               {format(product.price)}
             </Text>
           )}
         </Stack>
+      </UnstyledButton>
 
-        {isEditMode && (
-          <Group
-            gap={0}
-            w="100%"
-            grow
-            style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}
+      {isEditMode && (
+        <Group
+          gap={0}
+          grow
+          h={48}
+          wrap="nowrap"
+          style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}
+        >
+          <ActionIcon
+            variant="subtle"
+            radius={0}
+            h={48}
+            onClick={() => onEdit?.(product)}
+            aria-label={t('actions.edit')}
+            style={{ borderRight: '1px solid var(--mantine-color-default-border)' }}
           >
-            <Button
-              variant="default"
-              onClick={handleEdit}
-              aria-label={t('actions.edit')}
-              radius={0}
-              style={{
-                flex: 1,
-                borderRight: '1px solid var(--mantine-color-default-border)',
-                height: '56px',
-              }}
-            >
-              <IconEdit size={20} color="var(--mantine-primary-color-filled)" />
-            </Button>
-            <Button
-              variant="default"
-              onClick={handleDelete}
-              aria-label={t('delete')}
-              radius={0}
-              style={{
-                flex: 1,
-                height: '56px',
-              }}
-            >
-              <IconTrash size={20} color="var(--mantine-color-red-6)" />
-            </Button>
-          </Group>
-        )}
-      </Stack>
-    </Button>
+            <IconEdit size={22} color="var(--mantine-primary-color-filled)" />
+          </ActionIcon>
+          <ActionIcon
+            variant="subtle"
+            radius={0}
+            h={48}
+            onClick={() => onDelete?.(product)}
+            aria-label={t('delete')}
+          >
+            <IconTrash size={22} color="var(--mantine-color-red-6)" />
+          </ActionIcon>
+        </Group>
+      )}
+    </Card>
   );
 };
 

@@ -31,4 +31,38 @@
 
   --color-border: #5F6368;
   --color-border-light: #9AA0A6;
+
+  /* Touch targets and layout (docs/design/spacing-layout.md) */
+  --touch-min: 44px;
+  --touch-comfort: 56px;
+  --cart-bar-height: 72px;
+}
+
+/*
+ * react-toastify, theme="colored" (docs/design/colors.md, components.md).
+ * Scoped on .Toastify so it wins over the variables toastify injects on :root.
+ * Contrasts: success 6.1:1, error 6.2:1, info 6.7:1.
+ */
+.Toastify {
+  --toastify-color-success: var(--color-success-bg);
+  --toastify-text-color-success: var(--color-success-text);
+  --toastify-color-error: var(--color-danger-bg);
+  --toastify-text-color-error: var(--color-danger-text);
+  --toastify-color-info: var(--color-info-bg);
+  --toastify-text-color-info: var(--color-info-text);
+
+  --toastify-toast-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* Phone portrait: keep toasts above the collapsed cart bar. */
+@media (orientation: portrait) and (max-width: 575.98px) {
+  .Toastify {
+    --toastify-toast-bottom: calc(var(--cart-bar-height) + env(safe-area-inset-bottom) + 8px);
+  }
+}
+
+/* The colored theme draws a white close button: follow the toast text color instead. */
+.Toastify__close-button--colored {
+  color: inherit;
+  opacity: 1;
 }

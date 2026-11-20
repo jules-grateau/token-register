@@ -55,10 +55,39 @@ const cartSlice = createSlice({
     clear(state) {
       state.items = [];
     },
+    // D-019: "Annuler" after emptying the cart merges the previous cart back into the
+    // current one: previous lines first, then the products added in the meantime.
+    // A product present in both carts gets its quantities added.
+    // PROVISIONAL (pending a business decision, not covered by D-019): when such a
+    // product has a discount on either side, the discount amounts are added too.
+    restore(state, action: PayloadAction<CartItemType[]>) {
+      const current = state.items;
+      const merged = action.payload.map((previous) => {
+        const added = current.find((item) => item.product.id === previous.product.id);
+        return added
+          ? {
+              ...previous,
+              quantity: previous.quantity + added.quantity,
+              discountedAmount: previous.discountedAmount + added.discountedAmount,
+            }
+          : { ...previous };
+      });
+      const addedOnly = current.filter(
+        (item) => !action.payload.some((previous) => previous.product.id === item.product.id)
+      );
+      state.items = [...merged, ...addedOnly];
+    },
   },
 });
 
-export const { add, remove, clear: clearCart, addDiscount, updateQuantity } = cartSlice.actions;
+export const {
+  add,
+  remove,
+  clear: clearCart,
+  addDiscount,
+  updateQuantity,
+  restore: restoreCart,
+} = cartSlice.actions;
 export const cartReducer = cartSlice.reducer;
 
 export const selectCartItems = (state: { cart: CartState }) => state.cart.items;

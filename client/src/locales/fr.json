@@ -13,6 +13,8 @@
   "order_history": "Historique des commandes",
   "order": "Commande",
   "order_number": "Commande n°{{id}} - {{date}}",
+  "order_title": "Commande n°{{id}}",
+  "order_line": "{{quantity}} × {{name}}",
   "order_placed": "Commande n°{{id}} enregistrée",
   "delete": "Supprimer",
   "close": "Fermer",
@@ -58,10 +60,21 @@
   "clear_cart": "Vider le panier",
   "minus": "Moins",
   "plus": "Plus",
+  "cart_item_actions": "Plus d'actions",
+  "view_cart": "Voir le panier",
+  "cart_empty_short": "Panier vide",
+  "cart_cleared": "Panier vidé",
+  "undo": "Annuler",
+  "product_card": {
+    "add": "Ajouter {{name}}",
+    "edit": "Modifier {{name}}"
+  },
   "edit_mode": {
     "toggle": "Mode Édition",
     "exit": "Quitter le Mode Édition",
-    "active": "Mode Édition Actif"
+    "active": "Mode Édition Actif",
+    "done": "Terminer",
+    "badge": "Édition"
   },
   "product_management": {
     "new": "Nouveau Produit",

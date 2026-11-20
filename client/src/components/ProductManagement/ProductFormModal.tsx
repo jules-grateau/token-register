@@ -121,7 +121,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         'error' in err.data
           ? String(err.data.error)
           : t('errors.unknown');
-      toast.error(errorMessage);
+      toast.error(errorMessage, { autoClose: 5000 });
     }
   };
 
@@ -150,7 +150,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         'error' in err.data
           ? String(err.data.error)
           : t('errors.unknown');
-      toast.error(errorMessage);
+      toast.error(errorMessage, { autoClose: 5000 });
       setShowConfirmation(false);
     }
   };

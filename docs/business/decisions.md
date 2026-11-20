@@ -216,3 +216,69 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Décision** : la troncature silencieuse à 2 décimales est acceptée pour un collage dans le champ (le clavier empêche déjà la 3e décimale). Précise D-010, qui reste active : une saisie trop précise reste refusée avec un message par la validation du formulaire et par l'API.
 - **Options écartées** : refuser aussi le collage avec un message.
 - **Impact** : `client/src/components/ProductManagement/ProductFormModal.tsx`, `client/src/components/DiscountModal` (`NumberInput` avec `decimalScale={2}`).
+
+### D-018 — Téléphone : portrait et paysage pris en charge
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : sur téléphone, le catalogue était quasi inutilisable (catégories et panier occupaient l'écran, scrolls imbriqués). Réponse : « Les deux », avec la remarque « Faudrait juste que ce soit en horizontal forcé, non ? ».
+- **Décision** : les deux orientations du téléphone sont prises en charge. En portrait : catégories en rangée horizontale, grille de 2 colonnes, panier replié en barre basse (nombre d'articles, total, « Valider ») qui s'ouvre en tiroir. En paysage : catalogue et panier côte à côte, panier toujours visible. Aucun écran « Tournez votre téléphone ».
+- **Options écartées** : paysage obligatoire seul ; portrait seul.
+- **Impact** : `client/src/hooks/useLayoutMode.ts`, `client/src/components/Register`, `client/src/components/Catalog`, `client/src/components/Cart`, `docs/design/spacing-layout.md`.
+
+### D-019 — Vider le panier : immédiat, avec « Annuler » pendant 5 s qui fusionne
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Commandes
+- **Contexte** : « Vider le panier » vidait tout en un toucher, sans retour possible ; agrandir le bouton augmente le risque d'erreur.
+- **Décision** : le panier est vidé immédiatement, puis un toast « Panier vidé – Annuler » reste 5 s. Si le panier a été modifié pendant ces 5 s, « Annuler » fusionne (réponse : « Fusionner ») : l'ancien panier revient et les produits ajoutés entre-temps restent. Un produit sans remise présent dans les deux paniers voit ses quantités additionnées.
+- **Options écartées** : modale de confirmation ; laisser tel quel ; restaurer seulement l'ancien panier ; fermer le toast dès que le panier change.
+- **Impact** : `client/src/hooks/useClearCartWithUndo.tsx`, `client/src/redux/cartSlice.tsx` (`restore`), `docs/design/components.md`.
+
+### D-020 — Suppression d'une commande dans l'historique conservée, avec confirmation
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Commandes
+- **Contexte** : le bouton « Supprimer » de l'historique était petit et mal placé ; la question de garder la suppression se posait.
+- **Décision** : la suppression d'une commande est gardée (réponse : « La garder »), derrière la confirmation existante. Le bouton fait 44 px de haut, en bas de la carte de la commande.
+- **Options écartées** : retirer la suppression de l'historique.
+- **Impact** : `client/src/components/OrderHistoryModal`, `client/src/components/ConfirmationModal`.
+
+### D-021 — Noms de produits jamais coupés
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Catalogue
+- **Contexte** : les noms longs étaient coupés après 2 lignes ; deux produits proches pouvaient s'afficher pareil.
+- **Décision** : un nom de produit n'est jamais coupé (cartes, lignes de panier, historique) : il passe à la ligne et la carte grandit. Le prix reste toujours visible.
+- **Options écartées** : coupés après 2 lignes ; coupés après 3 lignes.
+- **Impact** : `client/src/components/Catalog/ProductList/ProductCard`, `client/src/components/Cart/CartItem`, `docs/design/typography.md`.
+
+### D-022 — Mode édition complet sur téléphone, toucher une carte ouvre sa modification
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Catalogue
+- **Contexte** : en mode édition sur téléphone, les actions des produits étaient invisibles et les catégories tronquées.
+- **Décision** : le mode édition est disponible et complet sur téléphone (réponse : « Oui, complètement »). En mode édition, toucher une carte produit ouvre sa modification (réponse : « Ouvre la modification »), en plus des boutons modifier / supprimer.
+- **Options écartées** : masquer le mode édition sur téléphone.
+- **Impact** : `client/src/components/Catalog`, `client/src/components/Catalog/ProductList/ProductCard`.
+
+### D-023 — Quantité affichée sur chaque ligne de l'historique
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Commandes
+- **Contexte** : l'historique affichait le nom et le montant d'une ligne, sans la quantité.
+- **Décision** : chaque ligne de l'historique affiche sa quantité devant le nom : « 2 × Bière ».
+- **Options écartées** : aucune (réponse : « Oui »).
+- **Impact** : `client/src/components/OrderHistoryModal`, `client/src/components/Cart/CartItem` (`showQuantity`).

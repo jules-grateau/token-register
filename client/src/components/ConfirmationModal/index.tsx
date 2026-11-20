@@ -41,8 +41,10 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         {children}
         {extraFooter}
         <Group grow mt="md">
-          <Button onClick={handleConfirm}>{confirmButtonText || t('confirm')}</Button>
-          <Button onClick={onClose} color="red" variant="outline">
+          <Button onClick={handleConfirm} size="md" h={44}>
+            {confirmButtonText || t('confirm')}
+          </Button>
+          <Button onClick={onClose} color="red" variant="outline" size="md" h={44}>
             {cancelButtonText || t('cancel')}
           </Button>
         </Group>

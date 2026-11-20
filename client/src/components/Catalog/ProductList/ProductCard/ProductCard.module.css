@@ -1,0 +1,9 @@
+/* docs/design/components.md, "Carte produit": hover / press state. */
+.main:hover,
+.main:active {
+  background-color: var(--mantine-color-dark-5);
+}
+
+.newCard {
+  border-style: dashed;
+}

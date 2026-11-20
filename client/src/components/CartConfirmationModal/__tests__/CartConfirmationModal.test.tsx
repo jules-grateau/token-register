@@ -119,7 +119,8 @@ describe('CartConfirmationModal', () => {
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
-        `error_adding_order (${JSON.stringify({ error: String(error) })})`
+        `error_adding_order (${JSON.stringify({ error: String(error) })})`,
+        { autoClose: 5000 }
       );
     });
 

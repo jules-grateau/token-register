@@ -19,9 +19,15 @@ import { useCurrency } from '../../hooks/useCurrency';
 interface CartConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Called after the order is saved (e.g. to collapse the phone cart Drawer). */
+  onOrderPlaced?: () => void;
 }
 
-const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({ isOpen, onClose }) => {
+const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
+  isOpen,
+  onClose,
+  onOrderPlaced,
+}) => {
   const { t } = useTranslation();
   const { format } = useCurrency();
   const cartItems = useSelector(selectCartItems);
@@ -40,8 +46,9 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({ isOpen, o
       void ordersQuery.refetch();
       toast.success(t('order_placed', { id }));
       onClose();
+      onOrderPlaced?.();
     } catch (error) {
-      toast.error(t(t('error_adding_order', { error: String(error) })));
+      toast.error(t('error_adding_order', { error: String(error) }), { autoClose: 5000 });
     }
   };
 
