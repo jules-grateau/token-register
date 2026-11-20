@@ -73,9 +73,9 @@ L'utilisateur n'a pas à demander de traiter les revues. Après chaque `gh pr cr
 
 1. La PR est créée en brouillon : le workflow `Tech-lead review` ignore les brouillons et ne tourne pas encore. Une fois tout poussé et lint/tests/build verts, la passer en « prête » (`gh pr ready <PR>`) : c'est ce qui déclenche la revue.
 2. Attendre la fin du workflow `Tech-lead review` sur la PR (en arrière-plan) (`gh run list --workflow tech-lead-review.yml --branch <branche>`), puis lire la revue : `gh pr view <PR> --comments` et `gh api repos/{owner}/{repo}/pulls/<PR>/comments`.
-3. S'il y a des points 🔴 ou 🟠 : repasser la PR en brouillon, lancer `developpeur` pour les traiter et y répondre, puis la remettre en « prête ». Ce passage relance une revue complète du tech-lead sur la PR corrigée. S'il n'y a que des 🟡 : pas de retour en brouillon. Le développeur les traite ou y répond sur la PR (⏸️ avec raison), et c'est tout. Seuls les points qui demandent un choix métier remontent à l'utilisateur, groupés.
+3. S'il y a des points 🔴 ou 🟠 : repasser la PR en brouillon, lancer `developpeur` pour les traiter et y répondre, puis la remettre en « prête ». Ce passage relance une revue complète du tech-lead sur la PR corrigée. S'il n'y a que des 🟡 : pas de retour en brouillon. Le développeur les traite ou y répond sur la PR (⏸️ avec raison si non retenu, 📌 + issue si reporté), et c'est tout. Seuls les points qui demandent un choix métier remontent à l'utilisateur, groupés.
 4. S'il n'y a rien à traiter : le dire en une ligne.
-5. Ne présenter le travail comme terminé qu'une fois la revue traitée et les réponses publiées, avec un résumé des points et de leur statut (✅ / ⏸️ / ❓).
+5. Ne présenter le travail comme terminé qu'une fois la revue traitée et les réponses publiées, avec un résumé des points et de leur statut (✅ / 📌 / ⏸️ / ❓).
 
 Pour une PR de feature qui modifie l'interface : après la revue du tech-lead, faire relire par le `designer` les écrans touchés par la PR (revue ciblée, une seule fois). La PR ne passe en « prête » qu'après sa validation. Si le contrôle automatique d'une release échoue, la correction passe par une PR vers `develop`.
 
