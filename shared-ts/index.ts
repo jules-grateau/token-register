@@ -1,8 +1,47 @@
+/**
+ * Key of a catalog icon (D-046, D-047): closed list of docs/design/icons.md, "Icônes produit".
+ * The database stores the key, never the icon itself. Adding an icon = adding a key here, in the
+ * API whitelist (api/src/utils/catalogIcons.ts) and in the client map
+ * (client/src/config/catalogIcons.ts); both are checked against this type.
+ */
+export type CatalogIconKey =
+  | 'beer'
+  | 'wine'
+  | 'cocktail'
+  | 'soft_drink'
+  | 'bottle'
+  | 'water'
+  | 'coffee'
+  | 'hot_drink'
+  | 'milk'
+  | 'cup'
+  | 'sandwich'
+  | 'burger'
+  | 'hot_dog'
+  | 'pizza'
+  | 'salad'
+  | 'soup'
+  | 'meat'
+  | 'grill'
+  | 'cheese'
+  | 'snack'
+  | 'cookie'
+  | 'cake'
+  | 'ice_cream'
+  | 'candy'
+  | 'fruit'
+  | 'deposit'
+  | 'ticket'
+  | 'tshirt'
+  | 'goodies';
+
 export type ProductType = {
   id: number;
   name: string;
   price: number;
   categoryId: number;
+  /** Optional icon (D-046). null or missing: the card shows the product's initial. */
+  icon?: CatalogIconKey | null;
 };
 
 export type CartItemType = {
@@ -51,6 +90,8 @@ export type CreateOrderRequestType = {
 export type CategoryType = {
   id: number;
   name: string;
+  /** Optional icon shown in the category tab (D-047). null or missing: the name only. */
+  icon?: CatalogIconKey | null;
 };
 
 export type PostAPIResponseType = {
