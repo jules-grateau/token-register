@@ -57,6 +57,10 @@ TypeScript 5.8.3: Follow standard conventions
 - Pour traiter une revue : lancer `developpeur` avec le numéro de PR (section « Traiter une revue » de son agent). Il corrige, pousse, puis répond sur chaque fil et publie un récapitulatif « 🛠️ Réponse du développeur ». Les points qui demandent un choix métier remontent à l'utilisateur.
 - Pour clore la boucle côté code : lancer `tech-lead` en mode « vérifier les corrections » sur la PR. Il confirme chaque `TL-n` (✅/❌) dans un commentaire.
 
+### PR en brouillon pendant le travail
+
+Une PR n'est mergeable que quand elle est prête. Le développeur crée ses PR en brouillon (`--draft`) et repasse une PR existante en brouillon (`gh pr ready <n> --undo`) avant de la modifier. Il la remet en « prête » (`gh pr ready <n>`) seulement quand tout est poussé et que les réponses aux revues sont publiées. La session principale fait de même quand elle relance un agent sur une PR. Le passage en « prête » relance la revue du tech-lead : on ne repasse pas une PR en brouillon pour de simples suggestions 🟡, pour ne pas tourner en boucle.
+
 ### Après chaque PR créée : traiter la revue sans attendre qu'on le demande
 
 L'utilisateur n'a pas à demander de traiter les revues. Après chaque `gh pr create` dans une session :
