@@ -41,8 +41,11 @@
   background-color: var(--color-surface);
 }
 
-/* Inputs: surface 2, strong border (a control, >= 3:1), focus border in the focus color. */
+/* Inputs: surface 2, strong border (a control, >= 3:1), focus border in the focus color.
+   48 px high, 16 px text (docs/design/components.md, "Modales (hors encaissement)"). */
 [data-mantine-color-scheme] .inputWrapper[data-variant='default'] {
+  --input-height: 48px;
+  --input-fz: 16px;
   --input-bg: var(--color-surface-2);
   --input-bd: var(--color-border-strong);
   --input-bd-focus: var(--color-focus);

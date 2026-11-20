@@ -1,19 +1,11 @@
 import React from 'react';
-import {
-  Badge,
-  Button,
-  Flex,
-  Group,
-  Modal,
-  Stack,
-  Text,
-  Title,
-  useMantineTheme,
-} from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { Badge, Button, Flex, Group, Modal, Stack, Text, Title } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { APP_NAME, getAppVersionInfo } from '../../config/version';
 import logoUrl from '../../assets/brand/logo.svg';
+import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
+
+const SECONDARY = 'var(--color-text-2)';
 
 interface AboutModalProps {
   isOpen: boolean;
@@ -22,8 +14,8 @@ interface AboutModalProps {
 
 const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
-  const theme = useMantineTheme();
-  const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.sm})`);
+  // Full screen on phones, portrait and landscape (useLayoutMode, like the other modals).
+  const isMobile = isPhoneMode(useLayoutMode());
   const info = getAppVersionInfo();
 
   const envBadge =
@@ -44,7 +36,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
       title={t('about.title')}
       centered
       fullScreen={isMobile}
-      closeButtonProps={{ size: 44 }}
+      closeButtonProps={{ size: 44, 'aria-label': t('close') }}
     >
       {/* docs/design/components.md, "À propos" (D-040: app name and version, not the client). */}
       <Stack align="center" gap="xs" ta="center">
@@ -52,16 +44,16 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
         <Title order={2} fz={24} fw={800}>
           {APP_NAME}
         </Title>
-        <Text c="dimmed">{t('app.tagline')}</Text>
+        <Text c={SECONDARY}>{t('app.tagline')}</Text>
         <Group gap="sm" justify="center">
-          <Text size="sm" c="dimmed" style={{ fontVariantNumeric: 'tabular-nums' }}>
+          <Text size="sm" c={SECONDARY} style={{ fontVariantNumeric: 'tabular-nums' }}>
             {t('about.version', { version: info.version })}
           </Text>
           {envBadge}
         </Group>
         {info.commit && (
           <Group gap="sm" justify="center">
-            <Text size="sm" c="dimmed">
+            <Text size="sm" c={SECONDARY}>
               {t('about.commit')}
             </Text>
             <Text size="sm" ff="monospace">

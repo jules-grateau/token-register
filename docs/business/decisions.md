@@ -565,3 +565,25 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Décision** : le badge affiche la quantité totale de la ligne du produit dans le panier, **remise comprise** (réponse : « Oui, toute la quantité »). Il est masqué en mode édition.
 - **Options écartées** : exclure les articles remisés.
 - **Impact** : `client/src/components/Catalog/ProductList`, `ProductCard`, `docs/design/components.md`.
+
+### D-049 — Nombre d'articles en minuscule, « Articles » en tête de ligne
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : la revue design de la PR #30 (DS-1) relevait « Total · 3 Articles » avec une majuscule, alors que la charte écrit « articles ». La clé `total_items` ne sert qu'au libellé seul en début de ligne du pied du panier (« Articles … 3 »), que la charte écrit avec une majuscule.
+- **Décision** : le nombre d'articles s'écrit en minuscule après le nombre (réponse : « Counts lowercase (Recommended) ») : « 1 article », « 3 articles », et « 1 item », « 3 items » en anglais (`items_one`, `items_other`). Le libellé seul du pied du panier garde sa majuscule : « Articles » (`total_items`).
+- **Options écartées** : tout mettre en minuscule, y compris le libellé du pied du panier (« articles … 3 »).
+- **Impact** : `client/src/locales/fr.json`, `client/src/locales/en.json` (barre panier, encaissement, historique).
+
+### D-050 — Confirmations : « Annuler » à gauche, suppression en rouge
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : dans les modales de confirmation, « Confirmer » était à gauche et « Annuler » à droite. La charte (« Modales hors encaissement ») place l'action principale à droite et une action destructive en rouge ; le changement casse l'habitude des utilisateurs actuels.
+- **Décision** : on applique la charte (réponse : « Apply the design (Recommended) ») : « Annuler » à gauche, l'action à droite, dans toutes les confirmations et tous les formulaires. Pour une suppression (commande, produit, catégorie), le bouton d'action est rouge plein.
+- **Options écartées** : garder « Confirmer » à gauche.
+- **Impact** : `client/src/components/ConfirmationModal` (prop `destructive`), `client/src/components/OrderHistoryModal`, `client/src/components/ProductManagement`, `client/src/components/CategoryManagement`, `client/src/components/DiscountModal`.

@@ -64,10 +64,21 @@ const VIEWPORTS = {
   'mobile-landscape': { ...devices['iPhone 13 landscape'], deviceScaleFactor: 1 },
 };
 
-// Closes whatever modal, Drawer or menu is open, and lets the transition end.
+// Closes whatever modal, Drawer or menu is open, and lets the transition end. A confirmation
+// opened over another modal (delete an order from the history) needs one Escape per layer.
 async function closeOverlays(page) {
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(300);
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    if (
+      !(await page
+        .getByRole('dialog')
+        .first()
+        .isVisible()
+        .catch(() => false))
+    )
+      return;
+  }
 }
 
 async function openSettingsItem(page, item) {
@@ -196,6 +207,13 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
     },
   ],
   [
+    // Confirmation over the history (D-020, D-050): not confirmed, the order stays.
+    'order-delete-confirm',
+    async (page) => {
+      await dialog(page).getByRole('button', { name: 'Supprimer', exact: true }).first().click();
+    },
+  ],
+  [
     'cart-cleared-toast',
     async (page) => {
       await closeOverlays(page);
@@ -261,6 +279,37 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
       await page.getByRole('tabpanel').getByRole('button', { name: 'Nouveau Produit' }).click();
       // Unfold the icon picker (D-046), so that the grid of icons is reviewed too.
       await dialog(page).getByRole('button', { name: 'Choisir une icône' }).click();
+    },
+  ],
+  [
+    'new-category-form',
+    async (page) => {
+      await closeOverlays(page);
+      // Dashed last tab (row of tabs) or NewCategoryButton (column of tabs).
+      await page.getByRole('button', { name: 'Nouvelle Catégorie' }).first().click();
+    },
+  ],
+  [
+    // Not confirmed: the product stays.
+    'product-delete-confirm',
+    async (page) => {
+      await closeOverlays(page);
+      await page
+        .getByRole('tabpanel')
+        .getByRole('button', { name: 'Supprimer', exact: true })
+        .first()
+        .click();
+    },
+  ],
+  [
+    'discount-modal',
+    async (page) => {
+      await closeOverlays(page);
+      await page.getByRole('button', { name: 'Terminer' }).click();
+      await page.getByRole('tabpanel').getByText(first, { exact: true }).first().click();
+      await openCartIfCollapsed(page);
+      await page.getByRole('button', { name: "Plus d'actions" }).last().click();
+      await page.getByRole('menuitem', { name: 'Appliquer une réduction' }).click();
     },
   ],
 ];

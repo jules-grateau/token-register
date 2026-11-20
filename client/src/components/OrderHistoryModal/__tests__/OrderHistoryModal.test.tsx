@@ -134,12 +134,23 @@ describe('OrderHistoryModal', () => {
     expect(await screen.findByText(/order_removal_confirmation/i)).toBeInTheDocument();
   });
 
+  it('confirms the deletion with a red button (D-050)', async () => {
+    render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: /delete/i }));
+    const confirmationModal = await screen.findByRole('dialog', { name: /confirmation/i });
+    const buttons = within(confirmationModal).getAllByRole('button', {
+      name: /^(cancel|confirm)$/,
+    });
+    expect(buttons.map((button) => button.textContent)).toEqual(['cancel', 'confirm']);
+    expect(buttons[1]).toHaveAttribute('data-destructive', 'true');
+  });
+
   it('removes order and shows toast on confirm', async () => {
     mockRemoveOrder.mockReturnValue({ unwrap: () => Promise.resolve() });
     render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
     const confirmationModal = await screen.findByRole('dialog', { name: /confirmation/i });
-    const confirmButton = within(confirmationModal).getByRole('button', { name: /confirm/i });
+    const confirmButton = within(confirmationModal).getByRole('button', { name: 'confirm' });
     fireEvent.click(confirmButton);
     await waitFor(() => {
       expect(mockRemoveOrder).toHaveBeenCalled();
@@ -155,7 +166,7 @@ describe('OrderHistoryModal', () => {
     render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
     const confirmationModal = await screen.findByRole('dialog', { name: /confirmation/i });
-    const confirmButton = within(confirmationModal).getByRole('button', { name: /confirm/i });
+    const confirmButton = within(confirmationModal).getByRole('button', { name: 'confirm' });
     fireEvent.click(confirmButton);
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalled();

@@ -1,0 +1,31 @@
+/* docs/design/components.md, "Historique": modal background --color-bg, order cards on surface. */
+.content.content,
+.header.header {
+  background-color: var(--color-bg);
+}
+
+.secondary {
+  color: var(--color-text-2);
+}
+
+.error {
+  color: var(--color-danger);
+}
+
+.amount {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pagination: every page button is a touch target >= 44 px (docs/design/spacing-layout.md). */
+.control.control {
+  min-width: var(--touch-min);
+  height: var(--touch-min);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.dots {
+  min-width: var(--touch-min);
+  height: var(--touch-min);
+}

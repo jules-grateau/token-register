@@ -46,11 +46,6 @@
   white-space: nowrap;
 }
 
-/* Big figures (>= 24 px), docs/design/typography.md. */
-.big {
-  letter-spacing: -0.02em;
-}
-
 .accent {
   color: var(--color-icon-accent);
 }

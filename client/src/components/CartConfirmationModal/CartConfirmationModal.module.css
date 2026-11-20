@@ -1,10 +1,5 @@
 /* docs/design/components.md, "Encaissement". */
 
-/* Big figures (>= 24 px): total, typed amount (docs/design/typography.md). */
-.big {
-  letter-spacing: -0.02em;
-}
-
 /* Main button disabled ("Encaisser" with no amount, "Il manque"): stays mustard, faded, like
    "Valider" (docs/design/components.md, "Panier"); the state is also given by the change block. */
 .mainButton.mainButton:disabled,

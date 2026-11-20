@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { validateDiscountValue } from './utils/validateDiscountValue';
 import { Stack, Text, Group, NumberInput, SegmentedControl } from '@mantine/core';
 import { useCurrency } from '../../hooks/useCurrency';
+import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
+// Same look as the light / dark switch (docs/design/components.md, "Bascule clair/sombre").
+import segmentedClasses from '../ColorSchemeControl/ColorSchemeControl.module.css';
 import {
   computePercentageDiscount,
   getDecimalScale,
@@ -33,6 +36,7 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const { currency, format } = useCurrency();
+  const isPhone = isPhoneMode(useLayoutMode());
   const [discountType, setDiscountType] = useState<DiscountType>('fixed');
   const [discountValue, setDiscountValue] = useState<number | string>('');
   const [validationError, setValidationError] = useState<string>('');
@@ -98,9 +102,14 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
   const modalContent = (
     <Stack>
       <Stack gap={4}>
-        <Text fw={500}>{t('discount_type_title')}</Text>
+        <Text fw={600}>{t('discount_type_title')}</Text>
         <SegmentedControl
           fullWidth
+          radius="md"
+          color="moutarde"
+          classNames={{ root: segmentedClasses.root, label: segmentedClasses.label }}
+          // "Montant fixe (Jeton)" may not fit on one line at 360 px: it wraps, never cut.
+          styles={{ label: { whiteSpace: 'normal', textAlign: 'center' } }}
           value={discountType}
           onChange={(value) => handleDiscountTypeChange(value as DiscountType)}
           data={[
@@ -114,7 +123,7 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
       </Stack>
 
       <NumberInput
-        label={<Text fw={500}>{t('discount_value_title')}</Text>}
+        label={<Text fw={600}>{t('discount_value_title')}</Text>}
         id="discountValueInput"
         value={discountValue}
         onChange={handleDiscountValueChange}
@@ -128,7 +137,7 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
         hideControls
         rightSection={
           unitSuffix ? (
-            <Text size="sm" c="dimmed">
+            <Text size="md" c="var(--color-text-2)">
               {unitSuffix}
             </Text>
           ) : undefined
@@ -143,7 +152,7 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
 
       <Group justify="space-between" mt="md">
         <Text>{t('new_total_price_for_item')}:</Text>
-        <Text fw={700} style={{ whiteSpace: 'nowrap' }}>
+        <Text fw={800} style={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
           {format(priceAfterDiscount(discountValue))}
         </Text>
       </Group>
@@ -156,6 +165,7 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
       onClose={onClose}
       onConfirm={handleConfirm}
       title={t('apply_discount', { itemName: item.product.name })}
+      fullScreen={isPhone}
     >
       {modalContent}
     </ConfirmationModal>

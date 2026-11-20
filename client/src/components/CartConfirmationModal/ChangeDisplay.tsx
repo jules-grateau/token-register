@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import type { CurrencyCode } from 'shared-ts';
 import type { ChangeState } from '../../utils/payment';
 import classes from './ChangeDisplay.module.css';
+import figures from '../../styles/figures.module.css';
 
 interface ChangeDisplayProps {
   state: ChangeState;
@@ -55,7 +56,7 @@ const ChangeDisplay: React.FC<ChangeDisplayProps> = ({
         fw={800}
         lh={1.1}
         ml="auto"
-        className={[classes.amount, classes.big, colorClass].filter(Boolean).join(' ')}
+        className={[classes.amount, figures.big, colorClass].filter(Boolean).join(' ')}
       >
         {format(amount)}
       </Text>
@@ -99,7 +100,7 @@ const ChangeDisplay: React.FC<ChangeDisplayProps> = ({
       content = (
         <>
           {receivedLine(t('payment_received'), state.received)}
-          <Text fz={24} fw={800} className={classes.big}>
+          <Text fz={24} fw={800} className={figures.big}>
             {t('payment_no_change')}
           </Text>
         </>
