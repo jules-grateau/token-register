@@ -46,6 +46,11 @@ TypeScript 5.8.3: Follow standard conventions
 4. Si l'agent remonte une nouvelle question « ❓ Choix métier à confirmer », la poser à l'utilisateur et le relancer de même.
 5. Ne jamais répondre à une question métier à la place de l'utilisateur.
 
+### Version et mise en prod
+
+- La version est montée **dans la PR de la feature** (D-027), avec le type (PATCH / MINOR / MAJOR) demandé à l'utilisateur pendant la clarification. Pas de PR de bump séparée.
+- Mise en prod : une seule PR `develop` → `main`. L'utilisateur la merge, puis approuve le déploiement ; le CI crée le tag et la Release.
+
 ### Revues automatiques et réponses
 
 - Chaque PR est relue par le `tech-lead` (workflow `tech-lead-review.yml`, points `TL-n`). Les PR `develop` → `main` sont en plus relues par le `designer` sur la démo (workflow `design-review.yml`, points `DS-n`). Il approuve ou demande des modifications, captures à l'appui, et repasse à chaque push sur `develop`.
