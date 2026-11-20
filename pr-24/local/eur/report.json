@@ -1,0 +1,498 @@
+{
+  "appUrl": "http://localhost:3102",
+  "data": {
+    "category": "Boissons",
+    "products": [
+      "Bière",
+      "Soft",
+      "Crêpe"
+    ],
+    "negative": "Retour Eco-cup"
+  },
+  "viewports": {
+    "desktop": {
+      "size": {
+        "width": 1440,
+        "height": 900
+      },
+      "steps": [
+        {
+          "step": "home",
+          "screenshot": "desktop\\01-home.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "category-selected",
+          "screenshot": "desktop\\02-category-selected.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-with-items",
+          "screenshot": "desktop\\03-cart-with-items.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "screenshot": "desktop\\05-payment-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-suggested-change",
+          "screenshot": "desktop\\06-payment-suggested-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-keypad-partial",
+          "screenshot": "desktop\\07-payment-keypad-partial.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-mixed-or-change",
+          "screenshot": "desktop\\08-order-placed-mixed-or-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-card",
+          "screenshot": "desktop\\09-order-placed-card.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-exact",
+          "screenshot": "desktop\\10-order-placed-exact.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-negative-total",
+          "screenshot": "desktop\\11-payment-negative-total.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-history",
+          "screenshot": "desktop\\12-order-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-cleared-toast",
+          "screenshot": "desktop\\13-cart-cleared-toast.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "about-modal",
+          "screenshot": "desktop\\14-about-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-mode",
+          "screenshot": "desktop\\15-edit-mode.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-form",
+          "screenshot": "desktop\\16-edit-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-form",
+          "screenshot": "desktop\\17-edit-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-form",
+          "screenshot": "desktop\\18-new-product-form.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    "tablet": {
+      "size": {
+        "width": 810,
+        "height": 1080
+      },
+      "steps": [
+        {
+          "step": "home",
+          "screenshot": "tablet\\01-home.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "category-selected",
+          "screenshot": "tablet\\02-category-selected.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-with-items",
+          "screenshot": "tablet\\03-cart-with-items.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "screenshot": "tablet\\05-payment-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-suggested-change",
+          "screenshot": "tablet\\06-payment-suggested-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-keypad-partial",
+          "screenshot": "tablet\\07-payment-keypad-partial.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-mixed-or-change",
+          "screenshot": "tablet\\08-order-placed-mixed-or-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-card",
+          "screenshot": "tablet\\09-order-placed-card.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-exact",
+          "screenshot": "tablet\\10-order-placed-exact.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-negative-total",
+          "screenshot": "tablet\\11-payment-negative-total.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-history",
+          "screenshot": "tablet\\12-order-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-cleared-toast",
+          "screenshot": "tablet\\13-cart-cleared-toast.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "about-modal",
+          "screenshot": "tablet\\14-about-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-mode",
+          "screenshot": "tablet\\15-edit-mode.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-form",
+          "screenshot": "tablet\\16-edit-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-form",
+          "screenshot": "tablet\\17-edit-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-form",
+          "screenshot": "tablet\\18-new-product-form.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    "mobile": {
+      "size": {
+        "width": 390,
+        "height": 664
+      },
+      "steps": [
+        {
+          "step": "home",
+          "screenshot": "mobile\\01-home.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "category-selected",
+          "screenshot": "mobile\\02-category-selected.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-with-items",
+          "screenshot": "mobile\\03-cart-with-items.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-drawer",
+          "screenshot": "mobile\\04-cart-drawer.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-modal",
+          "screenshot": "mobile\\05-payment-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-suggested-change",
+          "screenshot": "mobile\\06-payment-suggested-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-keypad-partial",
+          "screenshot": "mobile\\07-payment-keypad-partial.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-mixed-or-change",
+          "screenshot": "mobile\\08-order-placed-mixed-or-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-card",
+          "screenshot": "mobile\\09-order-placed-card.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-exact",
+          "screenshot": "mobile\\10-order-placed-exact.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-negative-total",
+          "screenshot": "mobile\\11-payment-negative-total.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-history",
+          "screenshot": "mobile\\12-order-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-cleared-toast",
+          "screenshot": "mobile\\13-cart-cleared-toast.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "about-modal",
+          "screenshot": "mobile\\14-about-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-mode",
+          "screenshot": "mobile\\15-edit-mode.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-form",
+          "screenshot": "mobile\\16-edit-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-form",
+          "screenshot": "mobile\\17-edit-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-form",
+          "screenshot": "mobile\\18-new-product-form.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    "mobile-landscape": {
+      "size": {
+        "width": 750,
+        "height": 342
+      },
+      "steps": [
+        {
+          "step": "home",
+          "screenshot": "mobile-landscape\\01-home.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "category-selected",
+          "screenshot": "mobile-landscape\\02-category-selected.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-with-items",
+          "screenshot": "mobile-landscape\\03-cart-with-items.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "screenshot": "mobile-landscape\\05-payment-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-suggested-change",
+          "screenshot": "mobile-landscape\\06-payment-suggested-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-keypad-partial",
+          "screenshot": "mobile-landscape\\07-payment-keypad-partial.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-mixed-or-change",
+          "screenshot": "mobile-landscape\\08-order-placed-mixed-or-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-card",
+          "screenshot": "mobile-landscape\\09-order-placed-card.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-exact",
+          "screenshot": "mobile-landscape\\10-order-placed-exact.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-negative-total",
+          "screenshot": "mobile-landscape\\11-payment-negative-total.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-history",
+          "screenshot": "mobile-landscape\\12-order-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-cleared-toast",
+          "screenshot": "mobile-landscape\\13-cart-cleared-toast.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "about-modal",
+          "screenshot": "mobile-landscape\\14-about-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-mode",
+          "screenshot": "mobile-landscape\\15-edit-mode.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-form",
+          "screenshot": "mobile-landscape\\16-edit-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-form",
+          "screenshot": "mobile-landscape\\17-edit-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-form",
+          "screenshot": "mobile-landscape\\18-new-product-form.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    }
+  },
+  "cleanup": {
+    "deletedOrders": [
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61
+    ],
+    "failed": []
+  },
+  "currency": "EUR"
+}
