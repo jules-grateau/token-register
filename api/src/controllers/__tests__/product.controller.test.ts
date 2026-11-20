@@ -64,10 +64,37 @@ describe('ProductController', () => {
 
       await controller.createProduct(req as Request, res as Response, next as NextFunction);
 
-      expect(mockProductService.addProduct).toHaveBeenCalledWith(newProduct);
+      expect(mockProductService.addProduct).toHaveBeenCalledWith({ ...newProduct, icon: null });
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({ id: createdId });
     });
+
+    it('should create a product with a known icon key (D-046)', async () => {
+      req.body = { name: 'Café', price: 1, categoryId: 2, icon: 'coffee' };
+      mockProductService.addProduct.mockResolvedValue(3);
+
+      await controller.createProduct(req as Request, res as Response, next as NextFunction);
+
+      expect(mockProductService.addProduct).toHaveBeenCalledWith({
+        name: 'Café',
+        price: 1,
+        categoryId: 2,
+        icon: 'coffee',
+      });
+      expect(res.status).toHaveBeenCalledWith(201);
+    });
+
+    it.each(['IconBeer', '<svg/>', 42, ''])(
+      'should return 400 for an icon outside the whitelist: %p',
+      async (icon) => {
+        req.body = { name: 'Café', price: 1, categoryId: 2, icon };
+
+        await controller.createProduct(req as Request, res as Response, next as NextFunction);
+
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(mockProductService.addProduct).not.toHaveBeenCalled();
+      }
+    );
 
     it('should return 400 if the price is not a whole number of units (D-010)', async () => {
       req.body = { name: 'Bière', price: 1.5, categoryId: 2 };
@@ -127,6 +154,26 @@ describe('ProductController', () => {
       expect(res.status).toHaveBeenCalledWith(204);
       expect(res.send).toHaveBeenCalled();
       expect(next).not.toHaveBeenCalled();
+    });
+
+    it('should accept a known icon key or null, and refuse anything else (D-046)', async () => {
+      mockProductService.updateProduct.mockResolvedValue(undefined);
+
+      req.body = { icon: 'beer' };
+      await controller.updateProduct(req as Request, res as Response, next as NextFunction);
+      expect(mockProductService.updateProduct).toHaveBeenLastCalledWith(productId, {
+        icon: 'beer',
+      });
+
+      req.body = { icon: null };
+      await controller.updateProduct(req as Request, res as Response, next as NextFunction);
+      expect(mockProductService.updateProduct).toHaveBeenLastCalledWith(productId, { icon: null });
+
+      mockProductService.updateProduct.mockClear();
+      req.body = { icon: 'not-an-icon' };
+      await controller.updateProduct(req as Request, res as Response, next as NextFunction);
+      expect(res.status).toHaveBeenLastCalledWith(400);
+      expect(mockProductService.updateProduct).not.toHaveBeenCalled();
     });
 
     it('should return 400 if the updated price is not a whole number of units', async () => {

@@ -30,6 +30,8 @@ import NewCategoryButton from '../CategoryManagement/NewCategoryButton';
 import CategoryFormModal from '../CategoryManagement/CategoryFormModal';
 import CategoryDeleteConfirm from '../CategoryManagement/CategoryDeleteConfirm';
 import { useLayoutMode, type LayoutMode } from '../../hooks/useLayoutMode';
+import { getCatalogIcon } from '../../config/catalogIcons';
+import classes from './Catalog.module.css';
 
 export const ALL_CATEGORIES_ID = 0;
 
@@ -44,6 +46,14 @@ interface CategoryTab {
   value: string;
   id: number;
   categoryData?: CategoryType;
+}
+
+/** D-047: optional category icon, 20 px before the name, in the tab's text color. */
+function categoryIcon(category: CategoryTab): React.ReactNode {
+  const IconComponent = getCatalogIcon(category.categoryData?.icon);
+  return IconComponent ? (
+    <IconComponent size={20} stroke={2} aria-hidden style={{ flex: 'none' }} />
+  ) : null;
 }
 
 function gridProps(mode: LayoutMode, isWideLandscape: boolean, isEditMode: boolean) {
@@ -171,31 +181,44 @@ function Catalog(): React.ReactElement {
           const canEdit = isEditMode && category.id !== ALL_CATEGORIES_ID && categoryData;
 
           return (
-            <Tabs.Tab key={category.value} value={category.value} w="100%" p={0}>
+            <Tabs.Tab
+              key={category.value}
+              value={category.value}
+              w="100%"
+              className={classes.columnTab}
+            >
               <Group
                 justify="space-between"
                 wrap="nowrap"
                 gap={0}
                 align="stretch"
                 style={{
-                  minHeight: '80px',
+                  minHeight: 56,
                   // docs/design/components.md, "Onglets catégorie": selected = mustard + ink.
                   background: isSelected ? 'var(--color-primary)' : 'transparent',
                 }}
               >
                 {/* A category name is never cut: it wraps. */}
-                <Text
-                  size={mode === 'tablet' ? 'md' : 'lg'}
-                  fw={isSelected ? 800 : 700}
+                <Group
+                  gap={8}
+                  wrap="nowrap"
                   flex={1}
                   miw={0}
                   px={canEdit && mode === 'tablet' ? 'xs' : 'md'}
-                  py="md"
+                  py="sm"
                   c={isSelected ? 'var(--color-on-primary)' : 'var(--color-text)'}
-                  style={{ alignContent: 'center', overflowWrap: 'anywhere' }}
                 >
-                  {category.label}
-                </Text>
+                  {categoryIcon(category)}
+                  <Text
+                    size={mode === 'tablet' ? 'md' : 'lg'}
+                    fw={isSelected ? 800 : 700}
+                    miw={0}
+                    c="inherit"
+                    style={{ overflowWrap: 'anywhere' }}
+                  >
+                    {category.label}
+                  </Text>
+                </Group>
                 {canEdit && (
                   <Group gap={0} wrap="nowrap" align="stretch" onClick={(e) => e.stopPropagation()}>
                     <ActionIcon
@@ -270,7 +293,8 @@ function Catalog(): React.ReactElement {
                         h={44}
                         px="md"
                         fz="md"
-                        fw={700}
+                        className={classes.pill}
+                        leftSection={categoryIcon(category)}
                         style={{ whiteSpace: 'nowrap', flex: 'none' }}
                       >
                         {category.label}
@@ -360,6 +384,7 @@ function Catalog(): React.ReactElement {
             renderRowTabs()
           ) : (
             <Tabs.List
+              className={classes.columnList}
               style={
                 mode === 'tablet'
                   ? { width: 200, flex: 'none' }
@@ -368,7 +393,7 @@ function Catalog(): React.ReactElement {
             >
               <ScrollArea h="100%">
                 <Loader isLoading={categoriesQuery.isFetching} />
-                <Stack gap="xs">{renderColumnTabs()}</Stack>
+                <Stack gap={8}>{renderColumnTabs()}</Stack>
               </ScrollArea>
             </Tabs.List>
           )}

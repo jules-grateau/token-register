@@ -14,51 +14,112 @@ Bibliothèque unique : **`@tabler/icons-react`**, trait 2 px, bouts arrondis (st
 
 Le « visuel » d'un produit est une **pastille** : un carré arrondi teinté moutarde qui porte une icône ou une initiale.
 
-| | Valeur |
-| --- | --- |
-| Forme | carré arrondi, `--radius-tile` (16 px) ; 48 × 48 (téléphone portrait, tablette, desktop), 32 × 32 en paysage (rayon 10) |
-| Fond | `--color-primary-tint` (clair `#F6E2A8`, sombre `#3A2F12`) |
-| Contenu | icône Tabler 26 px (paysage 20 px), `currentColor` ; **clair : encre** (`--color-text`, 13.5:1) ; **sombre : moutarde** (`--color-primary`, 7.3:1) |
-| Sans icône choisie | **initiale** du produit, 22 / 800 (paysage 16), mêmes couleurs |
+|                         | Valeur                                                                                                                                                                                       |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Forme                   | carré arrondi, `--radius-tile` (16 px) ; 48 × 48 (téléphone portrait, tablette, desktop), 32 × 32 en paysage (rayon 10)                                                                      |
+| Fond                    | `--color-primary-tint` (clair `#F6E2A8`, sombre `#3A2F12`)                                                                                                                                   |
+| Contenu                 | icône Tabler 26 px (paysage 20 px), `currentColor` ; **clair : encre** (`--color-text`, 13.5:1) ; **sombre : moutarde** (`--color-primary`, 7.3:1)                                           |
+| Sans icône choisie      | **initiale** du produit, 22 / 800 (paysage 16), mêmes couleurs                                                                                                                               |
 | Consigne (prix négatif) | pastille `--color-danger-tint`, icône `IconRecycle` en `--color-danger` ; bordure de carte **pointillée** `--color-danger`, prix en `--color-danger` avec signe « − » (pas de couleur seule) |
-| Décoratif | `aria-hidden="true"` : le nom et le prix portent l'information |
+| Décoratif               | `aria-hidden="true"` : le nom et le prix portent l'information                                                                                                                               |
 
 Règles d'usage : une pastille par carte produit, jamais plusieurs couleurs de pastille (une seule teinte moutarde, pas d'arc-en-ciel) ; pas de pastille dans la ligne de panier ni l'historique ; l'icône n'est jamais le seul identifiant d'un produit (le nom est toujours affiché).
 
-Bibliothèque de pastilles proposée (Tabler) : `IconBeer`, `IconGlassFull`, `IconCup`, `IconBottle`, `IconSandwich`, `IconCookie`, `IconIceCream`, `IconSoup`, `IconPizza`, `IconCoffee`, `IconRecycle`, `IconTicket`. Le choix d'une icône par produit demande un champ de données : voir les points à trancher du compte rendu de la refonte.
+## Icônes produit (D-044)
+
+Chaque produit peut porter **une icône** choisie dans une **liste fermée de 29 icônes Tabler**. Le champ de données stocke la **clé stable** (`snake_case`, anglais), jamais le nom du composant : on peut changer le composant sans migration. Une clé inconnue (liste réduite plus tard) est traitée comme « aucune ». Tous les composants ci-dessous ont été vérifiés dans `@tabler/icons-react` installé. Attention : `IconSandwich` **n'existe pas** (ancienne proposition de ce document, retirée).
+
+| Clé          | Composant Tabler    | Libellé FR              | Label EN              |
+| ------------ | ------------------- | ----------------------- | --------------------- |
+| `beer`       | `IconBeer`          | Bière                   | Beer                  |
+| `wine`       | `IconGlass`         | Vin                     | Wine                  |
+| `cocktail`   | `IconGlassCocktail` | Cocktail                | Cocktail              |
+| `soft_drink` | `IconGlassFull`     | Soda / jus              | Soft drink            |
+| `bottle`     | `IconBottle`        | Bouteille               | Bottle                |
+| `water`      | `IconDroplet`       | Eau                     | Water                 |
+| `coffee`     | `IconCoffee`        | Café                    | Coffee                |
+| `hot_drink`  | `IconMug`           | Boisson chaude / thé    | Hot drink / tea       |
+| `milk`       | `IconMilk`          | Lait                    | Milk                  |
+| `cup`        | `IconCup`           | Gobelet                 | Cup                   |
+| `sandwich`   | `IconBaguette`      | Sandwich                | Sandwich              |
+| `burger`     | `IconBurger`        | Burger                  | Burger                |
+| `hot_dog`    | `IconSausage`       | Hot-dog / saucisse      | Hot dog / sausage     |
+| `pizza`      | `IconPizza`         | Pizza                   | Pizza                 |
+| `salad`      | `IconSalad`         | Salade                  | Salad                 |
+| `soup`       | `IconSoup`          | Soupe                   | Soup                  |
+| `meat`       | `IconMeat`          | Viande                  | Meat                  |
+| `grill`      | `IconGrill`         | Grillade / barbecue     | Grill                 |
+| `cheese`     | `IconCheese`        | Fromage                 | Cheese                |
+| `snack`      | `IconPackage`       | Chips / frites / paquet | Snack / chips / fries |
+| `cookie`     | `IconCookie`        | Biscuit / crêpe         | Cookie / crepe        |
+| `cake`       | `IconCake`          | Gâteau                  | Cake                  |
+| `ice_cream`  | `IconIceCream`      | Glace                   | Ice cream             |
+| `candy`      | `IconCandy`         | Bonbons                 | Candy                 |
+| `fruit`      | `IconApple`         | Fruit                   | Fruit                 |
+| `deposit`    | `IconRecycle`       | Consigne                | Deposit               |
+| `ticket`     | `IconTicket`        | Ticket / entrée         | Ticket                |
+| `tshirt`     | `IconShirt`         | T-shirt                 | T-shirt               |
+| `goodies`    | `IconGift`          | Goodies / cadeau        | Goodies / gift        |
+
+Il n'y a pas d'icône Tabler fiable pour crêpe, frites ni chips : ils partagent `cookie` et `snack`. Ajouter une icône = ajouter une ligne ici, une clé dans la liste du code et rien en base.
+
+### Icône par défaut
+
+Un produit sans icône affiche son **initiale** (règle de la pastille ci-dessus, 22 / 800), confirmé par **D-046** : l'initiale distingue deux produits sans icône côte à côte, alors qu'une icône identique partout ressemble à un état d'erreur. L'icône est facultative. La consigne (prix négatif) prend `deposit` si aucune icône n'est choisie, et garde l'icône choisie sinon (D-046).
+
+### Affichage dans la pastille
+
+|                         | Valeur                                                                                                                                                                                                                                                      |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Taille de l'icône       | 26 px dans la pastille 48 × 48 (téléphone portrait, tablette, desktop) ; 20 px dans la pastille 32 × 32 (téléphone paysage) ; `stroke` 2                                                                                                                    |
+| Clair                   | fond `--color-primary-tint` `#F6E2A8`, icône `--color-text` `#1F1A0F` : **13.5:1**                                                                                                                                                                          |
+| Sombre                  | fond `--color-primary-tint` `#3A2F12`, icône `--color-primary` `#F0B93A` : **7.3:1**                                                                                                                                                                        |
+| Seuil                   | contraste icône / fond ≥ 3:1 (graphique non textuel, WCAG 1.4.11) ; atteint largement                                                                                                                                                                       |
+| Consigne (prix négatif) | pastille `--color-danger-tint`, icône (`deposit` par défaut, ou l'icône choisie) en `--color-danger` (5.3:1 en clair, 5.4:1 en sombre) ; **bordure de carte pointillée** et **signe « − »** devant le prix : le marqueur ne repose pas sur la couleur seule |
+| Accessibilité           | `aria-hidden="true"` sur l'icône, le nom et le prix portent l'information                                                                                                                                                                                   |
+
+### Sélecteur d'icône (formulaire produit)
+
+- Champ « Icône » dans le formulaire produit, après le nom : un aperçu de la pastille courante et un bouton qui déplie la grille (inline dans la modale, pas de second niveau de modale).
+- Grille de **boutons de 44 × 44 px minimum** (pastille 48 recommandée), écart `--space-2`, 5 colonnes sur téléphone portrait, 6 à 8 ailleurs ; ordre = ordre du tableau ci-dessus (boissons, plats, desserts, divers).
+- **Pas de recherche** : 29 icônes tiennent sur 5 à 6 lignes ; la recherche n'apporte rien et ouvre le clavier sur mobile. À revoir au-delà de 40 icônes.
+- Chaque bouton : `IconX` 26 px dans la pastille, `aria-label` = libellé FR (EN selon la langue), `aria-pressed` pour l'état. Info-bulle (`title`) sur desktop.
+- **État sélectionné non porté par la seule couleur** : fond moutarde `--color-primary` + bordure 2 px `--color-text` + coche `IconCheck` 14 px en coin haut droit. Focus visible : anneau habituel de la charte.
+- Premier élément : bouton **« Aucune »** (`IconBan`, présent dans `@tabler/icons-react`) avec libellé visible « Aucune », sur 2 colonnes ; sélectionné par défaut à la création. Il remet le produit à l'initiale (D-046), la catégorie à son nom seul (D-047).
+- Le même sélecteur sert au formulaire catégorie (D-047), sans aperçu de pastille tant qu'aucune icône n'est choisie.
 
 ## Correspondance icône ↔ action
 
-| Action | Icône | Couleur |
-| --- | --- | --- |
-| Réglages (menu ⚙️) | `IconSettings` ; le bouton des réglages porte aussi `aria-label` « Réglages » | `--color-text` |
-| Historique des commandes | `IconHistory` | `--color-text` |
-| Modifier (produit, catégorie) / mode édition | `IconEdit` (menu : `IconPencil`) | `--color-icon-accent` |
-| Terminer l'édition | `IconCheck` | texte du bouton |
-| Supprimer (produit, catégorie, ligne, commande) | `IconTrash` | `--color-danger` |
-| **Vider le panier** | `IconTrash` | `--color-danger` |
-| Ajouter / quantité + | `IconPlus` | `--color-text` (sur moutarde : encre) |
-| Quantité − | `IconMinus` | `--color-text` |
-| Remise | `IconDiscount` | `--color-success` |
-| Plus d'actions (ligne de panier) | `IconDotsVertical` | `--color-text-2` |
-| Ouvrir / fermer le panier (portrait) | `IconChevronUp` / `IconChevronDown` | `--color-on-bar` (barre) / `--color-text` |
-| Monnaie verrouillée | `IconLock` | `--color-text-2` |
-| À propos | `IconInfoCircle` | `--color-text` |
-| Thème clair / sombre | `IconSun` / `IconMoon` (état courant, avec libellé) | `--color-text` |
-| Consigne (pastille) | `IconRecycle` | `--color-danger` |
+| Action                                          | Icône                                                                         | Couleur                                   |
+| ----------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------- |
+| Réglages (menu ⚙️)                              | `IconSettings` ; le bouton des réglages porte aussi `aria-label` « Réglages » | `--color-text`                            |
+| Historique des commandes                        | `IconHistory`                                                                 | `--color-text`                            |
+| Modifier (produit, catégorie) / mode édition    | `IconEdit` (menu : `IconPencil`)                                              | `--color-icon-accent`                     |
+| Terminer l'édition                              | `IconCheck`                                                                   | texte du bouton                           |
+| Supprimer (produit, catégorie, ligne, commande) | `IconTrash`                                                                   | `--color-danger`                          |
+| **Vider le panier**                             | `IconTrash`                                                                   | `--color-danger`                          |
+| Ajouter / quantité +                            | `IconPlus`                                                                    | `--color-text` (sur moutarde : encre)     |
+| Quantité −                                      | `IconMinus`                                                                   | `--color-text`                            |
+| Remise                                          | `IconDiscount`                                                                | `--color-success`                         |
+| Plus d'actions (ligne de panier)                | `IconDotsVertical`                                                            | `--color-text-2`                          |
+| Ouvrir / fermer le panier (portrait)            | `IconChevronUp` / `IconChevronDown`                                           | `--color-on-bar` (barre) / `--color-text` |
+| Monnaie verrouillée                             | `IconLock`                                                                    | `--color-text-2`                          |
+| À propos                                        | `IconInfoCircle`                                                              | `--color-text`                            |
+| Thème clair / sombre                            | `IconSun` / `IconMoon` (état courant, avec libellé)                           | `--color-text`                            |
+| Consigne (pastille)                             | `IconRecycle`                                                                 | `--color-danger`                          |
 
 ### Encaissement (voir [components.md](components.md#encaissement--cartconfirmationmodal))
 
-| Action / information | Icône | Taille | Couleur |
-| --- | --- | --- | --- |
-| Payer par carte, « Tout en carte », « Reste en carte » | `IconCreditCard` | 24 (bouton Carte), 22 (pied) | texte du bouton |
-| Espèces (libellé « Espèces reçues », bouton total ≤ 0) | `IconCash` | 20 (libellé), 24 (bouton) | `--color-text-2` (libellé), texte du bouton |
-| Monnaie à rendre / à rendre au client (bloc de rendu) | `IconCoins` | 28 | `--color-icon-accent` |
-| Il reste à payer par carte (bloc de rendu) | `IconCreditCard` | 28 | `--color-text` |
-| Il manque (jetons) / rendu élevé | `IconAlertTriangle` | 28 (bloc), 20 (avertissement) | `--color-danger` (il manque), `--color-icon-accent` (rendu élevé) |
-| Encaisser / Enregistrer / Rien à rendre / suggestion choisie | `IconCheck` | 22 (pied), 28 (bloc), 18 (suggestion) | texte du bouton / `--color-success` (bloc « Rien à rendre ») |
-| Autre montant (ouvre le pavé) | `IconKeyboard` | 20 | texte du bouton |
-| Retour aux montants | `IconArrowLeft` | 20 | texte du bouton |
-| Effacer le dernier chiffre | `IconBackspace` | 24 | `--color-text` |
-| Effacer le montant | `IconX` | 20 | `--color-text` |
-| Badge de paiement (historique) | `IconCash` / `IconCreditCard` | 16 | texte du badge |
+| Action / information                                         | Icône                         | Taille                                | Couleur                                                           |
+| ------------------------------------------------------------ | ----------------------------- | ------------------------------------- | ----------------------------------------------------------------- |
+| Payer par carte, « Tout en carte », « Reste en carte »       | `IconCreditCard`              | 24 (bouton Carte), 22 (pied)          | texte du bouton                                                   |
+| Espèces (libellé « Espèces reçues », bouton total ≤ 0)       | `IconCash`                    | 20 (libellé), 24 (bouton)             | `--color-text-2` (libellé), texte du bouton                       |
+| Monnaie à rendre / à rendre au client (bloc de rendu)        | `IconCoins`                   | 28                                    | `--color-icon-accent`                                             |
+| Il reste à payer par carte (bloc de rendu)                   | `IconCreditCard`              | 28                                    | `--color-text`                                                    |
+| Il manque (jetons) / rendu élevé                             | `IconAlertTriangle`           | 28 (bloc), 20 (avertissement)         | `--color-danger` (il manque), `--color-icon-accent` (rendu élevé) |
+| Encaisser / Enregistrer / Rien à rendre / suggestion choisie | `IconCheck`                   | 22 (pied), 28 (bloc), 18 (suggestion) | texte du bouton / `--color-success` (bloc « Rien à rendre »)      |
+| Autre montant (ouvre le pavé)                                | `IconKeyboard`                | 20                                    | texte du bouton                                                   |
+| Retour aux montants                                          | `IconArrowLeft`               | 20                                    | texte du bouton                                                   |
+| Effacer le dernier chiffre                                   | `IconBackspace`               | 24                                    | `--color-text`                                                    |
+| Effacer le montant                                           | `IconX`                       | 20                                    | `--color-text`                                                    |
+| Badge de paiement (historique)                               | `IconCash` / `IconCreditCard` | 16                                    | texte du badge                                                    |

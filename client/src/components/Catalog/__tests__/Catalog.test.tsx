@@ -47,6 +47,7 @@ describe('Catalog', () => {
     (useDispatch as unknown as jest.Mock).mockReturnValue(mockDispatch);
     (useSelector as unknown as jest.Mock).mockImplementation((selector: any) => {
       if (selector.name === 'selectSelectedCategory') return null;
+      if (selector.name === 'selectCartItems') return [];
       return undefined;
     });
     (useGetCategoriesQuery as jest.Mock).mockReturnValue({
@@ -81,6 +82,7 @@ describe('Catalog', () => {
   it('renders products when a category is selected', () => {
     (useSelector as unknown as jest.Mock).mockImplementation((selector: any) => {
       if (selector.name === 'selectSelectedCategory') return 1;
+      if (selector.name === 'selectCartItems') return [];
       return undefined;
     });
     render(<Catalog />);
@@ -109,6 +111,7 @@ describe('Catalog', () => {
   it('handles add to cart from product', () => {
     (useSelector as unknown as jest.Mock).mockImplementation((selector: any) => {
       if (selector.name === 'selectSelectedCategory') return 1;
+      if (selector.name === 'selectCartItems') return [];
       return undefined;
     });
     render(<Catalog />);
@@ -132,6 +135,7 @@ describe('Catalog', () => {
   it('shows error if products query fails', () => {
     (useSelector as unknown as jest.Mock).mockImplementation((selector: any) => {
       if (selector.name === 'selectSelectedCategory') return 1;
+      if (selector.name === 'selectCartItems') return [];
       return undefined;
     });
     (useGetProductsByCategoryQuery as jest.Mock).mockReturnValue({
@@ -148,6 +152,7 @@ describe('Catalog layout per mode', () => {
   const selectWith = (selected: number, isEditMode: boolean) =>
     (useSelector as unknown as jest.Mock).mockImplementation((selector: any) => {
       if (selector.name === 'selectSelectedCategory') return selected;
+      if (selector.name === 'selectCartItems') return [];
       if (selector.name === 'selectIsEditMode') return isEditMode;
       return undefined;
     });
@@ -185,6 +190,33 @@ describe('Catalog layout per mode', () => {
     expect(screen.getByRole('tab', { name: 'Drinks' })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('tabpanel')).toBeInTheDocument();
   });
+
+  it.each([
+    ['phone-portrait', 'horizontal'],
+    ['tablet', 'vertical'],
+  ] as const)(
+    'shows a category icon before the name, the name only without icon (D-047): %s',
+    (mode, orientation) => {
+      setLayoutMode(mode);
+      (useGetCategoriesQuery as jest.Mock).mockReturnValue({
+        isLoading: false,
+        isError: false,
+        currentData: [
+          { id: 1, name: 'Drinks', icon: 'beer' },
+          { id: 2, name: 'Food', icon: null },
+        ],
+        isFetching: false,
+      });
+      selectWith(1, false);
+      render(<Catalog />);
+      expect(screen.getByRole('tablist')).toHaveAttribute('aria-orientation', orientation);
+      const drinks = screen.getByRole('tab', { name: 'Drinks' });
+      const food = screen.getByRole('tab', { name: 'Food' });
+      expect(drinks.querySelector('svg.tabler-icon-beer')).not.toBeNull();
+      expect(food.querySelector('svg')).toBeNull();
+      expect(food).not.toHaveTextContent(/^F$/);
+    }
+  );
 
   it('keeps the vertical column of categories on a wide tablet', () => {
     selectWith(1, false);

@@ -6,6 +6,7 @@ const UPDATABLE_COLUMNS = {
   name: 'name',
   price: 'price',
   categoryId: 'category_id',
+  icon: 'icon',
 } as const satisfies Record<keyof Omit<ProductType, 'id'>, string>;
 
 export class ProductService {
@@ -42,8 +43,8 @@ export class ProductService {
     try {
       db = await openDb();
       const result = await db.run(
-        `INSERT INTO products (name, price, category_id) VALUES (?, ?, ?)`,
-        [product.name, product.price, product.categoryId]
+        `INSERT INTO products (name, price, category_id, icon) VALUES (?, ?, ?, ?)`,
+        [product.name, product.price, product.categoryId, product.icon ?? null]
       );
       if (!result.lastID) {
         throw new Error('Failed to create the product');
@@ -62,7 +63,8 @@ export class ProductService {
     try {
       // Only whitelisted fields can reach the SQL query: keys come from the request body.
       const entries = Object.entries(product).filter(
-        ([key, value]) => Object.prototype.hasOwnProperty.call(UPDATABLE_COLUMNS, key) && value !== undefined
+        ([key, value]) =>
+          Object.prototype.hasOwnProperty.call(UPDATABLE_COLUMNS, key) && value !== undefined
       ) as [keyof typeof UPDATABLE_COLUMNS, unknown][];
 
       if (entries.length === 0) {

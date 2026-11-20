@@ -84,6 +84,27 @@ bare-array body of older clients: reload open tabs after the deploy.
 Rollback: older versions ignore the two columns (they only insert `date`); they can stay. To drop
 them (SQLite >= 3.35): `ALTER TABLE orders DROP COLUMN cash_amount; ALTER TABLE orders DROP COLUMN card_amount;`
 
+### Catalog icons (2.0.0)
+
+**Script**: `api/src/db/scripts/migrateDb.ts` (step `migrateCatalogIcons`, runs on every start;
+logic in `api/src/db/catalogIcons.ts`)
+**Schema change**: adds `products.icon TEXT` (D-046) and `categories.icon TEXT` (D-047), both
+nullable. They store the **key** of an icon from the closed list of
+[docs/design/icons.md](./docs/design/icons.md#icônes-produit) (`beer`, `coffee`…), never the icon
+itself. Only missing columns are added, in one transaction, so the step is idempotent. New
+databases get them from `initDb.ts`, and the sample catalog comes with icons.
+**Data**: existing products and categories keep `NULL`: no icon. A product without icon shows its
+initial, a category without icon shows its name only. Nothing is backfilled.
+**API**: `POST` / `PUT` on `/products` and `/categories` accept `icon` (a known key or
+`null`); any other value is refused with a 400. An unknown key read from the database (list
+shortened later) is displayed as "no icon".
+**Conversion and backups**: not concerned. `convertCurrency.ts` only touches amounts; a backup
+is a copy of the SQLite file and holds the columns.
+
+Rollback: older versions ignore both columns (they insert products and categories without
+`icon`); they can stay. To drop them (SQLite >= 3.35):
+`ALTER TABLE products DROP COLUMN icon; ALTER TABLE categories DROP COLUMN icon;`
+
 ## Deployment Workflow
 
 ### Development Environment
@@ -97,21 +118,26 @@ them (SQLite >= 3.35): `ALTER TABLE orders DROP COLUMN cash_amount; ALTER TABLE 
 ### Docker Production Environment
 
 **New Installations**:
+
 - Migrations run automatically via `entrypoint.sh`
 - No manual intervention needed
 
 **Existing Installations**:
+
 1. Backup database:
+
    ```bash
    docker cp <container-name>:/path/to/database.sqlite ./backup/database-$(date +%Y%m%d).sqlite
    ```
 
 2. Pull latest image:
+
    ```bash
    docker pull julesgrateau/token-register:latest
    ```
 
 3. Run migration (automatic on restart, or manual):
+
    ```bash
    # Option A: Automatic on container restart
    docker restart <container-name>
@@ -142,6 +168,7 @@ Each feature with database changes includes a deployment guide:
 ### SQLite Considerations
 
 SQLite has limited ALTER TABLE support:
+
 - Can ADD COLUMN (used by migrations)
 - Cannot DROP COLUMN directly
 - Cannot modify column types
@@ -172,12 +199,14 @@ To rollback a column addition, you must recreate the table (see feature-specific
 ### Migration Script Fails
 
 **Check**:
+
 - Database file permissions
 - Disk space available
 - Database not locked by another process
 - Log output for specific error message
 
 **Solutions**:
+
 - Ensure application is stopped during migration
 - Free up disk space if needed
 - Check file system permissions
@@ -186,11 +215,13 @@ To rollback a column addition, you must recreate the table (see feature-specific
 ### Application Won't Start After Migration
 
 **Check**:
+
 - Migration completed successfully (check logs)
 - No syntax errors in SQL (migration uses transactions, should rollback)
 - Application code compatible with new schema
 
 **Solutions**:
+
 - Review logs: `docker logs <container-name>`
 - Run migration manually if it didn't complete
 - Restore backup and redeploy with previous version

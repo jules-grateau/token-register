@@ -7,4 +7,5 @@ export const mapProduct = (product: ApiProductType): ProductType => ({
   name: product.name,
   price: product.price,
   categoryId: product.category_id,
+  icon: product.icon ?? null,
 });

@@ -56,8 +56,9 @@ describe('CategoryService (unit)', () => {
     const service = new CategoryService();
     const id = await service.addCategory({ name: 'New Category' });
 
-    expect(mockRun).toHaveBeenCalledWith('INSERT INTO categories (name) VALUES (?)', [
+    expect(mockRun).toHaveBeenCalledWith('INSERT INTO categories (name, icon) VALUES (?, ?)', [
       'New Category',
+      null,
     ]);
     expect(id).toBe(55);
   });
@@ -81,6 +82,23 @@ describe('CategoryService (unit)', () => {
   });
 
   describe('updateCategory', () => {
+    it('should update the icon only when it is given (D-047)', async () => {
+      mockRun.mockResolvedValue({ changes: 1 });
+      const service = new CategoryService();
+
+      await service.updateCategory(1, { name: 'Boissons', icon: 'beer' });
+      expect(mockRun).toHaveBeenLastCalledWith(
+        'UPDATE categories SET name = ?, icon = ? WHERE id = ?',
+        ['Boissons', 'beer', 1]
+      );
+
+      await service.updateCategory(1, { name: 'Boissons', icon: null });
+      expect(mockRun).toHaveBeenLastCalledWith(
+        'UPDATE categories SET name = ?, icon = ? WHERE id = ?',
+        ['Boissons', null, 1]
+      );
+    });
+
     it('should update a category', async () => {
       mockRun.mockResolvedValue({ changes: 1 });
       const service = new CategoryService();

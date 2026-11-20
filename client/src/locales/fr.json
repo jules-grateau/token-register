@@ -99,7 +99,45 @@
   "undo": "Annuler",
   "product_card": {
     "add": "Ajouter {{name}}",
-    "edit": "Modifier {{name}}"
+    "edit": "Modifier {{name}}",
+    "add_in_cart": "Ajouter {{name}}, {{count}} dans le panier"
+  },
+  "icon_picker": {
+    "label": "Icône",
+    "none": "Aucune",
+    "choose": "Choisir une icône",
+    "hide": "Masquer les icônes"
+  },
+  "catalog_icons": {
+    "beer": "Bière",
+    "wine": "Vin",
+    "cocktail": "Cocktail",
+    "soft_drink": "Soda / jus",
+    "bottle": "Bouteille",
+    "water": "Eau",
+    "coffee": "Café",
+    "hot_drink": "Boisson chaude / thé",
+    "milk": "Lait",
+    "cup": "Gobelet",
+    "sandwich": "Sandwich",
+    "burger": "Burger",
+    "hot_dog": "Hot-dog / saucisse",
+    "pizza": "Pizza",
+    "salad": "Salade",
+    "soup": "Soupe",
+    "meat": "Viande",
+    "grill": "Grillade / barbecue",
+    "cheese": "Fromage",
+    "snack": "Chips / frites / paquet",
+    "cookie": "Biscuit / crêpe",
+    "cake": "Gâteau",
+    "ice_cream": "Glace",
+    "candy": "Bonbons",
+    "fruit": "Fruit",
+    "deposit": "Consigne",
+    "ticket": "Ticket / entrée",
+    "tshirt": "T-shirt",
+    "goodies": "Goodies / cadeau"
   },
   "edit_mode": {
     "toggle": "Mode Édition",

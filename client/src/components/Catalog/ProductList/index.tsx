@@ -1,6 +1,8 @@
 import type { ProductType } from 'shared-ts';
 import ProductCard from './ProductCard';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { selectCartItems } from '../../../redux/cartSlice';
 
 interface ProductListProps {
   isLoading: boolean;
@@ -22,6 +24,9 @@ function ProductList({
   onDeleteProduct,
 }: ProductListProps): React.ReactNode {
   const { t } = useTranslation();
+  const cartItems = useSelector(selectCartItems);
+  // D-048: one cart line per product; its quantity, discount included, feeds the badge.
+  const quantityByProductId = new Map(cartItems.map((item) => [item.product.id, item.quantity]));
 
   if (isLoading) {
     return <p>{t('loading_products')}</p>;
@@ -48,6 +53,7 @@ function ProductList({
           isEditMode={isEditMode}
           onEdit={onEditProduct}
           onDelete={onDeleteProduct}
+          quantityInCart={quantityByProductId.get(product.id) ?? 0}
         />
       ))}
     </>

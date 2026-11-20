@@ -81,3 +81,65 @@ describe('ProductCard structure and edit mode', () => {
     expect(text).not.toHaveAttribute('data-truncate');
   });
 });
+
+describe('ProductCard tile (D-046)', () => {
+  const beer = { id: 2, name: 'bière', price: 3, categoryId: 1 };
+
+  it('shows the initial of a product without icon', () => {
+    render(<ProductCard product={beer} onClick={jest.fn()} />);
+    const tile = screen.getByTestId('catalog-tile');
+    expect(tile).toHaveTextContent('B');
+    expect(tile).toHaveAttribute('aria-hidden');
+  });
+
+  it('shows the chosen icon instead of the initial', () => {
+    render(<ProductCard product={{ ...beer, icon: 'beer' }} onClick={jest.fn()} />);
+    const tile = screen.getByTestId('catalog-tile');
+    expect(tile.querySelector('svg')).not.toBeNull();
+    expect(tile).not.toHaveTextContent('B');
+  });
+
+  it('treats an unknown key as no icon', () => {
+    render(
+      <ProductCard
+        product={{ ...beer, icon: 'removed' as unknown as 'beer' }}
+        onClick={jest.fn()}
+      />
+    );
+    expect(screen.getByTestId('catalog-tile')).toHaveTextContent('B');
+  });
+
+  it('gives a deposit the recycle icon by default, on a danger tile', () => {
+    render(<ProductCard product={product} onClick={jest.fn()} />);
+    const tile = screen.getByTestId('catalog-tile');
+    expect(tile).toHaveAttribute('data-deposit');
+    expect(tile.querySelector('svg.tabler-icon-recycle')).not.toBeNull();
+  });
+
+  it('keeps the chosen icon of a deposit', () => {
+    render(<ProductCard product={{ ...product, icon: 'cup' }} onClick={jest.fn()} />);
+    const tile = screen.getByTestId('catalog-tile');
+    expect(tile).toHaveAttribute('data-deposit');
+    expect(tile.querySelector('svg.tabler-icon-cup')).not.toBeNull();
+  });
+});
+
+describe('ProductCard quantity badge (D-045, D-048)', () => {
+  it('shows no badge when the product is not in the cart', () => {
+    render(<ProductCard product={product} onClick={jest.fn()} />);
+    expect(screen.queryByTestId('product-card-badge')).not.toBeInTheDocument();
+  });
+
+  it('shows the quantity of the cart line and says it in the label', () => {
+    render(<ProductCard product={product} onClick={jest.fn()} quantityInCart={3} />);
+    expect(screen.getByTestId('product-card-badge')).toHaveTextContent('3');
+    expect(
+      screen.getByRole('button', { name: 'product_card.add_in_cart (3)' })
+    ).toBeInTheDocument();
+  });
+
+  it('hides the badge in edit mode', () => {
+    render(<ProductCard product={product} onClick={jest.fn()} quantityInCart={3} isEditMode />);
+    expect(screen.queryByTestId('product-card-badge')).not.toBeInTheDocument();
+  });
+});

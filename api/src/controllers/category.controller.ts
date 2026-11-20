@@ -3,6 +3,7 @@ import { CategoryService } from '../services/category.service';
 import { ProductService } from '../services/product.service';
 import { CategoryType } from 'shared-ts';
 import { NotFoundError } from '../types/errors';
+import { INVALID_ICON_MESSAGE, isValidIconField } from '../utils/catalogIcons';
 
 export class CategoryController {
   public path = '/categories';
@@ -66,12 +67,17 @@ export class CategoryController {
   public addCategory = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     req.log.info('Controller: Creating new category');
     try {
-      const { name } = req.body as CategoryType;
+      const { name, icon } = req.body as CategoryType;
       if (!name) {
         res.status(400).json({ error: 'Category name is required' });
         return;
       }
-      const id = await this.categoryService.addCategory({ name });
+      // D-047: the icon is optional; when given, it must be a known key.
+      if (!isValidIconField(icon)) {
+        res.status(400).json({ error: INVALID_ICON_MESSAGE });
+        return;
+      }
+      const id = await this.categoryService.addCategory({ name, icon: icon ?? null });
       res.status(201).json({ id });
     } catch (error) {
       req.log.error('Controller Error: Error creating category: %s', error);
@@ -93,13 +99,21 @@ export class CategoryController {
         return;
       }
 
-      const { name } = req.body as Omit<CategoryType, 'id'>;
+      const { name, icon } = req.body as Omit<CategoryType, 'id'>;
       if (!name) {
         res.status(400).json({ error: 'Category name is required' });
         return;
       }
+      if (!isValidIconField(icon)) {
+        res.status(400).json({ error: INVALID_ICON_MESSAGE });
+        return;
+      }
 
-      await this.categoryService.updateCategory(categoryId, { name });
+      // A missing icon keeps the current one; null removes it.
+      await this.categoryService.updateCategory(
+        categoryId,
+        icon === undefined ? { name } : { name, icon }
+      );
 
       res.status(204).send();
     } catch (error) {
