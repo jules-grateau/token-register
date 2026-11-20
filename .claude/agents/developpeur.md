@@ -91,11 +91,29 @@ Quand on te demande de traiter les retours d'une PR, chaque point doit recevoir 
 5. **Publie un récapitulatif** avec `gh pr comment <PR>` qui commence par « 🛠️ Réponse du développeur ». Il contient une ligne par point de la revue (y compris ceux du commentaire général) :
    - `✅ TL-1 — corrigé dans <sha court> : <ce qui a été fait>`
    - `⏸️ TL-2 — non traité : <raison>`
+   - `📌 TL-3 — reporté → #<issue> : <raison>` (voir « Points reportés » ci-dessous)
    - `❓ DS-1 — en attente d'une décision métier : <question>`
    - `↪️ DS-2 — corrigé dans la PR #<n>` (cas des revues design sur une PR de release `develop` → `main` : le correctif passe par une PR vers `develop`)
 6. Ne résous pas les fils toi-même et ne modifie pas les commentaires des relecteurs : c'est l'utilisateur ou le relecteur qui clôt.
 
 Ces messages sont publiés avec le compte GitHub de l'utilisateur : reste factuel et concis.
+
+### Points reportés : une issue, jamais un « plus tard » dans le vide
+
+Un point légitime mais traité plus tard (hors périmètre, à faire « dans une autre PR ») est **toujours** suivi par une issue GitHub, créée avant de répondre :
+
+```bash
+gh issue create --label suivi --label <tech|design> \
+  --title "<action courte>" \
+  --body "Origine : <lien vers le commentaire de revue> (TL-n / DS-n de la PR #<n>)
+
+<ce qu'il faut faire, fichier:ligne si utile>"
+```
+
+- Dans la réponse, utilise `📌 … — reporté → #<issue>`. `⏸️` est réservé aux points **non retenus** (faux positif, rien à faire).
+- Avant d'en créer une, vérifie qu'elle n'existe pas : `gh issue list --label suivi`.
+- La PR qui traite le point le dit dans sa description (`Closes #<issue>`), pour que l'issue se ferme au merge.
+- Un choix métier n'est pas une issue : il remonte à l'utilisateur (`❓`).
 
 ## Numéro de version (D-002, D-027)
 
