@@ -425,3 +425,14 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Décision** : la conversion euros → jetons efface `cash_amount` et `card_amount` des commandes converties, puisqu'une instance en jetons n'enregistre pas de paiement (D-033). Les totaux des commandes sont convertis comme d'habitude (D-009). L'aperçu prévient : « N commandes : la répartition espèces / carte sera effacée ». Jetons → euros : il n'y a pas de paiement, rien à faire.
 - **Options écartées** : refuser la conversion (code provisoire de la PR) ; convertir et garder les montants ; convertir le total puis en déduire la répartition (somme toujours juste) en la gardant.
 - **Impact** : `api/src/db/currency.ts`, `api/src/db/scripts/convertCurrency.ts`, `deploy/README.md`, `MIGRATIONS.md`.
+
+### D-037 — Une PR en cours de travail reste en brouillon
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : une PR sur laquelle un agent travaille encore pouvait être mergée par erreur (cas de #14, mergée pendant une correction, d'où la PR de suite #15).
+- **Décision** : demande de l'utilisateur, « Il faudrait que le développeur fasse un truc pour que la PR ne soit pas mergeable s'il travaille dessus, que je ne merge pas par erreur ». Une PR est créée en brouillon et repasse en brouillon avant toute modification. Elle n'est mise en « prête » qu'une fois tout poussé, vert, et les réponses aux revues publiées (et, pour une modification d'interface, les captures validées par le designer). La mise en « prête » déclenche la revue du tech-lead.
+- **Options écartées** : aucune autre option présentée (mécanisme natif de GitHub retenu directement) ; un label « WIP » avec un check obligatoire aurait demandé une protection de branche.
+- **Impact** : `.claude/agents/developpeur.md`, `CLAUDE.md`.
