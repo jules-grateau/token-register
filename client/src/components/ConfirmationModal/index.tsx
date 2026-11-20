@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Button, Group, Stack } from '@mantine/core';
+import classes from './ConfirmationModal.module.css';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -59,6 +60,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
             h={44}
             color={destructive ? 'red' : undefined}
             data-destructive={destructive || undefined}
+            className={destructive ? classes.destructive : undefined}
           >
             {confirmButtonText || t('confirm')}
           </Button>

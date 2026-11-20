@@ -134,14 +134,14 @@ describe('OrderHistoryModal', () => {
     expect(await screen.findByText(/order_removal_confirmation/i)).toBeInTheDocument();
   });
 
-  it('confirms the deletion with a red button (D-050)', async () => {
+  it('confirms the deletion with a red "delete" button (D-050)', async () => {
     render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
     const confirmationModal = await screen.findByRole('dialog', { name: /confirmation/i });
     const buttons = within(confirmationModal).getAllByRole('button', {
-      name: /^(cancel|confirm)$/,
+      name: /^(cancel|delete)$/,
     });
-    expect(buttons.map((button) => button.textContent)).toEqual(['cancel', 'confirm']);
+    expect(buttons.map((button) => button.textContent)).toEqual(['cancel', 'delete']);
     expect(buttons[1]).toHaveAttribute('data-destructive', 'true');
   });
 
@@ -150,7 +150,7 @@ describe('OrderHistoryModal', () => {
     render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
     const confirmationModal = await screen.findByRole('dialog', { name: /confirmation/i });
-    const confirmButton = within(confirmationModal).getByRole('button', { name: 'confirm' });
+    const confirmButton = within(confirmationModal).getByRole('button', { name: 'delete' });
     fireEvent.click(confirmButton);
     await waitFor(() => {
       expect(mockRemoveOrder).toHaveBeenCalled();
@@ -166,7 +166,7 @@ describe('OrderHistoryModal', () => {
     render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
     fireEvent.click(screen.getByRole('button', { name: /delete/i }));
     const confirmationModal = await screen.findByRole('dialog', { name: /confirmation/i });
-    const confirmButton = within(confirmationModal).getByRole('button', { name: 'confirm' });
+    const confirmButton = within(confirmationModal).getByRole('button', { name: 'delete' });
     fireEvent.click(confirmButton);
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalled();

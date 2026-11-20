@@ -222,6 +222,7 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
         onClose={() => setIsConfirmationModalOpen(false)}
         onConfirm={() => void onConfirmRemoveOrder(selectedOrder)}
         title={t('confirmation')}
+        confirmButtonText={t('delete')}
         destructive
       >
         <Stack align="center">

@@ -31,8 +31,12 @@ const ONLY_VIEWPORTS = list(process.env.ONLY_VIEWPORTS);
 const ONLY_STEPS = list(process.env.ONLY_STEPS);
 const AUTH = 'Basic ' + Buffer.from(`${USER}:${PASS}`).toString('base64');
 
-async function api(method, route) {
-  const res = await fetch(`${APP_URL}/api${route}`, { method, headers: { Authorization: AUTH } });
+async function api(method, route, body) {
+  const res = await fetch(`${APP_URL}/api${route}`, {
+    method,
+    headers: { Authorization: AUTH, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
   if (!res.ok) throw new Error(`${method} ${route} -> ${res.status} ${await res.text()}`);
   return res.status === 204 ? null : res.json();
 }
@@ -46,7 +50,11 @@ async function pickData() {
     const products = await api('GET', `/categories/${category.id}/products`);
     const positive = products.filter((p) => p.price > 0);
     if (!picked && positive.length >= 2)
-      picked = { category: category.name, products: positive.map((p) => p.name) };
+      picked = {
+        category: category.name,
+        products: positive.map((p) => p.name),
+        sample: positive[0],
+      };
     negative ??= products.find((p) => p.price < 0)?.name ?? null;
   }
   if (!picked)
@@ -120,7 +128,20 @@ async function waitForToast(page) {
 // (that is a finding too) and the run continues with the next one.
 // `only`: viewports where the step makes sense; `currency`: instances where it does
 // (EUR or TOKEN). It is skipped elsewhere.
-const buildSteps = ({ category, products: [first, second], negative }) => [
+// The history shows 20 orders per page: past that, the pagination appears (DS-4 of PR #31).
+// Orders created here are deleted at the end with the others.
+const HISTORY_ORDERS = 21;
+async function fillHistory(product, currency, createdOrderIds) {
+  const { pagination } = await api('GET', '/orders?page=1&pageSize=20');
+  const items = [{ product, quantity: 1, discountedAmount: 0 }];
+  const payment = currency === 'EUR' ? { cashAmount: null, cardAmount: product.price } : undefined;
+  for (let n = pagination.totalCount; n < HISTORY_ORDERS; n++) {
+    const order = await api('POST', '/orders', { items, payment });
+    if (order?.id) createdOrderIds.push(order.id);
+  }
+}
+
+const buildSteps = ({ category, products: [first, second], negative, sample }) => [
   ['home', async () => {}],
   [
     'category-selected',
@@ -201,8 +222,9 @@ const buildSteps = ({ category, products: [first, second], negative }) => [
   ],
   [
     'order-history',
-    async (page) => {
+    async (page, { currency, createdOrderIds }) => {
       await closeOverlays(page);
+      await fillHistory(sample, currency, createdOrderIds);
       await page.getByRole('button', { name: 'Historique' }).first().click();
     },
   ],
@@ -367,7 +389,7 @@ async function run() {
         const file = path.join(dir, `${String(i + 1).padStart(2, '0')}-${step}.png`);
         let error = null;
         try {
-          await action(page, { currency });
+          await action(page, { currency, createdOrderIds });
           await page.waitForLoadState('networkidle');
           await page.waitForTimeout(300); // let transitions settle
         } catch (e) {

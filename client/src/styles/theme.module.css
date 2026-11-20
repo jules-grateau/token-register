@@ -46,6 +46,8 @@
 [data-mantine-color-scheme] .inputWrapper[data-variant='default'] {
   --input-height: 48px;
   --input-fz: 16px;
+  /* Placeholders: --color-text-2, 6.2:1 in light, 6.9:1 in dark on --color-surface-2 (DS-2). */
+  --input-placeholder-color: var(--color-text-2);
   --input-bg: var(--color-surface-2);
   --input-bd: var(--color-border-strong);
   --input-bd-focus: var(--color-focus);

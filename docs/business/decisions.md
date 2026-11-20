@@ -584,6 +584,6 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Statut** : Active
 - **Domaine** : Autre
 - **Contexte** : dans les modales de confirmation, « Confirmer » était à gauche et « Annuler » à droite. La charte (« Modales hors encaissement ») place l'action principale à droite et une action destructive en rouge ; le changement casse l'habitude des utilisateurs actuels.
-- **Décision** : on applique la charte (réponse : « Apply the design (Recommended) ») : « Annuler » à gauche, l'action à droite, dans toutes les confirmations et tous les formulaires. Pour une suppression (commande, produit, catégorie), le bouton d'action est rouge plein.
-- **Options écartées** : garder « Confirmer » à gauche.
+- **Décision** : on applique la charte (réponse : « Apply the design (Recommended) ») : « Annuler » à gauche, l'action à droite, dans toutes les confirmations et tous les formulaires. Pour une suppression (commande, produit, catégorie), le bouton d'action est rouge plein. Pour une commande, il s'appelle « Supprimer » au lieu de « Confirmer », comme pour les produits et les catégories (réponse : « Supprimer (Recommended) », après la revue design de la PR #31).
+- **Options écartées** : garder « Confirmer » à gauche ; garder « Confirmer » comme libellé de la suppression d'une commande.
 - **Impact** : `client/src/components/ConfirmationModal` (prop `destructive`), `client/src/components/OrderHistoryModal`, `client/src/components/ProductManagement`, `client/src/components/CategoryManagement`, `client/src/components/DiscountModal`.

@@ -487,7 +487,18 @@ Décalage bas : `--toastify-toast-bottom` dans `variables.css` (au-dessus de la 
 
 ## Modales (hors encaissement)
 
-`Modal` Mantine : fond `--color-surface`, rayon 20 (`--radius-card`), `--shadow-pop`, overlay `rgba(31,26,15,.5)` (clair) / `rgba(0,0,0,.65)` (sombre) ; plein écran sur téléphone. En-tête : titre 18 / 700, croix `closeButtonProps={{ size: 44 }}` `--color-text`. Pas de bordure d'en-tête. Pied d'actions : boutons ≥ 44 px, `gap` 8 px, action principale moutarde à droite, « Annuler » `variant="default"` ; action destructive `color="red"` (`variant="light"` sauf confirmation finale `filled`). `ConfirmationModal` et formulaires produit / catégorie / remise suivent ces règles ; champs : fond `--color-surface-2`, contour 1 px `--color-border-strong` (≥ 3:1, c'est un contrôle de saisie), rayon 14, `h` 48, texte 16 ; focus = anneau `--color-focus` 2 px.
+`Modal` Mantine : fond `--color-surface`, rayon 20 (`--radius-card`), `--shadow-pop`, overlay `rgba(31,26,15,.5)` (clair) / `rgba(0,0,0,.65)` (sombre) ; plein écran sur téléphone. En-tête : titre 18 / 700, croix `closeButtonProps={{ size: 44 }}` `--color-text`. Pas de bordure d'en-tête. Pied d'actions : boutons ≥ 44 px, `gap` 8 px, action principale moutarde à droite, « Annuler » `variant="default"` ; action destructive `color="red"` (`variant="light"` sauf confirmation finale `filled`). `ConfirmationModal` et formulaires produit / catégorie / remise suivent ces règles.
+
+**Gabarits (PR #31, étape 4, validés)** :
+
+- **Confirmations** (`ConfirmationModal`, suppression de commande / produit / catégorie) : modale **centrée, jamais plein écran**, même sur téléphone (petit contenu, le contexte reste visible derrière). « Annuler » `variant="default"` à gauche, action à droite (D-050) ; suppression = `color="red"` **plein** (`filled`). En sombre, le texte du bouton rouge plein est `--color-danger-text` (`#3A0B0B`, 6.2:1), jamais du blanc (≈ 2.8:1 sur `#F87171`).
+- **Formulaires produit / catégorie, remise, « À propos »** : `fullScreen` sur téléphone ; sur desktop, modale centrée étroite (largeur du formulaire laissée libre pour l'instant, non spécifiée).
+- **Pagination de l'historique** : boutons 44 × 44 px, écart 8 px ; page active moutarde (`--color-primary`, texte encre), les autres `variant="default"`.
+- **« Nouvelle catégorie »** (mode édition) : `--radius-control`, bordure pointillée 1.5 px `--color-border-strong`, fond `--color-bg`, icône `IconPlus` + libellé 16 / 600 ; même famille que la carte « Nouveau Produit ».
+- **`SegmentedControl` de la remise** (Montant fixe / Pourcentage) : même style que la bascule du thème (`h` 44, rayon 14, sélectionné moutarde + texte encre 800). Les libellés peuvent passer sur deux lignes à 360 px ; ne jamais les tronquer.
+- **Non décrits à ce jour** : états vide, erreur et chargement de l'historique ; largeur des formulaires desktop.
+
+Champs : fond `--color-surface-2`, contour 1 px `--color-border-strong` (≥ 3:1, c'est un contrôle de saisie), rayon 14, `h` 48, texte 16 ; focus = anneau `--color-focus` 2 px.
 
 ## « À propos »
 

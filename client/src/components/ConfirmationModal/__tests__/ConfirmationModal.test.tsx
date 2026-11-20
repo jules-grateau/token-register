@@ -98,10 +98,10 @@ describe('ConfirmationModal', () => {
         <div>Content</div>
       </ConfirmationModal>
     );
-    expect(screen.getByRole('button', { name: 'delete' })).toHaveAttribute(
-      'data-destructive',
-      'true'
-    );
+    const button = screen.getByRole('button', { name: 'delete' });
+    expect(button).toHaveAttribute('data-destructive', 'true');
+    // --color-danger-bg / --color-danger-text, never autoContrast white in dark (DS-1, PR #31).
+    expect(button).toHaveClass('destructive');
   });
 
   it('renders extraFooter if provided', () => {
