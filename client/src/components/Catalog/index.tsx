@@ -367,7 +367,10 @@ function Catalog(): React.ReactElement {
           styles={
             isRow
               ? undefined
-              : { tab: { whiteSpace: 'normal' }, tabLabel: { minWidth: 0, flex: 1 } }
+              : {
+                  tab: { whiteSpace: 'normal' },
+                  tabLabel: { minWidth: 0, flex: 1, textAlign: 'left' },
+                }
           }
           value={String(selectedCategory)}
           onChange={(value) => value && dispatch(setSelectedCategory(Number(value)))}
