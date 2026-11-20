@@ -24,14 +24,21 @@ async function api(method, route) {
   return res.status === 204 ? null : res.json();
 }
 
-// Use the instance's existing catalog: pick a category with at least 2 products.
+// Use the instance's existing catalog: pick a category with at least 2 positive-priced
+// products, and any negative-priced one (deposit return) for the "total ≤ 0" screen.
 async function pickData() {
+  let picked = null;
+  let negative = null;
   for (const category of await api('GET', '/categories')) {
     const products = await api('GET', `/categories/${category.id}/products`);
-    if (products.length >= 2)
-      return { category: category.name, products: products.map((p) => p.name) };
+    const positive = products.filter((p) => p.price > 0);
+    if (!picked && positive.length >= 2)
+      picked = { category: category.name, products: positive.map((p) => p.name) };
+    negative ??= products.find((p) => p.price < 0)?.name ?? null;
   }
-  throw new Error('No category with at least 2 products on this instance to drive the UI');
+  if (!picked)
+    throw new Error('No category with at least 2 products on this instance to drive the UI');
+  return { ...picked, negative };
 }
 
 // Layout modes (docs/design/spacing-layout.md): desktop, tablet, phone portrait, phone landscape.
@@ -63,10 +70,31 @@ async function openCartIfCollapsed(page) {
   }
 }
 
+const dialog = (page) => page.getByRole('dialog');
+
+// "Valider" of the cart (also on the collapsed phone bar); with the phone Drawer open, the
+// last one is the Drawer's.
+async function checkout(page) {
+  await page.getByRole('button', { name: 'Valider', exact: true }).last().click();
+  await page.waitForTimeout(300);
+}
+
+// Adds one product from the catalog shown (all categories after an order), then checks out.
+async function sellOne(page, product) {
+  await closeOverlays(page);
+  await page.getByRole('tabpanel').getByText(product, { exact: true }).first().click();
+  await checkout(page);
+}
+
+async function waitForToast(page) {
+  await page.waitForTimeout(800); // toast animation
+}
+
 // Each step drives the UI then takes a screenshot. A failing step is recorded
 // (that is a finding too) and the run continues with the next one.
-// `only`: viewports where the step makes sense; it is skipped elsewhere.
-const buildSteps = ({ category, products: [first, second] }) => [
+// `only`: viewports where the step makes sense; `currency`: instances where it does
+// (EUR or TOKEN). It is skipped elsewhere.
+const buildSteps = ({ category, products: [first, second], negative }) => [
   ['home', async () => {}],
   [
     'category-selected',
@@ -82,24 +110,67 @@ const buildSteps = ({ category, products: [first, second] }) => [
     },
   ],
   ['cart-drawer', async (page) => openCartIfCollapsed(page), { only: ['mobile'] }],
+  // "Encaissement" (docs/design/components.md): empty state, then a suggested note.
+  ['payment-modal', async (page) => checkout(page)],
   [
-    'cart-confirmation-modal',
-    // With the Drawer open, the last "Valider" is the Drawer's one.
-    async (page) => page.getByRole('button', { name: 'Valider', exact: true }).last().click(),
+    'payment-suggested-change',
+    async (page) => dialog(page).getByRole('button', { name: /^Reçu / }).nth(1).click(),
   ],
   [
-    'order-placed',
+    // Amount typed on the keypad, below the total: "Il reste" (EUR) or "Il manque" (tokens).
+    'payment-keypad-partial',
     async (page) => {
-      await page
-        .getByRole('dialog')
-        .getByRole('button', { name: 'Confirmer', exact: true })
-        .click();
-      await page.waitForTimeout(800); // toast animation
+      const other = dialog(page).getByRole('button', { name: 'Autre montant' });
+      if (await other.isVisible().catch(() => false)) await other.click();
+      await dialog(page).getByRole('button', { name: '1', exact: true }).click();
+    },
+  ],
+  [
+    // EUR: mixed payment, "Reste en carte". Tokens: "100" received, then "Encaisser".
+    'order-placed-mixed-or-change',
+    async (page, { currency }) => {
+      if (currency === 'EUR') {
+        await dialog(page).getByRole('button', { name: /^Reste en carte/ }).click();
+      } else {
+        await dialog(page).getByRole('button', { name: '0', exact: true }).click();
+        await dialog(page).getByRole('button', { name: '0', exact: true }).click();
+        await page.waitForTimeout(300);
+        await dialog(page).getByRole('button', { name: 'Encaisser' }).click();
+      }
+      await waitForToast(page);
+    },
+  ],
+  [
+    'order-placed-card',
+    async (page) => {
+      await sellOne(page, first);
+      await dialog(page).getByRole('button', { name: 'Carte', exact: true }).click();
+      await waitForToast(page);
+    },
+    { currency: 'EUR' },
+  ],
+  [
+    'order-placed-exact',
+    async (page) => {
+      await sellOne(page, second);
+      await dialog(page).getByRole('button', { name: /^Appoint/ }).click();
+      await waitForToast(page);
+    },
+  ],
+  [
+    // Negative total (deposit return, D-013): asks for the mode in EUR, "Enregistrer" in tokens.
+    'payment-negative-total',
+    async (page) => {
+      if (!negative) throw new Error('No negative-priced product on this instance');
+      await sellOne(page, negative);
     },
   ],
   [
     'order-history',
-    async (page) => page.getByRole('button', { name: 'Historique' }).first().click(),
+    async (page) => {
+      await closeOverlays(page);
+      await page.getByRole('button', { name: 'Historique' }).first().click();
+    },
   ],
   [
     'cart-cleared-toast',
@@ -191,16 +262,18 @@ async function run() {
       });
 
       await page.goto(APP_URL, { waitUntil: 'networkidle' });
+      const currency = await page.evaluate(() => window.APP_CONFIG?.VITE_CURRENCY ?? 'TOKEN');
+      report.currency = currency;
 
-      for (const [i, [step, action, { only } = {}]] of STEPS.entries()) {
-        if (only && !only.includes(name)) {
+      for (const [i, [step, action, { only, currency: onlyCurrency } = {}]] of STEPS.entries()) {
+        if ((only && !only.includes(name)) || (onlyCurrency && onlyCurrency !== currency)) {
           vp.steps.push({ step, skipped: true });
           continue;
         }
         const file = path.join(dir, `${String(i + 1).padStart(2, '0')}-${step}.png`);
         let error = null;
         try {
-          await action(page);
+          await action(page, { currency });
           await page.waitForLoadState('networkidle');
           await page.waitForTimeout(300); // let transitions settle
         } catch (e) {
