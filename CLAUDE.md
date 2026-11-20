@@ -60,6 +60,7 @@ TypeScript 5.8.3: Follow standard conventions
   - les comptes rendus des agents font 30 lignes maximum ;
   - quand on relance un agent, on lui donne la liste précise des écrans ou des fichiers à regarder.
 - Pour traiter une revue : lancer `developpeur` avec le numéro de PR (section « Traiter une revue » de son agent). Il corrige, pousse, puis répond sur chaque fil et publie un récapitulatif « 🛠️ Réponse du développeur ». Les points qui demandent un choix métier remontent à l'utilisateur.
+- Points reportés : tout point légitime laissé « pour plus tard » devient une issue GitHub (label `suivi`, plus `tech` ou `design`), avec le lien vers le commentaire d'origine. La réponse sur la PR cite l'issue (`📌 … — reporté → #n`). `⏸️` ne sert qu'aux points non retenus. Cela vaut pour le développeur comme pour la session principale. Le tech-lead et le designer, qui ne lancent pas de commandes, signalent seulement le point. La PR qui le traite met `Closes #n`. Liste : `gh issue list --label suivi`.
 - Pour clore la boucle côté code : lancer `tech-lead` en mode « vérifier les corrections » sur la PR. Il confirme chaque `TL-n` (✅/❌) dans un commentaire.
 
 ### PR en brouillon pendant le travail
