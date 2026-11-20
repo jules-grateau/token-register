@@ -4,12 +4,21 @@ import Cart from '../index';
 import { useSelector } from 'react-redux';
 import { render } from '../../../utils/testUtils';
 import { clearCart, updateQuantity } from '../../../redux/cartSlice';
+import { toast } from 'react-toastify';
+import { resetLayoutMode, setLayoutMode } from '../../../test/layoutMode';
 
 const mockDispatch = jest.fn();
+
+let mockStoreItems: unknown[] = [];
 
 jest.mock('react-redux', () => ({
   useSelector: jest.fn(),
   useDispatch: () => mockDispatch,
+  useStore: () => ({ getState: () => ({ cart: { items: mockStoreItems } }) }),
+}));
+
+jest.mock('react-toastify', () => ({
+  toast: { info: jest.fn(), isActive: jest.fn(() => false), update: jest.fn(), dismiss: jest.fn() },
 }));
 
 jest.mock('react-i18next', () => ({
@@ -31,6 +40,7 @@ describe('Cart', () => {
   const onValidateCart = jest.fn();
 
   beforeEach(() => {
+    mockStoreItems = mockCartItems;
     (useSelector as unknown as jest.Mock).mockImplementation((selector: any) => {
       if (selector.name === 'selectCartItems') return mockCartItems;
       if (selector.name === 'selectTotalPrice') return 6;
@@ -97,5 +107,77 @@ describe('Cart', () => {
     const clearButton = screen.getByRole('button', { name: /clear_cart/i });
     fireEvent.click(clearButton);
     expect(mockDispatch).toHaveBeenCalledWith(clearCart());
+    // D-019: the cart is emptied at once and "Annuler" is offered in a toast.
+    expect(toast.info).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ toastId: 'cart-cleared', autoClose: 5000, closeOnClick: false })
+    );
+  });
+
+  it('gives each cart line a "more actions" menu with an accessible name', () => {
+    render(<Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} />);
+    expect(screen.getByRole('button', { name: 'cart_item_actions' })).toBeInTheDocument();
+  });
+});
+
+describe('Cart on a phone in portrait', () => {
+  const onClickHistory = jest.fn();
+  const onValidateCart = jest.fn();
+
+  beforeEach(() => {
+    setLayoutMode('phone-portrait');
+    (useSelector as unknown as jest.Mock).mockImplementation((selector: any) => {
+      if (selector.name === 'selectCartItems') return mockCartItems;
+      if (selector.name === 'selectTotalPrice') return 6;
+      if (selector.name === 'selectTotalItems') return 3;
+      return undefined;
+    });
+  });
+
+  afterEach(() => {
+    resetLayoutMode();
+    jest.clearAllMocks();
+  });
+
+  it('shows a collapsed bar with the total and "Valider", without the lines', () => {
+    render(<Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} />);
+    expect(screen.getByTestId('cart-bar')).toBeInTheDocument();
+    expect(screen.getByTestId('cart-bar-total')).toHaveTextContent('6');
+    expect(screen.queryByText('Apple')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /checkout/i }));
+    expect(onValidateCart).toHaveBeenCalled();
+  });
+
+  it('asks to open the Drawer when the bar is touched', () => {
+    const onDrawerOpenChange = jest.fn();
+    render(
+      <Cart
+        onClickHistory={onClickHistory}
+        onValidateCart={onValidateCart}
+        onDrawerOpenChange={onDrawerOpenChange}
+      />
+    );
+    fireEvent.click(screen.getAllByRole('button', { name: 'view_cart' })[0]);
+    expect(onDrawerOpenChange).toHaveBeenCalledWith(true);
+  });
+
+  it('shows the lines and the clear button in the open Drawer', async () => {
+    render(
+      <Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} isDrawerOpen={true} />
+    );
+    expect(await screen.findByText('Apple')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /clear_cart/i })).toBeInTheDocument();
+    // History moves to the global header on phones.
+    expect(screen.queryByRole('button', { name: /history/i })).not.toBeInTheDocument();
+  });
+
+  it('disables "Valider" when the cart is empty', () => {
+    (useSelector as unknown as jest.Mock).mockImplementation((selector: any) => {
+      if (selector.name === 'selectCartItems') return [];
+      return 0;
+    });
+    render(<Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} />);
+    expect(screen.getByRole('button', { name: /checkout/i })).toBeDisabled();
+    expect(screen.getByText('cart_empty_short')).toBeInTheDocument();
   });
 });

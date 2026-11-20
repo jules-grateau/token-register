@@ -1,36 +1,45 @@
 import React from 'react';
-import { Button, Stack, Text } from '@mantine/core';
+import { Card, Stack, Text, UnstyledButton } from '@mantine/core';
 import { IconPlus } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
+import { useLayoutMode } from '../../hooks/useLayoutMode';
+import { CARD_MIN_HEIGHT, CARD_PADDING } from '../Catalog/ProductList/ProductCard';
+import classes from '../Catalog/ProductList/ProductCard/ProductCard.module.css';
 
 interface NewProductCardProps {
   onClick: () => void;
 }
 
+// docs/design/components.md, "Nouveau produit": same size as a product card, never cut.
 export const NewProductCard: React.FC<NewProductCardProps> = ({ onClick }) => {
   const { t } = useTranslation();
+  const mode = useLayoutMode();
+  const isDesktop = mode === 'desktop';
 
   return (
-    <Button
-      onClick={onClick}
-      h={{ base: 100, md: 200 }}
-      variant="default"
+    <Card
+      withBorder
       radius="sm"
-      p="lg"
-      aria-label={t('product_management.new')}
-      styles={{
-        root: { borderStyle: 'dashed' },
-        label: { whiteSpace: 'normal', height: '100%' },
-        inner: { height: '100%' },
-      }}
+      p={0}
+      h="auto"
+      mih={CARD_MIN_HEIGHT[mode]}
+      className={classes.newCard}
     >
-      <Stack gap="sm" align="center" justify="center">
-        <IconPlus size={48} stroke={1.5} />
-        <Text fw={700} size="lg" ta="center">
-          {t('product_management.new')}
-        </Text>
-      </Stack>
-    </Button>
+      <UnstyledButton
+        onClick={onClick}
+        className={classes.main}
+        flex={1}
+        p={CARD_PADDING[mode]}
+        aria-label={t('product_management.new')}
+      >
+        <Stack gap="xs" align="center" justify="center" h="100%">
+          <IconPlus size={isDesktop ? 48 : 32} stroke={1.5} />
+          <Text fw={700} size={isDesktop ? 'lg' : 'md'} ta="center">
+            {t('product_management.new')}
+          </Text>
+        </Stack>
+      </UnstyledButton>
+    </Card>
   );
 };
 

@@ -2,7 +2,8 @@
 // Drives a running instance of the app (the demo, in CI) through its main screens
 // and takes screenshots on desktop, tablet and mobile, like a designer testing the
 // real thing. Orders placed during the run are deleted at the end.
-// Used by .github/workflows/design-review.yml.
+// Used by .github/workflows/design-review.yml. Can also run locally against any instance
+// (e.g. a local EUR instance); the instance needs a category with at least 2 products.
 //
 // Env: APP_URL (e.g. https://demo.julesgrateau.dev), BASIC_AUTH_USER, BASIC_AUTH_PASS,
 //      OUT_DIR (default ./design-review-output)
@@ -33,14 +34,38 @@ async function pickData() {
   throw new Error('No category with at least 2 products on this instance to drive the UI');
 }
 
+// Layout modes (docs/design/spacing-layout.md): desktop, tablet, phone portrait, phone landscape.
 const VIEWPORTS = {
   desktop: { viewport: { width: 1440, height: 900 } },
   tablet: { ...devices['iPad (gen 7)'] },
   mobile: { ...devices['iPhone 13'] },
+  'mobile-landscape': { ...devices['iPhone 13 landscape'] },
 };
+
+// Closes whatever modal, Drawer or menu is open, and lets the transition end.
+async function closeOverlays(page) {
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+}
+
+async function openSettingsItem(page, item) {
+  // The settings button is labelled "Mode Édition" (aria-label of the ⚙️ icon).
+  await page.getByRole('button', { name: 'Mode Édition', exact: true }).click();
+  await page.getByRole('menuitem', { name: item }).click();
+}
+
+// Phone portrait: the cart is a collapsed bar that opens a Drawer ("Voir le panier").
+async function openCartIfCollapsed(page) {
+  const openCart = page.getByRole('button', { name: 'Voir le panier' }).first();
+  if (await openCart.isVisible().catch(() => false)) {
+    await openCart.click();
+    await page.waitForTimeout(400);
+  }
+}
 
 // Each step drives the UI then takes a screenshot. A failing step is recorded
 // (that is a finding too) and the run continues with the next one.
+// `only`: viewports where the step makes sense; it is skipped elsewhere.
 const buildSteps = ({ category, products: [first, second] }) => [
   ['home', async () => {}],
   [
@@ -56,9 +81,11 @@ const buildSteps = ({ category, products: [first, second] }) => [
       await catalog.getByText(second, { exact: true }).first().click();
     },
   ],
+  ['cart-drawer', async (page) => openCartIfCollapsed(page), { only: ['mobile'] }],
   [
     'cart-confirmation-modal',
-    async (page) => page.getByRole('button', { name: 'Valider' }).click(),
+    // With the Drawer open, the last "Valider" is the Drawer's one.
+    async (page) => page.getByRole('button', { name: 'Valider', exact: true }).last().click(),
   ],
   [
     'order-placed',
@@ -70,13 +97,65 @@ const buildSteps = ({ category, products: [first, second] }) => [
       await page.waitForTimeout(800); // toast animation
     },
   ],
-  ['order-history', async (page) => page.getByRole('button', { name: 'Historique' }).click()],
+  [
+    'order-history',
+    async (page) => page.getByRole('button', { name: 'Historique' }).first().click(),
+  ],
+  [
+    'cart-cleared-toast',
+    async (page) => {
+      await closeOverlays(page);
+      await page.getByRole('tabpanel').getByText(first, { exact: true }).first().click();
+      await openCartIfCollapsed(page);
+      await page.getByRole('button', { name: 'Vider le panier' }).last().click();
+      await page.waitForTimeout(600); // toast animation
+    },
+  ],
+  [
+    'about-modal',
+    async (page) => {
+      await closeOverlays(page);
+      await openSettingsItem(page, 'À propos');
+    },
+  ],
   [
     'edit-mode',
     async (page) => {
-      await page.keyboard.press('Escape');
-      await page.getByRole('button', { name: 'Mode Édition' }).click();
-      await page.getByRole('menuitem', { name: 'Mode Édition' }).click();
+      await closeOverlays(page);
+      await openSettingsItem(page, 'Mode Édition');
+      // Placing an order goes back to "all categories": select the category again.
+      await page.getByRole('tab').filter({ hasText: category }).first().click();
+    },
+  ],
+  [
+    'edit-category-form',
+    async (page) => {
+      // Toolbar (phone portrait), end of the tab row (phone landscape) or column of tabs.
+      await page
+        .getByTestId('category-toolbar')
+        .getByRole('button', { name: 'Modifier', exact: true })
+        .or(page.getByRole('button', { name: 'Modifier la Catégorie', exact: true }))
+        .or(page.getByRole('tablist').getByRole('button', { name: 'Modifier', exact: true }))
+        .first()
+        .click();
+    },
+  ],
+  [
+    'edit-product-form',
+    async (page) => {
+      await closeOverlays(page);
+      await page
+        .getByRole('tabpanel')
+        .getByRole('button', { name: 'Modifier', exact: true })
+        .first()
+        .click();
+    },
+  ],
+  [
+    'new-product-form',
+    async (page) => {
+      await closeOverlays(page);
+      await page.getByRole('tabpanel').getByRole('button', { name: 'Nouveau Produit' }).click();
     },
   ],
 ];
@@ -113,7 +192,11 @@ async function run() {
 
       await page.goto(APP_URL, { waitUntil: 'networkidle' });
 
-      for (const [i, [step, action]] of STEPS.entries()) {
+      for (const [i, [step, action, { only } = {}]] of STEPS.entries()) {
+        if (only && !only.includes(name)) {
+          vp.steps.push({ step, skipped: true });
+          continue;
+        }
         const file = path.join(dir, `${String(i + 1).padStart(2, '0')}-${step}.png`);
         let error = null;
         try {

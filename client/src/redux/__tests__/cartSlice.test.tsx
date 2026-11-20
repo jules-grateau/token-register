@@ -1,4 +1,12 @@
-import { cartReducer, add, updateQuantity, remove, clearCart, addDiscount } from '../cartSlice';
+import {
+  cartReducer,
+  add,
+  updateQuantity,
+  remove,
+  clearCart,
+  addDiscount,
+  restoreCart,
+} from '../cartSlice';
 import type { CartState } from '../cartSlice';
 import type { ProductType } from 'shared-ts';
 
@@ -66,5 +74,54 @@ describe('cartSlice reducers', () => {
   it('should handle addDiscount', () => {
     const nextState = cartReducer(initialState, addDiscount({ productId: 1, discountedAmount: 5 }));
     expect(nextState.items[0].discountedAmount).toBe(5);
+  });
+});
+
+describe('cartSlice restore (D-019: "Annuler" merges)', () => {
+  const product3: ProductType = { id: 3, name: 'Cherry', price: 2, categoryId: 1 };
+  const previous = [
+    { product: product1, quantity: 1, discountedAmount: 0 },
+    { product: product2, quantity: 2, discountedAmount: 0 },
+  ];
+
+  it('brings the previous cart back into an empty cart', () => {
+    const nextState = cartReducer({ items: [] }, restoreCart(previous));
+    expect(nextState.items).toEqual(previous);
+  });
+
+  it('keeps the products added in the meantime, after the previous lines', () => {
+    const current = { items: [{ product: product3, quantity: 1, discountedAmount: 0 }] };
+    const nextState = cartReducer(current, restoreCart(previous));
+    expect(nextState.items.map((item) => [item.product.id, item.quantity])).toEqual([
+      [1, 1],
+      [2, 2],
+      [3, 1],
+    ]);
+  });
+
+  it('adds the quantities of a product present in both carts', () => {
+    const current = { items: [{ product: product2, quantity: 1, discountedAmount: 0 }] };
+    const nextState = cartReducer(current, restoreCart(previous));
+    expect(nextState.items).toHaveLength(2);
+    expect(nextState.items[1]).toEqual({ product: product2, quantity: 3, discountedAmount: 0 });
+  });
+
+  it('keeps the discounts of lines that are only in one cart', () => {
+    const current = { items: [{ product: product3, quantity: 1, discountedAmount: 1 }] };
+    const nextState = cartReducer(
+      current,
+      restoreCart([{ product: product1, quantity: 2, discountedAmount: 5 }])
+    );
+    expect(nextState.items.map((item) => item.discountedAmount)).toEqual([5, 1]);
+  });
+
+  it('adds quantities and discount amounts of a product in both carts (D-024)', () => {
+    // 2 x Apple (-1), emptied, 1 x Apple (-0.50), "Annuler" -> 3 x Apple (-1.50).
+    const current = { items: [{ product: product1, quantity: 1, discountedAmount: 50 }] };
+    const nextState = cartReducer(
+      current,
+      restoreCart([{ product: product1, quantity: 2, discountedAmount: 100 }])
+    );
+    expect(nextState.items).toEqual([{ product: product1, quantity: 3, discountedAmount: 150 }]);
   });
 });

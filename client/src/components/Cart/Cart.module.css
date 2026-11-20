@@ -1,0 +1,16 @@
+/* docs/design/components.md, "Pulsation à l'ajout" (phone portrait cart bar). */
+.pulse {
+  animation: cart-total-pulse 150ms ease-out;
+}
+
+@keyframes cart-total-pulse {
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}

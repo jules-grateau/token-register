@@ -37,7 +37,7 @@ export const ProductDeleteConfirm: React.FC<ProductDeleteConfirmProps> = ({
         'error' in err.data
           ? String(err.data.error)
           : t('errors.unknown');
-      toast.error(errorMessage);
+      toast.error(errorMessage, { autoClose: 5000 });
     }
   };
 

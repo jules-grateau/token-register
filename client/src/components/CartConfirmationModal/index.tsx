@@ -15,13 +15,20 @@ import { Group, Stack, Text, ScrollArea } from '@mantine/core';
 import ConfirmationModal from '../ConfirmationModal';
 import Loader from '../Loader';
 import { useCurrency } from '../../hooks/useCurrency';
+import { CART_CLEARED_TOAST_ID } from '../../hooks/useClearCartWithUndo';
 
 interface CartConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Called after the order is saved (e.g. to collapse the phone cart Drawer). */
+  onOrderPlaced?: () => void;
 }
 
-const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({ isOpen, onClose }) => {
+const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
+  isOpen,
+  onClose,
+  onOrderPlaced,
+}) => {
   const { t } = useTranslation();
   const { format } = useCurrency();
   const cartItems = useSelector(selectCartItems);
@@ -38,10 +45,13 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({ isOpen, o
       const id = await addOrder(cartItems).unwrap();
       dispatch(clearCart());
       void ordersQuery.refetch();
+      // D-025: once an order is placed, emptying the cart can no longer be undone.
+      toast.dismiss(CART_CLEARED_TOAST_ID);
       toast.success(t('order_placed', { id }));
       onClose();
+      onOrderPlaced?.();
     } catch (error) {
-      toast.error(t(t('error_adding_order', { error: String(error) })));
+      toast.error(t('error_adding_order', { error: String(error) }), { autoClose: 5000 });
     }
   };
 
@@ -53,7 +63,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({ isOpen, o
   const modalFooter = (
     <Group justify="space-between">
       <Text fw={700}>{`${totalItems} ${t('items', { count: totalItems })}`}</Text>
-      <Text fw={700} style={{ whiteSpace: 'nowrap' }}>
+      <Text fz={20} fw={700} style={{ whiteSpace: 'nowrap' }}>
         {format(totalPrice)}
       </Text>
     </Group>
@@ -75,7 +85,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({ isOpen, o
           <ScrollArea.Autosize mah={300}>
             <Stack>
               {cartItems.map((item, index) => (
-                <CartItem key={index} item={item} />
+                <CartItem key={index} item={item} showQuantity />
               ))}
             </Stack>
           </ScrollArea.Autosize>
