@@ -1,10 +1,16 @@
 import {
+  addPart,
+  applyCardKey,
   applyKeypadKey,
-  cardPayment,
-  cashPayment,
+  cashSuggestions,
+  completePayment,
   computeChangeState,
+  NO_PARTS,
   parseKeypadInput,
-  splitCashPayment,
+  partOutcome,
+  remainingDue,
+  removePart,
+  singleModePayment,
   suggestAmounts,
   toKeypadInput,
   type KeypadKey,
@@ -75,51 +81,129 @@ describe('keypad input', () => {
   });
 });
 
-describe('computeChangeState', () => {
-  it('handles a total of 0 or below first (D-032)', () => {
-    expect(computeChangeState(0, 500, 'EUR')).toEqual({ kind: 'nothing-due' });
-    expect(computeChangeState(-200, null, 'EUR')).toEqual({ kind: 'refund', amount: 200 });
+describe('cashSuggestions (D-053)', () => {
+  it('puts the exact amount due first, then 3 amounts above it', () => {
+    expect(cashSuggestions(750, 100)).toEqual([750, 800, 1000, 2000]);
+    expect(cashSuggestions(1200, 100)).toEqual([1200, 1500, 2000, 5000]);
   });
 
-  it('gives the change to return', () => {
-    expect(computeChangeState(750, null, 'EUR')).toEqual({ kind: 'empty' });
-    expect(computeChangeState(750, 2000, 'EUR')).toEqual({
+  it('suggests from the amount still due after a card part', () => {
+    expect(cashSuggestions(250, 100)).toEqual([250, 300, 500, 1000]);
+  });
+
+  it('suggests nothing when nothing is due', () => {
+    expect(cashSuggestions(0, 100)).toEqual([]);
+  });
+});
+
+describe('payment parts (D-053)', () => {
+  const cash500 = addPart(NO_PARTS, 'cash', 500);
+
+  it('deducts the added parts from the total, and removes a part', () => {
+    expect(remainingDue(750, NO_PARTS)).toBe(750);
+    expect(remainingDue(750, cash500)).toBe(250);
+    expect(removePart(cash500, 'cash')).toEqual(NO_PARTS);
+  });
+
+  it('never lets the card amount go above the amount due', () => {
+    expect(applyCardKey('', '5', 750, 100)).toBe('5');
+    expect(applyCardKey('7', ',', 750, 100)).toBe('7,');
+    expect(applyCardKey('7,', '6', 750, 100)).toBe('7,'); // 7,6 > 7,50: ignored
+    expect(applyCardKey('7', '5', 750, 100)).toBe('7'); // 75 > 7,50: ignored
+    expect(applyCardKey('7,5', 'backspace', 750, 100)).toBe('7,');
+  });
+
+  it('completes the sale when the part covers the amount due', () => {
+    expect(partOutcome('card', 750, 750, NO_PARTS)).toBe('complete');
+    expect(partOutcome('cash', 2000, 750, NO_PARTS)).toBe('complete');
+    expect(partOutcome('cash', 750, 750, NO_PARTS)).toBe('complete');
+    expect(partOutcome('card', 250, 250, cash500)).toBe('complete');
+  });
+
+  it('adds a part below the amount due, unless it is the last mode', () => {
+    expect(partOutcome('cash', 500, 750, NO_PARTS)).toBe('add');
+    expect(partOutcome('card', 300, 750, NO_PARTS)).toBe('add');
+    // The other mode already has its part: no third part.
+    expect(partOutcome('card', 100, 250, cash500)).toBe('none');
+    expect(partOutcome('cash', null, 750, NO_PARTS)).toBe('none');
+  });
+
+  it('records the cash kept, never the change (D-034)', () => {
+    expect(completePayment(NO_PARTS, 'cash', 2000, 750)).toEqual({
+      cashAmount: 750,
+      cardAmount: null,
+    });
+    expect(completePayment(NO_PARTS, 'card', 750, 750)).toEqual({
+      cashAmount: null,
+      cardAmount: 750,
+    });
+    expect(completePayment(cash500, 'card', 250, 250)).toEqual({
+      cashAmount: 500,
+      cardAmount: 250,
+    });
+    const card300 = addPart(NO_PARTS, 'card', 300);
+    expect(completePayment(card300, 'cash', 1000, 450)).toEqual({
+      cashAmount: 450,
+      cardAmount: 300,
+    });
+  });
+
+  it('records the whole total on the mode chosen for a total <= 0', () => {
+    expect(singleModePayment('cash', -200)).toEqual({ cashAmount: -200, cardAmount: null });
+    expect(singleModePayment('card', 0)).toEqual({ cashAmount: null, cardAmount: 0 });
+  });
+});
+
+describe('computeChangeState', () => {
+  it('handles a total of 0 or below first', () => {
+    expect(computeChangeState(0, NO_PARTS, 'cash', 500)).toEqual({ kind: 'nothing-due' });
+    expect(computeChangeState(-200, NO_PARTS, null, null)).toEqual({ kind: 'refund', amount: 200 });
+  });
+
+  it('asks for a mode, then an amount', () => {
+    expect(computeChangeState(750, NO_PARTS, null, null)).toEqual({ kind: 'empty', hint: 'mode' });
+    expect(computeChangeState(750, NO_PARTS, 'cash', null)).toEqual({
+      kind: 'empty',
+      hint: 'cash',
+    });
+    expect(computeChangeState(750, addPart(NO_PARTS, 'cash', 500), null, null)).toEqual({
+      kind: 'due',
+      remaining: 250,
+    });
+  });
+
+  it('gives the change to return on the cash part', () => {
+    expect(computeChangeState(750, NO_PARTS, 'cash', 2000)).toEqual({
       kind: 'change',
       received: 2000,
       change: 1250,
       large: false,
     });
-    expect(computeChangeState(750, 750, 'EUR')).toEqual({ kind: 'no-change', received: 750 });
-  });
-
-  it('warns about a change above 100 EUR, in euros only', () => {
-    expect(computeChangeState(500, 20000, 'EUR')).toMatchObject({ large: true });
-    expect(computeChangeState(500, 10500, 'EUR')).toMatchObject({ large: false });
-    expect(computeChangeState(5, 500, 'TOKEN')).toMatchObject({ large: false });
-  });
-
-  it('asks for the rest by card in euros, flags a missing amount in tokens', () => {
-    expect(computeChangeState(750, 500, 'EUR')).toEqual({
-      kind: 'remaining',
-      received: 500,
-      remaining: 250,
+    expect(computeChangeState(750, NO_PARTS, 'cash', 750)).toEqual({
+      kind: 'no-change',
+      received: 750,
     });
-    expect(computeChangeState(7, 5, 'TOKEN')).toEqual({ kind: 'missing', received: 5, missing: 2 });
-  });
-});
-
-describe('recorded payment (D-031, D-034)', () => {
-  it('records the whole total on a single mode', () => {
-    expect(cardPayment(750)).toEqual({ cashAmount: null, cardAmount: 750 });
-    expect(cashPayment(-200)).toEqual({ cashAmount: -200, cardAmount: null });
+    const card300 = addPart(NO_PARTS, 'card', 300);
+    expect(computeChangeState(750, card300, 'cash', 500)).toMatchObject({ change: 50 });
   });
 
-  it('never records the change: cash covers at most the total', () => {
-    expect(splitCashPayment(750, 2000)).toEqual({ cashAmount: 750, cardAmount: null });
-    expect(splitCashPayment(750, 750)).toEqual({ cashAmount: 750, cardAmount: null });
+  it('warns about a change above 100 EUR', () => {
+    expect(computeChangeState(500, NO_PARTS, 'cash', 20000)).toMatchObject({ large: true });
+    expect(computeChangeState(500, NO_PARTS, 'cash', 10500)).toMatchObject({ large: false });
   });
 
-  it('splits a partial cash payment, the rest by card', () => {
-    expect(splitCashPayment(750, 500)).toEqual({ cashAmount: 500, cardAmount: 250 });
+  it('shows a full card payment and what remains after a part', () => {
+    expect(computeChangeState(750, NO_PARTS, 'card', 750)).toEqual({ kind: 'paid', amount: 750 });
+    expect(computeChangeState(750, NO_PARTS, 'cash', 500)).toEqual({
+      kind: 'remaining',
+      mode: 'cash',
+      amount: 500,
+      remaining: 250,
+      last: false,
+    });
+    expect(computeChangeState(750, addPart(NO_PARTS, 'cash', 500), 'card', 100)).toMatchObject({
+      kind: 'remaining',
+      last: true,
+    });
   });
 });

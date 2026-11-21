@@ -1,37 +1,51 @@
 import React from 'react';
 import { Group, Paper, Stack, Text } from '@mantine/core';
-import { IconAlertTriangle, IconCheck, IconCoins, IconCreditCard } from '@tabler/icons-react';
+import {
+  IconAlertTriangle,
+  IconCash,
+  IconCheck,
+  IconCoins,
+  IconCreditCard,
+} from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
-import type { CurrencyCode } from 'shared-ts';
-import type { ChangeState } from '../../utils/payment';
+import type { ChangeState, PaymentMode } from '../../utils/payment';
 import classes from './ChangeDisplay.module.css';
 import figures from '../../styles/figures.module.css';
 
 interface ChangeDisplayProps {
   state: ChangeState;
-  currency: CurrencyCode;
   format: (amount: number) => string;
-  /** Phone landscape: big amounts at 32 instead of 40, and 28 in tokens (DS-5). */
+  /** Phone landscape: big amounts at 32 instead of 40 (DS-5). */
   compact?: boolean;
   /** Reserved height: 112 in phone portrait (DS-4), so the screen does not jump. */
   minHeight?: number;
-  /** Initial focus target when there is no amount display (never "Carte"). */
+  /** Initial focus target when there is no amount display (never a mode button). */
   autoFocus?: boolean;
 }
 
+const PLACEHOLDERS = {
+  mode: 'payment_placeholder_mode',
+  cash: 'payment_placeholder_cash',
+  card: 'payment_placeholder_card',
+} as const;
+
+const PART_LABELS: Record<PaymentMode, string> = {
+  cash: 'payment_cash_received',
+  card: 'payment_card',
+};
+
 // docs/design/components.md, "États du bloc de rendu". Always the same place and min height;
 // background, border and icon colors come from ChangeDisplay.module.css (`data-state`).
+// Euros only: token instances show no change block (D-053).
 const ChangeDisplay: React.FC<ChangeDisplayProps> = ({
   state,
-  currency,
   format,
   compact = false,
   minHeight = 96,
   autoFocus = false,
 }) => {
   const { t } = useTranslation();
-  const isTokens = currency === 'TOKEN';
-  const bigAmount = compact ? (isTokens ? 28 : 32) : 40;
+  const bigAmount = compact ? 32 : 40;
 
   const receivedLine = (label: string, amount: number) => (
     <Group justify="space-between" wrap="nowrap" gap="xs">
@@ -44,9 +58,8 @@ const ChangeDisplay: React.FC<ChangeDisplayProps> = ({
     </Group>
   );
 
-  // A long amount ("12 Jetons") goes under its label instead of overflowing; in phone landscape
-  // it is 28 px in tokens so that the block stays low enough for "Encaisser" (DS-5).
-  const amountLine = (label: string, amount: number, size: number, colorClass?: string) => (
+  // A long amount goes under its label instead of overflowing.
+  const amountLine = (label: string, amount: number, size: number) => (
     <Group justify="space-between" wrap="wrap" gap="xs" align="center" style={{ rowGap: 0 }}>
       <Text fz={20} fw={700} className={classes.amount}>
         {label}
@@ -56,9 +69,18 @@ const ChangeDisplay: React.FC<ChangeDisplayProps> = ({
         fw={800}
         lh={1.1}
         ml="auto"
-        className={[classes.amount, figures.big, colorClass].filter(Boolean).join(' ')}
+        className={[classes.amount, figures.big].join(' ')}
       >
         {format(amount)}
+      </Text>
+    </Group>
+  );
+
+  const warning = (label: string) => (
+    <Group gap="xs" wrap="nowrap">
+      <IconAlertTriangle size={20} className={classes.accent} aria-hidden />
+      <Text fz={16} fw={600}>
+        {label}
       </Text>
     </Group>
   );
@@ -70,28 +92,20 @@ const ChangeDisplay: React.FC<ChangeDisplayProps> = ({
     case 'empty':
       content = (
         <Text fz={16} className={classes.label}>
-          {t(isTokens ? 'payment_placeholder_tokens' : 'payment_placeholder')}
+          {t(PLACEHOLDERS[state.hint])}
         </Text>
       );
+      break;
+    case 'due':
+      content = amountLine(t('payment_remaining'), state.remaining, 32);
       break;
     case 'change':
       icon = <IconCoins size={28} className={classes.accent} aria-hidden />;
       content = (
         <>
           {receivedLine(t('payment_received'), state.received)}
-          {amountLine(
-            t(isTokens ? 'payment_tokens_change_due' : 'payment_change_due'),
-            state.change,
-            bigAmount
-          )}
-          {state.large && (
-            <Group gap="xs" wrap="nowrap">
-              <IconAlertTriangle size={20} className={classes.accent} aria-hidden />
-              <Text fz={16} fw={600}>
-                {t('payment_large_change')}
-              </Text>
-            </Group>
-          )}
+          {amountLine(t('payment_change_due'), state.change, bigAmount)}
+          {state.large && warning(t('payment_large_change'))}
         </>
       );
       break;
@@ -106,31 +120,37 @@ const ChangeDisplay: React.FC<ChangeDisplayProps> = ({
         </>
       );
       break;
-    case 'remaining':
-      icon = <IconCreditCard size={28} className={classes.ink} aria-hidden />;
+    case 'paid':
+      icon = <IconCheck size={28} className={classes.success} aria-hidden />;
       content = (
         <>
-          {receivedLine(t('payment_cash_received'), state.received)}
+          {receivedLine(t('payment_card'), state.amount)}
+          <Text fz={24} fw={800} className={figures.big}>
+            {t('payment_fully_paid')}
+          </Text>
+        </>
+      );
+      break;
+    case 'remaining': {
+      // The rest goes to the other mode, unless it already has its part (D-053).
+      const Icon = state.mode === 'cash' ? IconCreditCard : IconCash;
+      icon = state.last ? (
+        <IconAlertTriangle size={28} className={classes.accent} aria-hidden />
+      ) : (
+        <Icon size={28} className={classes.ink} aria-hidden />
+      );
+      content = (
+        <>
+          {receivedLine(t(PART_LABELS[state.mode]), state.amount)}
           {amountLine(t('payment_remaining'), state.remaining, 32)}
+          {state.last && warning(t('payment_must_cover'))}
         </>
       );
       break;
-    case 'missing':
-      icon = <IconAlertTriangle size={28} className={classes.danger} aria-hidden />;
-      content = (
-        <>
-          {receivedLine(t('payment_received'), state.received)}
-          {amountLine(t('payment_missing'), state.missing, 32, classes.danger)}
-        </>
-      );
-      break;
+    }
     case 'refund':
       icon = <IconCoins size={28} className={classes.accent} aria-hidden />;
-      content = amountLine(
-        t(isTokens ? 'payment_tokens_refund_due' : 'payment_refund_due'),
-        state.amount,
-        bigAmount
-      );
+      content = amountLine(t('payment_refund_due'), state.amount, bigAmount);
       break;
     case 'nothing-due':
       content = (

@@ -177,39 +177,46 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
     },
   ],
   ['cart-drawer', async (page) => openCartIfCollapsed(page), { only: ['mobile'] }],
-  // "Encaissement" (docs/design/components.md): empty state, then a suggested note.
+  // "Encaissement" (docs/design/components.md, D-053): the mode first in EUR; the recap and
+  // "Encaisser" only in tokens.
   ['payment-modal', async (page) => checkout(page)],
   [
-    'payment-suggested-change',
-    async (page) =>
-      dialog(page)
-        .getByRole('button', { name: /^Reçu / })
-        .nth(1)
-        .click(),
+    // Card: prefilled with the amount due.
+    'payment-card-prefilled',
+    async (page) => dialog(page).getByRole('button', { name: 'Carte', exact: true }).click(),
+    { currency: 'EUR' },
   ],
   [
-    // Amount typed on the keypad, below the total: "Il reste" (EUR) or "Il manque" (tokens).
-    'payment-keypad-partial',
+    // Cash: the exact amount first, then a suggested note with change.
+    'payment-cash-suggested-change',
+    async (page) => {
+      await dialog(page).getByRole('button', { name: 'Espèces', exact: true }).click();
+      await dialog(page)
+        .getByRole('button', { name: /^Reçu / })
+        .nth(1)
+        .click();
+    },
+    { currency: 'EUR' },
+  ],
+  [
+    // 1 € in cash, "Ajouter": the part is listed (with its delete button), back to the modes.
+    'payment-mixed-parts',
     async (page) => {
       const other = dialog(page).getByRole('button', { name: 'Autre montant' });
       if (await other.isVisible().catch(() => false)) await other.click();
       await dialog(page).getByRole('button', { name: '1', exact: true }).click();
+      await dialog(page).getByRole('button', { name: 'Ajouter', exact: true }).click();
     },
+    { currency: 'EUR' },
   ],
   [
-    // EUR: mixed payment, "Reste en carte". Tokens: "100" received, then "Encaisser".
-    'order-placed-mixed-or-change',
+    // EUR: the card is prefilled with the rest, then "Encaisser". Tokens: "Encaisser".
+    'order-placed-mixed-or-tokens',
     async (page, { currency }) => {
       if (currency === 'EUR') {
-        await dialog(page)
-          .getByRole('button', { name: /^Reste en carte/ })
-          .click();
-      } else {
-        await dialog(page).getByRole('button', { name: '0', exact: true }).click();
-        await dialog(page).getByRole('button', { name: '0', exact: true }).click();
-        await page.waitForTimeout(300);
-        await dialog(page).getByRole('button', { name: 'Encaisser' }).click();
+        await dialog(page).getByRole('button', { name: 'Carte', exact: true }).click();
       }
+      await dialog(page).getByRole('button', { name: 'Encaisser', exact: true }).click();
       await waitForToast(page);
     },
   ],
@@ -218,26 +225,36 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
     async (page) => {
       await sellOne(page, first);
       await dialog(page).getByRole('button', { name: 'Carte', exact: true }).click();
+      await dialog(page).getByRole('button', { name: 'Encaisser', exact: true }).click();
       await waitForToast(page);
     },
     { currency: 'EUR' },
   ],
   [
+    // Cash, exact amount: the first suggestion, then "Encaisser".
     'order-placed-exact',
     async (page) => {
       await sellOne(page, second);
+      await dialog(page).getByRole('button', { name: 'Espèces', exact: true }).click();
       await dialog(page)
-        .getByRole('button', { name: /^Appoint/ })
+        .getByRole('button', { name: /^Reçu / })
+        .first()
         .click();
+      await dialog(page).getByRole('button', { name: 'Encaisser', exact: true }).click();
       await waitForToast(page);
     },
+    { currency: 'EUR' },
   ],
   [
-    // Negative total (deposit return, D-013): asks for the mode in EUR, "Enregistrer" in tokens.
+    // Negative total (deposit return, D-013): the mode then "Rembourser" in EUR (the mode is
+    // chosen here, to show the enabled button), "Rembourser" only in tokens.
     'payment-negative-total',
-    async (page) => {
+    async (page, { currency }) => {
       if (!negative) throw new Error('No negative-priced product on this instance');
       await sellOne(page, negative);
+      if (currency === 'EUR') {
+        await dialog(page).getByRole('button', { name: 'Espèces', exact: true }).click();
+      }
     },
   ],
   [
