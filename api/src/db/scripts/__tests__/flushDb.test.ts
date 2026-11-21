@@ -1,48 +1,37 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import sqlite3 from 'sqlite3';
+import logger from '../../../utils/logger';
+import {
+  createTempDbPath,
+  hasAppTables,
+  listTables,
+  waitFor,
+  wasLogged,
+  APP_TABLES,
+  SEED_DECISION_MESSAGES,
+} from './dbTestUtils';
 
-const tempDbPath = path.join(os.tmpdir(), `test-db-${Date.now()}.sqlite`);
+// Above the 10 s of waitFor, so that its explicit message is the one reported (TL-1).
+jest.setTimeout(15000);
+
+const { dbPath: tempDbPath, cleanup } = createTempDbPath('test-db-flush');
+let infoSpy: jest.SpyInstance;
 
 beforeAll(() => {
+  infoSpy = jest.spyOn(logger, 'info');
   process.env.DATABASE_PATH = tempDbPath;
-  if (fs.existsSync(tempDbPath)) fs.unlinkSync(tempDbPath);
 });
 
 afterAll(() => {
-  if (fs.existsSync(tempDbPath)) fs.unlinkSync(tempDbPath);
+  infoSpy.mockRestore();
+  cleanup();
 });
 
 it('should remove all tables', async () => {
   await import('../initDb');
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await waitFor(() => hasAppTables(tempDbPath), 'initDb to create the tables');
+  await waitFor(() => wasLogged(infoSpy, SEED_DECISION_MESSAGES), 'initDb to decide on seeding');
   await import('../flushDb');
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await waitFor(() => wasLogged(infoSpy, ['All tables dropped']), 'flushDb to drop the tables');
 
-  const db = new sqlite3.Database(tempDbPath);
-
-  await new Promise<void>((resolve, reject) => {
-    db.all(
-      "SELECT name FROM sqlite_master WHERE type='table'",
-      (err: Error | null, tables: { name: string }[]) => {
-        if (err) {
-          db.close();
-          reject(err);
-          return;
-        }
-        const tableNames = tables.map((t) => t.name);
-        try {
-          expect(tableNames).toEqual(expect.arrayContaining([]));
-          resolve();
-        } catch (e) {
-          db.close();
-          reject(new Error(String(e)));
-          return;
-        }
-      }
-    );
-  });
-
-  db.close();
+  const tables = await listTables(tempDbPath);
+  expect(tables.filter((table) => APP_TABLES.includes(table))).toEqual([]);
 });
