@@ -39,6 +39,7 @@
   "payment_back_to_modes": "Moyens",
   "payment_add_part": "Ajouter",
   "payment_remove_part": "Supprimer la part {{mode}}",
+  "payment_mode_has_part": "Ce moyen a déjà une part : supprimez-la pour la modifier",
   "payment_fully_paid": "Tout est réglé",
   "payment_must_cover": "Ce montant doit couvrir le reste",
   "payment_refund": "Rembourser",

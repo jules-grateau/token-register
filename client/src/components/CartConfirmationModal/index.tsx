@@ -23,6 +23,7 @@ import {
   Text,
 } from '@mantine/core';
 import {
+  IconArrowBackUp,
   IconArrowLeft,
   IconCash,
   IconCheck,
@@ -141,10 +142,14 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
   const selectedSuggestion = replaceNext && mode === 'cash' ? amount : null;
   // Phone: the keypad takes the screen (always for the card, "Autre montant" for cash).
   const keypadOnly = isPhone && (mode === 'card' || (mode === 'cash' && view === 'keypad'));
+  // Phone portrait keypad view: the "Espèces | Carte" row stays visible (DS-1 of PR #47), so
+  // the keys, the mode row and the change block are lower to fit in 390 × 664.
+  const portraitKeypad = layout === 'phone-portrait' && keypadOnly;
 
   const sizes = {
     button: isLandscape ? 48 : 56,
-    key: isLandscape ? 44 : isPhone ? (hasParts(parts) ? 48 : 56) : 64,
+    mode: isLandscape || portraitKeypad ? 48 : 56,
+    key: isLandscape || portraitKeypad ? 44 : 64,
   };
 
   const paymentLabel = (payment: OrderPaymentType) => {
@@ -207,7 +212,8 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
   const mainAction = (() => {
     const collect = { label: t('payment_collect'), icon: <IconCheck size={22} /> };
     if (!isPositive) {
-      const action = total < 0 ? { ...collect, label: t('payment_refund') } : collect;
+      const action =
+        total < 0 ? { label: t('payment_refund'), icon: <IconArrowBackUp size={22} /> } : collect;
       if (!isEur) return { ...action, enabled: true, run: () => void submit(null) };
       return {
         ...action,
@@ -323,7 +329,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
       state={changeState}
       format={format}
       compact={isLandscape}
-      minHeight={layout === 'phone-portrait' ? 112 : 96}
+      minHeight={layout === 'phone-portrait' && !portraitKeypad ? 112 : 96}
       autoFocus={mode === null || !isPositive}
     />
   );
@@ -331,20 +337,25 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
   const modeButton = (buttonMode: PaymentMode) => {
     const selected = mode === buttonMode;
     const Icon = buttonMode === 'cash' ? IconCash : IconCreditCard;
+    // One part per mode (D-053): a mode that has its part is done; the title says why (DS-3).
+    const hasPart = isPositive && parts[buttonMode] !== null;
+    const hint = hasPart ? t('payment_mode_has_part') : undefined;
     return (
-      <Button
-        variant={selected ? 'filled' : 'default'}
-        h={sizes.button}
-        fz={18}
-        fw={700}
-        leftSection={<Icon size={24} />}
-        aria-pressed={selected}
-        onClick={() => chooseMode(buttonMode)}
-        // One part per mode (D-053): a mode that has its part is done.
-        disabled={isLoading || (isPositive && parts[buttonMode] !== null)}
-      >
-        {t(buttonMode === 'cash' ? 'payment_cash' : 'payment_card')}
-      </Button>
+      <Box title={hint} style={{ display: 'grid' }}>
+        <Button
+          variant={selected ? 'filled' : 'default'}
+          h={sizes.mode}
+          fz={18}
+          fw={700}
+          leftSection={<Icon size={24} />}
+          aria-pressed={selected}
+          aria-description={hint}
+          onClick={() => chooseMode(buttonMode)}
+          disabled={isLoading || hasPart}
+        >
+          {t(buttonMode === 'cash' ? 'payment_cash' : 'payment_card')}
+        </Button>
+      </Box>
     );
   };
 
@@ -413,9 +424,10 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
   const backButton =
     mode === 'card' ? (
       <Button
-        variant="subtle"
+        variant="default"
         h={44}
-        className={classes.inkControl}
+        fz={16}
+        fw={700}
         leftSection={<IconArrowLeft size={20} />}
         onClick={backToModes}
         disabled={isLoading}
@@ -424,9 +436,10 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
       </Button>
     ) : (
       <Button
-        variant="subtle"
+        variant="default"
         h={44}
-        className={classes.inkControl}
+        fz={16}
+        fw={700}
         leftSection={<IconArrowLeft size={20} />}
         onClick={() => setView('amounts')}
         disabled={isLoading}
@@ -437,7 +450,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
 
   const amountDisplay = (
     <Group justify="space-between" wrap="nowrap" mih={44} gap="xs">
-      {isPhone ? (
+      {isPhone && !(portraitKeypad && mode === 'card') ? (
         backButton
       ) : (
         <Text fz={16} c="dimmed">
@@ -561,11 +574,12 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
 
     if (layout === 'phone-portrait') {
       return (
-        <Stack gap="sm" style={{ flex: 1, minHeight: 0 }}>
+        <Stack gap={portraitKeypad ? 'xs' : 'sm'} style={{ flex: 1, minHeight: 0 }}>
           {keypadOnly ? (
             <>
-              {collapsedRecap}
+              {!hasParts(parts) && collapsedRecap}
               {partsList}
+              {modeRow}
               {amountDisplay}
               {keypad}
             </>

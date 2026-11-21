@@ -39,6 +39,7 @@
   "payment_back_to_modes": "Methods",
   "payment_add_part": "Add",
   "payment_remove_part": "Remove the {{mode}} part",
+  "payment_mode_has_part": "This method already has a part: remove it to change it",
   "payment_fully_paid": "Fully paid",
   "payment_must_cover": "This amount must cover the rest",
   "payment_refund": "Refund",

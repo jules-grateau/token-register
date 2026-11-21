@@ -243,6 +243,11 @@ describe('CartConfirmationModal (Encaissement)', () => {
       press('5');
       fireEvent.click(button('payment_add_part'));
       expect(button('payment_cash')).toBeDisabled();
+      // DS-3: the disabled mode says why.
+      expect(button('payment_cash').parentElement).toHaveAttribute(
+        'title',
+        'payment_mode_has_part'
+      );
 
       fireEvent.click(button(/^payment_remove_part/));
       expect(screen.queryByTestId('payment-parts')).not.toBeInTheDocument();
@@ -304,11 +309,23 @@ describe('CartConfirmationModal (Encaissement)', () => {
       expect(button('payment_card')).toBeInTheDocument();
     });
 
-    it('shows the card keypad on phone, with a way back to the modes', () => {
+    it('keeps the mode row with the card keypad on phone portrait (DS-1)', () => {
       (useLayoutMode as jest.Mock).mockReturnValue('phone-portrait');
       renderModal();
       fireEvent.click(button('payment_card'));
       expect(button('7')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'payment_back_to_modes' })
+      ).not.toBeInTheDocument();
+      fireEvent.click(button('payment_cash'));
+      expect(button('payment_cash')).toHaveAttribute('aria-pressed', 'true');
+      expect(changeDisplay()).toHaveTextContent('payment_placeholder_cash');
+    });
+
+    it('goes back to the modes from the card keypad on phone landscape', () => {
+      (useLayoutMode as jest.Mock).mockReturnValue('phone-landscape');
+      renderModal();
+      fireEvent.click(button('payment_card'));
       fireEvent.click(button('payment_back_to_modes'));
       expect(changeDisplay()).toHaveTextContent('payment_placeholder_mode');
     });
