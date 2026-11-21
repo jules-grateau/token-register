@@ -1,0 +1,417 @@
+{
+  "appUrl": "http://localhost:3101",
+  "data": {
+    "category": "Boissons",
+    "products": [
+      "Bi�re pression",
+      "Coca",
+      "Eau"
+    ],
+    "sample": {
+      "id": 4,
+      "name": "Bi�re pression",
+      "price": 350,
+      "category_id": 1,
+      "icon": null
+    },
+    "negative": "Eco-cup consigne"
+  },
+  "viewports": {
+    "mobile-light": {
+      "size": {
+        "width": 390,
+        "height": 664
+      },
+      "steps": [
+        {
+          "step": "home",
+          "screenshot": "mobile-light\\01-home.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "category-selected",
+          "screenshot": "mobile-light\\02-category-selected.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-with-items",
+          "screenshot": "mobile-light\\03-cart-with-items.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-drawer",
+          "screenshot": "mobile-light\\04-cart-drawer.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-modal",
+          "screenshot": "mobile-light\\05-payment-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-card-prefilled",
+          "screenshot": "mobile-light\\06-payment-card-prefilled.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-cash-suggested-change",
+          "screenshot": "mobile-light\\07-payment-cash-suggested-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-mixed-parts",
+          "screenshot": "mobile-light\\08-payment-mixed-parts.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-mixed-or-tokens",
+          "screenshot": "mobile-light\\09-order-placed-mixed-or-tokens.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-card",
+          "screenshot": "mobile-light\\10-order-placed-card.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-exact",
+          "screenshot": "mobile-light\\11-order-placed-exact.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-negative-total",
+          "screenshot": "mobile-light\\12-payment-negative-total.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-history",
+          "screenshot": "mobile-light\\13-order-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-delete-confirm",
+          "screenshot": "mobile-light\\14-order-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-cleared-toast",
+          "screenshot": "mobile-light\\15-cart-cleared-toast.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "settings-menu",
+          "screenshot": "mobile-light\\16-settings-menu.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "about-modal",
+          "screenshot": "mobile-light\\17-about-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-mode",
+          "screenshot": "mobile-light\\18-edit-mode.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-form",
+          "screenshot": "mobile-light\\19-edit-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-unsaved",
+          "screenshot": "mobile-light\\20-edit-category-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-form",
+          "screenshot": "mobile-light\\21-edit-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-unsaved",
+          "screenshot": "mobile-light\\22-edit-product-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-form",
+          "screenshot": "mobile-light\\23-new-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-category-list",
+          "screenshot": "mobile-light\\24-new-product-category-list.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-category-form",
+          "screenshot": "mobile-light\\25-new-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "product-delete-confirm",
+          "screenshot": "mobile-light\\26-product-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-item-menu",
+          "screenshot": "mobile-light\\27-cart-item-menu.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "discount-modal",
+          "screenshot": "mobile-light\\28-discount-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "settings-menu-scrolled",
+          "screenshot": "mobile-light\\29-settings-menu-scrolled.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    "mobile-landscape-short-light": {
+      "size": {
+        "width": 667,
+        "height": 300
+      },
+      "steps": [
+        {
+          "step": "home",
+          "screenshot": "mobile-landscape-short-light\\01-home.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "category-selected",
+          "screenshot": "mobile-landscape-short-light\\02-category-selected.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-with-items",
+          "screenshot": "mobile-landscape-short-light\\03-cart-with-items.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "screenshot": "mobile-landscape-short-light\\05-payment-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-card-prefilled",
+          "screenshot": "mobile-landscape-short-light\\06-payment-card-prefilled.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-cash-suggested-change",
+          "screenshot": "mobile-landscape-short-light\\07-payment-cash-suggested-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-mixed-parts",
+          "screenshot": "mobile-landscape-short-light\\08-payment-mixed-parts.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-mixed-or-tokens",
+          "screenshot": "mobile-landscape-short-light\\09-order-placed-mixed-or-tokens.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-card",
+          "screenshot": "mobile-landscape-short-light\\10-order-placed-card.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-exact",
+          "screenshot": "mobile-landscape-short-light\\11-order-placed-exact.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-negative-total",
+          "screenshot": "mobile-landscape-short-light\\12-payment-negative-total.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-history",
+          "screenshot": "mobile-landscape-short-light\\13-order-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-delete-confirm",
+          "screenshot": "mobile-landscape-short-light\\14-order-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-cleared-toast",
+          "screenshot": "mobile-landscape-short-light\\15-cart-cleared-toast.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "settings-menu",
+          "screenshot": "mobile-landscape-short-light\\16-settings-menu.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "about-modal",
+          "screenshot": "mobile-landscape-short-light\\17-about-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-mode",
+          "screenshot": "mobile-landscape-short-light\\18-edit-mode.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-form",
+          "screenshot": "mobile-landscape-short-light\\19-edit-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-unsaved",
+          "screenshot": "mobile-landscape-short-light\\20-edit-category-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-form",
+          "screenshot": "mobile-landscape-short-light\\21-edit-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-unsaved",
+          "screenshot": "mobile-landscape-short-light\\22-edit-product-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-form",
+          "screenshot": "mobile-landscape-short-light\\23-new-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-category-list",
+          "screenshot": "mobile-landscape-short-light\\24-new-product-category-list.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-category-form",
+          "screenshot": "mobile-landscape-short-light\\25-new-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "product-delete-confirm",
+          "screenshot": "mobile-landscape-short-light\\26-product-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-item-menu",
+          "screenshot": "mobile-landscape-short-light\\27-cart-item-menu.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "discount-modal",
+          "screenshot": "mobile-landscape-short-light\\28-discount-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "settings-menu-scrolled",
+          "screenshot": "mobile-landscape-short-light\\29-settings-menu-scrolled.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    }
+  },
+  "cleanup": {
+    "deletedOrders": [
+      133,
+      134,
+      135,
+      136,
+      137,
+      138,
+      139,
+      140,
+      141,
+      142,
+      143,
+      144,
+      145,
+      146,
+      147,
+      148,
+      149,
+      150,
+      151,
+      152,
+      153,
+      154,
+      155,
+      156
+    ],
+    "failed": []
+  },
+  "currency": "EUR"
+}
