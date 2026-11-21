@@ -46,8 +46,10 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const isPhone = isPhoneMode(useLayoutMode());
-  const [createCategory] = useCreateCategoryMutation();
-  const [updateCategory] = useUpdateCategoryMutation();
+  const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
+  const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
+  // TL-1 of PR #45: one request at a time, a double click must not create a duplicate.
+  const isSaving = isCreating || isUpdating;
   const [openedValues, setOpenedValues] = useState<CategoryFormValues>(() => valuesOf(category));
 
   const isEditMode = !!category;
@@ -74,6 +76,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
 
   // D-052: saved at once, without confirmation; nothing changed in edit mode = just close.
   const handleSubmit = (values: CategoryFormValues) => {
+    if (isSaving) return;
     if (isEditMode) {
       if (isSameValues(values, openedValues)) {
         onClose();
@@ -144,7 +147,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
               <Button variant="default" h={44} onClick={guard.requestClose}>
                 {t('cancel')}
               </Button>
-              <Button type="submit" h={44}>
+              <Button type="submit" h={44} loading={isSaving}>
                 {isEditMode ? t('actions.save') : t('actions.create')}
               </Button>
             </Group>
@@ -156,6 +159,7 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
         isOpen={isOpen && guard.isPromptOpen}
         onKeepEditing={guard.keepEditing}
         onDiscard={guard.discard}
+        isSaving={isSaving}
         onSave={() => {
           guard.keepEditing();
           submit();

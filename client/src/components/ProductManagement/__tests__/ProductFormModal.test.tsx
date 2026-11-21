@@ -15,10 +15,15 @@ jest.mock('react-i18next', () => ({
 jest.mock('react-toastify', () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
-jest.mock('../../../services/product', () => ({
-  useCreateProductMutation: () => [mockCreateProduct],
-  useUpdateProductMutation: () => [mockUpdateProduct],
-}));
+jest.mock('../../../services/product', () => {
+  const { useMockMutation } = jest.requireActual<typeof import('../../../test/mutationMock')>(
+    '../../../test/mutationMock'
+  );
+  return {
+    useCreateProductMutation: () => useMockMutation(mockCreateProduct),
+    useUpdateProductMutation: () => useMockMutation(mockUpdateProduct),
+  };
+});
 jest.mock('../../../hooks/useLayoutMode', () => ({
   ...jest.requireActual<typeof import('../../../hooks/useLayoutMode')>(
     '../../../hooks/useLayoutMode'
@@ -287,6 +292,33 @@ describe('ProductFormModal', () => {
       expect(mockCreateProduct).not.toHaveBeenCalled();
       expect(onClose).not.toHaveBeenCalled();
       expect(await screen.findByText('errors.required')).toBeInTheDocument();
+    });
+
+    // TL-1 of PR #45: "Enregistrer" is disabled while the request runs.
+    it('a double click in creation sends a single request', async () => {
+      mockCreateProduct.mockReturnValue({ unwrap: () => new Promise(() => {}) });
+      renderForm();
+      fillAndSubmit('Bière', '3');
+      fireEvent.click(screen.getByRole('button', { name: 'actions.create' }));
+
+      await waitFor(() => expect(mockCreateProduct).toHaveBeenCalledTimes(1));
+      expect(screen.getByRole('button', { name: 'actions.create' })).toBeDisabled();
+    });
+
+    it('"save" in the prompt then in the form sends a single request', async () => {
+      mockUpdateProduct.mockReturnValue({ unwrap: () => new Promise(() => {}) });
+      renderEdit();
+      typeName('Bière blonde');
+      fireEvent.click(screen.getByRole('button', { name: 'close' }));
+      await screen.findByText('unsaved_changes.title');
+      fireEvent.click(within(prompt()).getByRole('button', { name: 'actions.save' }));
+      await waitFor(() =>
+        expect(screen.queryByText('unsaved_changes.title')).not.toBeInTheDocument()
+      );
+      fireEvent.click(screen.getByRole('button', { name: 'actions.save' }));
+
+      expect(mockUpdateProduct).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole('button', { name: 'actions.save' })).toBeDisabled();
     });
 
     it('asks in creation too, as soon as something was typed', async () => {

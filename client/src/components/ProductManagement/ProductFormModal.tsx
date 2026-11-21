@@ -71,8 +71,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const { currency } = useCurrency();
   const decimalScale = getDecimalScale(currency);
   const isPhone = isPhoneMode(useLayoutMode());
-  const [createProduct] = useCreateProductMutation();
-  const [updateProduct] = useUpdateProductMutation();
+  const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
+  const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+  // TL-1 of PR #45: one request at a time, a double click must not create a duplicate.
+  const isSaving = isCreating || isUpdating;
   const { data: categories } = useGetCategoriesQuery();
   const [openedValues, setOpenedValues] = useState<ProductFormValues>(() =>
     valuesOf(product, defaultCategoryId, currency)
@@ -118,6 +120,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
 
   // D-052: saved at once, without confirmation; nothing changed in edit mode = just close.
   const handleSubmit = (values: ProductFormValues) => {
+    if (isSaving) return;
     if (isEditMode) {
       if (isSameValues(values, openedValues)) {
         onClose();
@@ -246,7 +249,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               <Button variant="default" h={44} onClick={guard.requestClose}>
                 {t('cancel')}
               </Button>
-              <Button type="submit" h={44}>
+              <Button type="submit" h={44} loading={isSaving}>
                 {isEditMode ? t('actions.save') : t('actions.create')}
               </Button>
             </Group>
@@ -258,6 +261,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         isOpen={isOpen && guard.isPromptOpen}
         onKeepEditing={guard.keepEditing}
         onDiscard={guard.discard}
+        isSaving={isSaving}
         onSave={() => {
           guard.keepEditing();
           submit();

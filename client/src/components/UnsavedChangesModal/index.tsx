@@ -11,6 +11,8 @@ interface UnsavedChangesModalProps {
   onDiscard: () => void;
   /** "Enregistrer": submit the form (validation included). */
   onSave: () => void;
+  /** The form is being saved: "Enregistrer" is disabled, no second request (TL-1 of PR #45). */
+  isSaving?: boolean;
 }
 
 /**
@@ -23,6 +25,7 @@ const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
   onKeepEditing,
   onDiscard,
   onSave,
+  isSaving = false,
 }) => {
   const { t } = useTranslation();
   const isPhone = isPhoneMode(useLayoutMode());
@@ -36,7 +39,7 @@ const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
       <Button variant="light" color="red" h={44} fw={600} onClick={onDiscard}>
         {t('unsaved_changes.discard')}
       </Button>
-      <Button h={44} fw={600} onClick={onSave}>
+      <Button h={44} fw={600} loading={isSaving} onClick={onSave}>
         {t('actions.save')}
       </Button>
     </>

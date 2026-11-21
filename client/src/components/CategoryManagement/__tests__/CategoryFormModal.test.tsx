@@ -13,10 +13,15 @@ jest.mock('react-redux', () => ({ useDispatch: () => mockDispatch }));
 jest.mock('react-toastify', () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
-jest.mock('../../../services/categories', () => ({
-  useCreateCategoryMutation: () => [mockCreateCategory],
-  useUpdateCategoryMutation: () => [mockUpdateCategory],
-}));
+jest.mock('../../../services/categories', () => {
+  const { useMockMutation } = jest.requireActual<typeof import('../../../test/mutationMock')>(
+    '../../../test/mutationMock'
+  );
+  return {
+    useCreateCategoryMutation: () => useMockMutation(mockCreateCategory),
+    useUpdateCategoryMutation: () => useMockMutation(mockUpdateCategory),
+  };
+});
 
 const category = { id: 3, name: 'Boissons', icon: null };
 
@@ -96,6 +101,18 @@ describe('CategoryFormModal (D-052)', () => {
       expect(mockUpdateCategory).toHaveBeenCalledWith({ id: 3, name: 'Snacks', icon: null })
     );
     await waitFor(() => expect(onClose).toHaveBeenCalled());
+  });
+
+  // TL-1 of PR #45: "Enregistrer" is disabled while the request runs.
+  it('a double click sends a single request', async () => {
+    mockUpdateCategory.mockReturnValue({ unwrap: () => new Promise(() => {}) });
+    renderEdit(jest.fn());
+    typeName('Snacks');
+    fireEvent.click(screen.getByRole('button', { name: 'actions.save' }));
+    fireEvent.click(screen.getByRole('button', { name: 'actions.save' }));
+
+    await waitFor(() => expect(mockUpdateCategory).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('button', { name: 'actions.save' })).toBeDisabled();
   });
 
   it('asks in creation too, as soon as something was typed', async () => {

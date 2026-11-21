@@ -34,6 +34,11 @@ describe('UnsavedChangesModal', () => {
     expect(handlers[handler]).toHaveBeenCalledTimes(1);
   });
 
+  it('"save" is disabled while the form is being saved', () => {
+    render(<UnsavedChangesModal isOpen={true} {...handlers} isSaving />);
+    expect(screen.getByRole('button', { name: 'actions.save' })).toBeDisabled();
+  });
+
   it('Escape goes back to the form', () => {
     renderPrompt();
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
