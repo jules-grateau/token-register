@@ -8,7 +8,8 @@ name: Release smoke check
 #                scripts/design-review/check-report.mjs fails on any failed step,
 #                console/JS error or horizontal overflow. Screenshots are kept as a
 #                workflow artifact (not published, not reviewed).
-#   + failure  - if anything fails, say so on the PR.
+#   + failure  - if anything fails, say so on the PR, with the problem list
+#                (smoke-problems.md, written by check-report.mjs) when there is one.
 # Skipped entirely when no app file changed (scripts/ci/app-changed.sh).
 #
 # Secrets: DEMO_BASIC_AUTH_USER / DEMO_BASIC_AUTH_PASS (demo Basic Auth).
@@ -112,7 +113,17 @@ jobs:
           path: design-review-output
           if-no-files-found: warn
 
-  # The release is not validated if the smoke check failed: say it on the PR.
+      # Written by check-report.mjs only when it finds problems; posted by the failure job.
+      - name: Upload the problem list
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke-problems
+          path: smoke-problems.md
+          if-no-files-found: ignore
+
+  # The release is not validated if the smoke check failed: say it on the PR, with the
+  # problem list from check-report.mjs when the run got that far.
   failure:
     needs: [changes, capture]
     if: failure()
@@ -120,14 +131,38 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - env:
+      # Absent when the run failed before the check (deploy not found, capture crash).
+      - name: Download the problem list
+        uses: actions/download-artifact@v7
+        continue-on-error: true
+        with:
+          name: smoke-problems
+
+      - name: Comment on the PR
+        env:
           GH_TOKEN: ${{ github.token }}
           PR: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          gh pr comment "$PR" --repo "$REPO" --body "🧪 **Contrôle automatique de la release : ❌ échec.**
-
-          Une étape du parcours a échoué sur la démo, ou une erreur JS / un débordement a été détecté, ou la démo n'a pas pu être déployée ou jointe. Détails (résumé et captures en artifact) : $RUN_URL
-
-          Corriger puis pousser sur \`develop\` relance la revue."
+          {
+            echo "🧪 **Contrôle automatique de la release : ❌ échec.**"
+            echo
+            if [ -s smoke-problems.md ]; then
+              echo "Problèmes détectés sur la démo :"
+              echo
+              # Capped: a run where every step fails would exceed the comment size limit.
+              head -n 50 smoke-problems.md
+              total=$(grep -c '^- ' smoke-problems.md || true)
+              if [ "$total" -gt 50 ]; then
+                echo "- … et $((total - 50)) autre(s) : voir le résumé du run."
+              fi
+              echo
+              echo "Résumé et captures (artifact) : $RUN_URL"
+            else
+              echo "La démo n'a pas pu être déployée ou jointe, ou la capture s'est arrêtée avant le contrôle. Détails : $RUN_URL"
+            fi
+            echo
+            echo "Corriger puis pousser sur \`develop\` relance la revue."
+          } > comment.md
+          gh pr comment "$PR" --repo "$REPO" --body-file comment.md
