@@ -635,3 +635,17 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - Stockage inchangé : aucune migration, mêmes colonnes `cash_amount` / `card_amount` (D-034).
 - **Options écartées** : un « Encaisser » final après une liste de parts (un toucher de plus) ; garder « Appoint » ; suggestions calculées sur le total plutôt que sur le reste dû ; « Rembourser » aussi pour un total à 0 €.
 - **Impact** : `client/src/components/CartConfirmationModal`, `client/src/utils/payment.ts`, `client/src/locales`, `docs/design/components.md` (section « Encaissement »), `scripts/design-review/capture.mjs`.
+
+### D-054 — Échec d'une insertion du catalogue d'exemple : journaliser et continuer
+
+- **Date** : 2026-11-21
+- **Confirmée par** : Jules (responsable produit), 2026-11-21
+- **Statut** : Active
+- **Domaine** : Catalogue
+- **Contexte** : issue #52. L'initialisation de la base fermait la connexion sans attendre explicitement les insertions du catalogue d'exemple, et un échec d'insertion passait inaperçu. Il fallait décider du comportement si une insertion échoue (le script tourne au démarrage du conteneur).
+- **Décision** :
+  - Le script d'initialisation attend la fin de toutes les insertions avant de fermer la base (réponse : « Fiabiliser + test (Recommandé) »).
+  - Si une insertion du catalogue d'exemple échoue, l'erreur est journalisée, les insertions suivantes continuent et l'appli démarre quand même, avec un catalogue éventuellement partiel (réponse : « Journaliser et continuer (Recommandé) »).
+  - Version : **2.2.2** (réponse : « PATCH 2.2.2 (Recommandé) »).
+- **Options écartées** : arrêter le script en erreur (le conteneur ne démarre pas tant que la base n'est pas réparée) ; ajouter seulement un test sans toucher au script.
+- **Impact** : `api/src/db/scripts/initDb.ts`, `api/src/db/scripts/__tests__/initDb.test.ts`.
