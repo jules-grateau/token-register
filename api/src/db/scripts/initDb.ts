@@ -97,14 +97,13 @@ async function createTables(db: Database) {
 async function seedSampleCatalogIfEmpty(db: Database) {
   logger.info('Inserting categories and products');
 
-  let categoryCount: number;
+  // A failed count is treated as an empty catalog; D-014 still applies (no sample data in EUR).
+  let categoryCount = 0;
   try {
     const row = await db.get<{ count: number }>(`SELECT COUNT(id) as count from categories`);
     categoryCount = row?.count ?? 0;
   } catch (err) {
     logger.error('Error executing count query on categories table: %s', err);
-    await insertData(db);
-    return;
   }
 
   if (categoryCount > 0) {
@@ -177,6 +176,7 @@ async function insertData(db: Database) {
 
   if (failures > 0) {
     logger.error(`Sample catalog partially inserted: ${failures} insert(s) failed`);
+  } else {
+    logger.info('Categories and products inserted');
   }
-  logger.info('Categories and products inserted');
 }
