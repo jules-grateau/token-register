@@ -383,6 +383,7 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
 async function run() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const data = await pickData();
+  let catalog = data; // last catalog read, kept when a later read fails (TL-1 of PR #50)
   const createdOrderIds = [];
 
   const report = { appUrl: APP_URL, data, viewports: {}, cleanup: null };
@@ -407,12 +408,25 @@ async function run() {
         httpCredentials: { username: USER, password: PASS },
       });
       const page = await context.newPage();
-      const vpData = await pickData();
+      // One retry, then the previous catalog with a warning: a transient API error must not
+      // fail the whole run.
+      const warnings = [];
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          catalog = await pickData();
+          break;
+        } catch (e) {
+          if (attempt === 2)
+            warnings.push(`catalog not read again, previous one used: ${String(e).split('\n')[0]}`);
+        }
+      }
+      const vpData = catalog;
       const STEPS = buildSteps(vpData);
       const vp = {
         size: page.viewportSize(),
         // Only when the catalog changed since the start of the run.
         ...(JSON.stringify(vpData) !== JSON.stringify(data) ? { data: vpData } : {}),
+        ...(warnings.length ? { warnings } : {}),
         steps: [],
         consoleErrors: [],
         pageErrors: [],
