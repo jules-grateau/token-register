@@ -7,23 +7,23 @@ Bibliothèque unique : **`@tabler/icons-react`**, trait 2 px, bouts arrondis (st
 - Taille : 20 px dans les boutons et menus, 22 px dans la barre d'édition des cartes, 24–28 px dans les en-têtes, 32 px (téléphone) / 48 px (desktop) sur « Nouveau produit ».
 - `stroke` par défaut (2) ; 1.5 toléré pour les icônes ≥ 24 px des en-têtes.
 - Couleur héritée (`currentColor`) ou token (`var(--color-…)`, voir [colors.md](colors.md)). Jamais de hex ni `"red"`.
-- **Icône d'accent** (`--color-icon-accent`) : encre en clair, **moutarde en sombre**. La moutarde seule n'est jamais l'icône sur fond clair (2.1:1).
+- **Icône d'accent** (`--color-icon-accent`) : encre (`#26241F` en clair, `#F2EFE8` en sombre) pour « Modifier », « Ajouter », `IconCoins`. **Jamais d'olive** hors des pastilles (D-051).
 - Une icône seule = un `aria-label` obligatoire. Une action destructive ou ambiguë = icône **et** texte quand la place le permet.
 
 ## Pastille-icône
 
-Le « visuel » d'un produit est une **pastille** : un carré arrondi teinté moutarde qui porte une icône ou une initiale.
+Le « visuel » d'un produit est une **pastille** : un carré arrondi teinté **olive** (seule touche d'olive avec le logo, D-051) qui porte une icône ou une initiale.
 
 |                         | Valeur                                                                                                                                                                                       |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Forme                   | carré arrondi, `--radius-tile` (16 px) ; 48 × 48 (téléphone portrait, tablette, desktop), 32 × 32 en paysage (rayon 10)                                                                      |
-| Fond                    | `--color-primary-tint` (clair `#F6E2A8`, sombre `#3A2F12`)                                                                                                                                   |
-| Contenu                 | icône Tabler 26 px (paysage 20 px), `currentColor` ; **clair : encre** (`--color-text`, 13.5:1) ; **sombre : moutarde** (`--color-primary`, 7.3:1)                                           |
+| Fond                    | `--color-icon-tile` (clair `#EBEFC6`, sombre `#2B3012`) ; **pas** `--color-primary-tint`, qui reste neutre                                                                                   |
+| Contenu                 | icône Tabler 26 px (paysage 20 px), `currentColor` = `--color-tile-icon` (clair `#5C7316`, 4.5:1 ; sombre `#B5CC55`, 7.6:1)                                                                  |
 | Sans icône choisie      | **initiale** du produit, 22 / 800 (paysage 16), mêmes couleurs                                                                                                                               |
 | Consigne (prix négatif) | pastille `--color-danger-tint`, icône `IconRecycle` en `--color-danger` ; bordure de carte **pointillée** `--color-danger`, prix en `--color-danger` avec signe « − » (pas de couleur seule) |
 | Décoratif               | `aria-hidden="true"` : le nom et le prix portent l'information                                                                                                                               |
 
-Règles d'usage : une pastille par carte produit, jamais plusieurs couleurs de pastille (une seule teinte moutarde, pas d'arc-en-ciel) ; pas de pastille dans la ligne de panier ni l'historique ; l'icône n'est jamais le seul identifiant d'un produit (le nom est toujours affiché).
+Règles d'usage : une pastille par carte produit, jamais plusieurs couleurs de pastille (une seule teinte olive, pas d'arc-en-ciel) ; pas de pastille dans la ligne de panier ni l'historique ; l'icône n'est jamais le seul identifiant d'un produit (le nom est toujours affiché).
 
 ## Icônes produit (D-044)
 
@@ -72,9 +72,9 @@ Un produit sans icône affiche son **initiale** (règle de la pastille ci-dessus
 |                         | Valeur                                                                                                                                                                                                                                                      |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Taille de l'icône       | 26 px dans la pastille 48 × 48 (téléphone portrait, tablette, desktop) ; 20 px dans la pastille 32 × 32 (téléphone paysage) ; `stroke` 2                                                                                                                    |
-| Clair                   | fond `--color-primary-tint` `#F6E2A8`, icône `--color-text` `#1F1A0F` : **13.5:1**                                                                                                                                                                          |
-| Sombre                  | fond `--color-primary-tint` `#3A2F12`, icône `--color-primary` `#F0B93A` : **7.3:1**                                                                                                                                                                        |
-| Seuil                   | contraste icône / fond ≥ 3:1 (graphique non textuel, WCAG 1.4.11) ; atteint largement                                                                                                                                                                       |
+| Clair                   | fond `--color-icon-tile` `#EBEFC6`, icône `--color-tile-icon` `#5C7316` : **4.5:1**                                                                                                                                                                         |
+| Sombre                  | fond `--color-icon-tile` `#2B3012`, icône `--color-tile-icon` `#B5CC55` : **7.6:1**                                                                                                                                                                         |
+| Seuil                   | contraste icône / fond ≥ 3:1 (graphique non textuel, WCAG 1.4.11) ; l'initiale (22 / 800) atteint aussi 4.5:1                                                                                                                                               |
 | Consigne (prix négatif) | pastille `--color-danger-tint`, icône (`deposit` par défaut, ou l'icône choisie) en `--color-danger` (5.3:1 en clair, 5.4:1 en sombre) ; **bordure de carte pointillée** et **signe « − »** devant le prix : le marqueur ne repose pas sur la couleur seule |
 | Accessibilité           | `aria-hidden="true"` sur l'icône, le nom et le prix portent l'information                                                                                                                                                                                   |
 
@@ -84,29 +84,31 @@ Un produit sans icône affiche son **initiale** (règle de la pastille ci-dessus
 - Grille de **boutons de 44 × 44 px minimum** (pastille 48 recommandée), écart `--space-2`, 5 colonnes sur téléphone portrait, 6 à 8 ailleurs ; ordre = ordre du tableau ci-dessus (boissons, plats, desserts, divers).
 - **Pas de recherche** : 29 icônes tiennent sur 5 à 6 lignes ; la recherche n'apporte rien et ouvre le clavier sur mobile. À revoir au-delà de 40 icônes.
 - Chaque bouton : `IconX` 26 px dans la pastille, `aria-label` = libellé FR (EN selon la langue), `aria-pressed` pour l'état. Info-bulle (`title`) sur desktop.
-- **État sélectionné non porté par la seule couleur** : fond moutarde `--color-primary` + bordure 2 px `--color-text` + coche `IconCheck` 14 px en coin haut droit. Focus visible : anneau habituel de la charte.
+- Non sélectionné : pastille olive (`--color-icon-tile`, icône `--color-tile-icon`), contour 1 px `--color-border`.
+- **État sélectionné non porté par la seule couleur** : fond `--color-primary-tint` (neutre) + contour 2 px `--color-text` + `aria-pressed` + coche `IconCheck` 14 px `--color-text` en coin haut droit (pastille ronde 18 px `--color-primary-tint`). Focus visible : anneau habituel de la charte.
+- « Aucune » est un libellé, pas une pastille : fond `--color-surface`, texte `--color-text`.
 - Premier élément : bouton **« Aucune »** (`IconBan`, présent dans `@tabler/icons-react`) avec libellé visible « Aucune », sur 2 colonnes ; sélectionné par défaut à la création. Il remet le produit à l'initiale (D-046), la catégorie à son nom seul (D-047).
 - Le même sélecteur sert au formulaire catégorie (D-047), sans aperçu de pastille tant qu'aucune icône n'est choisie.
 
 ## Correspondance icône ↔ action
 
-| Action                                          | Icône                                                                         | Couleur                                   |
-| ----------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------- |
-| Réglages (menu ⚙️)                              | `IconSettings` ; le bouton des réglages porte aussi `aria-label` « Réglages » | `--color-text`                            |
-| Historique des commandes                        | `IconHistory`                                                                 | `--color-text`                            |
-| Modifier (produit, catégorie) / mode édition    | `IconEdit` (menu : `IconPencil`)                                              | `--color-icon-accent`                     |
-| Terminer l'édition                              | `IconCheck`                                                                   | texte du bouton                           |
-| Supprimer (produit, catégorie, ligne, commande) | `IconTrash`                                                                   | `--color-danger`                          |
-| **Vider le panier**                             | `IconTrash`                                                                   | `--color-danger`                          |
-| Ajouter / quantité +                            | `IconPlus`                                                                    | `--color-text` (sur moutarde : encre)     |
-| Quantité −                                      | `IconMinus`                                                                   | `--color-text`                            |
-| Remise                                          | `IconDiscount`                                                                | `--color-success`                         |
-| Plus d'actions (ligne de panier)                | `IconDotsVertical`                                                            | `--color-text-2`                          |
-| Ouvrir / fermer le panier (portrait)            | `IconChevronUp` / `IconChevronDown`                                           | `--color-on-bar` (barre) / `--color-text` |
-| Monnaie verrouillée                             | `IconLock`                                                                    | `--color-text-2`                          |
-| À propos                                        | `IconInfoCircle`                                                              | `--color-text`                            |
-| Thème clair / sombre                            | `IconSun` / `IconMoon` (état courant, avec libellé)                           | `--color-text`                            |
-| Consigne (pastille)                             | `IconRecycle`                                                                 | `--color-danger`                          |
+| Action                                          | Icône                                                                         | Couleur                                                  |
+| ----------------------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Réglages (menu ⚙️)                              | `IconSettings` ; le bouton des réglages porte aussi `aria-label` « Réglages » | `--color-text`                                           |
+| Historique des commandes                        | `IconHistory`                                                                 | `--color-text`                                           |
+| Modifier (produit, catégorie) / mode édition    | `IconEdit` (menu : `IconPencil`)                                              | `--color-icon-accent`                                    |
+| Terminer l'édition                              | `IconCheck`                                                                   | texte du bouton                                          |
+| Supprimer (produit, catégorie, ligne, commande) | `IconTrash`                                                                   | `--color-danger`                                         |
+| **Vider le panier**                             | `IconTrash`                                                                   | `--color-danger`                                         |
+| Ajouter / quantité +                            | `IconPlus`                                                                    | `--color-icon-accent` (sur encre : `--color-on-primary`) |
+| Quantité −                                      | `IconMinus`                                                                   | `--color-text`                                           |
+| Remise                                          | `IconDiscount`                                                                | `--color-success`                                        |
+| Plus d'actions (ligne de panier)                | `IconDotsVertical`                                                            | `--color-text-2`                                         |
+| Ouvrir / fermer le panier (portrait)            | `IconChevronUp` / `IconChevronDown`                                           | `--color-on-bar` (barre) / `--color-text`                |
+| Monnaie verrouillée                             | `IconLock`                                                                    | `--color-text-2`                                         |
+| À propos                                        | `IconInfoCircle`                                                              | `--color-text`                                           |
+| Thème clair / sombre                            | `IconSun` / `IconMoon` (état courant, avec libellé)                           | `--color-text`                                           |
+| Consigne (pastille)                             | `IconRecycle`                                                                 | `--color-danger`                                         |
 
 ### Encaissement (voir [components.md](components.md#encaissement--cartconfirmationmodal))
 

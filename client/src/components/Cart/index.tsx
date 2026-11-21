@@ -109,7 +109,7 @@ const Cart: React.FC<CartProps> = ({
     </ActionIcon>
   );
 
-  // "Valider": mustard, ink text, 18 / 800, arrow on the right of the text.
+  // "Valider": ink (cream on the ink bar), 18 / 800, arrow on the right of the text.
   const checkoutButton = (props: ButtonProps & { style?: React.CSSProperties }) => (
     <Button
       onClick={onValidateCart}

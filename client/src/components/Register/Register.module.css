@@ -9,9 +9,9 @@
   background-color: var(--color-bg);
 }
 
-/* Edit mode: 2 px bottom border, ink in light, mustard in dark. */
+/* Edit mode: 2 px bottom border in the text color. */
 .header[data-edit-mode] {
-  border-bottom: 2px solid var(--color-icon-accent);
+  border-bottom: 2px solid var(--color-text);
 }
 
 /* Client name: the screen title. Never truncated, wraps and the header grows (D-021). */
@@ -40,15 +40,15 @@
   flex: none;
 }
 
-/* "Édition" badge: ink fill and cream text in light, mustard outline and text in dark. */
+/* "Édition" badge: primary fill and on-primary text in light, primary outline on surface in dark. */
 .editBadge {
-  background-color: var(--color-text);
-  color: var(--color-bg);
-  border: 1px solid var(--color-text);
+  background-color: var(--color-primary);
+  color: var(--color-on-primary);
+  border: 1px solid var(--color-primary);
 }
 
 :where([data-mantine-color-scheme='dark']) .editBadge {
-  background-color: transparent;
-  color: var(--color-primary);
+  background-color: var(--color-surface);
+  color: var(--color-text);
   border-color: var(--color-primary);
 }

@@ -1,6 +1,6 @@
 /* docs/design/components.md, "Encaissement". */
 
-/* Main button disabled ("Encaisser" with no amount, "Il manque"): stays mustard, faded, like
+/* Main button disabled ("Encaisser" with no amount, "Il manque"): stays ink, faded, like
    "Valider" (docs/design/components.md, "Panier"); the state is also given by the change block. */
 .mainButton.mainButton:disabled,
 .mainButton.mainButton[data-disabled] {
@@ -9,7 +9,7 @@
   opacity: 0.45;
 }
 
-/* While saving, Mantine's loader overlay keeps the mustard background. */
+/* While saving, Mantine's loader overlay keeps the ink background. */
 .mainButton.mainButton[data-loading] {
   opacity: 1;
 }

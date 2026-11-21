@@ -7,9 +7,9 @@
   width: 48px;
   height: 48px;
   border-radius: var(--radius-tile);
-  background-color: var(--color-primary-tint);
-  /* Ink in light (13.5:1), mustard in dark (7.3:1). */
-  color: var(--color-icon-accent);
+  /* Olive touch (D-051): 4.5:1 in light, 7.6:1 in dark. */
+  background-color: var(--color-icon-tile);
+  color: var(--color-tile-icon);
 }
 
 .tile[data-size='sm'] {
@@ -34,20 +34,19 @@
   min-width: 48px;
   height: 48px;
   border-radius: var(--radius-tile);
-  border: 2px solid transparent;
-  background-color: var(--color-primary-tint);
-  color: var(--color-icon-accent);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-icon-tile);
+  color: var(--color-tile-icon);
 }
 
 .option:hover {
   border-color: var(--color-border-strong);
 }
 
-/* Selected: mustard fill + ink border + check, not the color alone. */
+/* Selected: neutral tint + 2 px ink border + check, not the color alone. */
 .option[aria-pressed='true'] {
-  background-color: var(--color-primary);
-  border-color: var(--color-text);
-  color: var(--color-on-primary);
+  background-color: var(--color-primary-tint);
+  border: 2px solid var(--color-text);
 }
 
 .option:focus-visible {
@@ -60,6 +59,9 @@
   padding: 0 8px;
   font-size: 16px;
   font-weight: 700;
+  /* "Aucune" is text, not an icon tile: neutral, olive stays for the tiles (D-051). */
+  background-color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .check {
@@ -72,6 +74,6 @@
   width: 18px;
   height: 18px;
   border-radius: var(--radius-pill);
-  background-color: var(--color-text);
-  color: var(--color-bg);
+  background-color: var(--color-primary-tint);
+  color: var(--color-text);
 }

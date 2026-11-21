@@ -106,7 +106,7 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
         <SegmentedControl
           fullWidth
           radius="md"
-          color="moutarde"
+          color="encre"
           classNames={{ root: segmentedClasses.root, label: segmentedClasses.label }}
           // "Montant fixe (Jeton)" may not fit on one line at 360 px: it wraps, never cut.
           styles={{ label: { whiteSpace: 'normal', textAlign: 'center' } }}

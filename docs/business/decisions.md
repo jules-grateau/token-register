@@ -455,7 +455,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 
 - **Date** : 2026-11-20
 - **Confirmée par** : Jules (responsable produit), 2026-11-20
-- **Statut** : Active
+- **Statut** : Active (couleurs remplacées par D-051)
 - **Domaine** : Autre
 - **Contexte** : D-015 gardait « Token Register » en attendant une refonte de l'identité. Ce nom évoque les jetons alors qu'une instance peut être en euros, et l'appli sert aussi bien la nourriture que la boisson.
 - **Décision** : l'appli s'appelle **« Caisse Claire »** (réponse : « Vas pour Caisse Claire »), avec l'accroche « Une caisse simple, claire et nette. ». Direction artistique E : moutarde + encre, police Manrope, logo en ticket de caisse sur un carré moutarde (charte dans `docs/design/`). Parcours de choix :
@@ -587,3 +587,14 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Décision** : on applique la charte (réponse : « Apply the design (Recommended) ») : « Annuler » à gauche, l'action à droite, dans toutes les confirmations et tous les formulaires. Pour une suppression (commande, produit, catégorie), le bouton d'action est rouge plein. Pour une commande, il s'appelle « Supprimer » au lieu de « Confirmer », comme pour les produits et les catégories (réponse : « Supprimer (Recommended) », après la revue design de la PR #31).
 - **Options écartées** : garder « Confirmer » à gauche ; garder « Confirmer » comme libellé de la suppression d'une commande.
 - **Impact** : `client/src/components/ConfirmationModal` (prop `destructive`), `client/src/components/OrderHistoryModal`, `client/src/components/ProductManagement`, `client/src/components/CategoryManagement`, `client/src/components/DiscountModal`.
+
+### D-051 — Palette « Graphite + olive » et colonne des catégories « liseré + teinte »
+
+- **Date** : 2026-11-20
+- **Confirmée par** : Jules (responsable produit), 2026-11-20
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : après la mise en prod de la 2.0.0, l'utilisateur a voulu changer la palette moutarde + encre de D-039 et le style de la colonne des catégories. Il a choisi sur un comparatif visuel préparé par le designer.
+- **Décision** : la palette devient **« Graphite + olive V3 »**. Les neutres graphite remplacent le crème. L'action, la sélection, le badge de quantité et le contour « dans le panier » passent à l'encre (`--color-primary` #26241F, crème #F2EFE8 en sombre). L'**olive** ne sert qu'aux pastilles-icônes produit et au logo, avec des tokens dédiés. Danger et succès sont inchangés. La colonne des catégories (tablette et desktop) prend l'« Option 2 : liseré + teinte » : lignes droites collées, séparées par un filet, ligne choisie en `--color-surface-2` avec un liseré encre de 3 px à gauche et un texte en 800. Les pilules en rangée (téléphone) gardent leur forme. Cette décision remplace **la partie couleurs** de D-039 ; le nom, la police et le logo en ticket restent ceux de D-039. Version : **MINOR, 2.1.0** (réponse : « MINOR, 2.1.0 (Recommended) »), à consigner dans une nouvelle décision (réponse : « New D-051 (Recommended) »). Valeurs et détails des composants : `docs/design/`.
+- **Options écartées** : garder la moutarde (D-039) ; les autres palettes et options de colonne du comparatif ; une version PATCH ou MAJOR ; une simple mise à jour de D-039.
+- **Impact** : `client/src/styles/variables.css`, `client/src/App.tsx` (palette Mantine `encre`), `client/src/components/BrandLogo`, `client/src/assets/brand/`, `client/index.html` (favicon clair / sombre), `client/src/components/Catalog`, `CatalogIcon`, `Cart`, `Register`, `docs/design/`.

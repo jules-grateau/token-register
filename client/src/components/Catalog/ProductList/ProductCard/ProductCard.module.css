@@ -4,13 +4,9 @@
   border-radius: var(--radius-card);
 }
 
-/* Already in the cart (D-045, D-048): 2 px contour, ink in light, mustard in dark. */
+/* Already in the cart (D-045, D-048): 2 px contour in the ink primary (cream in dark). */
 .card.card[data-in-cart] {
-  border: 2px solid var(--color-text);
-}
-
-[data-mantine-color-scheme='dark'] .card.card[data-in-cart] {
-  border-color: var(--color-primary);
+  border: 2px solid var(--color-primary);
 }
 
 /* Deposit (negative price): dotted danger contour; it stays dotted when in the cart. */
@@ -46,7 +42,7 @@
   color: var(--color-danger);
 }
 
-/* Quantity badge, top right: ink + cream in light, mustard + ink in dark. */
+/* Quantity badge, top right: primary + on-primary (ink + white in light, cream + ink in dark). */
 .badge {
   position: absolute;
   top: 8px;
@@ -62,11 +58,6 @@
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
-  background-color: var(--color-text);
-  color: var(--color-bg);
-}
-
-[data-mantine-color-scheme='dark'] .badge {
   background-color: var(--color-primary);
   color: var(--color-on-primary);
 }
