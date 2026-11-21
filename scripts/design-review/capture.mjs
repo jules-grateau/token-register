@@ -190,6 +190,9 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
     // Cash: the exact amount first, then a suggested note with change.
     'payment-cash-suggested-change',
     async (page) => {
+      // Phone: the card keypad takes the screen, "← Moyens" goes back to the modes.
+      const back = dialog(page).getByRole('button', { name: 'Moyens', exact: true });
+      if (await back.isVisible().catch(() => false)) await back.click();
       await dialog(page).getByRole('button', { name: 'Espèces', exact: true }).click();
       await dialog(page)
         .getByRole('button', { name: /^Reçu / })
