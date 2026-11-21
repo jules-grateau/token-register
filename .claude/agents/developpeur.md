@@ -124,7 +124,35 @@ gh issue create --label suivi --label <tech|design> \
 
 ## Captures pour la revue design (PR qui modifie l'interface)
 
-- Lance `scripts/design-review/capture.mjs` en local (en jetons, et en EUR si des montants sont concernés). Publie les captures sous `pr-<n>/local/` sur la branche `design-review-screenshots`.
+- Lance `scripts/design-review/capture.mjs` en local (en jetons, et en EUR si des montants sont concernés). Publie les captures sous `pr-<n>/local/` (jetons) et `pr-<n>/local-eur/` (EUR) sur la branche `design-review-screenshots`.
+- Commandes (Git Bash ; `S` = ton dossier scratchpad, `R` = racine du dépôt, `<n>` = numéro de la PR) :
+
+  ```bash
+  # 1. Playwright n'est pas dans le dépôt : l'installer à part, même version que design-review.yml
+  mkdir -p "$S/pw" && cd "$S/pw" && npm init -y >/dev/null && npm install playwright@1.55.0 \
+    && npx playwright install chromium
+
+  # 2. Capturer (script copié à côté de Playwright ; identifiants lus dans api/.env)
+  cp "$R/scripts/design-review/capture.mjs" . \
+    && export BASIC_AUTH_USER=$(grep '^BASIC_AUTH_USER=' "$R/api/.env" | cut -d= -f2 | tr -d '\r ') \
+              BASIC_AUTH_PASS=$(grep '^BASIC_AUTH_PASS=' "$R/api/.env" | cut -d= -f2 | sed 's/ *#.*//' | tr -d '\r') \
+    && export COLOR_SCHEMES=light ONLY_VIEWPORTS=mobile,desktop ONLY_STEPS=<étapes touchées> \
+    && APP_URL=<instance jetons> OUT_DIR="$S/cap/local" node capture.mjs \
+    && APP_URL=<instance EUR> OUT_DIR="$S/cap/local-eur" node capture.mjs
+
+  # 3. Publier depuis un worktree temporaire (le dépôt principal ne change pas de branche)
+  cd "$R" && git fetch -q origin design-review-screenshots && rm -rf "$S/wt" \
+    && git worktree add -q "$S/wt" origin/design-review-screenshots \
+    && cd "$S/wt" && git checkout -q -B design-review-screenshots origin/design-review-screenshots \
+    && mkdir -p pr-<n> && cp -r "$S/cap/local" "$S/cap/local-eur" pr-<n>/ \
+    && git add pr-<n> && git commit -q -m "captures: PR #<n>, <écrans> (<jetons / EUR>, <tailles>)" \
+         -m "Co-Authored-By: <ligne d'attribution de la session>" \
+    && git push -q origin design-review-screenshots \
+    && cd "$R" && git worktree remove --force "$S/wt" && git worktree prune
+  ```
+
+  Pour une nouvelle série après correction (DS-n), refais les étapes 2 et 3 en ne copiant que les écrans repris ; nomme le rapport `report-ds-fix.json` pour garder le premier.
+
 - **N'ouvre pas les images toi-même** : c'est le rôle du designer. Vérifie seulement `report.json` (étapes en erreur, erreurs console/JS, `overflowX`) et corrige ce qui y apparaît.
 - Dans la PR et dans ton compte rendu, liste **les écrans touchés** par ta PR (nom de fichier, tailles concernées). Le designer ne relira que ceux-là (D-038).
 
