@@ -284,6 +284,81 @@ describe('currency conversion of recorded payments', () => {
     expect(await getStoredCurrency(db)).toBe('TOKEN');
   });
 
+  describe('order lines without a recorded price (D-056)', () => {
+    beforeEach(async () => {
+      await db.exec(`
+        INSERT INTO orders (id, date) VALUES (2, 2000);
+        INSERT INTO order_items
+          (order_id, product_id, quantity, discountedAmount, product_name, product_price, category_name)
+        VALUES (2, 1, 4, 0, 'Bière', NULL, 'Boissons');
+      `);
+    });
+
+    it('keeps the price empty in the plan and leaves the line out of the revenue', async () => {
+      const plan = await planCurrencyConversion(db, 'EUR');
+
+      expect(plan.itemsWithoutPrice).toHaveLength(1);
+      expect(plan.itemsWithoutPrice[0]).toMatchObject({
+        orderId: 2,
+        priceBefore: null,
+        priceAfter: null,
+      });
+      // Same revenue as without the line: 2 x 3 - 1 + 1 x -1 = 4 tokens.
+      expect(plan.revenueBefore).toBe(4);
+      expect(plan.revenueAfter).toBe(400);
+      expect(plan.inconsistentOrderItems).toEqual([]);
+    });
+
+    it('warns in the preview with the confirmed wording', async () => {
+      const lines = describeConversionPlan(await planCurrencyConversion(db, 'EUR'));
+
+      expect(lines).toContain(
+        'Warning: 1 ligne(s) de commande sans prix enregistré (commandes #2) : ' +
+          'prix inconnu, laissé vide'
+      );
+      expect(lines.join('\n')).toContain('not counted in the revenue');
+    });
+
+    it('lists at most 20 orders, then an ellipsis', async () => {
+      for (let id = 3; id <= 23; id++) {
+        await db.run('INSERT INTO orders (id, date) VALUES (?, 3000)', [id]);
+        await db.run(
+          `INSERT INTO order_items (order_id, product_id, quantity, product_name, product_price)
+           VALUES (?, 1, 1, 'Bière', NULL)`,
+          [id]
+        );
+      }
+
+      const warning = describeConversionPlan(await planCurrencyConversion(db, 'EUR')).find((line) =>
+        line.startsWith('Warning: 22 ligne(s)')
+      );
+
+      expect(warning).toContain('#21, …)');
+      expect(warning).not.toContain('#22');
+    });
+
+    it('leaves the price empty when applying, and converts the rest of the line', async () => {
+      await db.exec('UPDATE order_items SET discountedAmount = 1 WHERE order_id = 2');
+
+      await applyCurrencyConversion(db, await planCurrencyConversion(db, 'EUR'));
+
+      const line = await db.get<{ product_price: number | null; discountedAmount: number }>(
+        'SELECT product_price, discountedAmount FROM order_items WHERE order_id = 2'
+      );
+      expect(line).toEqual({ product_price: null, discountedAmount: 100 });
+      expect(await getStoredCurrency(db)).toBe('EUR');
+    });
+
+    it('gives no missing-price warning when every line has a price', async () => {
+      await db.exec('UPDATE order_items SET product_price = 3 WHERE order_id = 2');
+
+      const plan = await planCurrencyConversion(db, 'EUR');
+
+      expect(plan.itemsWithoutPrice).toEqual([]);
+      expect(describeConversionPlan(plan).join('\n')).not.toContain('sans prix');
+    });
+  });
+
   it('gives no warning when no payment is recorded', async () => {
     await setStoredCurrency(db, 'EUR');
     const plan = await planCurrencyConversion(db, 'TOKEN');

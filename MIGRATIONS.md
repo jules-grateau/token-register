@@ -65,7 +65,8 @@ npm run prod:db:convert-currency -- --to=EUR --apply   # converts in one transac
 ```
 
 Converts `products.price`, `order_items.product_price` and `order_items.discountedAmount`, then
-updates `settings.currency`. Back up the database first. Full procedure:
+updates `settings.currency`. A NULL `product_price` stays NULL and is reported in the
+preview (D-056). Back up the database first. Full procedure:
 [deploy/README.md > Currency](./deploy/README.md#currency).
 
 ### Order payments (1.3.0)
