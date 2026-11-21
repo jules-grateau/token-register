@@ -68,8 +68,8 @@ Each instance runs either in tokens or in euros, set by the `CURRENCY` environme
 its service in `compose.yaml`: `TOKEN` (default when unset) or `EUR` (decisions D-008 to D-014).
 It is shown read-only in the app (⚙️ menu). Amounts are stored as whole numbers: tokens, or cents.
 
-- **New EUR instance**: add `CURRENCY=EUR` to the new service before its first start. It starts
-  with an empty catalog (D-014) and records EUR in its database.
+- **New EUR instance**: add `CURRENCY=EUR` to the new service before its first start. Like any new
+  instance, it starts with no data (D-055) and records EUR in its database.
 - **Existing production instances**: each one runs in tokens or in euros according to the
   `CURRENCY` of its service. An instance moved from tokens to euros has its history converted with
   the command below. The demo uses the `CURRENCY` of its service.

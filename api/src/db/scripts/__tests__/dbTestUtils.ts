@@ -57,12 +57,8 @@ export async function listTables(dbPath: string): Promise<string[]> {
   }
 }
 
-/** Messages logged by initDb once it has decided whether to seed the catalog. */
-export const SEED_DECISION_MESSAGES = [
-  'EUR instance: starting with an empty catalog',
-  'Categories and products inserted',
-  'Database is already populated',
-];
+/** Message logged by initDb once the database is closed. */
+export const INIT_DONE_MESSAGES = ['Database initialization complete'];
 
 export const APP_TABLES = ['categories', 'products', 'orders', 'order_items'];
 
@@ -76,4 +72,18 @@ export function wasLogged(spy: jest.SpyInstance, messages: string[]): boolean {
   return spy.mock.calls.some(
     ([first]) => typeof first === 'string' && messages.some((message) => first.includes(message))
   );
+}
+
+/** Number of rows of the catalog tables (D-055: a new database has none). */
+export async function countCatalog(
+  dbPath: string
+): Promise<{ categories: number; products: number }> {
+  const db = await open({ filename: dbPath, driver: sqlite3.Database });
+  try {
+    const categories = await db.get<{ count: number }>('SELECT COUNT(*) AS count FROM categories');
+    const products = await db.get<{ count: number }>('SELECT COUNT(*) AS count FROM products');
+    return { categories: categories?.count ?? 0, products: products?.count ?? 0 };
+  } finally {
+    await db.close();
+  }
 }

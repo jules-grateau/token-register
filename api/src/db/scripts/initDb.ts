@@ -4,7 +4,6 @@ import logger from '../../utils/logger';
 import path from 'path';
 import fs from 'fs';
 import { getDatabasePath } from '..';
-import { getConfiguredCurrency } from '../../utils/currency';
 
 export const dbFilePath = getDatabasePath();
 export const dbDir = path.dirname(dbFilePath);
@@ -39,14 +38,15 @@ async function initializeDatabase() {
   logger.info(`Successfully connected to/created database at ${dbFilePath}`);
 
   try {
+    // D-055: tables only. A new database starts empty; existing data is never modified.
     await createTables(db);
-    await seedSampleCatalogIfEmpty(db);
   } catch (error) {
     logger.error('Error initializing database: %s', error);
   } finally {
     // Closed only once every statement above has completed (issue #52).
     await db.close();
   }
+  logger.info('Database initialization complete');
 }
 
 async function createTables(db: Database) {
@@ -92,91 +92,4 @@ async function createTables(db: Database) {
   `);
 
   logger.info('Tables created');
-}
-
-async function seedSampleCatalogIfEmpty(db: Database) {
-  logger.info('Inserting categories and products');
-
-  // A failed count is treated as an empty catalog; D-014 still applies (no sample data in EUR).
-  let categoryCount = 0;
-  try {
-    const row = await db.get<{ count: number }>(`SELECT COUNT(id) as count from categories`);
-    categoryCount = row?.count ?? 0;
-  } catch (err) {
-    logger.error('Error executing count query on categories table: %s', err);
-  }
-
-  if (categoryCount > 0) {
-    logger.info('Database is already populated. Skipping initalization.');
-  } else if (shouldSeedSampleCatalog()) {
-    await insertData(db);
-  } else {
-    logger.info('EUR instance: starting with an empty catalog (no sample data).');
-  }
-}
-
-/** D-014: a new EUR instance starts with an empty catalog; token instances keep the sample one. */
-function shouldSeedSampleCatalog(): boolean {
-  return getConfiguredCurrency() !== 'EUR';
-}
-
-// Sample catalog of token instances and of the demo. Icons: keys of docs/design/icons.md.
-async function insertData(db: Database) {
-  const categories = [
-    { id: 1, name: 'Boissons', icon: 'beer' },
-    { id: 2, name: 'Salé', icon: 'sandwich' },
-    { id: 3, name: 'Sucré', icon: 'cake' },
-    { id: 4, name: 'Eco-cup', icon: 'deposit' },
-  ];
-
-  const products = [
-    { name: 'Bière', price: 3, category_id: 1, icon: 'beer' },
-    { name: 'Soda/Jus de fruit', price: 2, category_id: 1, icon: 'soft_drink' },
-    { name: 'Eau', price: 1, category_id: 1, icon: 'water' },
-    { name: 'Café/Thé', price: 1, category_id: 1, icon: 'coffee' },
-    { name: 'Sandwich Jambon beurre', price: 3, category_id: 2, icon: 'sandwich' },
-    { name: 'Sandwich Rillette poulet', price: 3, category_id: 2, icon: 'sandwich' },
-    { name: 'Sandwich Camembert', price: 3, category_id: 2, icon: 'cheese' },
-    { name: 'Croque Monsieur', price: 2, category_id: 2, icon: 'sandwich' },
-    { name: 'Chips', price: 1, category_id: 2, icon: 'snack' },
-    { name: 'Barre chocolatée', price: 1, category_id: 3, icon: 'candy' },
-    { name: 'Bonbons', price: 1, category_id: 3, icon: 'candy' },
-    { name: 'Dessert', price: 2, category_id: 3, icon: 'cake' },
-    { name: 'Crêpes', price: 2, category_id: 3, icon: 'cookie' },
-    { name: 'Eco-cup', price: 1, category_id: 4, icon: 'cup' },
-    { name: 'Retour Eco-cup', price: -1, category_id: 4, icon: 'deposit' },
-  ];
-
-  // D-054: a failed insert is logged and the next ones still run; the app starts anyway.
-  let failures = 0;
-  const insert = async (sql: string, params: (string | number)[], label: string) => {
-    try {
-      await db.run(sql, params);
-    } catch (err) {
-      failures++;
-      logger.error(`Error inserting sample ${label}: %s`, err);
-    }
-  };
-
-  for (const category of categories) {
-    await insert(
-      `INSERT OR IGNORE INTO categories (id, name, icon) VALUES (?, ?, ?)`,
-      [category.id, category.name, category.icon],
-      `category "${category.name}"`
-    );
-  }
-
-  for (const product of products) {
-    await insert(
-      `INSERT INTO products (name, price, category_id, icon) VALUES (?, ?, ?, ?)`,
-      [product.name, product.price, product.category_id, product.icon],
-      `product "${product.name}"`
-    );
-  }
-
-  if (failures > 0) {
-    logger.error(`Sample catalog partially inserted: ${failures} insert(s) failed`);
-  } else {
-    logger.info('Categories and products inserted');
-  }
 }

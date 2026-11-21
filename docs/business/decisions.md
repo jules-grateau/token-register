@@ -177,7 +177,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 
 - **Date** : 2026-11-19
 - **Confirmée par** : Jules (responsable produit), 2026-11-19
-- **Statut** : Active
+- **Statut** : Remplacée par D-055
 - **Domaine** : Catalogue
 - **Contexte** : une base vide reçoit un catalogue d'exemple dont les prix sont en jetons.
 - **Décision** : une nouvelle instance en euros démarre avec un catalogue vide. Les instances en jetons gardent le catalogue d'exemple actuel.
@@ -640,7 +640,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 
 - **Date** : 2026-11-21
 - **Confirmée par** : Jules (responsable produit), 2026-11-21
-- **Statut** : Active
+- **Statut** : Remplacée par D-055
 - **Domaine** : Catalogue
 - **Contexte** : issue #52. L'initialisation de la base fermait la connexion sans attendre explicitement les insertions du catalogue d'exemple, et un échec d'insertion passait inaperçu. Il fallait décider du comportement si une insertion échoue (le script tourne au démarrage du conteneur).
 - **Décision** :
@@ -649,3 +649,18 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - Version : **2.2.2** (réponse : « PATCH 2.2.2 (Recommandé) »).
 - **Options écartées** : arrêter le script en erreur (le conteneur ne démarre pas tant que la base n'est pas réparée) ; ajouter seulement un test sans toucher au script.
 - **Impact** : `api/src/db/scripts/initDb.ts`, `api/src/db/scripts/__tests__/initDb.test.ts`.
+
+### D-055 — Une base neuve démarre sans aucune donnée, les données existantes ne sont jamais modifiées
+
+- **Date** : 2026-11-21
+- **Confirmée par** : Jules (responsable produit), 2026-11-21
+- **Statut** : Active
+- **Domaine** : Catalogue
+- **Contexte** : en traitant l'issue #52 (PR #61), la question s'est posée de ce que fait l'initialisation quand elle ne peut pas lire le catalogue. Jusqu'ici, une base neuve en jetons recevait un catalogue d'exemple (D-014), et D-054 réglait le cas d'une insertion en échec.
+- **Décision** :
+  - Il n'y a plus de catalogue d'exemple, nulle part (réponse : « Mais personne en reçoit jamais de catalogue d'exemple. Ça existe pas ») : ni par défaut, ni en option, ni en euros.
+  - L'initialisation ne crée que les tables (réponse : « Non mais si des données existes déjà, on les gardes et on y touches pas. Si c'est une initialisation a zero, on part sans aucune donnée ») : une base neuve est vide, en jetons comme en euros ; une base qui a déjà des données n'est jamais modifiée.
+  - La démo n'est pas touchée : sa base actuelle reste telle quelle (réponse : « Ne rien changer (Recommandé) »).
+  - Version : **2.3.0**, dans la PR #61 (réponse : « MINOR 2.3.0 dans #61 (Recommandé) »).
+- **Options écartées** : garder le catalogue d'exemple dans une commande manuelle ou derrière une variable d'environnement ; remettre la démo à zéro ; version PATCH 2.2.2.
+- **Impact** : `api/src/db/scripts/initDb.ts` et ses tests, `README.md`, `MIGRATIONS.md`, `deploy/README.md`. Remplace D-014 et D-054. Le script de capture ne trouve plus de catalogue sur une base locale neuve (issue #62).
