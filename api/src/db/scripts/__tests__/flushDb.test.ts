@@ -6,7 +6,7 @@ import {
   waitFor,
   wasLogged,
   APP_TABLES,
-  SEED_DECISION_MESSAGES,
+  INIT_DONE_MESSAGES,
 } from './dbTestUtils';
 
 // Above the 10 s of waitFor, so that its explicit message is the one reported (TL-1).
@@ -28,7 +28,7 @@ afterAll(() => {
 it('should remove all tables', async () => {
   await import('../initDb');
   await waitFor(() => hasAppTables(tempDbPath), 'initDb to create the tables');
-  await waitFor(() => wasLogged(infoSpy, SEED_DECISION_MESSAGES), 'initDb to decide on seeding');
+  await waitFor(() => wasLogged(infoSpy, INIT_DONE_MESSAGES), 'initDb to finish');
   await import('../flushDb');
   await waitFor(() => wasLogged(infoSpy, ['All tables dropped']), 'flushDb to drop the tables');
 

@@ -18,8 +18,9 @@ Token-register uses SQLite for data storage. Database schema changes are managed
 ### Initialization
 
 **Script**: `api/src/db/scripts/initDb.ts`
-**Purpose**: Creates initial database schema and seeds default data
-**When**: Run on fresh installations or empty databases
+**Purpose**: Creates the database schema (missing tables only). Inserts no data: a new database
+starts empty, in tokens as in euros, and existing data is never modified (D-055)
+**When**: Runs on every start (container entrypoint), before the migrations
 
 ```bash
 # Development
@@ -64,7 +65,8 @@ npm run prod:db:convert-currency -- --to=EUR --apply   # converts in one transac
 ```
 
 Converts `products.price`, `order_items.product_price` and `order_items.discountedAmount`, then
-updates `settings.currency`. Back up the database first. Full procedure:
+updates `settings.currency`. A NULL `product_price` stays NULL and is reported in the
+preview (D-056). Back up the database first. Full procedure:
 [deploy/README.md > Currency](./deploy/README.md#currency).
 
 ### Order payments (1.3.0)
@@ -92,7 +94,7 @@ logic in `api/src/db/catalogIcons.ts`)
 nullable. They store the **key** of an icon from the closed list of
 [docs/design/icons.md](./docs/design/icons.md#icônes-produit) (`beer`, `coffee`…), never the icon
 itself. Only missing columns are added, in one transaction, so the step is idempotent. New
-databases get them from `initDb.ts`, and the sample catalog comes with icons.
+databases get them from `initDb.ts`.
 **Data**: existing products and categories keep `NULL`: no icon. A product without icon shows its
 initial, a category without icon shows its name only. Nothing is backfilled.
 **API**: `POST` / `PUT` on `/products` and `/categories` accept `icon` (a known key or

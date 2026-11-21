@@ -177,7 +177,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 
 - **Date** : 2026-11-19
 - **Confirmée par** : Jules (responsable produit), 2026-11-19
-- **Statut** : Active
+- **Statut** : Remplacée par D-055
 - **Domaine** : Catalogue
 - **Contexte** : une base vide reçoit un catalogue d'exemple dont les prix sont en jetons.
 - **Décision** : une nouvelle instance en euros démarre avec un catalogue vide. Les instances en jetons gardent le catalogue d'exemple actuel.
@@ -635,3 +635,62 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - Stockage inchangé : aucune migration, mêmes colonnes `cash_amount` / `card_amount` (D-034).
 - **Options écartées** : un « Encaisser » final après une liste de parts (un toucher de plus) ; garder « Appoint » ; suggestions calculées sur le total plutôt que sur le reste dû ; « Rembourser » aussi pour un total à 0 €.
 - **Impact** : `client/src/components/CartConfirmationModal`, `client/src/utils/payment.ts`, `client/src/locales`, `docs/design/components.md` (section « Encaissement »), `scripts/design-review/capture.mjs`.
+
+### D-054 — Échec d'une insertion du catalogue d'exemple : journaliser et continuer
+
+- **Date** : 2026-11-21
+- **Confirmée par** : Jules (responsable produit), 2026-11-21
+- **Statut** : Remplacée par D-055
+- **Domaine** : Catalogue
+- **Contexte** : issue #52. L'initialisation de la base fermait la connexion sans attendre explicitement les insertions du catalogue d'exemple, et un échec d'insertion passait inaperçu. Il fallait décider du comportement si une insertion échoue (le script tourne au démarrage du conteneur).
+- **Décision** :
+  - Le script d'initialisation attend la fin de toutes les insertions avant de fermer la base (réponse : « Fiabiliser + test (Recommandé) »).
+  - Si une insertion du catalogue d'exemple échoue, l'erreur est journalisée, les insertions suivantes continuent et l'appli démarre quand même, avec un catalogue éventuellement partiel (réponse : « Journaliser et continuer (Recommandé) »).
+  - Version : **2.2.2** (réponse : « PATCH 2.2.2 (Recommandé) »).
+- **Options écartées** : arrêter le script en erreur (le conteneur ne démarre pas tant que la base n'est pas réparée) ; ajouter seulement un test sans toucher au script.
+- **Impact** : `api/src/db/scripts/initDb.ts`, `api/src/db/scripts/__tests__/initDb.test.ts`.
+
+### D-055 — Une base neuve démarre sans aucune donnée, les données existantes ne sont jamais modifiées
+
+- **Date** : 2026-11-21
+- **Confirmée par** : Jules (responsable produit), 2026-11-21
+- **Statut** : Active
+- **Domaine** : Catalogue
+- **Contexte** : en traitant l'issue #52 (PR #61), la question s'est posée de ce que fait l'initialisation quand elle ne peut pas lire le catalogue. Jusqu'ici, une base neuve en jetons recevait un catalogue d'exemple (D-014), et D-054 réglait le cas d'une insertion en échec.
+- **Décision** :
+  - Il n'y a plus de catalogue d'exemple, nulle part (réponse : « Mais personne en reçoit jamais de catalogue d'exemple. Ça existe pas ») : ni par défaut, ni en option, ni en euros.
+  - L'initialisation ne crée que les tables (réponse : « Non mais si des données existes déjà, on les gardes et on y touches pas. Si c'est une initialisation a zero, on part sans aucune donnée ») : une base neuve est vide, en jetons comme en euros ; une base qui a déjà des données n'est jamais modifiée.
+  - La démo n'est pas touchée : sa base actuelle reste telle quelle (réponse : « Ne rien changer (Recommandé) »).
+  - Version : **2.3.0**, dans la PR #61 (réponse : « MINOR 2.3.0 dans #61 (Recommandé) »).
+  - Ajout du 2026-11-21 : si la création des tables échoue, l'erreur est journalisée et le script sort en erreur, ce qui arrête le démarrage de l'appli (réponse : « Arrêter le démarrage (Recommandé) »).
+- **Options écartées** : garder le catalogue d'exemple dans une commande manuelle ou derrière une variable d'environnement ; remettre la démo à zéro ; version PATCH 2.2.2 ; en cas d'échec de la création des tables, journaliser et laisser l'appli démarrer.
+- **Impact** : `api/src/db/scripts/initDb.ts` et ses tests, `README.md`, `MIGRATIONS.md`, `deploy/README.md`. Remplace D-014 et D-054. Le script de capture ne trouve plus de catalogue sur une base locale neuve (issue #62).
+
+### D-056 — Conversion de monnaie : une ligne d'historique sans prix reste sans prix
+
+- **Date** : 2026-11-21
+- **Confirmée par** : Jules (responsable produit), 2026-11-21
+- **Statut** : Active
+- **Domaine** : Prix & jetons
+- **Contexte** : issue #33 (TL-2 de la PR #19). La commande de conversion (D-009) remplaçait sans prévenir un `order_items.product_price` vide par 0, puis écrivait ce 0 avec `--apply`. Ce cas ne se produit pas avec l'appli actuelle, mais peut exister dans une ancienne base (migration de l'historique incomplète, lignes écrites par une version antérieure, modification manuelle).
+- **Décision** :
+  - Avec `--apply`, le prix d'une telle ligne reste vide ; la remise et les autres montants sont convertis comme d'habitude (réponse : « Le laisser vide (Recommandé) »).
+  - Ces lignes sont exclues du total de l'aperçu, qui le signale (réponse : « Non, exclues et comptées (Recommandé) »). Elles ne peuvent pas bloquer la conversion au titre de D-016.
+  - L'aperçu affiche : « Warning: N ligne(s) de commande sans prix enregistré (commandes #x, #y) : prix inconnu, laissé vide », avec au plus 20 numéros de commande puis « … » (réponse : « Français (Recommandé) »).
+  - Version : **2.3.1** (réponse : « PATCH 2.3.1 (Recommandé) »).
+- **Options écartées** : refuser la conversion tant qu'il reste des lignes sans prix ; écrire 0 avec un simple avertissement ; compter ces lignes à 0 dans le total ; message en anglais.
+- **Impact** : `api/src/db/currency.ts` et ses tests, `deploy/README.md`, `MIGRATIONS.md`.
+
+### D-057 — Script de capture : jeu de test créé sur une instance sans catalogue, puis supprimé
+
+- **Date** : 2026-11-21
+- **Confirmée par** : Jules (responsable produit), 2026-11-21
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : issue #62. Depuis D-055, une base neuve est vide : le script de capture (`scripts/design-review/capture.mjs`) s'arrêtait, faute d'une catégorie avec 2 produits à prix positif et d'un produit à prix négatif. Il fallait décider de ce qu'il crée, sous quels noms, et ce qui se passe si le nettoyage échoue.
+- **Décision** :
+  - S'il manque une pièce (pas de catégorie avec 2 produits à prix positif, ou pas de produit à prix négatif), le script crée tout le jeu de test, dans sa propre catégorie, sans jamais modifier le catalogue existant (réponse : « Créer tout le jeu (Recommandé) »). Sur une instance qui a déjà tout (la démo), rien n'est créé.
+  - Noms repérables : catégorie « Test capture », produits « Produit A », « Produit B » et « Retour consigne » (réponse : « Noms repérables (Recommandé) »). Prix : 3 / 2 / -1 jetons, ou 2,50 € / 1,50 € / -1,00 €.
+  - Le jeu est supprimé à la fin du passage, après les commandes de test. S'il n'a pas pu être supprimé, le contrôle (`check-report.mjs`) échoue, comme pour les commandes (réponse : « Le contrôle échoue (Recommandé) »).
+- **Options écartées** : ne rien créer et laisser l'étape « total ≤ 0 » échouer quand seul le produit négatif manque ; ajouter le produit négatif dans une catégorie existante ; noms réalistes (« Café », « Eco-cup ») ; simple avertissement dans le rapport si le nettoyage échoue.
+- **Impact** : `scripts/design-review/capture.mjs`, `scripts/design-review/check-report.mjs`. Outil de revue seulement : pas de montée de version (D-027).

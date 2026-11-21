@@ -54,6 +54,13 @@ for (const [viewport, vp] of Object.entries(report.viewports ?? {})) {
 if (report.cleanup?.failed?.length) {
   problems.push(`cleanup: test orders not deleted: ${report.cleanup.failed.join(', ')}`);
 }
+// Test catalog created on an instance without one (D-057): it must not stay behind.
+const testCatalog = report.cleanup?.testCatalog;
+if (testCatalog && !testCatalog.deleted) {
+  problems.push(
+    `cleanup: test catalog not deleted: category ${testCatalog.category}, products ${testCatalog.products.join(', ')}`
+  );
+}
 
 const summary = [
   `### Release smoke check: ${problems.length ? '❌' : '✅'}`,

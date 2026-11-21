@@ -118,7 +118,7 @@ VITE_CLIENT_NAME= # Optional association name in the header - Used in developmen
 npm run init-db -w=api
 ```
 
-This will create and seed the SQLite database at `api/src/db/data/database.sqlite` or where configured in the `api/.env` file
+This will create the SQLite database, with empty tables (D-055), at `api/src/db/data/database.sqlite` or where configured in the `api/.env` file
 
 Then run the migrations, which also record the instance currency (the API refuses to start without it):
 
