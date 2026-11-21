@@ -665,3 +665,17 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - Ajout du 2026-11-21 : si la création des tables échoue, l'erreur est journalisée et le script sort en erreur, ce qui arrête le démarrage de l'appli (réponse : « Arrêter le démarrage (Recommandé) »).
 - **Options écartées** : garder le catalogue d'exemple dans une commande manuelle ou derrière une variable d'environnement ; remettre la démo à zéro ; version PATCH 2.2.2 ; en cas d'échec de la création des tables, journaliser et laisser l'appli démarrer.
 - **Impact** : `api/src/db/scripts/initDb.ts` et ses tests, `README.md`, `MIGRATIONS.md`, `deploy/README.md`. Remplace D-014 et D-054. Le script de capture ne trouve plus de catalogue sur une base locale neuve (issue #62).
+
+### D-057 — Script de capture : jeu de test créé sur une instance sans catalogue, puis supprimé
+
+- **Date** : 2026-11-21
+- **Confirmée par** : Jules (responsable produit), 2026-11-21
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : issue #62. Depuis D-055, une base neuve est vide : le script de capture (`scripts/design-review/capture.mjs`) s'arrêtait, faute d'une catégorie avec 2 produits à prix positif et d'un produit à prix négatif. Il fallait décider de ce qu'il crée, sous quels noms, et ce qui se passe si le nettoyage échoue.
+- **Décision** :
+  - S'il manque une pièce (pas de catégorie avec 2 produits à prix positif, ou pas de produit à prix négatif), le script crée tout le jeu de test, dans sa propre catégorie, sans jamais modifier le catalogue existant (réponse : « Créer tout le jeu (Recommandé) »). Sur une instance qui a déjà tout (la démo), rien n'est créé.
+  - Noms repérables : catégorie « Test capture », produits « Produit A », « Produit B » et « Retour consigne » (réponse : « Noms repérables (Recommandé) »). Prix : 3 / 2 / -1 jetons, ou 2,50 € / 1,50 € / -1,00 €.
+  - Le jeu est supprimé à la fin du passage, après les commandes de test. S'il n'a pas pu être supprimé, le contrôle (`check-report.mjs`) échoue, comme pour les commandes (réponse : « Le contrôle échoue (Recommandé) »).
+- **Options écartées** : ne rien créer et laisser l'étape « total ≤ 0 » échouer quand seul le produit négatif manque ; ajouter le produit négatif dans une catégorie existante ; noms réalistes (« Café », « Eco-cup ») ; simple avertissement dans le rapport si le nettoyage échoue.
+- **Impact** : `scripts/design-review/capture.mjs`, `scripts/design-review/check-report.mjs`. Outil de revue seulement : pas de montée de version (D-027).
