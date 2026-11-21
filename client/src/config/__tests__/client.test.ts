@@ -2,7 +2,7 @@ import { buildDocumentTitle, getClientName, parseClientName } from '../client';
 
 describe('parseClientName (D-040)', () => {
   it('trims the name', () => {
-    expect(parseClientName('  Atakora ')).toBe('Atakora');
+    expect(parseClientName('  Club Exemple ')).toBe('Club Exemple');
   });
 
   it('treats a missing or blank name as not configured', () => {
@@ -31,7 +31,7 @@ describe('getClientName', () => {
 
 describe('buildDocumentTitle (D-040)', () => {
   it('puts the client name before the app name', () => {
-    expect(buildDocumentTitle('Atakora')).toBe('Atakora · Caisse Claire');
+    expect(buildDocumentTitle('Club Exemple')).toBe('Club Exemple · Caisse Claire');
   });
 
   it('shows the app name alone without a client name', () => {

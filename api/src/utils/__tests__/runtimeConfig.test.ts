@@ -21,7 +21,7 @@ describe('getConfiguredClientName (D-040)', () => {
   });
 
   it('trims the configured name', () => {
-    expect(getConfiguredClientName({ CLIENT_NAME: '  Atakora  ' })).toBe('Atakora');
+    expect(getConfiguredClientName({ CLIENT_NAME: '  Club Exemple  ' })).toBe('Club Exemple');
   });
 });
 

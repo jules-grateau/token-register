@@ -12,7 +12,7 @@ async function createLegacyDb(): Promise<Database> {
       price INTEGER NOT NULL, category_id INTEGER NOT NULL
     );
     INSERT INTO categories (id, name) VALUES (1, 'Boissons');
-    INSERT INTO products (id, name, price, category_id) VALUES (1, 'Poule', 3, 1);
+    INSERT INTO products (id, name, price, category_id) VALUES (1, 'Produit A', 3, 1);
   `);
   return db;
 }

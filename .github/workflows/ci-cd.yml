@@ -169,14 +169,34 @@ jobs:
     # instances are only restarted when you approve — never in the middle of an event.
     environment:
       name: ${{ github.ref_name == 'main' && 'production' || 'test' }}
-      url: ${{ github.ref_name == 'main' && 'https://poule-aux-jeux-dor.julesgrateau.dev' || 'https://demo.julesgrateau.dev' }}
+      # Production URL and services are repository variables (Settings > Secrets and variables >
+      # Actions > Variables), so the production setup is not written in this public repository.
+      url: ${{ github.ref_name == 'main' && vars.PROD_URL || 'https://demo.julesgrateau.dev' }}
     steps:
+      - name: Check the production variables
+        if: github.ref_name == 'main'
+        env:
+          PROD_URL: ${{ vars.PROD_URL }}
+          PROD_SERVICES: ${{ vars.PROD_SERVICES }}
+        run: |
+          MISSING=0
+          if [ -z "$(echo "$PROD_URL" | tr -d '[:space:]')" ]; then
+            echo "::error::Repository variable PROD_URL is empty: set it before deploying to production."
+            MISSING=1
+          fi
+          if [ -z "$(echo "$PROD_SERVICES" | tr -d '[:space:]')" ]; then
+            echo "::error::Repository variable PROD_SERVICES is empty (space-separated compose services): nothing would be restarted."
+            MISSING=1
+          fi
+          exit $MISSING
+
       - name: Pull and restart the services on the VPS
         # Pinned to a commit (not a movable tag): this third-party action receives the SSH key.
         uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
         env:
           # Compose services of the VPS compose.yaml running this image tag.
-          SERVICES: ${{ github.ref_name == 'main' && 'token-register-poule token-register-atakora' || 'token-register' }}
+          # Production: repository variable PROD_SERVICES (space-separated), checked above.
+          SERVICES: ${{ github.ref_name == 'main' && vars.PROD_SERVICES || 'token-register' }}
           DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
         with:
           host: ${{ secrets.VPS_HOST }}

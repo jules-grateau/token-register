@@ -539,7 +539,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Confirmée par** : Jules (responsable produit), 2026-11-20
 - **Statut** : Active (précise D-044)
 - **Domaine** : Catalogue
-- **Contexte** : D-044 donne une icône à chaque produit, sans dire ce qu'affiche un produit qui n'en a pas (poule, atakora, nouveaux produits), si elle est obligatoire, ce que devient une consigne ni d'où viennent les icônes.
+- **Contexte** : D-044 donne une icône à chaque produit, sans dire ce qu'affiche un produit qui n'en a pas (produits des instances de production existantes, nouveaux produits), si elle est obligatoire, ce que devient une consigne ni d'où viennent les icônes.
 - **Décision** : un produit sans icône affiche son **initiale** (réponse : « Son initiale ») ; rien n'est écrit en base (`NULL`), aucune icône n'est attribuée aux produits existants. L'icône est **facultative** (réponse : « Non, facultatif ») : « Aucune » est présélectionnée dans le formulaire. Une consigne (prix négatif) garde l'icône choisie, et prend l'icône recyclage si aucune n'est choisie (réponse : « Celle choisie, recyclage par défaut »). Les icônes viennent d'une **liste fermée** de 29 clés (`docs/design/icons.md`, réponse : « Oui, ça suffit ») ; l'API refuse toute autre valeur.
 - **Options écartées** : icône générique par défaut ; icône devinée d'après le nom lors de la migration ; icône obligatoire ; consigne toujours en recyclage ; icônes sur mesure (crêpe, frites, chips).
 - **Impact** : `products.icon` (migration `api/src/db/catalogIcons.ts`), `api/src/utils/catalogIcons.ts`, `shared-ts` (`CatalogIconKey`), `client/src/config/catalogIcons.ts`, `client/src/components/CatalogIcon`, `ProductCard`, `ProductFormModal`, `docs/design/icons.md`, `MIGRATIONS.md`.
