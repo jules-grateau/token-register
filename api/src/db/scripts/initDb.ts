@@ -41,7 +41,10 @@ async function initializeDatabase() {
     // D-055: tables only. A new database starts empty; existing data is never modified.
     await createTables(db);
   } catch (error) {
+    // D-055: a failed initialization stops the start (non-zero exit, entrypoint uses set -e).
     logger.error('Error initializing database: %s', error);
+    process.exitCode = 1;
+    return;
   } finally {
     // Closed only once every statement above has completed (issue #52).
     await db.close();

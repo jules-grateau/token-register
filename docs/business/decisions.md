@@ -662,5 +662,6 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - L'initialisation ne crée que les tables (réponse : « Non mais si des données existes déjà, on les gardes et on y touches pas. Si c'est une initialisation a zero, on part sans aucune donnée ») : une base neuve est vide, en jetons comme en euros ; une base qui a déjà des données n'est jamais modifiée.
   - La démo n'est pas touchée : sa base actuelle reste telle quelle (réponse : « Ne rien changer (Recommandé) »).
   - Version : **2.3.0**, dans la PR #61 (réponse : « MINOR 2.3.0 dans #61 (Recommandé) »).
-- **Options écartées** : garder le catalogue d'exemple dans une commande manuelle ou derrière une variable d'environnement ; remettre la démo à zéro ; version PATCH 2.2.2.
+  - Ajout du 2026-11-21 : si la création des tables échoue, l'erreur est journalisée et le script sort en erreur, ce qui arrête le démarrage de l'appli (réponse : « Arrêter le démarrage (Recommandé) »).
+- **Options écartées** : garder le catalogue d'exemple dans une commande manuelle ou derrière une variable d'environnement ; remettre la démo à zéro ; version PATCH 2.2.2 ; en cas d'échec de la création des tables, journaliser et laisser l'appli démarrer.
 - **Impact** : `api/src/db/scripts/initDb.ts` et ses tests, `README.md`, `MIGRATIONS.md`, `deploy/README.md`. Remplace D-014 et D-054. Le script de capture ne trouve plus de catalogue sur une base locale neuve (issue #62).
