@@ -131,6 +131,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             variant="subtle"
             radius={0}
             h={48}
+            className={classes.action}
             onClick={() => onEdit?.(product)}
             aria-label={t('actions.edit')}
             style={{ borderRight: '1px solid var(--color-border)' }}
@@ -141,6 +142,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             variant="subtle"
             radius={0}
             h={48}
+            className={classes.action}
             onClick={() => onDelete?.(product)}
             aria-label={t('delete')}
           >

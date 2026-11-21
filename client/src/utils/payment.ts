@@ -1,7 +1,8 @@
 import type { CurrencyCode, OrderPaymentType } from 'shared-ts';
 
-// Payment help of the "Encaissement" modal (docs/design/components.md, D-028 to D-034).
-// Amounts are stored integers: cents in EUR, tokens otherwise.
+// Payment of the "Encaissement" modal (docs/design/components.md, D-053, D-034).
+// Amounts are stored integers: cents in EUR, tokens otherwise. Token instances have no
+// payment help (D-053): the keypad and the parts are used in euros only.
 
 /** Stored units per displayed unit: 100 cents per euro, 1 per token. */
 export function getPaymentUnit(currency: CurrencyCode): number {
@@ -15,8 +16,8 @@ const SUGGESTION_COUNT = 4;
 const nextMultiple = (total: number, step: number) => (Math.floor(total / step) + 1) * step;
 
 /**
- * Amounts suggested for a total > 0 (D-029): always 4 amounts, ascending, all strictly above
- * the total (the exact amount is the "Appoint" button). `unit` = 100 in EUR, 1 in tokens.
+ * 4 amounts, ascending, all strictly above the total (D-029); `cashSuggestions` puts the
+ * exact amount in front of the first 3. `unit` = 100 in EUR, 1 in tokens.
  */
 export function suggestAmounts(total: number, unit: number): number[] {
   const candidates = new Set<number>();
@@ -93,60 +94,127 @@ export function toKeypadInput(amount: number, unit: number): string {
   return rest === 0 ? String(integerPart) : `${integerPart},${String(rest).padStart(2, '0')}`;
 }
 
+// --- Payment parts (D-053) ---------------------------------------------------------------
+
+export type PaymentMode = 'cash' | 'card';
+
+/**
+ * Parts already added, at most one per mode. An added part never covers the amount due (the
+ * part that does saves the sale at once), so it is exactly what is recorded for its mode.
+ */
+export interface PaymentParts {
+  cash: number | null;
+  card: number | null;
+}
+
+export const NO_PARTS: PaymentParts = { cash: null, card: null };
+
+export const hasParts = (parts: PaymentParts) => parts.cash !== null || parts.card !== null;
+
+/** Amount still due once the added parts are deducted. */
+export const remainingDue = (total: number, parts: PaymentParts) =>
+  total - (parts.cash ?? 0) - (parts.card ?? 0);
+
+export const otherMode = (mode: PaymentMode): PaymentMode => (mode === 'cash' ? 'card' : 'cash');
+
+/** The other mode already has a part: this one must cover the amount due (no third part). */
+export const isLastMode = (mode: PaymentMode, parts: PaymentParts) =>
+  parts[otherMode(mode)] !== null;
+
+/** Cash buttons (D-053): the exact amount due first, then the 3 smallest amounts above it. */
+export function cashSuggestions(due: number, unit: number): number[] {
+  if (due <= 0) return [];
+  return [due, ...suggestAmounts(due, unit).slice(0, SUGGESTION_COUNT - 1)];
+}
+
+/** Card keypad (D-053): a key that would take the card amount above the amount due is ignored. */
+export function applyCardKey(input: string, key: KeypadKey, due: number, unit: number): string {
+  const next = applyKeypadKey(input, key, unit !== 1);
+  const amount = parseKeypadInput(next, unit);
+  return amount !== null && amount > due ? input : next;
+}
+
+/** What the amount typed for a mode leads to: save the sale, add a part, or nothing yet. */
+export type PartOutcome = 'complete' | 'add' | 'none';
+
+export function partOutcome(
+  mode: PaymentMode,
+  amount: number | null,
+  due: number,
+  parts: PaymentParts
+): PartOutcome {
+  if (amount === null || amount <= 0) return 'none';
+  if (amount >= due) return mode === 'cash' || amount === due ? 'complete' : 'none';
+  return isLastMode(mode, parts) ? 'none' : 'add';
+}
+
+export const addPart = (parts: PaymentParts, mode: PaymentMode, amount: number): PaymentParts => ({
+  ...parts,
+  [mode]: amount,
+});
+
+export const removePart = (parts: PaymentParts, mode: PaymentMode): PaymentParts => ({
+  ...parts,
+  [mode]: null,
+});
+
+/**
+ * Payment recorded when the last part covers the amount due (D-034): the change is never
+ * recorded, so the cash part covers at most what was due.
+ */
+export function completePayment(
+  parts: PaymentParts,
+  mode: PaymentMode,
+  amount: number,
+  due: number
+): OrderPaymentType {
+  const final = addPart(parts, mode, Math.min(amount, due));
+  return { cashAmount: final.cash, cardAmount: final.card };
+}
+
 // --- Change state ------------------------------------------------------------------------
 
 /** Above this change (100 EUR), a non-blocking warning asks to check the amount received. */
 export const LARGE_CHANGE_THRESHOLD = 10000;
 
 export type ChangeState =
-  | { kind: 'empty' }
-  | { kind: 'change'; received: number; change: number; large: boolean }
-  | { kind: 'no-change'; received: number }
-  | { kind: 'remaining'; received: number; remaining: number } // EUR: rest paid by card
-  | { kind: 'missing'; received: number; missing: number } // tokens: not enough
+  | { kind: 'empty'; hint: 'mode' | PaymentMode } // nothing chosen or typed yet
+  | { kind: 'due'; remaining: number } // parts added, nothing typed
+  | { kind: 'change'; received: number; change: number; large: boolean } // cash > due
+  | { kind: 'no-change'; received: number } // cash = due
+  | { kind: 'paid'; amount: number } // card = due
+  // part < due; `last`: the other mode already has its part, so this one must cover it
+  | { kind: 'remaining'; mode: PaymentMode; amount: number; remaining: number; last: boolean }
   | { kind: 'refund'; amount: number } // total < 0
   | { kind: 'nothing-due' }; // total = 0
 
 export function computeChangeState(
   total: number,
-  received: number | null,
-  currency: CurrencyCode
+  parts: PaymentParts,
+  mode: PaymentMode | null,
+  amount: number | null
 ): ChangeState {
   if (total === 0) return { kind: 'nothing-due' };
   if (total < 0) return { kind: 'refund', amount: -total };
-  if (received === null) return { kind: 'empty' };
-  if (received > total) {
-    const change = received - total;
-    return {
-      kind: 'change',
-      received,
-      change,
-      large: currency === 'EUR' && change > LARGE_CHANGE_THRESHOLD,
-    };
+  const due = remainingDue(total, parts);
+  if (mode === null || amount === null) {
+    return hasParts(parts)
+      ? { kind: 'due', remaining: due }
+      : { kind: 'empty', hint: mode ?? 'mode' };
   }
-  if (received === total) return { kind: 'no-change', received };
-  return currency === 'EUR'
-    ? { kind: 'remaining', received, remaining: total - received }
-    : { kind: 'missing', received, missing: total - received };
+  if (amount < due) {
+    const last = isLastMode(mode, parts);
+    return { kind: 'remaining', mode, amount, remaining: due - amount, last };
+  }
+  if (mode === 'card') return { kind: 'paid', amount };
+  if (amount === due) return { kind: 'no-change', received: amount };
+  const change = amount - due;
+  return { kind: 'change', received: amount, change, large: change > LARGE_CHANGE_THRESHOLD };
 }
 
-// --- What is recorded (EUR only, D-034) --------------------------------------------------
+// --- Single mode, total <= 0 (EUR only, D-053, D-034) ------------------------------------
 
-export const cardPayment = (total: number): OrderPaymentType => ({
-  cashAmount: null,
-  cardAmount: total,
+export const singleModePayment = (mode: PaymentMode, total: number): OrderPaymentType => ({
+  cashAmount: mode === 'cash' ? total : null,
+  cardAmount: mode === 'card' ? total : null,
 });
-
-export const cashPayment = (total: number): OrderPaymentType => ({
-  cashAmount: total,
-  cardAmount: null,
-});
-
-/**
- * Cash received for a total > 0 (D-031): the change is never recorded, so cash covers at most
- * the total; below the total, the rest is paid by card.
- */
-export function splitCashPayment(total: number, received: number): OrderPaymentType {
-  if (received >= total) return cashPayment(total);
-  return { cashAmount: received, cardAmount: total - received };
-}

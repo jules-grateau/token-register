@@ -120,6 +120,9 @@ Un produit sans icône affiche son **initiale** (règle de la pastille ci-dessus
 | Il reste à payer par carte (bloc de rendu)                   | `IconCreditCard`              | 28                                    | `--color-text`                                                    |
 | Il manque (jetons) / rendu élevé                             | `IconAlertTriangle`           | 28 (bloc), 20 (avertissement)         | `--color-danger` (il manque), `--color-icon-accent` (rendu élevé) |
 | Encaisser / Enregistrer / Rien à rendre / suggestion choisie | `IconCheck`                   | 22 (pied), 28 (bloc), 18 (suggestion) | texte du bouton / `--color-success` (bloc « Rien à rendre »)      |
+| Rembourser (total négatif, D-053)                            | `IconArrowBackUp`             | 22 (pied)                             | texte du bouton                                                   |
+| Ajouter une part (D-053)                                     | `IconPlus`                    | 22 (pied)                             | texte du bouton                                                   |
+| Supprimer une part (D-053)                                   | `IconTrash`                   | 20, zone 44 × 44                      | `--color-danger`                                                  |
 | Autre montant (ouvre le pavé)                                | `IconKeyboard`                | 20                                    | texte du bouton                                                   |
 | Retour aux montants                                          | `IconArrowLeft`               | 20                                    | texte du bouton                                                   |
 | Effacer le dernier chiffre                                   | `IconBackspace`               | 24                                    | `--color-text`                                                    |

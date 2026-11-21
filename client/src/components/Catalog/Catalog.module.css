@@ -66,3 +66,9 @@
   outline-offset: -2px;
   border-radius: 0;
 }
+
+/* Edit / delete buttons of a column line: the line clips its content (overflow: hidden), so the
+   focus ring is drawn inside the button, e.g. when a form gives the focus back (DS-1 of PR #45). */
+.columnAction.columnAction:focus-visible {
+  outline-offset: -2px;
+}

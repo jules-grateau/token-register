@@ -23,29 +23,40 @@ import {
   Text,
 } from '@mantine/core';
 import {
+  IconArrowBackUp,
   IconArrowLeft,
   IconCash,
   IconCheck,
   IconCreditCard,
   IconKeyboard,
+  IconPlus,
   IconX,
 } from '@tabler/icons-react';
 import { useCurrency } from '../../hooks/useCurrency';
 import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
 import { CART_CLEARED_TOAST_ID } from '../../hooks/useClearCartWithUndo';
 import {
+  addPart,
+  applyCardKey,
   applyKeypadKey,
-  cardPayment,
-  cashPayment,
+  cashSuggestions,
+  completePayment,
   computeChangeState,
   getPaymentUnit,
+  hasParts,
+  NO_PARTS,
   parseKeypadInput,
-  splitCashPayment,
-  suggestAmounts,
+  partOutcome,
+  remainingDue,
+  removePart,
+  singleModePayment,
   toKeypadInput,
   type KeypadKey,
+  type PaymentMode,
+  type PaymentParts,
 } from '../../utils/payment';
 import ChangeDisplay from './ChangeDisplay';
+import PaymentPartsList from './PaymentPartsList';
 import { dismissSuccessToasts } from '../../utils/toasts';
 import PaymentKeypad from './PaymentKeypad';
 import classes from './CartConfirmationModal.module.css';
@@ -72,9 +83,11 @@ const isPaymentRequiredError = (error: unknown): boolean =>
 const DIGITS = new Set(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
 
 /**
- * "Encaissement" (docs/design/components.md, D-028 to D-034): payment mode, cash received and
- * change to give back. Card and exact amount save at once; a cash amount with change waits
- * for "Encaisser", so that the change stays on screen while it is counted.
+ * "Encaissement" (docs/design/components.md, D-053, D-034). In euros, the mode comes first
+ * (Espèces | Carte), then its amount: card prefilled with the amount due and never above it,
+ * cash with suggestions and the keypad. A part below the amount due is added ("Ajouter"), one
+ * per mode; the part that covers it saves the sale ("Encaisser"). Total <= 0: the mode, then
+ * "Rembourser" (or "Encaisser" at 0). Token instances: the recap and "Encaisser" only.
  */
 const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
   isOpen,
@@ -97,31 +110,46 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
   const ordersQuery = useGetOrdersQuery();
   const dispatch = useDispatch();
 
-  // Typed text ("18,5"); a touched suggestion replaces it and the next key starts over.
+  const [mode, setMode] = useState<PaymentMode | null>(null);
+  const [parts, setParts] = useState<PaymentParts>(NO_PARTS);
+  // Typed text ("18,5"). A prefilled amount or a touched suggestion is replaced by the next key.
   const [input, setInput] = useState('');
-  const [selectedSuggestion, setSelectedSuggestion] = useState<number | null>(null);
+  const [replaceNext, setReplaceNext] = useState(false);
   const [view, setView] = useState<'amounts' | 'keypad'>('amounts');
 
   useEffect(() => {
     if (isOpen) {
       // DS-2: the toast of the previous sale must not cover this one; errors stay.
       dismissSuccessToasts();
+      setMode(null);
+      setParts(NO_PARTS);
       setInput('');
-      setSelectedSuggestion(null);
+      setReplaceNext(false);
       setView('amounts');
     }
   }, [isOpen]);
 
-  const received = parseKeypadInput(input, unit);
-  const changeState = computeChangeState(total, received, currency);
-  const suggestions = useMemo(() => (total > 0 ? suggestAmounts(total, unit) : []), [total, unit]);
   const isEmpty = cartItems.length === 0;
-  const keypadAlwaysVisible = !isPhone;
-  const showKeypadView = keypadAlwaysVisible || view === 'keypad';
+  const isPositive = total > 0;
+  const due = remainingDue(total, parts);
+  const amount = parseKeypadInput(input, unit);
+  const changeState = computeChangeState(total, parts, mode, amount);
+  const outcome = isPositive && mode ? partOutcome(mode, amount, due, parts) : 'none';
+  const suggestions = useMemo(
+    () => (isEur && mode === 'cash' && due > 0 ? cashSuggestions(due, unit) : []),
+    [isEur, mode, due, unit]
+  );
+  const selectedSuggestion = replaceNext && mode === 'cash' ? amount : null;
+  // Phone: the keypad takes the screen (always for the card, "Autre montant" for cash).
+  const keypadOnly = isPhone && (mode === 'card' || (mode === 'cash' && view === 'keypad'));
+  // Phone portrait keypad view: the "Espèces | Carte" row stays visible (DS-1 of PR #47), so
+  // the keys, the mode row and the change block are lower to fit in 390 × 664.
+  const portraitKeypad = layout === 'phone-portrait' && keypadOnly;
 
   const sizes = {
     button: isLandscape ? 48 : 56,
-    key: isLandscape ? 44 : isPhone ? 56 : 64,
+    mode: isLandscape || portraitKeypad ? 48 : 56,
+    key: isLandscape || portraitKeypad ? 44 : 64,
   };
 
   const paymentLabel = (payment: OrderPaymentType) => {
@@ -131,7 +159,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
     return t(payment.cashAmount !== null ? 'payment_cash' : 'payment_card');
   };
 
-  /** Token instances record no payment (D-033): `payment` is null there. */
+  /** Token instances record no payment: `payment` is null there. */
   const submit = async (payment: OrderPaymentType | null) => {
     if (isLoading || isEmpty) return;
     try {
@@ -156,57 +184,93 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
     }
   };
 
-  const payByCard = () => void submit(cardPayment(total));
-  const payExact = () => void submit(isEur ? cashPayment(total) : null);
-  const payCash = () => {
-    if (received === null) return;
-    void submit(isEur ? splitCashPayment(total, received) : null);
+  const setAmount = (text: string, replace: boolean) => {
+    setInput(text);
+    setReplaceNext(replace);
+  };
+
+  /** Card: always prefilled with the amount due. Cash: prefilled when it is the 2nd part. */
+  const chooseMode = (next: PaymentMode) => {
+    if (next === mode || parts[next] !== null) return;
+    setMode(next);
+    setView('amounts');
+    if (isPositive && (next === 'card' || hasParts(parts))) {
+      setAmount(toKeypadInput(due, unit), true);
+    } else {
+      setAmount('', false);
+    }
+  };
+
+  const backToModes = () => {
+    setMode(null);
+    setAmount('', false);
+    setView('amounts');
+  };
+
+  // The amount due changes: back to the modes, so that no amount prefilled from the old rest
+  // stays on screen (TL-1 of PR #47).
+  const handleRemovePart = (removed: PaymentMode) => {
+    setParts(removePart(parts, removed));
+    backToModes();
   };
 
   const mainAction = (() => {
-    switch (changeState.kind) {
-      case 'change':
-      case 'no-change':
-        return { label: t('payment_collect'), icon: <IconCheck size={22} />, enabled: true };
-      case 'remaining':
-        return {
-          label: t('payment_rest_by_card', { amount: format(changeState.remaining) }),
-          icon: <IconCreditCard size={22} />,
-          enabled: true,
-        };
-      default:
-        return { label: t('payment_collect'), icon: <IconCheck size={22} />, enabled: false };
+    const collect = { label: t('payment_collect'), icon: <IconCheck size={22} /> };
+    if (!isPositive) {
+      const action =
+        total < 0 ? { label: t('payment_refund'), icon: <IconArrowBackUp size={22} /> } : collect;
+      if (!isEur) return { ...action, enabled: true, run: () => void submit(null) };
+      return {
+        ...action,
+        enabled: mode !== null,
+        run: () => mode && void submit(singleModePayment(mode, total)),
+      };
     }
+    if (!isEur) return { ...collect, enabled: true, run: () => void submit(null) };
+    if (outcome === 'add' && mode && amount !== null) {
+      return {
+        label: t('payment_add_part'),
+        icon: <IconPlus size={22} />,
+        enabled: true,
+        run: () => {
+          setParts(addPart(parts, mode, amount));
+          backToModes();
+        },
+      };
+    }
+    return {
+      ...collect,
+      enabled: outcome === 'complete',
+      run: () => mode && amount !== null && void submit(completePayment(parts, mode, amount, due)),
+    };
   })();
 
   const handleKey = (key: KeypadKey) => {
-    const base = selectedSuggestion !== null ? '' : input;
-    setSelectedSuggestion(null);
-    setInput(applyKeypadKey(base, key, isEur));
+    if (!mode) return;
+    const base = replaceNext ? '' : input;
+    const next =
+      mode === 'card' ? applyCardKey(base, key, due, unit) : applyKeypadKey(base, key, true);
+    // A card key above the amount due has no effect: the prefilled amount stays (D-053).
+    if (mode === 'card' && next === base && key !== 'backspace') return;
+    setAmount(next, false);
   };
 
-  const clearInput = () => {
-    setSelectedSuggestion(null);
-    setInput('');
-  };
+  const clearInput = () => setAmount('', false);
 
-  const pickSuggestion = (amount: number) => {
-    setSelectedSuggestion(amount);
-    setInput(toKeypadInput(amount, unit));
-  };
+  const pickSuggestion = (suggestion: number) => setAmount(toKeypadInput(suggestion, unit), true);
 
   const handleClose = () => {
     if (isLoading) return;
     onClose();
   };
 
-  // Physical keyboard (docs/design/components.md, "Clavier physique"), only when total > 0.
+  // Physical keyboard (docs/design/components.md, "Clavier physique"), once a mode is chosen.
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (total <= 0 || isEmpty || isLoading) return;
+    if (!isEur || !isPositive || isEmpty || isLoading || !mode) return;
     const { key } = event;
     let keypadKey: KeypadKey | null = null;
     if (DIGITS.has(key)) keypadKey = key as KeypadKey;
-    else if ((key === ',' || key === '.' || key === 'Decimal') && isEur) keypadKey = ',';
+    else if (key === ',' || key === '.' || key === 'Decimal') keypadKey = ',';
     else if (key === 'Backspace') keypadKey = 'backspace';
 
     if (keypadKey) {
@@ -221,10 +285,10 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
       return;
     }
     if (key === 'Enter') {
-      // A focused button keeps its native behaviour; Enter never triggers Card or Exact.
+      // A focused button keeps its native behaviour.
       if ((event.target as HTMLElement).closest('button')) return;
       event.preventDefault();
-      if (mainAction.enabled) payCash();
+      if (mainAction.enabled) mainAction.run();
     }
   };
 
@@ -256,111 +320,91 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
     </Group>
   );
 
-  const changeDisplay = (
-    <ChangeDisplay
-      state={changeState}
-      currency={currency}
+  const partsList = (
+    <PaymentPartsList
+      parts={parts}
       format={format}
-      compact={isLandscape}
-      minHeight={layout === 'phone-portrait' ? 112 : 96}
-      autoFocus={!showKeypadView || total <= 0}
+      onRemove={handleRemovePart}
+      disabled={isLoading}
     />
   );
 
-  const exactButton = (fullWidth: boolean) => (
-    <Button
-      variant="default"
-      h={sizes.button}
-      fullWidth={fullWidth}
-      onClick={payExact}
-      loading={isLoading}
-      disabled={isLoading}
-      aria-label={t('payment_exact_aria', { amount: format(total) })}
-    >
-      {isLandscape || !isEur ? (
-        <Text fz={18} fw={700} style={NOWRAP}>
-          {`${t('payment_exact')} ${format(total)}`}
-        </Text>
-      ) : (
-        <Stack gap={0} align="center">
-          <Text fz={16} fw={600}>
-            {t('payment_exact')}
-          </Text>
-          <Text fz={18} fw={700} style={NOWRAP}>
-            {format(total)}
-          </Text>
-        </Stack>
-      )}
-    </Button>
+  const changeDisplay = (
+    <ChangeDisplay
+      state={changeState}
+      format={format}
+      compact={isLandscape}
+      minHeight={layout === 'phone-portrait' && !portraitKeypad ? 112 : 96}
+      autoFocus={mode === null || !isPositive}
+    />
   );
 
-  const modeRow = isEur ? (
+  const modeButton = (buttonMode: PaymentMode) => {
+    const selected = mode === buttonMode;
+    const Icon = buttonMode === 'cash' ? IconCash : IconCreditCard;
+    // One part per mode (D-053): a mode that has its part is done; the title says why (DS-3).
+    const hasPart = isPositive && parts[buttonMode] !== null;
+    const hint = hasPart ? t('payment_mode_has_part') : undefined;
+    return (
+      <Box title={hint} style={{ display: 'grid' }}>
+        <Button
+          variant={selected ? 'filled' : 'default'}
+          h={sizes.mode}
+          fz={18}
+          fw={700}
+          leftSection={<Icon size={24} />}
+          aria-pressed={selected}
+          aria-description={hint}
+          onClick={() => chooseMode(buttonMode)}
+          disabled={isLoading || hasPart}
+        >
+          {t(buttonMode === 'cash' ? 'payment_cash' : 'payment_card')}
+        </Button>
+      </Box>
+    );
+  };
+
+  const modeRow = (
     <SimpleGrid cols={2} spacing="xs">
-      <Button
-        variant="default"
-        h={sizes.button}
-        fz={18}
-        fw={700}
-        // DS-1: narrow padding and wrapping label, so that "Tout en carte" is never cut.
-        px="xs"
-        styles={{ label: { whiteSpace: 'normal', textAlign: 'center' } }}
-        leftSection={<IconCreditCard size={received !== null ? 20 : 24} />}
-        onClick={payByCard}
-        loading={isLoading}
-        disabled={isLoading}
-        aria-label={
-          received !== null ? t('payment_all_card', { amount: format(total) }) : undefined
-        }
-      >
-        {received !== null ? (
-          // Two lines, like "Appoint": the one-line label is cut in a half-width button.
-          <Stack gap={0} align="center">
-            <Text fz={16} fw={600} lh={1.2}>
-              {t('payment_all_card_label')}
-            </Text>
-            <Text fz={18} fw={700} lh={1.2} style={NOWRAP}>
-              {format(total)}
-            </Text>
-          </Stack>
-        ) : (
-          t('payment_card')
-        )}
-      </Button>
-      {exactButton(false)}
+      {modeButton('cash')}
+      {modeButton('card')}
     </SimpleGrid>
-  ) : (
-    exactButton(true)
   );
 
   const receivedLabel = (
     <Group gap="xs" wrap="nowrap">
       <IconCash size={20} color="var(--mantine-color-dimmed)" aria-hidden />
       <Text fz={16} c="dimmed">
-        {t(isEur ? 'payment_cash_received' : 'payment_tokens_received')}
+        {t('payment_cash_received')}
       </Text>
     </Group>
   );
 
+  // Whole euros without cents ("20 €"); the exact amount due keeps its cents ("7,50 €").
+  const suggestionText = (suggestion: number) =>
+    suggestion % unit === 0 ? `${suggestion / unit}\u00a0€` : format(suggestion);
+
   const suggestionGrid = (
     <SimpleGrid cols={4} spacing="xs">
-      {suggestions.map((amount) => {
-        const selected = selectedSuggestion === amount;
+      {suggestions.map((suggestion) => {
+        const selected = selectedSuggestion === suggestion;
+        const text = suggestionText(suggestion);
         return (
           <Button
-            key={amount}
+            key={suggestion}
             variant={selected ? 'filled' : 'default'}
             h={sizes.button}
-            fz={20}
+            fz={text.length > 6 ? 16 : 20}
             fw={700}
             px={0}
             style={NOWRAP}
-            leftSection={selected ? <IconCheck size={18} /> : undefined}
+            leftSection={selected && text.length <= 6 ? <IconCheck size={18} /> : undefined}
             aria-pressed={selected}
-            aria-label={t('payment_received_aria', { amount: format(amount) })}
-            onClick={() => pickSuggestion(amount)}
+            aria-label={t('payment_received_aria', { amount: format(suggestion) })}
+            onClick={() => pickSuggestion(suggestion)}
             disabled={isLoading}
           >
-            {isEur ? `${amount / unit}\u00a0€` : String(amount)}
+            {text}
           </Button>
         );
       })}
@@ -382,23 +426,40 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
     </Button>
   );
 
-  const typedText = `${input || '0'}${isEur ? '\u00a0€' : ` ${t('tokens', { count: received ?? 0 })}`}`;
+  const backButton =
+    mode === 'card' ? (
+      <Button
+        variant="default"
+        h={44}
+        fz={16}
+        fw={700}
+        leftSection={<IconArrowLeft size={20} />}
+        onClick={backToModes}
+        disabled={isLoading}
+      >
+        {t('payment_back_to_modes')}
+      </Button>
+    ) : (
+      <Button
+        variant="default"
+        h={44}
+        fz={16}
+        fw={700}
+        leftSection={<IconArrowLeft size={20} />}
+        onClick={() => setView('amounts')}
+        disabled={isLoading}
+      >
+        {t('payment_back_to_amounts')}
+      </Button>
+    );
+
   const amountDisplay = (
     <Group justify="space-between" wrap="nowrap" mih={44} gap="xs">
-      {isPhone ? (
-        <Button
-          variant="subtle"
-          h={44}
-          className={classes.inkControl}
-          leftSection={<IconArrowLeft size={20} />}
-          onClick={() => setView('amounts')}
-          disabled={isLoading}
-        >
-          {t('payment_back_to_amounts')}
-        </Button>
+      {isPhone && !(portraitKeypad && mode === 'card') ? (
+        backButton
       ) : (
         <Text fz={16} c="dimmed">
-          {t('payment_received')}
+          {t(mode === 'card' ? 'payment_card_amount' : 'payment_received')}
         </Text>
       )}
       <Group gap="xs" wrap="nowrap">
@@ -410,10 +471,10 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
           style={NOWRAP}
           className={figures.big}
           tabIndex={-1}
-          data-autofocus={showKeypadView && total > 0 ? true : undefined}
+          data-autofocus={!isPhone && mode !== null ? true : undefined}
           data-testid="typed-amount"
         >
-          {typedText}
+          {`${input || '0'}\u00a0€`}
         </Text>
         <ActionIcon
           variant="subtle"
@@ -431,7 +492,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
 
   const keypad = (
     <PaymentKeypad
-      allowDecimal={isEur}
+      allowDecimal
       onKey={handleKey}
       disabled={isLoading}
       cols={isLandscape ? 4 : 3}
@@ -448,7 +509,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
       radius={18}
       className={classes.mainButton}
       leftSection={mainAction.icon}
-      onClick={payCash}
+      onClick={mainAction.run}
       disabled={!mainAction.enabled || isLoading}
       loading={isLoading}
     >
@@ -456,73 +517,74 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
     </Button>
   );
 
-  // Total <= 0 (D-032): no suggestion, no keypad; the mode is still asked in euros.
-  const nonPositiveActions = isEur ? (
-    <SimpleGrid cols={2} spacing="xs">
-      <Button
-        variant="default"
-        h={sizes.button}
-        fz={18}
-        fw={700}
-        leftSection={<IconCash size={24} />}
-        onClick={() => void submit(cashPayment(total))}
-        loading={isLoading}
-        disabled={isLoading}
-      >
-        {t('payment_cash')}
-      </Button>
-      <Button
-        variant="default"
-        h={sizes.button}
-        fz={18}
-        fw={700}
-        leftSection={<IconCreditCard size={24} />}
-        onClick={payByCard}
-        loading={isLoading}
-        disabled={isLoading}
-      >
-        {t('payment_card')}
-      </Button>
-    </SimpleGrid>
-  ) : (
-    <Button
-      fullWidth
-      h={sizes.button}
-      fz={18}
-      fw={800}
-      radius={18}
-      className={classes.mainButton}
-      leftSection={<IconCheck size={22} />}
-      onClick={() => void submit(null)}
-      loading={isLoading}
-      disabled={isLoading}
-    >
-      {t('payment_save')}
-    </Button>
-  );
+  /** What follows the mode row for the chosen mode (tablet / desktop, or phone amounts view). */
+  const modeContent = (withKeypad: boolean) => {
+    if (mode === 'cash') {
+      return (
+        <>
+          {!isLandscape && receivedLabel}
+          {suggestionGrid}
+          {withKeypad ? (
+            <>
+              {amountDisplay}
+              {keypad}
+            </>
+          ) : (
+            otherAmountButton
+          )}
+        </>
+      );
+    }
+    if (mode === 'card' && withKeypad) {
+      return (
+        <>
+          {amountDisplay}
+          {keypad}
+        </>
+      );
+    }
+    return null;
+  };
 
   // --- Layouts ---------------------------------------------------------------------------
+
+  const footer = (
+    <Box mt="auto" pb={layout === 'phone-portrait' ? 'env(safe-area-inset-bottom)' : undefined}>
+      {mainButton}
+    </Box>
+  );
 
   const renderBody = () => {
     if (isEmpty) return <Text>{t('your_cart_is_empty')}</Text>;
 
-    if (total <= 0) {
+    // Token instances (D-053): the recap and the main button, nothing else.
+    // Total <= 0 in euros: the mode, then "Rembourser" ("Encaisser" at 0).
+    if (!isEur || !isPositive) {
       return (
-        <Stack gap="sm">
-          <ScrollArea.Autosize mah={isPhone ? '50vh' : 300}>{recapLines}</ScrollArea.Autosize>
+        <Stack gap="sm" style={layout === 'phone-portrait' ? { flex: 1, minHeight: 0 } : undefined}>
+          <ScrollArea.Autosize mah={isPhone ? '50vh' : 300} type="auto">
+            {recapLines}
+          </ScrollArea.Autosize>
           {totalLine}
-          {changeDisplay}
-          {nonPositiveActions}
+          {isEur && (
+            <>
+              {changeDisplay}
+              {modeRow}
+            </>
+          )}
+          {footer}
         </Stack>
       );
     }
 
     if (layout === 'phone-portrait') {
       return (
-        <Stack gap="sm" style={{ flex: 1, minHeight: 0 }}>
-          {view === 'keypad' ? (
+        <Stack gap={portraitKeypad ? 'xs' : 'sm'} style={{ flex: 1, minHeight: 0 }}>
+          {keypadOnly ? (
             <>
-              {collapsedRecap}
+              {!hasParts(parts) && collapsedRecap}
+              {partsList}
+              {modeRow}
               {amountDisplay}
               {keypad}
             </>
@@ -532,16 +594,13 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
                 {recapLines}
               </ScrollArea>
               {totalLine}
+              {partsList}
               {modeRow}
-              {receivedLabel}
-              {suggestionGrid}
-              {otherAmountButton}
+              {modeContent(false)}
             </>
           )}
           {changeDisplay}
-          <Box mt="auto" pb="env(safe-area-inset-bottom)">
-            {mainButton}
-          </Box>
+          {footer}
         </Stack>
       );
     }
@@ -552,13 +611,14 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
           {recapLines}
         </ScrollArea.Autosize>
         {totalLine}
+        {partsList}
         {changeDisplay}
       </Stack>
     );
 
     const rightColumn = (
       <Stack gap="sm" style={{ flex: 1, minWidth: 0 }}>
-        {isLandscape && view === 'keypad' ? (
+        {keypadOnly ? (
           <>
             {amountDisplay}
             {keypad}
@@ -566,19 +626,10 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
         ) : (
           <>
             {modeRow}
-            {!isLandscape && receivedLabel}
-            {suggestionGrid}
-            {isLandscape ? (
-              otherAmountButton
-            ) : (
-              <>
-                {amountDisplay}
-                {keypad}
-              </>
-            )}
+            {modeContent(!isLandscape)}
           </>
         )}
-        <Box mt="auto">{mainButton}</Box>
+        {footer}
       </Stack>
     );
 
