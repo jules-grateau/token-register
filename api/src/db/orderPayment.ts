@@ -21,6 +21,9 @@ export async function addOrderPaymentColumns(db: Database): Promise<string[]> {
   await db.exec('BEGIN TRANSACTION');
   try {
     for (const column of missing) {
+      // SQLite cannot bind identifiers as parameters, so the column name is interpolated.
+      // Safe: `column` only comes from the ORDER_PAYMENT_COLUMNS constant above (filtered by
+      // getMissingOrderPaymentColumns), never from user input.
       await db.exec(`ALTER TABLE orders ADD COLUMN ${column} INTEGER`);
     }
     await db.exec('COMMIT');
