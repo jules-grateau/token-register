@@ -10,8 +10,9 @@
   border: 1px solid var(--color-border);
 }
 
-/* "Rien à rendre" */
-[data-mantine-color-scheme] .block[data-state='no-change'] {
+/* "Rien à rendre", "Tout est réglé" */
+[data-mantine-color-scheme] .block[data-state='no-change'],
+[data-mantine-color-scheme] .block[data-state='paid'] {
   border: 2px solid var(--color-border-strong);
 }
 
@@ -27,15 +28,10 @@
   border-color: var(--color-primary);
 }
 
-/* "Il reste" (euros) */
-[data-mantine-color-scheme] .block[data-state='remaining'] {
+/* "Il reste" (a part below the amount due, or parts added with nothing typed) */
+[data-mantine-color-scheme] .block[data-state='remaining'],
+[data-mantine-color-scheme] .block[data-state='due'] {
   border: 2px solid var(--color-text);
-}
-
-/* "Il manque" (tokens) */
-[data-mantine-color-scheme] .block[data-state='missing'] {
-  background-color: var(--color-danger-tint);
-  border: 2px solid var(--color-danger);
 }
 
 .label {
@@ -56,8 +52,4 @@
 
 .ink {
   color: var(--color-text);
-}
-
-.danger {
-  color: var(--color-danger);
 }

@@ -143,6 +143,21 @@ Remplace l'ancien « Récapitulatif de confirmation ». Décisions de l'utilisat
 
 La modale ne passe plus par `ConfirmationModal` : plus de boutons « Confirmer / Annuler ». On ferme avec la croix (44 × 44) ou Échap ; le panier reste intact.
 
+### Depuis la 2.2.0 : moyen d'abord, une part par moyen (D-053)
+
+Ce bloc **prime** sur les sous-sections suivantes (écrites pour la 1.3.0, D-028 à D-033) partout où elles diffèrent. Les maquettes ASCII plus bas sont celles de la 1.3.0 : à redessiner par le designer.
+
+- **Euros, total > 0** : deux boutons « Espèces » (`IconCash`) | « Carte » (`IconCreditCard`), `SimpleGrid cols={2}`, en premier. Rien n'est sélectionné à l'ouverture (bloc de rendu : « Choisissez Espèces ou Carte »). Le moyen choisi est `variant="filled"` + `aria-pressed`. Un moyen qui a déjà sa part est désactivé, avec un `title` « Ce moyen a déjà une part : supprimez-la pour la modifier » (DS-3 de la PR #47).
+- **Carte** : montant prérempli avec le reste dû, pavé visible. Téléphone portrait (DS-1 de la PR #47) : vue pavé avec la rangée « Espèces | Carte » toujours visible (h 48), libellé « Montant carte », touches h 44, bloc de rendu `mih` 96, espacement `xs` ; la ligne repliée du total est masquée quand une part existe (la liste des parts et « Il reste » la remplacent). Téléphone paysage : bouton « ← Moyens » `variant="default"` h 44, 16 / 700. Le retour « ← Montants » des espèces a le même style. Jamais au-dessus du reste : une touche qui le ferait dépasser est sans effet. La première touche remplace le montant prérempli.
+- **Espèces** : « Espèces reçues », 4 suggestions dont la **première est le montant exact du reste dû** (avec ses centimes, « 7,50 € »), puis 3 montants supérieurs (`suggestAmounts` sur le reste dû) ; pavé (téléphone : « Autre montant »). **Plus de bouton « Appoint »**. Toucher une suggestion remplit le montant, sans enregistrer. Si une part carte existe déjà, la première suggestion est préremplie.
+- **Bouton principal contextuel** : « Encaisser » (`IconCheck`) si la part complète le reste dû (espèces ≥ reste, ou carte = reste) : il enregistre. Sinon « Ajouter » (`IconPlus`) : la part est ajoutée et on revient au choix de l'autre moyen. Désactivé sans montant, ou si le dernier moyen restant ne couvre pas le reste (bloc : « Ce montant doit couvrir le reste », `IconAlertTriangle`).
+- **Parts** : liste sous le total (une ligne par moyen : icône 20, libellé 16 / 600, montant 18 / 700, `ActionIcon` 44 `IconTrash` `--color-danger`, `aria-label` « Supprimer la part Espèces »). Supprimer une part remet son montant dans le reste dû.
+- **Bloc de rendu** : nouveaux états « Il reste » sans saisie (`due`, parts ajoutées, même style que « Il reste ») et « Tout est réglé » (`paid`, carte = reste, même style que « Rien à rendre »). « Il reste » s'applique aux deux moyens (sous-libellé « Espèces reçues » ou « Carte », icône de l'autre moyen). États « Il manque » et libellés en jetons supprimés.
+- **Total ≤ 0 (euros)** : bloc « Rien à encaisser » / « À rendre au client », boutons « Espèces » | « Carte » qui **sélectionnent** seulement, puis le bouton principal : « Rembourser » (`IconArrowBackUp`, total négatif) ou « Encaisser » (0 €), désactivé tant qu'aucun moyen n'est choisi.
+- **Jetons** : récapitulatif, total et bouton principal seulement (« Encaisser », « Rembourser » si négatif). Ni bloc de rendu, ni suggestions, ni pavé, ni clavier physique.
+- **Clavier physique** : actif une fois un moyen choisi (euros, total > 0) ; `Enter` déclenche le bouton principal (« Encaisser » ou « Ajouter ») s'il est actif.
+- **Nombre de touchers** (total 7,50 €) : Carte = Valider, Carte, Encaisser (**3**) ; espèces exactes ou billet = Valider, Espèces, suggestion, Encaisser (**4**) ; mixte 5 € espèces + carte = Valider, Espèces, 5 (pavé), Ajouter, Carte, Encaisser (**6** sur tablette / desktop, +1 en téléphone pour « Autre montant »).
+
 ### Principe
 
 1. Le vendeur touche « Valider » : la modale « Encaissement » s'ouvre avec le récapitulatif (lignes « 2 × Nom », D-026), le total, puis le choix du paiement.
@@ -440,33 +455,32 @@ Focus initial : sur l'affichage de la saisie (`tabIndex={-1}`, `data-autofocus`)
 | `cart_confirmation` (valeur changée) | Encaissement | Payment |
 | `payment_card` | Carte | Card |
 | `payment_cash` | Espèces | Cash |
-| `payment_all_card` | Tout en carte ({{amount}}) | All by card ({{amount}}) |
-| `payment_all_card_label` | Tout en carte | All by card |
 | `payment_required_reload` | Le paiement n'a pas été enregistré : rechargez la page pour utiliser la dernière version de l'appli. | The payment was not recorded: reload the page to use the latest version of the app. |
-| `payment_exact` | Appoint | Exact amount |
-| `payment_exact_aria` | Appoint, {{amount}} | Exact amount, {{amount}} |
 | `payment_cash_received` | Espèces reçues | Cash received |
-| `payment_tokens_received` | Jetons reçus | Tokens received |
 | `payment_other_amount` | Autre montant | Other amount |
 | `payment_back_to_amounts` | Montants | Amounts |
 | `payment_received` | Reçu | Received |
 | `payment_received_aria` | Reçu {{amount}} | Received {{amount}} |
 | `payment_change_due` | À rendre | Change due |
-| `payment_tokens_change_due` | Jetons à rendre | Tokens to return |
 | `payment_no_change` | Rien à rendre | No change |
 | `payment_remaining` | Il reste | Remaining |
-| `payment_rest_by_card` | Reste en carte ({{amount}}) | Rest by card ({{amount}}) |
-| `payment_missing` | Il manque | Missing |
 | `payment_refund_due` | À rendre au client | Refund to customer |
-| `payment_tokens_refund_due` | Jetons à rendre au client | Tokens to return to customer |
 | `payment_nothing_due` | Rien à encaisser | Nothing to collect |
-| `payment_placeholder` | Choisissez Carte ou le montant reçu | Choose Card or the amount received |
-| `payment_placeholder_tokens` | Choisissez le nombre de jetons reçus | Choose the number of tokens received |
 | `payment_large_change` | Rendu élevé : vérifiez le montant reçu | Large change: check the amount received |
 | `payment_collect` | Encaisser | Complete sale |
-| `payment_save` | Enregistrer | Save |
 | `payment_clear_amount` | Effacer le montant | Clear amount |
 | `payment_backspace` | Effacer le dernier chiffre | Delete last digit |
+| `payment_placeholder_mode` (D-053) | Choisissez Espèces ou Carte | Choose Cash or Card |
+| `payment_placeholder_cash` (D-053) | Choisissez le montant reçu | Choose the amount received |
+| `payment_placeholder_card` (D-053) | Saisissez le montant payé par carte | Enter the amount paid by card |
+| `payment_card_amount` (D-053) | Montant carte | Card amount |
+| `payment_back_to_modes` (D-053) | Moyens | Methods |
+| `payment_add_part` (D-053) | Ajouter | Add |
+| `payment_remove_part` (D-053) | Supprimer la part {{mode}} | Remove the {{mode}} part |
+| `payment_fully_paid` (D-053) | Tout est réglé | Fully paid |
+| `payment_must_cover` (D-053) | Ce montant doit couvrir le reste | This amount must cover the rest |
+| `payment_refund` (D-053) | Rembourser | Refund |
+| `payment_mode_has_part` (D-053) | Ce moyen a déjà une part : supprimez-la pour la modifier | This method already has a part: remove it to change it |
 | `payment_cash_and_card` | Espèces + Carte | Cash + Card |
 | `order_placed_with_payment` | Commande n°{{id}} enregistrée · {{payment}} | Order #{{id}} placed · {{payment}} |
 | `payment_badge` | {{mode}} {{amount}} | {{mode}} {{amount}} |

@@ -98,52 +98,31 @@ describe('CartConfirmationModal (Encaissement)', () => {
     expect(screen.queryByText('cart_confirmation')).not.toBeInTheDocument();
   });
 
-  it('shows the recap with quantities (D-026) and an empty change block', () => {
+  it('shows the recap with quantities (D-026), then asks for the mode first (D-053)', () => {
     renderModal();
     expect(screen.getByText('cart_confirmation')).toBeInTheDocument();
     expect(screen.getByText('2 × Product A')).toBeInTheDocument();
     expect(screen.getByText('1 × Product B')).toBeInTheDocument();
-    expect(changeDisplay()).toHaveTextContent('payment_placeholder');
+    expect(changeDisplay()).toHaveTextContent('payment_placeholder_mode');
+    expect(changeDisplay()).toHaveAttribute('data-state', 'empty');
+    expect(button('payment_cash')).toBeInTheDocument();
+    expect(button('payment_card')).toBeInTheDocument();
+    // No amount before a mode is chosen, and no "Appoint" button any more.
+    expect(screen.queryByRole('button', { name: '7' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^payment_exact/ })).not.toBeInTheDocument();
     expect(button('payment_collect')).toBeDisabled();
   });
 
-  // The colors of the change block hang on `data-state` (ChangeDisplay.module.css).
-  it('exposes the state of the change block for its colors', () => {
-    const { unmount } = renderModal();
-    expect(changeDisplay()).toHaveAttribute('data-state', 'empty');
-    press('5');
-    expect(changeDisplay()).toHaveAttribute('data-state', 'remaining');
-    press(',', '5');
-    expect(changeDisplay()).toHaveAttribute('data-state', 'remaining');
-    fireEvent.click(button('payment_clear_amount'));
-    press('7', ',', '5');
-    expect(changeDisplay()).toHaveAttribute('data-state', 'no-change');
-    fireEvent.click(button(/payment_received_aria.*20,00/));
-    expect(changeDisplay()).toHaveAttribute('data-state', 'change');
-    unmount();
-
-    mockTotal = -200;
-    const negative = renderModal();
-    expect(changeDisplay()).toHaveAttribute('data-state', 'refund');
-    negative.unmount();
-
-    mockTotal = 0;
-    const zero = renderModal();
-    expect(changeDisplay()).toHaveAttribute('data-state', 'nothing-due');
-    zero.unmount();
-
-    setCurrency();
-    mockTotal = 7;
-    renderModal();
-    press('5');
-    expect(changeDisplay()).toHaveAttribute('data-state', 'missing');
-  });
-
-  describe('euros', () => {
-    it('saves a card payment at once (D-028)', async () => {
+  describe('euros, card', () => {
+    it('prefills the amount due, then saves on "Encaisser"', async () => {
       renderModal();
       fireEvent.click(button('payment_card'));
+      expect(button('payment_card')).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByTestId('typed-amount')).toHaveTextContent(/^7,50/);
+      expect(changeDisplay()).toHaveAttribute('data-state', 'paid');
+      expect(mockAddOrder).not.toHaveBeenCalled();
 
+      fireEvent.click(button('payment_collect'));
       await waitFor(() => {
         expect(mockAddOrder).toHaveBeenCalledWith({
           items: mockCartItems,
@@ -161,53 +140,42 @@ describe('CartConfirmationModal (Encaissement)', () => {
       expect(mockRefetchOrders).toHaveBeenCalledTimes(1);
     });
 
-    it('saves the exact amount in cash at once', async () => {
+    it('never goes above the amount due', () => {
       renderModal();
-      fireEvent.click(button(/^payment_exact_aria/));
-      await waitFor(() => {
-        expect(savedOrder().payment).toEqual({ cashAmount: 750, cardAmount: null });
-      });
+      fireEvent.click(button('payment_card'));
+      press('9'); // 9 EUR > 7,50 EUR: ignored, the prefilled amount stays
+      expect(screen.getByTestId('typed-amount')).toHaveTextContent(/^7,50/);
+      press('5');
+      expect(screen.getByTestId('typed-amount')).toHaveTextContent(/^5/);
+      press('0');
+      expect(screen.getByTestId('typed-amount')).toHaveTextContent(/^5/);
     });
 
-    it('shows the change of a suggested note, then saves on "Encaisser" (D-029)', async () => {
+    it('adds a partial card part, then the cash is prefilled with the rest', async () => {
       renderModal();
-      expect(screen.getAllByRole('button', { name: /^payment_received_aria/ })).toHaveLength(4);
+      fireEvent.click(button('payment_card'));
+      press('5');
+      expect(changeDisplay()).toHaveAttribute('data-state', 'remaining');
+      fireEvent.click(button('payment_add_part'));
 
-      const twenty = button(/payment_received_aria.*20,00/);
-      fireEvent.click(twenty);
+      expect(screen.getByTestId('payment-parts')).toHaveTextContent('payment_card');
+      expect(changeDisplay()).toHaveAttribute('data-state', 'due');
+      expect(changeDisplay()).toHaveTextContent(/2,50/);
+      expect(button('payment_card')).toBeDisabled();
 
-      expect(twenty).toHaveAttribute('aria-pressed', 'true');
-      expect(changeDisplay()).toHaveTextContent('payment_change_due');
-      expect(changeDisplay()).toHaveTextContent(/12,50/);
-      expect(mockAddOrder).not.toHaveBeenCalled();
-      // A cash amount turns "Carte" into "Tout en carte".
-      expect(button(/^payment_all_card/)).toBeInTheDocument();
+      fireEvent.click(button('payment_cash'));
+      // The exact amount due is the first suggestion, and it is selected.
+      const suggestions = screen.getAllByRole('button', { name: /^payment_received_aria/ });
+      expect(suggestions).toHaveLength(4);
+      expect(suggestions[0]).toHaveAccessibleName(/2,50/);
+      expect(suggestions[0]).toHaveAttribute('aria-pressed', 'true');
 
+      fireEvent.click(button(/payment_received_aria.*5,00/));
+      expect(changeDisplay()).toHaveAttribute('data-state', 'change');
       fireEvent.click(button('payment_collect'));
       await waitFor(() => {
         // The change is never recorded (D-034).
-        expect(savedOrder().payment).toEqual({ cashAmount: 750, cardAmount: null });
-      });
-    });
-
-    it('waits for "Encaisser" when the typed amount equals the total', () => {
-      renderModal();
-      press('7');
-      expect(changeDisplay()).toHaveTextContent('payment_remaining');
-      press(',', '5');
-      expect(changeDisplay()).toHaveTextContent('payment_no_change');
-      expect(mockAddOrder).not.toHaveBeenCalled();
-    });
-
-    it('splits a partial cash payment, the rest by card (D-031)', async () => {
-      renderModal();
-      press('5');
-      expect(changeDisplay()).toHaveTextContent('payment_remaining');
-      expect(changeDisplay()).toHaveTextContent(/2,50/);
-
-      fireEvent.click(button(/^payment_rest_by_card/));
-      await waitFor(() => {
-        expect(savedOrder().payment).toEqual({ cashAmount: 500, cardAmount: 250 });
+        expect(savedOrder().payment).toEqual({ cashAmount: 250, cardAmount: 500 });
       });
       await waitFor(() => {
         expect(toast.success).toHaveBeenCalledWith(
@@ -215,27 +183,122 @@ describe('CartConfirmationModal (Encaissement)', () => {
         );
       });
     });
+  });
 
-    it('"Tout en carte" ignores the typed amount', async () => {
+  describe('euros, cash', () => {
+    it('suggests the exact amount first, fills it, then saves on "Encaisser"', async () => {
       renderModal();
-      press('5');
-      fireEvent.click(button(/^payment_all_card/));
+      fireEvent.click(button('payment_cash'));
+      expect(changeDisplay()).toHaveTextContent('payment_placeholder_cash');
+      const suggestions = screen.getAllByRole('button', { name: /^payment_received_aria/ });
+      expect(suggestions.map((s) => s.textContent)).toEqual([
+        expect.stringMatching(/7,50/),
+        '8\u00a0€',
+        '10\u00a0€',
+        '20\u00a0€',
+      ]);
+
+      fireEvent.click(suggestions[0]);
+      expect(changeDisplay()).toHaveAttribute('data-state', 'no-change');
+      expect(mockAddOrder).not.toHaveBeenCalled();
+      fireEvent.click(button('payment_collect'));
       await waitFor(() => {
-        expect(savedOrder().payment).toEqual({ cashAmount: null, cardAmount: 750 });
+        expect(savedOrder().payment).toEqual({ cashAmount: 750, cardAmount: null });
       });
     });
 
-    it('typing after a suggestion starts a new amount, and ✕ clears it', () => {
+    it('shows the change of a suggested note, then saves on "Encaisser" (D-029)', async () => {
       renderModal();
+      fireEvent.click(button('payment_cash'));
+      const twenty = button(/payment_received_aria.*20,00/);
+      fireEvent.click(twenty);
+      expect(twenty).toHaveAttribute('aria-pressed', 'true');
+      expect(changeDisplay()).toHaveTextContent('payment_change_due');
+      expect(changeDisplay()).toHaveTextContent(/12,50/);
+
+      fireEvent.click(button('payment_collect'));
+      await waitFor(() => {
+        expect(savedOrder().payment).toEqual({ cashAmount: 750, cardAmount: null });
+      });
+    });
+
+    it('adds a partial cash part, then the card is prefilled with the rest', async () => {
+      renderModal();
+      fireEvent.click(button('payment_cash'));
+      press('5');
+      expect(changeDisplay()).toHaveTextContent('payment_remaining');
+      fireEvent.click(button('payment_add_part'));
+
+      fireEvent.click(button('payment_card'));
+      expect(screen.getByTestId('typed-amount')).toHaveTextContent(/^2,50/);
+      fireEvent.click(button('payment_collect'));
+      await waitFor(() => {
+        expect(savedOrder().payment).toEqual({ cashAmount: 500, cardAmount: 250 });
+      });
+    });
+
+    it('removes a part while the other mode is open: back to the modes (TL-1)', () => {
+      renderModal();
+      fireEvent.click(button('payment_cash'));
+      press('5');
+      fireEvent.click(button('payment_add_part'));
+      fireEvent.click(button('payment_card'));
+      expect(screen.getByTestId('typed-amount')).toHaveTextContent(/^2,50/);
+
+      fireEvent.click(button(/^payment_remove_part/));
+      expect(screen.queryByTestId('typed-amount')).not.toBeInTheDocument();
+      expect(button('payment_card')).toHaveAttribute('aria-pressed', 'false');
+      expect(changeDisplay()).toHaveTextContent('payment_placeholder_mode');
+
+      // The card is prefilled again, with the new amount due.
+      fireEvent.click(button('payment_card'));
+      expect(screen.getByTestId('typed-amount')).toHaveTextContent(/^7,50/);
+      expect(button('payment_collect')).toBeEnabled();
+    });
+
+    it('removes a part: the amount due goes back up', () => {
+      renderModal();
+      fireEvent.click(button('payment_cash'));
+      press('5');
+      fireEvent.click(button('payment_add_part'));
+      expect(button('payment_cash')).toBeDisabled();
+      // DS-3: the disabled mode says why.
+      expect(button('payment_cash').parentElement).toHaveAttribute(
+        'title',
+        'payment_mode_has_part'
+      );
+
+      fireEvent.click(button(/^payment_remove_part/));
+      expect(screen.queryByTestId('payment-parts')).not.toBeInTheDocument();
+      expect(button('payment_cash')).toBeEnabled();
+      expect(changeDisplay()).toHaveTextContent('payment_placeholder_mode');
+    });
+
+    it('the last mode must cover the rest: no third part', () => {
+      renderModal();
+      fireEvent.click(button('payment_cash'));
+      press('5');
+      fireEvent.click(button('payment_add_part'));
+      fireEvent.click(button('payment_card'));
+      press('1');
+      expect(changeDisplay()).toHaveTextContent('payment_must_cover');
+      expect(screen.queryByRole('button', { name: 'payment_add_part' })).not.toBeInTheDocument();
+      expect(button('payment_collect')).toBeDisabled();
+    });
+
+    it('typing after a suggestion starts a new amount, and the clear button empties it', () => {
+      renderModal();
+      fireEvent.click(button('payment_cash'));
       fireEvent.click(button(/payment_received_aria.*20,00/));
       press('5');
       expect(screen.getByTestId('typed-amount')).toHaveTextContent(/^5/);
       fireEvent.click(button('payment_clear_amount'));
-      expect(changeDisplay()).toHaveTextContent('payment_placeholder');
+      expect(changeDisplay()).toHaveTextContent('payment_placeholder_cash');
     });
 
     it('warns about a large change without blocking', () => {
       renderModal();
+      fireEvent.click(button('payment_cash'));
       press('2', '0', '0');
       expect(changeDisplay()).toHaveTextContent('payment_large_change');
       expect(button('payment_collect')).toBeEnabled();
@@ -243,6 +306,7 @@ describe('CartConfirmationModal (Encaissement)', () => {
 
     it('supports the physical keyboard: digits, then Enter on the main button', async () => {
       renderModal();
+      fireEvent.click(button('payment_cash'));
       const display = screen.getByTestId('typed-amount');
       fireEvent.keyDown(display, { key: '1' });
       fireEvent.keyDown(display, { key: '0' });
@@ -253,53 +317,82 @@ describe('CartConfirmationModal (Encaissement)', () => {
       });
     });
 
-    it('asks for the mode on a negative total, without keypad (D-032)', async () => {
+    it('opens the keypad view on phone portrait with "Autre montant"', () => {
+      (useLayoutMode as jest.Mock).mockReturnValue('phone-portrait');
+      renderModal();
+      fireEvent.click(button('payment_cash'));
+      expect(screen.queryByRole('button', { name: '7' })).not.toBeInTheDocument();
+      fireEvent.click(button('payment_other_amount'));
+      expect(button('7')).toBeInTheDocument();
+      fireEvent.click(button('payment_back_to_amounts'));
+      expect(button('payment_card')).toBeInTheDocument();
+    });
+
+    it('keeps the mode row with the card keypad on phone portrait (DS-1)', () => {
+      (useLayoutMode as jest.Mock).mockReturnValue('phone-portrait');
+      renderModal();
+      fireEvent.click(button('payment_card'));
+      expect(button('7')).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'payment_back_to_modes' })
+      ).not.toBeInTheDocument();
+      fireEvent.click(button('payment_cash'));
+      expect(button('payment_cash')).toHaveAttribute('aria-pressed', 'true');
+      expect(changeDisplay()).toHaveTextContent('payment_placeholder_cash');
+    });
+
+    it('goes back to the modes from the card keypad on phone landscape', () => {
+      (useLayoutMode as jest.Mock).mockReturnValue('phone-landscape');
+      renderModal();
+      fireEvent.click(button('payment_card'));
+      fireEvent.click(button('payment_back_to_modes'));
+      expect(changeDisplay()).toHaveTextContent('payment_placeholder_mode');
+    });
+  });
+
+  describe('euros, total <= 0 (D-053)', () => {
+    it('asks for the mode, then refunds with "Rembourser"', async () => {
       mockTotal = -200;
       renderModal();
       expect(changeDisplay()).toHaveTextContent('payment_refund_due');
-      expect(screen.queryByRole('button', { name: 'payment_collect' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: '7' })).not.toBeInTheDocument();
+      expect(button('payment_refund')).toBeDisabled();
 
       fireEvent.click(button('payment_cash'));
+      expect(mockAddOrder).not.toHaveBeenCalled();
+      fireEvent.click(button('payment_refund'));
       await waitFor(() => {
         expect(savedOrder().payment).toEqual({ cashAmount: -200, cardAmount: null });
       });
     });
 
-    it('shows "Rien à encaisser" on a zero total and records the chosen mode', async () => {
+    it('records the chosen mode on a zero total with "Encaisser"', async () => {
       mockTotal = 0;
       renderModal();
       expect(changeDisplay()).toHaveTextContent('payment_nothing_due');
       fireEvent.click(button('payment_card'));
+      fireEvent.click(button('payment_collect'));
       await waitFor(() => {
         expect(savedOrder().payment).toEqual({ cashAmount: null, cardAmount: 0 });
       });
     });
-
-    it('opens the keypad view on phone portrait with "Autre montant"', () => {
-      (useLayoutMode as jest.Mock).mockReturnValue('phone-portrait');
-      renderModal();
-      expect(screen.queryByRole('button', { name: '7' })).not.toBeInTheDocument();
-      fireEvent.click(button('payment_other_amount'));
-      expect(button('7')).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'payment_card' })).not.toBeInTheDocument();
-      fireEvent.click(button('payment_back_to_amounts'));
-      expect(button('payment_card')).toBeInTheDocument();
-    });
   });
 
-  describe('tokens (D-033)', () => {
+  describe('tokens (D-053)', () => {
     beforeEach(() => {
       setCurrency();
       mockTotal = 7;
     });
 
-    it('has no card button and records no payment', async () => {
+    it('shows the recap and "Encaisser" only, and records no payment', async () => {
       renderModal();
+      expect(screen.queryByRole('button', { name: 'payment_cash' })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'payment_card' })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: ',' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: '7' })).not.toBeInTheDocument();
+      expect(screen.queryByTestId('change-display')).not.toBeInTheDocument();
+      expect(screen.queryAllByRole('button', { name: /^payment_received_aria/ })).toHaveLength(0);
 
-      fireEvent.click(button(/^payment_exact_aria/));
+      fireEvent.click(button('payment_collect'));
       await waitFor(() => {
         expect(mockAddOrder).toHaveBeenCalledWith({ items: mockCartItems, payment: null });
       });
@@ -308,37 +401,32 @@ describe('CartConfirmationModal (Encaissement)', () => {
       });
     });
 
-    it('shows the tokens to return', () => {
-      renderModal();
-      press('1', '0');
-      expect(changeDisplay()).toHaveTextContent('payment_tokens_change_due');
-    });
-
-    it('blocks "Encaisser" when tokens are missing', () => {
-      renderModal();
-      press('5');
-      expect(changeDisplay()).toHaveTextContent('payment_missing');
-      expect(button('payment_collect')).toBeDisabled();
-    });
-
-    it('saves a negative total with "Enregistrer"', async () => {
+    it('saves a negative total with "Rembourser"', async () => {
       mockTotal = -3;
       renderModal();
-      expect(changeDisplay()).toHaveTextContent('payment_tokens_refund_due');
-      fireEvent.click(button('payment_save'));
+      fireEvent.click(button('payment_refund'));
       await waitFor(() => {
         expect(mockAddOrder).toHaveBeenCalledWith({ items: mockCartItems, payment: null });
       });
     });
+
+    it('saves a zero total with "Encaisser"', () => {
+      mockTotal = 0;
+      renderModal();
+      expect(button('payment_collect')).toBeEnabled();
+    });
   });
 
-  it('keeps the modal open and the typed amount on an API error', async () => {
+  it('keeps the modal open and the parts on an API error', async () => {
     const error = new Error('Network Error');
     mockAddOrder.mockReturnValue({ unwrap: () => Promise.reject(error) });
     const onClose = jest.fn();
     renderModal(onClose);
+    fireEvent.click(button('payment_cash'));
     press('5');
-    fireEvent.click(button(/^payment_rest_by_card/));
+    fireEvent.click(button('payment_add_part'));
+    fireEvent.click(button('payment_card'));
+    fireEvent.click(button('payment_collect'));
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
@@ -348,7 +436,8 @@ describe('CartConfirmationModal (Encaissement)', () => {
     });
     expect(mockDispatch).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
-    expect(changeDisplay()).toHaveTextContent('payment_remaining');
+    expect(screen.getByTestId('payment-parts')).toHaveTextContent('payment_cash');
+    expect(changeDisplay()).toHaveAttribute('data-state', 'paid');
   });
 
   it('closes the success toast of the previous sale when it opens (DS-2)', () => {
@@ -365,6 +454,7 @@ describe('CartConfirmationModal (Encaissement)', () => {
     });
     renderModal();
     fireEvent.click(button('payment_card'));
+    fireEvent.click(button('payment_collect'));
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith('payment_required_reload', { autoClose: 5000 });
     });
@@ -373,9 +463,9 @@ describe('CartConfirmationModal (Encaissement)', () => {
   it('disables every action while saving', () => {
     (useAddOrderMutation as jest.Mock).mockReturnValue([mockAddOrder, { isLoading: true }]);
     renderModal();
+    expect(button('payment_card')).toBeDisabled();
+    expect(button('payment_cash')).toBeDisabled();
     fireEvent.click(button('payment_card'));
-    fireEvent.click(button('7'));
     expect(mockAddOrder).not.toHaveBeenCalled();
-    expect(button('7')).toBeDisabled();
   });
 });
