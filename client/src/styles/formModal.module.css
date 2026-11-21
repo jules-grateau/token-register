@@ -21,6 +21,9 @@
 .phoneContent {
   display: flex;
   flex-direction: column;
+  /* DS-2 of PR #57: a field scrolled into view (focus, keyboard) stops above the sticky bar
+     (44 px buttons + its padding + a gap) instead of under it. */
+  scroll-padding-bottom: calc(44px + var(--mantine-spacing-sm) * 2 + var(--mantine-spacing-md));
 }
 
 .phoneBody {

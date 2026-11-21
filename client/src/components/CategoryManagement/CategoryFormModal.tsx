@@ -154,10 +154,10 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
                 isPhone ? `${formClasses.actions} ${formClasses.phoneActions}` : formClasses.actions
               }
             >
-              <Button variant="default" h={44} onClick={guard.requestClose}>
+              <Button variant="default" h={44} fw={600} onClick={guard.requestClose}>
                 {t('cancel')}
               </Button>
-              <Button type="submit" h={44} loading={isSaving}>
+              <Button type="submit" h={44} fw={600} loading={isSaving}>
                 {isEditMode ? t('actions.save') : t('actions.create')}
               </Button>
             </Group>
