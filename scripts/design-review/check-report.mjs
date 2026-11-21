@@ -17,6 +17,11 @@ import fs from 'node:fs';
 // Format: { pattern: /regex on the message text/, reason: 'why it is benign (run / PR)' }
 const IGNORED_CONSOLE_ERRORS = [];
 
+// Text from the demo (error messages) goes into a PR comment: one line per problem, so the
+// failure comment can count them (multi-line stacks are flattened), and inline code, so
+// no @mention, link or Markdown in it is rendered. Backticks inside become quotes.
+const asCode = (text) => '`' + String(text).replace(/\s+/g, ' ').trim().replace(/`/g, "'") + '`';
+
 const isIgnoredConsoleError = (message) =>
   IGNORED_CONSOLE_ERRORS.some(({ pattern }) => pattern.test(message));
 
@@ -34,14 +39,14 @@ let ignoredConsoleErrors = 0;
 for (const [viewport, vp] of Object.entries(report.viewports ?? {})) {
   for (const s of vp.steps ?? []) {
     stepsChecked += 1;
-    if (s.error) problems.push(`${viewport} · ${s.step}: step failed (${s.error})`);
+    if (s.error) problems.push(`${viewport} · ${s.step}: step failed (${asCode(s.error)})`);
     if (s.overflowX) problems.push(`${viewport} · ${s.step}: horizontal overflow`);
   }
   for (const e of vp.consoleErrors ?? []) {
     if (isIgnoredConsoleError(e)) ignoredConsoleErrors += 1;
-    else problems.push(`${viewport}: console error: ${e}`);
+    else problems.push(`${viewport}: console error: ${asCode(e)}`);
   }
-  for (const e of vp.pageErrors ?? []) problems.push(`${viewport}: JS error: ${e}`);
+  for (const e of vp.pageErrors ?? []) problems.push(`${viewport}: JS error: ${asCode(e)}`);
 }
 if (report.cleanup?.failed?.length) {
   problems.push(`cleanup: test orders not deleted: ${report.cleanup.failed.join(', ')}`);
