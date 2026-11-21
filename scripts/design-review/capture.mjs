@@ -366,8 +366,10 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
       const pagination = dialog(page).locator('.mantine-Pagination-root');
       await pagination.waitFor({ timeout: 5000 });
       // The Stack of the pagination and its count; block "end" scrolls every scrolling parent.
-      await pagination.evaluate((el) => el.parentElement.scrollIntoView({ block: 'end' }));
-      await page.waitForTimeout(200);
+      // Instant: done when the call returns, no smooth scrolling to wait for (TL-1 of PR #66).
+      await pagination.evaluate((el) =>
+        el.parentElement.scrollIntoView({ block: 'end', behavior: 'instant' })
+      );
       const box = await pagination.boundingBox();
       const { height } = page.viewportSize();
       if (!box || box.y < 0 || box.y + box.height > height)
