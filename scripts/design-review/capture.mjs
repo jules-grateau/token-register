@@ -90,10 +90,13 @@ const TEST_PRODUCTS = [
 ];
 
 // Instance currency, from the runtime config that the client reads before it starts.
+// Not found: stop rather than guess (TL-1 of PR #64), prices in tokens on a EUR instance
+// would make a wrong test catalog without any error.
 async function readCurrency() {
   const res = await fetch(`${APP_URL}/config.js`, { headers: { Authorization: AUTH } });
   if (!res.ok) throw new Error(`GET /config.js -> ${res.status}`);
-  const currency = /"VITE_CURRENCY"\s*:\s*"(\w+)"/.exec(await res.text())?.[1] ?? 'TOKEN';
+  const currency = /"VITE_CURRENCY"\s*:\s*"(\w+)"/.exec(await res.text())?.[1];
+  if (!currency) throw new Error('VITE_CURRENCY not found in /config.js');
   if (!(currency in TEST_PRODUCTS[0][1])) throw new Error(`Unknown currency ${currency}`);
   return currency;
 }
