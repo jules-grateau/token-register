@@ -108,7 +108,7 @@ const DiscountModal: React.FC<DiscountModalProps> = ({
           radius="md"
           color="encre"
           classNames={{ root: segmentedClasses.root, label: segmentedClasses.label }}
-          // "Montant fixe (Jeton)" may not fit on one line at 360 px: it wraps, never cut.
+          // "Montant fixe (Jetons)" may not fit on one line at 360 px: it wraps, never cut.
           styles={{ label: { whiteSpace: 'normal', textAlign: 'center' } }}
           value={discountType}
           onChange={(value) => handleDiscountTypeChange(value as DiscountType)}
