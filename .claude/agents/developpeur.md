@@ -134,8 +134,8 @@ gh issue create --label suivi --label <tech|design> \
 
   # 2. Capturer (script copié à côté de Playwright ; identifiants lus dans api/.env)
   cp "$R/scripts/design-review/capture.mjs" . \
-    && export BASIC_AUTH_USER=$(grep '^BASIC_AUTH_USER=' "$R/api/.env" | cut -d= -f2 | tr -d '\r ') \
-              BASIC_AUTH_PASS=$(grep '^BASIC_AUTH_PASS=' "$R/api/.env" | cut -d= -f2 | sed 's/ *#.*//' | tr -d '\r') \
+    && export BASIC_AUTH_USER=$(grep '^BASIC_AUTH_USER=' "$R/api/.env" | cut -d= -f2- | sed 's/ *#.*//' | tr -d '\r') \
+              BASIC_AUTH_PASS=$(grep '^BASIC_AUTH_PASS=' "$R/api/.env" | cut -d= -f2- | sed 's/ *#.*//' | tr -d '\r') \
     && export COLOR_SCHEMES=light ONLY_VIEWPORTS=mobile,desktop ONLY_STEPS=<étapes touchées> \
     && APP_URL=<instance jetons> OUT_DIR="$S/cap/local" node capture.mjs \
     && APP_URL=<instance EUR> OUT_DIR="$S/cap/local-eur" node capture.mjs
