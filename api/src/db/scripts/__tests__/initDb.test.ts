@@ -1,47 +1,30 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import sqlite3 from 'sqlite3';
+import logger from '../../../utils/logger';
+import {
+  createTempDbPath,
+  hasAppTables,
+  listTables,
+  waitFor,
+  wasLogged,
+  APP_TABLES,
+  SEED_DECISION_MESSAGES,
+} from './dbTestUtils';
 
-const tempDbPath = path.join(os.tmpdir(), `test-db-${Date.now()}.sqlite`);
+const { dbPath: tempDbPath, cleanup } = createTempDbPath('test-db-init');
 
 beforeAll(() => {
   process.env.DATABASE_PATH = tempDbPath;
-  if (fs.existsSync(tempDbPath)) fs.unlinkSync(tempDbPath);
 });
 
 afterAll(() => {
-  if (fs.existsSync(tempDbPath)) fs.unlinkSync(tempDbPath);
+  cleanup();
 });
 
 it('should create all tables', async () => {
+  const infoSpy = jest.spyOn(logger, 'info');
   await import('../initDb');
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await waitFor(() => hasAppTables(tempDbPath), 'initDb to create the tables');
+  // Let the script finish before the temporary directory is removed.
+  await waitFor(() => wasLogged(infoSpy, SEED_DECISION_MESSAGES), 'initDb to decide on seeding');
 
-  const db = new sqlite3.Database(tempDbPath);
-
-  await new Promise<void>((resolve, reject) => {
-    db.all(
-      "SELECT name FROM sqlite_master WHERE type='table'",
-      (err: Error | null, tables: { name: string }[]) => {
-        if (err) {
-          db.close();
-          reject(err);
-          return;
-        }
-        const tableNames = tables.map((t) => t.name);
-        try {
-          expect(tableNames).toEqual(
-            expect.arrayContaining(['categories', 'products', 'orders', 'order_items'])
-          );
-          resolve();
-        } catch (e) {
-          db.close();
-          reject(new Error(String(e)));
-          return;
-        }
-      }
-    );
-    db.close();
-  });
+  expect(await listTables(tempDbPath)).toEqual(expect.arrayContaining(APP_TABLES));
 });
