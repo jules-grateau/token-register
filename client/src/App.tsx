@@ -120,6 +120,7 @@ const theme = createTheme({
     // Also used by Menu and Select / Combobox. `size`: never taller than the room left in the
     // window (8 px margin), the dropdown scrolls instead (theme.module.css); phone in landscape
     // has under 300 px of height (2.2.1). No change when the dropdown fits.
+    // A Popover / Menu / Select that sets its own `middlewares` replaces these: keep `size` in it.
     Popover: Popover.extend({
       defaultProps: { middlewares: { flip: true, shift: true, size: { padding: 8 } } },
       classNames: { dropdown: classes.popoverDropdown },
