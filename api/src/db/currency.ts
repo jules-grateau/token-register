@@ -121,8 +121,9 @@ export type OrderItemConversion = {
   orderId: number;
   productName: string;
   quantity: number;
-  priceBefore: number;
-  priceAfter: number;
+  /** null: no price recorded for this line, left empty by the conversion (D-056). */
+  priceBefore: number | null;
+  priceAfter: number | null;
   discountBefore: number;
   discountAfter: number;
 };
@@ -142,6 +143,8 @@ export type CurrencyConversionPlan = {
   orderItems: OrderItemConversion[];
   /** Lines where the rounded discount would exceed the rounded line total. */
   inconsistentOrderItems: OrderItemConversion[];
+  /** D-056: lines with no recorded price, kept empty and left out of the revenue. */
+  itemsWithoutPrice: OrderItemConversion[];
   /** Orders with a recorded payment (cash / card amounts, D-034). */
   orderPayments: OrderPaymentConversion[];
   /**
@@ -192,28 +195,35 @@ export async function planCurrencyConversion(
      FROM order_items ORDER BY order_id, rowid`
   );
   const orderItems = itemRows.map((row) => {
-    const priceBefore = row.product_price ?? 0;
+    const priceBefore = row.product_price;
     return {
       rowid: row.rowid,
       orderId: row.order_id,
       productName: row.product_name ?? '',
       quantity: row.quantity,
       priceBefore,
-      priceAfter: convertAmount(priceBefore, from, to),
+      priceAfter: priceBefore === null ? null : convertAmount(priceBefore, from, to),
       discountBefore: row.discountedAmount,
       discountAfter: convertAmount(row.discountedAmount, from, to),
     };
   });
 
-  const inconsistentOrderItems = orderItems.filter(
+  // D-056: a line without a recorded price is left empty and out of the revenue.
+  const itemsWithoutPrice = orderItems.filter((item) => item.priceBefore === null);
+  const pricedItems = orderItems.filter(
+    (item): item is OrderItemConversion & { priceBefore: number; priceAfter: number } =>
+      item.priceBefore !== null && item.priceAfter !== null
+  );
+
+  const inconsistentOrderItems = pricedItems.filter(
     (item) => item.discountAfter > Math.max(0, item.priceAfter * item.quantity)
   );
 
-  const revenueBefore = orderItems.reduce(
+  const revenueBefore = pricedItems.reduce(
     (sum, item) => sum + lineTotal(item.priceBefore, item.quantity, item.discountBefore),
     0
   );
-  const revenueAfter = orderItems.reduce(
+  const revenueAfter = pricedItems.reduce(
     (sum, item) => sum + lineTotal(item.priceAfter, item.quantity, item.discountAfter),
     0
   );
@@ -227,6 +237,7 @@ export async function planCurrencyConversion(
     products,
     orderItems,
     inconsistentOrderItems,
+    itemsWithoutPrice,
     orderPayments,
     paymentsCleared,
     revenueBefore,
@@ -330,6 +341,9 @@ export function formatStoredAmount(amount: number, currency: CurrencyCode): stri
   return currency === 'EUR' ? `${(amount / 100).toFixed(2)} EUR` : `${amount} TOKEN`;
 }
 
+/** D-056: at most this many order numbers are listed in the missing-price warning. */
+const MAX_LISTED_ORDERS = 20;
+
 export function describeConversionPlan(plan: CurrencyConversionPlan): string[] {
   const fmtFrom = (n: number) => formatStoredAmount(n, plan.from);
   const fmtTo = (n: number) => formatStoredAmount(n, plan.to);
@@ -343,6 +357,9 @@ export function describeConversionPlan(plan: CurrencyConversionPlan): string[] {
     `Order history: ${plan.orderItems.length} order line(s) converted.`,
     `  Total revenue: ${fmtFrom(plan.revenueBefore)} -> ${fmtTo(plan.revenueAfter)}`
   );
+  if (plan.itemsWithoutPrice.length > 0) {
+    lines.push('  (lines without a recorded price are not counted in the revenue)');
+  }
   if (plan.orderPayments.length > 0) {
     lines.push(`  Recorded payments: ${plan.orderPayments.length} order(s).`);
   }
@@ -354,6 +371,17 @@ export function describeConversionPlan(plan: CurrencyConversionPlan): string[] {
         'sera effacée (token instances record no payment).'
     );
   }
+  if (plan.itemsWithoutPrice.length > 0) {
+    const orderIds = [...new Set(plan.itemsWithoutPrice.map((item) => item.orderId))];
+    const listed = orderIds.slice(0, MAX_LISTED_ORDERS).map((id) => `#${id}`);
+    if (orderIds.length > MAX_LISTED_ORDERS) listed.push('…');
+    // Wording confirmed by the product owner (D-056).
+    lines.push(
+      '',
+      `Warning: ${plan.itemsWithoutPrice.length} ligne(s) de commande sans prix enregistré ` +
+        `(commandes ${listed.join(', ')}) : prix inconnu, laissé vide`
+    );
+  }
   if (plan.inconsistentOrderItems.length > 0) {
     lines.push(
       '',
@@ -363,7 +391,8 @@ export function describeConversionPlan(plan: CurrencyConversionPlan): string[] {
     for (const item of plan.inconsistentOrderItems) {
       lines.push(
         `  order #${item.orderId} ${item.productName} x${item.quantity}: ` +
-          `price ${fmtFrom(item.priceBefore)} -> ${fmtTo(item.priceAfter)}, ` +
+          // Always priced: lines without a price are never listed here (D-056).
+          `price ${fmtFrom(item.priceBefore ?? 0)} -> ${fmtTo(item.priceAfter ?? 0)}, ` +
           `discount ${fmtFrom(item.discountBefore)} -> ${fmtTo(item.discountAfter)}`
       );
     }

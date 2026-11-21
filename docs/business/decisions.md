@@ -665,3 +665,18 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - Ajout du 2026-11-21 : si la création des tables échoue, l'erreur est journalisée et le script sort en erreur, ce qui arrête le démarrage de l'appli (réponse : « Arrêter le démarrage (Recommandé) »).
 - **Options écartées** : garder le catalogue d'exemple dans une commande manuelle ou derrière une variable d'environnement ; remettre la démo à zéro ; version PATCH 2.2.2 ; en cas d'échec de la création des tables, journaliser et laisser l'appli démarrer.
 - **Impact** : `api/src/db/scripts/initDb.ts` et ses tests, `README.md`, `MIGRATIONS.md`, `deploy/README.md`. Remplace D-014 et D-054. Le script de capture ne trouve plus de catalogue sur une base locale neuve (issue #62).
+
+### D-056 — Conversion de monnaie : une ligne d'historique sans prix reste sans prix
+
+- **Date** : 2026-11-21
+- **Confirmée par** : Jules (responsable produit), 2026-11-21
+- **Statut** : Active
+- **Domaine** : Prix & jetons
+- **Contexte** : issue #33 (TL-2 de la PR #19). La commande de conversion (D-009) remplaçait sans prévenir un `order_items.product_price` vide par 0, puis écrivait ce 0 avec `--apply`. Ce cas ne se produit pas avec l'appli actuelle, mais peut exister dans une ancienne base (migration de l'historique incomplète, lignes écrites par une version antérieure, modification manuelle).
+- **Décision** :
+  - Avec `--apply`, le prix d'une telle ligne reste vide ; la remise et les autres montants sont convertis comme d'habitude (réponse : « Le laisser vide (Recommandé) »).
+  - Ces lignes sont exclues du total de l'aperçu, qui le signale (réponse : « Non, exclues et comptées (Recommandé) »). Elles ne peuvent pas bloquer la conversion au titre de D-016.
+  - L'aperçu affiche : « Warning: N ligne(s) de commande sans prix enregistré (commandes #x, #y) : prix inconnu, laissé vide », avec au plus 20 numéros de commande puis « … » (réponse : « Français (Recommandé) »).
+  - Version : **2.3.1** (réponse : « PATCH 2.3.1 (Recommandé) »).
+- **Options écartées** : refuser la conversion tant qu'il reste des lignes sans prix ; écrire 0 avec un simple avertissement ; compter ces lignes à 0 dans le total ; message en anglais.
+- **Impact** : `api/src/db/currency.ts` et ses tests, `deploy/README.md`, `MIGRATIONS.md`.
