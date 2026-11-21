@@ -1,0 +1,975 @@
+{
+  "appUrl": "http://localhost:3101",
+  "data": {
+    "category": "Boissons",
+    "products": [
+      "Bi�re pression",
+      "Coca",
+      "Eau"
+    ],
+    "sample": {
+      "id": 4,
+      "name": "Bi�re pression",
+      "price": 350,
+      "category_id": 1,
+      "icon": null
+    },
+    "negative": "Eco-cup consigne"
+  },
+  "viewports": {
+    "mobile-landscape-light": {
+      "size": {
+        "width": 750,
+        "height": 342
+      },
+      "steps": [
+        {
+          "step": "home",
+          "screenshot": "mobile-landscape-light\\01-home.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "category-selected",
+          "screenshot": "mobile-landscape-light\\02-category-selected.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-with-items",
+          "screenshot": "mobile-landscape-light\\03-cart-with-items.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "screenshot": "mobile-landscape-light\\05-payment-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-card-prefilled",
+          "screenshot": "mobile-landscape-light\\06-payment-card-prefilled.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-cash-suggested-change",
+          "screenshot": "mobile-landscape-light\\07-payment-cash-suggested-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-mixed-parts",
+          "screenshot": "mobile-landscape-light\\08-payment-mixed-parts.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-mixed-or-tokens",
+          "screenshot": "mobile-landscape-light\\09-order-placed-mixed-or-tokens.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-card",
+          "screenshot": "mobile-landscape-light\\10-order-placed-card.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-exact",
+          "screenshot": "mobile-landscape-light\\11-order-placed-exact.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-negative-total",
+          "screenshot": "mobile-landscape-light\\12-payment-negative-total.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-history",
+          "screenshot": "mobile-landscape-light\\13-order-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-delete-confirm",
+          "screenshot": "mobile-landscape-light\\14-order-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-cleared-toast",
+          "screenshot": "mobile-landscape-light\\15-cart-cleared-toast.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "settings-menu",
+          "screenshot": "mobile-landscape-light\\16-settings-menu.png",
+          "error": null,
+          "overflowX": false,
+          "popupOverflow": [
+            "mantine-Menu-dropdown: bottom 397 > 342",
+            "mantine-Menu-dropdown: \"À propos\" out of reach (326-386 px, window 342)"
+          ]
+        },
+        {
+          "step": "about-modal",
+          "screenshot": "mobile-landscape-light\\17-about-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-mode",
+          "screenshot": "mobile-landscape-light\\18-edit-mode.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-form",
+          "screenshot": "mobile-landscape-light\\19-edit-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-unsaved",
+          "screenshot": "mobile-landscape-light\\20-edit-category-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-form",
+          "screenshot": "mobile-landscape-light\\21-edit-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-unsaved",
+          "screenshot": "mobile-landscape-light\\22-edit-product-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-form",
+          "screenshot": "mobile-landscape-light\\23-new-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-category-list",
+          "screenshot": "mobile-landscape-light\\24-new-product-category-list.png",
+          "error": null,
+          "overflowX": false,
+          "popupOverflow": [
+            "mantine-Popover-dropdown: top -33 < 0"
+          ]
+        },
+        {
+          "step": "new-category-form",
+          "screenshot": "mobile-landscape-light\\25-new-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "product-delete-confirm",
+          "screenshot": "mobile-landscape-light\\26-product-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-item-menu",
+          "screenshot": "mobile-landscape-light\\27-cart-item-menu.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "discount-modal",
+          "screenshot": "mobile-landscape-light\\28-discount-modal.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    "mobile-landscape-short-light": {
+      "size": {
+        "width": 667,
+        "height": 300
+      },
+      "steps": [
+        {
+          "step": "home",
+          "screenshot": "mobile-landscape-short-light\\01-home.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "category-selected",
+          "screenshot": "mobile-landscape-short-light\\02-category-selected.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-with-items",
+          "screenshot": "mobile-landscape-short-light\\03-cart-with-items.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "screenshot": "mobile-landscape-short-light\\05-payment-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-card-prefilled",
+          "screenshot": "mobile-landscape-short-light\\06-payment-card-prefilled.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-cash-suggested-change",
+          "screenshot": "mobile-landscape-short-light\\07-payment-cash-suggested-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-mixed-parts",
+          "screenshot": "mobile-landscape-short-light\\08-payment-mixed-parts.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-mixed-or-tokens",
+          "screenshot": "mobile-landscape-short-light\\09-order-placed-mixed-or-tokens.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-card",
+          "screenshot": "mobile-landscape-short-light\\10-order-placed-card.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-exact",
+          "screenshot": "mobile-landscape-short-light\\11-order-placed-exact.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-negative-total",
+          "screenshot": "mobile-landscape-short-light\\12-payment-negative-total.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-history",
+          "screenshot": "mobile-landscape-short-light\\13-order-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-delete-confirm",
+          "screenshot": "mobile-landscape-short-light\\14-order-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-cleared-toast",
+          "screenshot": "mobile-landscape-short-light\\15-cart-cleared-toast.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "settings-menu",
+          "screenshot": "mobile-landscape-short-light\\16-settings-menu.png",
+          "error": null,
+          "overflowX": false,
+          "popupOverflow": [
+            "mantine-Menu-dropdown: bottom 397 > 300",
+            "mantine-Menu-dropdown: \"À propos\" out of reach (326-386 px, window 300)"
+          ]
+        },
+        {
+          "step": "about-modal",
+          "screenshot": "mobile-landscape-short-light\\17-about-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-mode",
+          "screenshot": "mobile-landscape-short-light\\18-edit-mode.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-form",
+          "screenshot": "mobile-landscape-short-light\\19-edit-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-unsaved",
+          "screenshot": "mobile-landscape-short-light\\20-edit-category-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-form",
+          "screenshot": "mobile-landscape-short-light\\21-edit-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-unsaved",
+          "screenshot": "mobile-landscape-short-light\\22-edit-product-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-form",
+          "screenshot": "mobile-landscape-short-light\\23-new-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-category-list",
+          "screenshot": "mobile-landscape-short-light\\24-new-product-category-list.png",
+          "error": null,
+          "overflowX": false,
+          "popupOverflow": [
+            "mantine-Popover-dropdown: top -75 < 0"
+          ]
+        },
+        {
+          "step": "new-category-form",
+          "screenshot": "mobile-landscape-short-light\\25-new-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "product-delete-confirm",
+          "screenshot": "mobile-landscape-short-light\\26-product-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-item-menu",
+          "screenshot": "mobile-landscape-short-light\\27-cart-item-menu.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "discount-modal",
+          "screenshot": "mobile-landscape-short-light\\28-discount-modal.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    "mobile-landscape-640x280-light": {
+      "size": {
+        "width": 640,
+        "height": 280
+      },
+      "steps": [
+        {
+          "step": "home",
+          "screenshot": "mobile-landscape-640x280-light\\01-home.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "category-selected",
+          "screenshot": "mobile-landscape-640x280-light\\02-category-selected.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-with-items",
+          "screenshot": "mobile-landscape-640x280-light\\03-cart-with-items.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "screenshot": "mobile-landscape-640x280-light\\05-payment-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-card-prefilled",
+          "screenshot": "mobile-landscape-640x280-light\\06-payment-card-prefilled.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-cash-suggested-change",
+          "screenshot": "mobile-landscape-640x280-light\\07-payment-cash-suggested-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-mixed-parts",
+          "screenshot": "mobile-landscape-640x280-light\\08-payment-mixed-parts.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-mixed-or-tokens",
+          "screenshot": "mobile-landscape-640x280-light\\09-order-placed-mixed-or-tokens.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-card",
+          "screenshot": "mobile-landscape-640x280-light\\10-order-placed-card.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-exact",
+          "screenshot": "mobile-landscape-640x280-light\\11-order-placed-exact.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-negative-total",
+          "screenshot": "mobile-landscape-640x280-light\\12-payment-negative-total.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-history",
+          "screenshot": "mobile-landscape-640x280-light\\13-order-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-delete-confirm",
+          "screenshot": "mobile-landscape-640x280-light\\14-order-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-cleared-toast",
+          "screenshot": "mobile-landscape-640x280-light\\15-cart-cleared-toast.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "settings-menu",
+          "screenshot": "mobile-landscape-640x280-light\\16-settings-menu.png",
+          "error": null,
+          "overflowX": false,
+          "popupOverflow": [
+            "mantine-Menu-dropdown: bottom 397 > 280",
+            "mantine-Menu-dropdown: \"À propos\" out of reach (326-386 px, window 280)"
+          ]
+        },
+        {
+          "step": "about-modal",
+          "screenshot": "mobile-landscape-640x280-light\\17-about-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-mode",
+          "screenshot": "mobile-landscape-640x280-light\\18-edit-mode.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-form",
+          "screenshot": "mobile-landscape-640x280-light\\19-edit-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-unsaved",
+          "screenshot": "mobile-landscape-640x280-light\\20-edit-category-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-form",
+          "screenshot": "mobile-landscape-640x280-light\\21-edit-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-unsaved",
+          "screenshot": "mobile-landscape-640x280-light\\22-edit-product-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-form",
+          "screenshot": "mobile-landscape-640x280-light\\23-new-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-category-list",
+          "screenshot": "mobile-landscape-640x280-light\\24-new-product-category-list.png",
+          "error": null,
+          "overflowX": false,
+          "popupOverflow": [
+            "mantine-Popover-dropdown: top -95 < 0"
+          ]
+        },
+        {
+          "step": "new-category-form",
+          "screenshot": "mobile-landscape-640x280-light\\25-new-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "product-delete-confirm",
+          "screenshot": "mobile-landscape-640x280-light\\26-product-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-item-menu",
+          "screenshot": "mobile-landscape-640x280-light\\27-cart-item-menu.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "discount-modal",
+          "screenshot": "mobile-landscape-640x280-light\\28-discount-modal.png",
+          "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.",
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    "mobile-landscape-740x320-light": {
+      "size": {
+        "width": 740,
+        "height": 320
+      },
+      "steps": [
+        {
+          "step": "home",
+          "screenshot": "mobile-landscape-740x320-light\\01-home.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "category-selected",
+          "screenshot": "mobile-landscape-740x320-light\\02-category-selected.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-with-items",
+          "screenshot": "mobile-landscape-740x320-light\\03-cart-with-items.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "screenshot": "mobile-landscape-740x320-light\\05-payment-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-card-prefilled",
+          "screenshot": "mobile-landscape-740x320-light\\06-payment-card-prefilled.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-cash-suggested-change",
+          "screenshot": "mobile-landscape-740x320-light\\07-payment-cash-suggested-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-mixed-parts",
+          "screenshot": "mobile-landscape-740x320-light\\08-payment-mixed-parts.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-mixed-or-tokens",
+          "screenshot": "mobile-landscape-740x320-light\\09-order-placed-mixed-or-tokens.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-card",
+          "screenshot": "mobile-landscape-740x320-light\\10-order-placed-card.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-exact",
+          "screenshot": "mobile-landscape-740x320-light\\11-order-placed-exact.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-negative-total",
+          "screenshot": "mobile-landscape-740x320-light\\12-payment-negative-total.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-history",
+          "screenshot": "mobile-landscape-740x320-light\\13-order-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-delete-confirm",
+          "screenshot": "mobile-landscape-740x320-light\\14-order-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-cleared-toast",
+          "screenshot": "mobile-landscape-740x320-light\\15-cart-cleared-toast.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "settings-menu",
+          "screenshot": "mobile-landscape-740x320-light\\16-settings-menu.png",
+          "error": null,
+          "overflowX": false,
+          "popupOverflow": [
+            "mantine-Menu-dropdown: bottom 397 > 320",
+            "mantine-Menu-dropdown: \"À propos\" out of reach (326-386 px, window 320)"
+          ]
+        },
+        {
+          "step": "about-modal",
+          "screenshot": "mobile-landscape-740x320-light\\17-about-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-mode",
+          "screenshot": "mobile-landscape-740x320-light\\18-edit-mode.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-form",
+          "screenshot": "mobile-landscape-740x320-light\\19-edit-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-unsaved",
+          "screenshot": "mobile-landscape-740x320-light\\20-edit-category-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-form",
+          "screenshot": "mobile-landscape-740x320-light\\21-edit-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-unsaved",
+          "screenshot": "mobile-landscape-740x320-light\\22-edit-product-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-form",
+          "screenshot": "mobile-landscape-740x320-light\\23-new-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-category-list",
+          "screenshot": "mobile-landscape-740x320-light\\24-new-product-category-list.png",
+          "error": null,
+          "overflowX": false,
+          "popupOverflow": [
+            "mantine-Popover-dropdown: top -55 < 0"
+          ]
+        },
+        {
+          "step": "new-category-form",
+          "screenshot": "mobile-landscape-740x320-light\\25-new-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "product-delete-confirm",
+          "screenshot": "mobile-landscape-740x320-light\\26-product-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-item-menu",
+          "screenshot": "mobile-landscape-740x320-light\\27-cart-item-menu.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "discount-modal",
+          "screenshot": "mobile-landscape-740x320-light\\28-discount-modal.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    "mobile-landscape-844x340-light": {
+      "size": {
+        "width": 844,
+        "height": 340
+      },
+      "steps": [
+        {
+          "step": "home",
+          "screenshot": "mobile-landscape-844x340-light\\01-home.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "category-selected",
+          "screenshot": "mobile-landscape-844x340-light\\02-category-selected.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-with-items",
+          "screenshot": "mobile-landscape-844x340-light\\03-cart-with-items.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "screenshot": "mobile-landscape-844x340-light\\05-payment-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-card-prefilled",
+          "screenshot": "mobile-landscape-844x340-light\\06-payment-card-prefilled.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-cash-suggested-change",
+          "screenshot": "mobile-landscape-844x340-light\\07-payment-cash-suggested-change.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-mixed-parts",
+          "screenshot": "mobile-landscape-844x340-light\\08-payment-mixed-parts.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-mixed-or-tokens",
+          "screenshot": "mobile-landscape-844x340-light\\09-order-placed-mixed-or-tokens.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-card",
+          "screenshot": "mobile-landscape-844x340-light\\10-order-placed-card.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-placed-exact",
+          "screenshot": "mobile-landscape-844x340-light\\11-order-placed-exact.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "payment-negative-total",
+          "screenshot": "mobile-landscape-844x340-light\\12-payment-negative-total.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-history",
+          "screenshot": "mobile-landscape-844x340-light\\13-order-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-delete-confirm",
+          "screenshot": "mobile-landscape-844x340-light\\14-order-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-cleared-toast",
+          "screenshot": "mobile-landscape-844x340-light\\15-cart-cleared-toast.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "settings-menu",
+          "screenshot": "mobile-landscape-844x340-light\\16-settings-menu.png",
+          "error": null,
+          "overflowX": false,
+          "popupOverflow": [
+            "mantine-Menu-dropdown: bottom 397 > 340",
+            "mantine-Menu-dropdown: \"À propos\" out of reach (326-386 px, window 340)"
+          ]
+        },
+        {
+          "step": "about-modal",
+          "screenshot": "mobile-landscape-844x340-light\\17-about-modal.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-mode",
+          "screenshot": "mobile-landscape-844x340-light\\18-edit-mode.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-form",
+          "screenshot": "mobile-landscape-844x340-light\\19-edit-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-category-unsaved",
+          "screenshot": "mobile-landscape-844x340-light\\20-edit-category-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-form",
+          "screenshot": "mobile-landscape-844x340-light\\21-edit-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "edit-product-unsaved",
+          "screenshot": "mobile-landscape-844x340-light\\22-edit-product-unsaved.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-form",
+          "screenshot": "mobile-landscape-844x340-light\\23-new-product-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "new-product-category-list",
+          "screenshot": "mobile-landscape-844x340-light\\24-new-product-category-list.png",
+          "error": null,
+          "overflowX": false,
+          "popupOverflow": [
+            "mantine-Popover-dropdown: top -35 < 0"
+          ]
+        },
+        {
+          "step": "new-category-form",
+          "screenshot": "mobile-landscape-844x340-light\\25-new-category-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "product-delete-confirm",
+          "screenshot": "mobile-landscape-844x340-light\\26-product-delete-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cart-item-menu",
+          "screenshot": "mobile-landscape-844x340-light\\27-cart-item-menu.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "discount-modal",
+          "screenshot": "mobile-landscape-844x340-light\\28-discount-modal.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    }
+  },
+  "cleanup": {
+    "deletedOrders": [
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71,
+      72,
+      73,
+      74,
+      75,
+      76,
+      77,
+      78,
+      79,
+      80,
+      81,
+      82,
+      83,
+      84,
+      85,
+      86,
+      87,
+      88,
+      89,
+      90,
+      91,
+      92,
+      93
+    ],
+    "failed": []
+  },
+  "currency": "EUR"
+}
