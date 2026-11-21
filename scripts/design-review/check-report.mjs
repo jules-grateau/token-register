@@ -1,7 +1,8 @@
 /* global process, console */
 // Free release smoke check (no AI): reads the report.json written by capture.mjs and
-// fails if any step errored, the page logged a console/JS error, or a screen overflowed
-// horizontally. The visual design review itself happens once, on the feature PR (D-038).
+// fails if any step errored, the page logged a console/JS error, a screen overflowed
+// horizontally, or a pop-up (modal, menu, list of options) stuck out of the window.
+// The visual design review itself happens once, on the feature PR (D-038).
 //
 // Usage: node check-report.mjs <path/to/report.json>
 // Writes a Markdown summary to $GITHUB_STEP_SUMMARY when available; exit 1 on problems.
@@ -22,6 +23,8 @@ for (const [viewport, vp] of Object.entries(report.viewports ?? {})) {
     stepsChecked += 1;
     if (s.error) problems.push(`${viewport} · ${s.step}: step failed (${s.error})`);
     if (s.overflowX) problems.push(`${viewport} · ${s.step}: horizontal overflow`);
+    for (const p of s.popupOverflow ?? [])
+      problems.push(`${viewport} · ${s.step}: pop-up out of the window (${p})`);
   }
   for (const e of vp.consoleErrors ?? []) problems.push(`${viewport}: console error: ${e}`);
   for (const e of vp.pageErrors ?? []) problems.push(`${viewport}: JS error: ${e}`);
