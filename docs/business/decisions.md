@@ -680,3 +680,17 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - Version : **2.3.1** (réponse : « PATCH 2.3.1 (Recommandé) »).
 - **Options écartées** : refuser la conversion tant qu'il reste des lignes sans prix ; écrire 0 avec un simple avertissement ; compter ces lignes à 0 dans le total ; message en anglais.
 - **Impact** : `api/src/db/currency.ts` et ses tests, `deploy/README.md`, `MIGRATIONS.md`.
+
+### D-057 — Script de capture : jeu de test créé sur une instance sans catalogue, puis supprimé
+
+- **Date** : 2026-11-21
+- **Confirmée par** : Jules (responsable produit), 2026-11-21
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : issue #62. Depuis D-055, une base neuve est vide : le script de capture (`scripts/design-review/capture.mjs`) s'arrêtait, faute d'une catégorie avec 2 produits à prix positif et d'un produit à prix négatif. Il fallait décider de ce qu'il crée, sous quels noms, et ce qui se passe si le nettoyage échoue.
+- **Décision** :
+  - S'il manque une pièce (pas de catégorie avec 2 produits à prix positif, ou pas de produit à prix négatif), le script crée tout le jeu de test, dans sa propre catégorie, sans jamais modifier le catalogue existant (réponse : « Créer tout le jeu (Recommandé) »). Sur une instance qui a déjà tout (la démo), rien n'est créé.
+  - Noms repérables : catégorie « Test capture », produits « Produit A », « Produit B » et « Retour consigne » (réponse : « Noms repérables (Recommandé) »). Prix : 3 / 2 / -1 jetons, ou 2,50 € / 1,50 € / -1,00 €.
+  - Le jeu est supprimé à la fin du passage, après les commandes de test. S'il n'a pas pu être supprimé, le contrôle (`check-report.mjs`) échoue, comme pour les commandes (réponse : « Le contrôle échoue (Recommandé) »).
+- **Options écartées** : ne rien créer et laisser l'étape « total ≤ 0 » échouer quand seul le produit négatif manque ; ajouter le produit négatif dans une catégorie existante ; noms réalistes (« Café », « Eco-cup ») ; simple avertissement dans le rapport si le nettoyage échoue.
+- **Impact** : `scripts/design-review/capture.mjs`, `scripts/design-review/check-report.mjs`. Outil de revue seulement : pas de montée de version (D-027).

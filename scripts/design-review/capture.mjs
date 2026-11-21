@@ -3,7 +3,9 @@
 // and takes screenshots on desktop, tablet and mobile, like a designer testing the
 // real thing. Orders placed during the run are deleted at the end.
 // Used by .github/workflows/design-review.yml. Can also run locally against any instance
-// (e.g. a local EUR instance); the instance needs a category with at least 2 products.
+// (e.g. a local EUR instance, or a new one, empty since D-055): when the instance has no
+// category with 2 positive-priced products or no negative-priced product, the run creates a
+// test catalog ("Test capture", D-057) and deletes it at the end, after its orders.
 //
 // Env: APP_URL (e.g. https://demo.julesgrateau.dev), BASIC_AUTH_USER, BASIC_AUTH_PASS,
 //      OUT_DIR (default ./design-review-output),
@@ -43,14 +45,17 @@ async function api(method, route, body) {
   return res.status === 204 ? null : res.json();
 }
 
-// Use the instance's existing catalog: pick a category with at least 2 positive-priced
-// products, and any negative-priced one (deposit return) for the "total ≤ 0" screen.
+// Use the instance's catalog: pick a category with at least 2 positive-priced products,
+// and any negative-priced one (deposit return) for the "total ≤ 0" screen. The test catalog
+// created by this run, if any, comes first.
 // Read again for each format: the demo is shared, a product renamed during the run would
 // otherwise make all the following formats fail (release 2.2.0 smoke check).
-async function pickData() {
+async function readCatalog(firstCategoryId = null) {
   let picked = null;
   let negative = null;
-  for (const category of await api('GET', '/categories')) {
+  const categories = await api('GET', '/categories');
+  categories.sort((a, b) => (b.id === firstCategoryId) - (a.id === firstCategoryId));
+  for (const category of categories) {
     const products = await api('GET', `/categories/${category.id}/products`);
     const positive = products.filter((p) => p.price > 0);
     if (!picked && positive.length >= 2)
@@ -61,9 +66,56 @@ async function pickData() {
       };
     negative ??= products.find((p) => p.price < 0)?.name ?? null;
   }
+  return { picked, negative };
+}
+
+async function pickData(firstCategoryId) {
+  const { picked, negative } = await readCatalog(firstCategoryId);
   if (!picked)
     throw new Error('No category with at least 2 products on this instance to drive the UI');
   return { ...picked, negative };
+}
+
+// Test catalog (D-057): created only when a piece is missing on an instance read without
+// error (no category with 2 positive-priced products, or no negative-priced product), and
+// then as a whole, in its own category: the existing catalog is never modified. Names that
+// can be spotted if the cleanup fails. Prices in the smallest unit of the instance currency
+// (D-010, D-012): 3 / 2 / -1 tokens, 2,50 € / 1,50 € / -1,00 € (the mixed payment step
+// takes 1 € in cash: the total must be above it).
+const TEST_CATEGORY = 'Test capture';
+const TEST_PRODUCTS = [
+  ['Produit A', { TOKEN: 3, EUR: 250 }],
+  ['Produit B', { TOKEN: 2, EUR: 150 }],
+  ['Retour consigne', { TOKEN: -1, EUR: -100 }],
+];
+
+// Instance currency, from the runtime config that the client reads before it starts.
+// Not found: stop rather than guess (TL-1 of PR #64), prices in tokens on a EUR instance
+// would make a wrong test catalog without any error.
+async function readCurrency() {
+  const res = await fetch(`${APP_URL}/config.js`, { headers: { Authorization: AUTH } });
+  if (!res.ok) throw new Error(`GET /config.js -> ${res.status}`);
+  const currency = /"VITE_CURRENCY"\s*:\s*"(\w+)"/.exec(await res.text())?.[1];
+  if (!currency) throw new Error('VITE_CURRENCY not found in /config.js');
+  if (!(currency in TEST_PRODUCTS[0][1])) throw new Error(`Unknown currency ${currency}`);
+  return currency;
+}
+
+// Fills `testCatalog` as it goes, so that a creation failing half-way is cleaned up too.
+async function ensureTestCatalog(testCatalog) {
+  const { picked, negative } = await readCatalog(); // an API error stops here: nothing created
+  if (picked && negative) return;
+  const currency = await readCurrency();
+  const { id } = await api('POST', '/categories', { name: TEST_CATEGORY });
+  testCatalog.categoryId = id;
+  for (const [name, prices] of TEST_PRODUCTS) {
+    const product = await api('POST', '/products', {
+      name,
+      price: prices[currency],
+      categoryId: id,
+    });
+    testCatalog.productIds.push(product.id);
+  }
 }
 
 // Layout modes (docs/design/spacing-layout.md): desktop, tablet, phone portrait, phone landscape.
@@ -510,14 +562,17 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
 
 async function run() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  const data = await pickData();
-  let catalog = data; // last catalog read, kept when a later read fails (TL-1 of PR #50)
   const createdOrderIds = [];
+  const testCatalog = { categoryId: null, productIds: [] };
 
-  const report = { appUrl: APP_URL, data, viewports: {}, cleanup: null };
+  const report = { appUrl: APP_URL, data: null, viewports: {}, cleanup: null };
   const browser = await chromium.launch();
 
   try {
+    await ensureTestCatalog(testCatalog);
+    const data = await pickData(testCatalog.categoryId);
+    report.data = data;
+    let catalog = data; // last catalog read, kept when a later read fails (TL-1 of PR #50)
     const runs = Object.entries(VIEWPORTS)
       .filter(([viewport]) =>
         ONLY_VIEWPORTS ? ONLY_VIEWPORTS.includes(viewport) : !OPT_IN_VIEWPORTS.includes(viewport)
@@ -541,7 +596,7 @@ async function run() {
       const warnings = [];
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
-          catalog = await pickData();
+          catalog = await pickData(testCatalog.categoryId);
           break;
         } catch (e) {
           if (attempt === 2)
@@ -619,6 +674,18 @@ async function run() {
       deletedOrders: createdOrderIds.filter((id) => !failed.includes(id)),
       failed,
     };
+    // After the orders: deleting the category deletes its products too. Order lines keep
+    // the product name and price (order history preservation, spec 002).
+    if (testCatalog.categoryId) {
+      const deleted = await api('DELETE', `/categories/${testCatalog.categoryId}`)
+        .then(() => true)
+        .catch(() => false);
+      report.cleanup.testCatalog = {
+        category: testCatalog.categoryId,
+        products: testCatalog.productIds,
+        deleted,
+      };
+    }
     fs.writeFileSync(path.join(OUT_DIR, 'report.json'), JSON.stringify(report, null, 2));
     console.log(JSON.stringify(report, null, 2));
   }
