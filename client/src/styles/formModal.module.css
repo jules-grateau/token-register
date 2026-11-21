@@ -11,3 +11,41 @@
   background-color: var(--color-surface);
   border-top: 1px solid var(--color-border);
 }
+
+/*
+ * Phone (full-screen modal, #46 / DS-4 of PR #45): the form fills the screen so the action bar
+ * sits at the bottom of the screen, within thumb reach, even when the fields are short. When the
+ * fields are longer than the screen, the modal scrolls and the bar sticks to the bottom as above.
+ * Desktop is unchanged: these classes are only set on phone.
+ */
+.phoneContent {
+  display: flex;
+  flex-direction: column;
+  /* DS-2 of PR #57: a field scrolled into view (focus, keyboard) stops above the sticky bar
+     (bar height, variables.css, + safe area + a gap) instead of under it. */
+  scroll-padding-bottom: calc(
+    var(--form-actions-height) + env(safe-area-inset-bottom) + var(--mantine-spacing-md)
+  );
+}
+
+.phoneBody {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+
+.phoneForm {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.phoneFields {
+  flex: 1 0 auto;
+}
+
+.phoneActions {
+  margin-top: auto;
+  padding-bottom: calc(var(--mantine-spacing-sm) + env(safe-area-inset-bottom));
+}
