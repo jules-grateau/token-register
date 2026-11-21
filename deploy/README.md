@@ -3,10 +3,10 @@
 All instances run on the VPS from its existing `compose.yaml`, behind Traefik.
 The CI never edits that file: it only pushes images and restarts the matching services.
 
-| Merge into | Image tag                            | Compose services                                       | Approval |
-| ---------- | ------------------------------------ | ------------------------------------------------------ | -------- |
-| `develop`  | `julesgrateau/token-register:test`   | `token-register` (demo.julesgrateau.dev)               | none     |
-| `main`     | `julesgrateau/token-register:latest` | `token-register-<instance>` (variable `PROD_SERVICES`) | required |
+| Merge into | Image tag                            | Compose services                                     | Approval |
+| ---------- | ------------------------------------ | ---------------------------------------------------- | -------- |
+| `develop`  | `julesgrateau/token-register:test`   | `token-register` (demo.julesgrateau.dev)             | none     |
+| `main`     | `julesgrateau/token-register:latest` | `token-register-<instance>` (secret `PROD_SERVICES`) | required |
 
 Flow: `feature/*` → PR into `develop` (CI runs tests) → merge → **auto-deploy to demo/test** →
 PR `develop` → `main` → merge → **approve in GitHub** → deploy to production instances.
@@ -17,11 +17,12 @@ VPS, `docker compose pull` + `up -d --no-deps` of those services only, then chec
 container is still running after the DB migrations).
 
 Adding a new production instance: add its service to the VPS `compose.yaml` with the `:latest`
-image, then add its name to the `PROD_SERVICES` repository variable (see below).
+image, then add its name to the `PROD_SERVICES` repository secret (see below).
 
 The list of production services is not written in this repository: the `deploy` job reads it
-from the `PROD_SERVICES` variable, and the production URL from `PROD_URL`. If either is empty,
-the production deployment fails before connecting to the VPS.
+from the `PROD_SERVICES` secret, masked in the logs. If it is empty, the production deployment
+fails before connecting to the VPS. The logs never print service or container names (they are
+public): read the `docker compose` output on the VPS. The `production` environment has no URL.
 
 ## One-time setup
 
@@ -44,10 +45,8 @@ Create an access token (Account settings → Personal access tokens, _Read & Wri
   - `VPS_SSH_KEY`: private SSH key (the whole file content)
   - `VPS_DEPLOY_PATH`: absolute path of the directory containing `compose.yaml`
   - `VPS_PORT` (optional, defaults to 22)
-- **Settings → Secrets and variables → Actions → Variables**, repository variables (production only):
-  - `PROD_SERVICES`: compose services to restart, space-separated
+  - `PROD_SERVICES`: production compose services to restart, space-separated
     (e.g. `token-register-<instance-a> token-register-<instance-b>`)
-  - `PROD_URL`: URL shown on the `production` environment (e.g. `https://<instance>.example.com`)
 - **Settings → Environments → New environment `production`** → _Required reviewers_: yourself.
   Without it, a merge into `main` restarts the production instances immediately.
 - **Settings → Branches** (recommended): protect `main` and `develop` (require PR + the `test` check).
