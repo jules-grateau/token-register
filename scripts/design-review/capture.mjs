@@ -43,6 +43,8 @@ async function api(method, route, body) {
 
 // Use the instance's existing catalog: pick a category with at least 2 positive-priced
 // products, and any negative-priced one (deposit return) for the "total ≤ 0" screen.
+// Read again for each format: the demo is shared, a product renamed during the run would
+// otherwise make all the following formats fail (release 2.2.0 smoke check).
 async function pickData() {
   let picked = null;
   let negative = null;
@@ -381,7 +383,7 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
 async function run() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const data = await pickData();
-  const STEPS = buildSteps(data);
+  let catalog = data; // last catalog read, kept when a later read fails (TL-1 of PR #50)
   const createdOrderIds = [];
 
   const report = { appUrl: APP_URL, data, viewports: {}, cleanup: null };
@@ -406,7 +408,29 @@ async function run() {
         httpCredentials: { username: USER, password: PASS },
       });
       const page = await context.newPage();
-      const vp = { size: page.viewportSize(), steps: [], consoleErrors: [], pageErrors: [] };
+      // One retry, then the previous catalog with a warning: a transient API error must not
+      // fail the whole run.
+      const warnings = [];
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          catalog = await pickData();
+          break;
+        } catch (e) {
+          if (attempt === 2)
+            warnings.push(`catalog not read again, previous one used: ${String(e).split('\n')[0]}`);
+        }
+      }
+      const vpData = catalog;
+      const STEPS = buildSteps(vpData);
+      const vp = {
+        size: page.viewportSize(),
+        // Only when the catalog changed since the start of the run.
+        ...(JSON.stringify(vpData) !== JSON.stringify(data) ? { data: vpData } : {}),
+        ...(warnings.length ? { warnings } : {}),
+        steps: [],
+        consoleErrors: [],
+        pageErrors: [],
+      };
       page.on('console', (m) => m.type() === 'error' && vp.consoleErrors.push(m.text()));
       page.on('pageerror', (e) => vp.pageErrors.push(String(e)));
       // Track the orders this run creates, to delete exactly those afterwards.
