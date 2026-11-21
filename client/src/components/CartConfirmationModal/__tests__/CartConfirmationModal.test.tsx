@@ -237,6 +237,25 @@ describe('CartConfirmationModal (Encaissement)', () => {
       });
     });
 
+    it('removes a part while the other mode is open: back to the modes (TL-1)', () => {
+      renderModal();
+      fireEvent.click(button('payment_cash'));
+      press('5');
+      fireEvent.click(button('payment_add_part'));
+      fireEvent.click(button('payment_card'));
+      expect(screen.getByTestId('typed-amount')).toHaveTextContent(/^2,50/);
+
+      fireEvent.click(button(/^payment_remove_part/));
+      expect(screen.queryByTestId('typed-amount')).not.toBeInTheDocument();
+      expect(button('payment_card')).toHaveAttribute('aria-pressed', 'false');
+      expect(changeDisplay()).toHaveTextContent('payment_placeholder_mode');
+
+      // The card is prefilled again, with the new amount due.
+      fireEvent.click(button('payment_card'));
+      expect(screen.getByTestId('typed-amount')).toHaveTextContent(/^7,50/);
+      expect(button('payment_collect')).toBeEnabled();
+    });
+
     it('removes a part: the amount due goes back up', () => {
       renderModal();
       fireEvent.click(button('payment_cash'));

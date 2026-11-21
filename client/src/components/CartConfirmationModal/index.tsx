@@ -207,7 +207,12 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
     setView('amounts');
   };
 
-  const handleRemovePart = (removed: PaymentMode) => setParts(removePart(parts, removed));
+  // The amount due changes: back to the modes, so that no amount prefilled from the old rest
+  // stays on screen (TL-1 of PR #47).
+  const handleRemovePart = (removed: PaymentMode) => {
+    setParts(removePart(parts, removed));
+    backToModes();
+  };
 
   const mainAction = (() => {
     const collect = { label: t('payment_collect'), icon: <IconCheck size={22} /> };
