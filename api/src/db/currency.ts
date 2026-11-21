@@ -142,6 +142,11 @@ export type CurrencyConversionPlan = {
   orderItems: OrderItemConversion[];
   /** Lines where the rounded discount would exceed the rounded line total. */
   inconsistentOrderItems: OrderItemConversion[];
+  /**
+   * Lines with no recorded price (NULL product_price): the conversion counts them as 0.
+   * Listed in the preview so the admin can check them before applying (#33).
+   */
+  missingPriceOrderItems: OrderItemConversion[];
   /** Orders with a recorded payment (cash / card amounts, D-034). */
   orderPayments: OrderPaymentConversion[];
   /**
@@ -191,6 +196,9 @@ export async function planCurrencyConversion(
     `SELECT rowid, order_id, product_name, quantity, product_price, discountedAmount
      FROM order_items ORDER BY order_id, rowid`
   );
+  const missingPriceRowids = new Set(
+    itemRows.filter((row) => row.product_price === null).map((row) => row.rowid)
+  );
   const orderItems = itemRows.map((row) => {
     const priceBefore = row.product_price ?? 0;
     return {
@@ -208,6 +216,7 @@ export async function planCurrencyConversion(
   const inconsistentOrderItems = orderItems.filter(
     (item) => item.discountAfter > Math.max(0, item.priceAfter * item.quantity)
   );
+  const missingPriceOrderItems = orderItems.filter((item) => missingPriceRowids.has(item.rowid));
 
   const revenueBefore = orderItems.reduce(
     (sum, item) => sum + lineTotal(item.priceBefore, item.quantity, item.discountBefore),
@@ -227,6 +236,7 @@ export async function planCurrencyConversion(
     products,
     orderItems,
     inconsistentOrderItems,
+    missingPriceOrderItems,
     orderPayments,
     paymentsCleared,
     revenueBefore,
@@ -353,6 +363,18 @@ export function describeConversionPlan(plan: CurrencyConversionPlan): string[] {
       `Warning (D-036): ${plan.orderPayments.length} commandes : la répartition espèces / carte ` +
         'sera effacée (token instances record no payment).'
     );
+  }
+  if (plan.missingPriceOrderItems.length > 0) {
+    // Warning only: these lines do not block the conversion.
+    lines.push(
+      '',
+      `Warning: ${plan.missingPriceOrderItems.length} order line(s) have no recorded price ` +
+        '(product_price is NULL). They are counted as 0 in the totals above and will be ' +
+        'saved with a price of 0 if you apply. Check these orders first:'
+    );
+    for (const item of plan.missingPriceOrderItems) {
+      lines.push(`  order #${item.orderId} ${item.productName || '(no name)'} x${item.quantity}`);
+    }
   }
   if (plan.inconsistentOrderItems.length > 0) {
     lines.push(

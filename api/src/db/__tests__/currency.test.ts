@@ -290,6 +290,37 @@ describe('currency conversion of recorded payments', () => {
     expect(plan.paymentsCleared).toBe(false);
     expect(describeConversionPlan(plan).join(' ')).not.toContain('D-036');
   });
+
+  it('warns about order lines with no recorded price, without blocking (#33)', async () => {
+    await db.exec(`
+      INSERT INTO orders (id, date) VALUES (2, 2000);
+      INSERT INTO order_items
+        (order_id, product_id, quantity, discountedAmount, product_name, product_price, category_name)
+      VALUES (2, 1, 2, 0, 'Bière', NULL, 'Boissons'), (2, 3, 1, 0, NULL, NULL, NULL);
+    `);
+
+    const plan = await planCurrencyConversion(db, 'EUR');
+
+    expect(plan.missingPriceOrderItems.map((item) => [item.orderId, item.quantity])).toEqual([
+      [2, 2],
+      [2, 1],
+    ]);
+    expect(plan.inconsistentOrderItems).toEqual([]);
+    expect(plan.revenueBefore).toBe(4);
+    const output = describeConversionPlan(plan).join('\n');
+    expect(output).toContain('Warning: 2 order line(s) have no recorded price');
+    expect(output).toContain('  order #2 Bière x2');
+    expect(output).toContain('  order #2 (no name) x1');
+
+    await expect(applyCurrencyConversion(db, plan)).resolves.toBeUndefined();
+    expect(await getStoredCurrency(db)).toBe('EUR');
+  });
+
+  it('gives no missing-price warning when every line has a price', async () => {
+    const plan = await planCurrencyConversion(db, 'EUR');
+    expect(plan.missingPriceOrderItems).toEqual([]);
+    expect(describeConversionPlan(plan).join('\n')).not.toContain('no recorded price');
+  });
 });
 
 describe('parseConvertCurrencyArgs', () => {

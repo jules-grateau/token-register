@@ -107,6 +107,10 @@ It is shown read-only in the app (⚙️ menu). Amounts are stored as whole numb
    order totals are converted as usual. The preview warns first: "N commandes : la répartition
    espèces / carte sera effacée".
 
+   Old order lines with no recorded price (`product_price` NULL) are counted as 0. The preview
+   lists them under "Warning: N order line(s) have no recorded price"; they do not block the
+   conversion, and `--apply` saves them with a price of 0.
+
 ## Client name
 
 The app is called **Caisse Claire** (D-039). The name of the association using an instance is
