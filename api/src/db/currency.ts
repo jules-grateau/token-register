@@ -128,6 +128,12 @@ export type OrderItemConversion = {
   discountAfter: number;
 };
 
+/** An order line with a recorded price (D-056). */
+export type PricedOrderItemConversion = OrderItemConversion & {
+  priceBefore: number;
+  priceAfter: number;
+};
+
 export type OrderPaymentConversion = {
   orderId: number;
   cashBefore: number | null;
@@ -142,7 +148,7 @@ export type CurrencyConversionPlan = {
   products: ProductConversion[];
   orderItems: OrderItemConversion[];
   /** Lines where the rounded discount would exceed the rounded line total. */
-  inconsistentOrderItems: OrderItemConversion[];
+  inconsistentOrderItems: PricedOrderItemConversion[];
   /** D-056: lines with no recorded price, kept empty and left out of the revenue. */
   itemsWithoutPrice: OrderItemConversion[];
   /** Orders with a recorded payment (cash / card amounts, D-034). */
@@ -211,7 +217,7 @@ export async function planCurrencyConversion(
   // D-056: a line without a recorded price is left empty and out of the revenue.
   const itemsWithoutPrice = orderItems.filter((item) => item.priceBefore === null);
   const pricedItems = orderItems.filter(
-    (item): item is OrderItemConversion & { priceBefore: number; priceAfter: number } =>
+    (item): item is PricedOrderItemConversion =>
       item.priceBefore !== null && item.priceAfter !== null
   );
 
@@ -391,8 +397,7 @@ export function describeConversionPlan(plan: CurrencyConversionPlan): string[] {
     for (const item of plan.inconsistentOrderItems) {
       lines.push(
         `  order #${item.orderId} ${item.productName} x${item.quantity}: ` +
-          // Always priced: lines without a price are never listed here (D-056).
-          `price ${fmtFrom(item.priceBefore ?? 0)} -> ${fmtTo(item.priceAfter ?? 0)}, ` +
+          `price ${fmtFrom(item.priceBefore)} -> ${fmtTo(item.priceAfter)}, ` +
           `discount ${fmtFrom(item.discountBefore)} -> ${fmtTo(item.discountAfter)}`
       );
     }
