@@ -35,7 +35,7 @@ const ColorSchemeControl: React.FC = () => {
         fullWidth
         aria-labelledby="color-scheme-label"
         radius="md"
-        color="moutarde"
+        color="encre"
         classNames={{ root: classes.root, label: classes.label }}
         value={colorScheme}
         onChange={(value) => {

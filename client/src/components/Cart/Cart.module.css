@@ -42,12 +42,24 @@
   outline-offset: 2px;
 }
 
-/* "Valider" disabled: stays mustard, faded; the state is also given by "Panier vide". */
+/* "Valider" disabled: stays ink, faded; the state is also given by "Panier vide". */
 .checkout.checkout:disabled,
 .checkout.checkout[data-disabled] {
   background-color: var(--color-primary);
   color: var(--color-on-primary);
   opacity: 0.45;
+}
+
+/* On the ink bar (phone), the ink primary would not show: "Valider" is cream with ink text. */
+.bar .checkout.checkout,
+.bar .checkout.checkout:disabled,
+.bar .checkout.checkout[data-disabled] {
+  background-color: var(--color-primary-on-bar);
+  color: var(--color-on-primary-on-bar);
+}
+
+.bar .checkout.checkout:hover:not(:disabled, [data-disabled]) {
+  background-color: var(--color-on-bar-2);
 }
 
 .bar .checkout:focus-visible {

@@ -2,7 +2,7 @@ import React from 'react';
 import { Badge, Button, Flex, Group, Modal, Stack, Text, Title } from '@mantine/core';
 import { useTranslation } from 'react-i18next';
 import { APP_NAME, getAppVersionInfo } from '../../config/version';
-import logoUrl from '../../assets/brand/logo.svg';
+import BrandLogo from '../BrandLogo';
 import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
 
 const SECONDARY = 'var(--color-text-2)';
@@ -40,7 +40,7 @@ const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
     >
       {/* docs/design/components.md, "À propos" (D-040: app name and version, not the client). */}
       <Stack align="center" gap="xs" ta="center">
-        <img src={logoUrl} width={64} height={64} alt="" aria-hidden />
+        <BrandLogo size={64} />
         <Title order={2} fz={24} fw={800}>
           {APP_NAME}
         </Title>

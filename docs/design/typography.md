@@ -22,7 +22,7 @@ Police unique : **Manrope** (titres et corps), graisses **400, 600, 700, 800**. 
 | Onglet catégorie | 16 px | 700 (800 sélectionné) | |
 | Nom produit (carte) | 16 px (`md`) ; 18 px (`lg`) en desktop | 600 | Jamais coupé, aligné à gauche |
 | **Prix produit (carte)** | **20 px** | **800** | `nowrap`, tabulaire |
-| Initiale de la pastille | 22 px | 800 | encre sur moutarde-tint |
+| Initiale de la pastille | 22 px | 800 | olive `--color-tile-icon` sur `--color-icon-tile` |
 | Nom ligne panier | 16 px | 600 | Jamais coupé |
 | Prix ligne panier | 16 px | 700 | `nowrap` |
 | Quantité (sélecteur) | 18 px | 800 | `miw={32}`, centré |
