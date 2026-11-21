@@ -114,6 +114,10 @@ It is shown read-only in the app (⚙️ menu). Amounts are stored as whole numb
    order totals are converted as usual. The preview warns first: "N commandes : la répartition
    espèces / carte sera effacée".
 
+   An order line with no recorded price (possible in an old database) keeps an empty price:
+   the preview warns with "N ligne(s) de commande sans prix enregistré (commandes #x, #y) :
+   prix inconnu, laissé vide" and leaves those lines out of the history total (D-056).
+
 ## Client name
 
 The app is called **Caisse Claire** (D-039). The name of the association using an instance is
