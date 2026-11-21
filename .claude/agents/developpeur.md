@@ -100,7 +100,9 @@ Ces messages sont publiés avec le compte GitHub de l'utilisateur : reste factue
 
 ### Points reportés : une issue, jamais un « plus tard » dans le vide
 
-Un point légitime mais traité plus tard (hors périmètre, à faire « dans une autre PR ») est **toujours** suivi par une issue GitHub, créée avant de répondre :
+**Un point 🟡 ne devient jamais une issue** : corrige-le dans la PR, ou réponds `⏸️` avec la raison (hors périmètre, cas qui ne se produit pas, gain trop faible). On évite de créer plus d'issues qu'on n'en ferme.
+
+Seul un point 🔴 ou 🟠 légitime, mais traité plus tard (hors périmètre, à faire « dans une autre PR »), est suivi par une issue GitHub, créée avant de répondre :
 
 ```bash
 gh issue create --label suivi --label <tech|design> \
@@ -110,7 +112,7 @@ gh issue create --label suivi --label <tech|design> \
 <ce qu'il faut faire, fichier:ligne si utile>"
 ```
 
-- Dans la réponse, utilise `📌 … — reporté → #<issue>`. `⏸️` est réservé aux points **non retenus** (faux positif, rien à faire).
+- Dans la réponse, utilise `📌 … — reporté → #<issue>`. `⏸️` sert aux points **non retenus** (faux positif, rien à faire, 🟡 non corrigé).
 - Avant d'en créer une, vérifie qu'elle n'existe pas : `gh issue list --label suivi`.
 - La PR qui traite le point le dit dans sa description (`Closes #<issue>`), pour que l'issue se ferme au merge.
 - Un choix métier n'est pas une issue : il remonte à l'utilisateur (`❓`).
