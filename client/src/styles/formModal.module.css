@@ -1,0 +1,13 @@
+/*
+ * Action bar of the product / category forms (D-052): always visible, even on a short or zoomed
+ * screen. It sticks to the bottom of the scrolling modal and hides the fields scrolling behind it.
+ */
+.actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-inline: calc(var(--mb-padding, 1rem) * -1);
+  padding: var(--mantine-spacing-sm) var(--mb-padding, 1rem);
+  background-color: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+}

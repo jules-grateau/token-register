@@ -598,3 +598,21 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
 - **Décision** : la palette devient **« Graphite + olive V3 »**. Les neutres graphite remplacent le crème. L'action, la sélection, le badge de quantité et le contour « dans le panier » passent à l'encre (`--color-primary` #26241F, crème #F2EFE8 en sombre). L'**olive** ne sert qu'aux pastilles-icônes produit et au logo, avec des tokens dédiés. Danger et succès sont inchangés. La colonne des catégories (tablette et desktop) prend l'« Option 2 : liseré + teinte » : lignes droites collées, séparées par un filet, ligne choisie en `--color-surface-2` avec un liseré encre de 3 px à gauche et un texte en 800. Les pilules en rangée (téléphone) gardent leur forme. Cette décision remplace **la partie couleurs** de D-039 ; le nom, la police et le logo en ticket restent ceux de D-039. Version : **MINOR, 2.1.0** (réponse : « MINOR, 2.1.0 (Recommended) »), à consigner dans une nouvelle décision (réponse : « New D-051 (Recommended) »). Valeurs et détails des composants : `docs/design/`.
 - **Options écartées** : garder la moutarde (D-039) ; les autres palettes et options de colonne du comparatif ; une version PATCH ou MAJOR ; une simple mise à jour de D-039.
 - **Impact** : `client/src/styles/variables.css`, `client/src/App.tsx` (palette Mantine `encre`), `client/src/components/BrandLogo`, `client/src/assets/brand/`, `client/index.html` (favicon clair / sombre), `client/src/components/Catalog`, `CatalogIcon`, `Cart`, `Register`, `docs/design/`.
+
+### D-052 — Formulaires produit / catégorie : enregistrement direct, confirmation à la fermeture si modifié
+
+- **Date** : 2026-11-21
+- **Confirmée par** : Jules (responsable produit), 2026-11-21
+- **Statut** : Active
+- **Domaine** : Catalogue
+- **Contexte** : retours d'un test utilisateur. Fermer un formulaire produit ou catégorie en cours de modification perdait la saisie sans prévenir ; sur un écran court (PC zoomé), le bouton « Enregistrer » n'était pas visible ; « Enregistrer » demandait toujours une confirmation, même sans modification.
+- **Décision** :
+  - « Enregistrer » enregistre tout de suite, sans confirmation (réponse : « Save at once (Recommended) »). En modification, si rien n'a changé, le formulaire se ferme sans appel à l'API.
+  - Fermer un formulaire modifié ouvre « Enregistrer les modifications ? » avec 3 boutons (réponse : « 3 buttons (Recommended) ») : « Annuler » (retour au formulaire, saisie conservée), « Ne pas enregistrer » (ferme, modifications perdues), « Enregistrer » (enregistre ; si le formulaire est invalide, retour au formulaire avec les erreurs).
+  - Toutes les façons de fermer passent par cette question (réponse : « All ways of closing (Recommended) ») : croix, Échap, « Annuler » et clic hors de la modale. Échap, la croix ou un clic hors du pop-up ramènent au formulaire.
+  - La question est posée aussi en création, dès qu'une saisie a été faite (réponse : « Creation too (Recommended) »). Une valeur ramenée à sa valeur d'origine ne compte pas comme une modification.
+  - Les boutons du formulaire restent visibles en bas, même sur un écran court.
+  - La modale de remise n'est pas concernée.
+  - Version : **2.2.0**, avec la refonte de l'encaissement (réponse : « We'll just do PR a and B in 2.2 ») ; la 2.1.0 ne contient que la palette (D-051).
+- **Options écartées** : garder une confirmation à l'enregistrement quand quelque chose a changé ; un pop-up à 2 boutons (« Continuer la modification » / « Abandonner ») ; désactiver le clic hors de la modale ; ne demander qu'en modification ; une version 2.1.x pour ce correctif seul.
+- **Impact** : `client/src/components/ProductManagement/ProductFormModal.tsx`, `client/src/components/CategoryManagement/CategoryFormModal.tsx`, `client/src/components/UnsavedChangesModal`, `client/src/styles/formModal.module.css`, `client/src/locales`, `scripts/design-review/capture.mjs`.
