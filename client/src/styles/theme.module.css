@@ -39,9 +39,23 @@
 [data-mantine-color-scheme] .popoverDropdown {
   --popover-border-color: var(--color-border);
   --popover-shadow: var(--shadow-pop);
-  background-color: var(--color-surface);
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* When it scrolls, show it (DS-1, DS-2 of PR #58): thin scrollbar (desktop, Android) and a
+     shade at the bottom while there is more below (also on iOS, which hides scrollbars).
+     Shade: fixed layer at the bottom of the box; cover: surface layer at the end of the
+     content, which hides the shade once scrolled to the end, or when the list fits. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+  background:
+    linear-gradient(transparent, var(--color-surface) 60%) center bottom / 100% 40px no-repeat local,
+    radial-gradient(
+        farthest-side at 50% 100%,
+        color-mix(in srgb, var(--color-border-strong) 55%, transparent),
+        transparent
+      )
+      center bottom / 100% 16px no-repeat scroll,
+    var(--color-surface);
 }
 
 /* Inputs: surface 2, strong border (a control, >= 3:1), focus border in the focus color.

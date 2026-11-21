@@ -482,6 +482,28 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
     'discount-modal',
     async (page) => page.getByRole('menuitem', { name: 'Appliquer une réduction' }).click(),
   ],
+  [
+    // Settings menu scrolled to the bottom (DS-1 of PR #58): on a short phone in landscape it
+    // scrolls; "À propos", the last item, must then be in the window and clickable.
+    // Last step, so that the numbers of the other screenshots stay the same.
+    'settings-menu-scrolled',
+    async (page) => {
+      await closeOverlays(page);
+      await page.getByRole('button', { name: 'Mode Édition', exact: true }).click();
+      await page.waitForTimeout(300);
+      await page
+        .locator('.mantine-Menu-dropdown')
+        .evaluate((menu) => menu.scrollTo({ top: menu.scrollHeight }));
+      await page.waitForTimeout(200);
+      const about = page.getByRole('menuitem', { name: 'À propos' });
+      const box = await about.boundingBox();
+      const { height } = page.viewportSize();
+      if (!box || box.y < 0 || box.y + box.height > height)
+        throw new Error(`"À propos" not in the window after scrolling the menu`);
+      // Actionability only (visible, enabled, not covered): the menu stays open.
+      await about.click({ trial: true, timeout: 5000 });
+    },
+  ],
 ];
 
 async function run() {
