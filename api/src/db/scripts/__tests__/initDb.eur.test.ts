@@ -1,27 +1,38 @@
-import fs from 'fs';
-import os from 'os';
-import path from 'path';
 import sqlite3 from 'sqlite3';
 import { open } from 'sqlite';
+import logger from '../../../utils/logger';
+import {
+  createTempDbPath,
+  hasAppTables,
+  waitFor,
+  wasLogged,
+  SEED_DECISION_MESSAGES,
+} from './dbTestUtils';
 
-const tempDbPath = path.join(os.tmpdir(), `test-db-eur-${Date.now()}.sqlite`);
+// Above the 10 s of waitFor, so that its explicit message is the one reported (TL-1).
+jest.setTimeout(15000);
+
+const { dbPath: tempDbPath, cleanup } = createTempDbPath('test-db-eur');
+let infoSpy: jest.SpyInstance;
 const previousCurrency = process.env.CURRENCY;
 
 beforeAll(() => {
+  infoSpy = jest.spyOn(logger, 'info');
   process.env.DATABASE_PATH = tempDbPath;
   process.env.CURRENCY = 'EUR';
-  if (fs.existsSync(tempDbPath)) fs.unlinkSync(tempDbPath);
 });
 
 afterAll(() => {
+  infoSpy.mockRestore();
   if (previousCurrency === undefined) delete process.env.CURRENCY;
   else process.env.CURRENCY = previousCurrency;
-  if (fs.existsSync(tempDbPath)) fs.unlinkSync(tempDbPath);
+  cleanup();
 });
 
 it('starts a new EUR instance with an empty catalog (D-014)', async () => {
   await import('../initDb');
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await waitFor(() => wasLogged(infoSpy, SEED_DECISION_MESSAGES), 'initDb to decide on seeding');
+  await waitFor(() => hasAppTables(tempDbPath), 'initDb to create the tables');
 
   const db = await open({ filename: tempDbPath, driver: sqlite3.Database });
   try {
