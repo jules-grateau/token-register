@@ -11,7 +11,7 @@ import CatalogIconPicker from '../CatalogIcon/CatalogIconPicker';
 import { isCatalogIconKey } from '../../config/catalogIcons';
 import { useCurrency } from '../../hooks/useCurrency';
 import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
-import formClasses from '../../styles/formModal.module.css';
+import { FORM_ACTION_BUTTON_HEIGHT, formModalClassNames } from '../../styles/formModal';
 import {
   fromStoredAmount,
   getDecimalScale,
@@ -71,6 +71,7 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const { currency } = useCurrency();
   const decimalScale = getDecimalScale(currency);
   const isPhone = isPhoneMode(useLayoutMode());
+  const formClasses = formModalClassNames(isPhone);
   const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
   // TL-1 of PR #45: one request at a time, a double click must not create a duplicate.
@@ -196,9 +197,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         centered
         fullScreen={isPhone}
         closeButtonProps={{ size: 44, 'aria-label': t('close') }}
+        classNames={formClasses.modal}
       >
-        <form onSubmit={submit}>
-          <Stack>
+        <form onSubmit={submit} className={formClasses.form}>
+          <Stack className={formClasses.fields}>
             <TextInput
               label={t('product_management.form.name')}
               placeholder={t('product_management.form.name')}
@@ -246,10 +248,15 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
             {/* docs/design/components.md, "Modales": "Annuler" left, main action right, >= 44 px.
                 D-052: the bar sticks to the bottom so "Enregistrer" stays visible on short screens. */}
             <Group justify="flex-end" gap={8} grow={isPhone} className={formClasses.actions}>
-              <Button variant="default" h={44} onClick={guard.requestClose}>
+              <Button
+                variant="default"
+                h={FORM_ACTION_BUTTON_HEIGHT}
+                fw={600}
+                onClick={guard.requestClose}
+              >
                 {t('cancel')}
               </Button>
-              <Button type="submit" h={44} loading={isSaving}>
+              <Button type="submit" h={FORM_ACTION_BUTTON_HEIGHT} fw={600} loading={isSaving}>
                 {isEditMode ? t('actions.save') : t('actions.create')}
               </Button>
             </Group>

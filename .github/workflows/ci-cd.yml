@@ -169,14 +169,28 @@ jobs:
     # instances are only restarted when you approve — never in the middle of an event.
     environment:
       name: ${{ github.ref_name == 'main' && 'production' || 'test' }}
-      url: ${{ github.ref_name == 'main' && 'https://poule-aux-jeux-dor.julesgrateau.dev' || 'https://demo.julesgrateau.dev' }}
+      # No URL for production: environment URLs are public on this repository.
+      url: ${{ github.ref_name != 'main' && 'https://demo.julesgrateau.dev' || '' }}
     steps:
+      # Production services come from the PROD_SERVICES repository secret (masked in the logs),
+      # so the production setup is not written in this public repository.
+      - name: Check the production secret
+        if: github.ref_name == 'main'
+        env:
+          PROD_SERVICES: ${{ secrets.PROD_SERVICES }}
+        run: |
+          if [ -z "$(printf '%s' "$PROD_SERVICES" | tr -d '[:space:]')" ]; then
+            echo "::error::Repository secret PROD_SERVICES is empty (space-separated compose services): nothing would be restarted."
+            exit 1
+          fi
+
       - name: Pull and restart the services on the VPS
         # Pinned to a commit (not a movable tag): this third-party action receives the SSH key.
         uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
         env:
           # Compose services of the VPS compose.yaml running this image tag.
-          SERVICES: ${{ github.ref_name == 'main' && 'token-register-poule token-register-atakora' || 'token-register' }}
+          # Production: repository secret PROD_SERVICES (space-separated), checked above.
+          SERVICES: ${{ github.ref_name == 'main' && secrets.PROD_SERVICES || 'token-register' }}
           DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -188,28 +202,38 @@ jobs:
             set -e
             cd "$DEPLOY_PATH"
 
-            docker compose pull $SERVICES
+            # Never print service or container names: Actions logs are public on this repo, and
+            # the secret is only masked as a whole, not name by name. Read the output on the VPS.
+            if ! docker compose pull --quiet $SERVICES > /dev/null 2>&1; then
+              echo "::error::docker compose pull failed. On the VPS: docker compose pull"
+              exit 1
+            fi
             # --no-deps: only restart these services, never Traefik or the other projects.
-            docker compose up -d --no-deps $SERVICES
+            if ! docker compose up -d --no-deps $SERVICES > /dev/null 2>&1; then
+              echo "::error::docker compose up failed. On the VPS: docker compose up -d --no-deps <service>"
+              exit 1
+            fi
 
             # The entrypoint runs DB init + migrations: a failure makes the container exit/restart.
             sleep 20
             FAILED=0
+            INDEX=0
             for SERVICE in $SERVICES; do
-              CONTAINER=$(docker compose ps -q "$SERVICE")
-              STATE=$(docker inspect -f '{{.State.Status}}' "$CONTAINER")
-              RESTARTS=$(docker inspect -f '{{.RestartCount}}' "$CONTAINER")
+              INDEX=$((INDEX + 1))
+              CONTAINER=$(docker compose ps -q "$SERVICE" 2>/dev/null || true)
+              STATE=$(docker inspect -f '{{.State.Status}}' "$CONTAINER" 2>/dev/null || echo missing)
+              RESTARTS=$(docker inspect -f '{{.RestartCount}}' "$CONTAINER" 2>/dev/null || echo unknown)
               if [ "$STATE" != "running" ] || [ "$RESTARTS" != "0" ]; then
                 # Do not print container logs here: Actions logs are public on this repo and
                 # request logs contain Basic Auth headers. Read them on the VPS instead.
-                echo "::error::$SERVICE failed: state=$STATE restarts=$RESTARTS. On the VPS: docker compose logs --tail=100 $SERVICE"
+                echo "::error::Service #$INDEX failed: state=$STATE restarts=$RESTARTS. On the VPS: docker compose logs --tail=100 <service>"
                 FAILED=1
               else
-                echo "$SERVICE is running."
+                echo "Service #$INDEX is running."
               fi
             done
 
-            docker image prune -f
+            docker image prune -f > /dev/null
             exit $FAILED
 
   # Production only, once the deploy succeeded: git tag v<version> + GitHub Release with

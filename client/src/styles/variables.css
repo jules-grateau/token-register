@@ -62,6 +62,10 @@
   --touch-comfort: 56px;
   /* Collapsed cart bar (docs/design/components.md, "Barre repliée"). */
   --cart-bar-height: 80px;
+  /* Action bar of the product / category forms (styles/formModal.module.css): button height,
+     and bar height with its vertical padding (without the safe area). */
+  --form-actions-button-height: var(--touch-min);
+  --form-actions-height: calc(var(--form-actions-button-height) + var(--mantine-spacing-sm) * 2);
 }
 
 [data-mantine-color-scheme='dark'] {
