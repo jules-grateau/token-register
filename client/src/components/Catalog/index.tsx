@@ -224,6 +224,7 @@ function Catalog(): React.ReactElement {
                       radius={0}
                       h="auto"
                       w={44}
+                      className={classes.columnAction}
                       style={{ flex: 'none' }}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -238,6 +239,7 @@ function Catalog(): React.ReactElement {
                       radius={0}
                       h="auto"
                       w={44}
+                      className={classes.columnAction}
                       style={{ flex: 'none' }}
                       onClick={(e) => {
                         e.stopPropagation();

@@ -227,19 +227,24 @@ describe('ProductFormModal', () => {
       }
     );
 
-    it('"cancel" in the prompt goes back to the form with the typed values', async () => {
-      const onClose = jest.fn();
-      renderEdit(onClose);
-      typeName('Bière blonde');
-      fireEvent.click(screen.getByRole('button', { name: 'close' }));
-      await screen.findByText('unsaved_changes.title');
-      fireEvent.click(within(prompt()).getByRole('button', { name: 'cancel' }));
+    // DS-3 of PR #45: the cross of the prompt does the same as "cancel".
+    it.each([['cancel'], ['close']])(
+      '"%s" in the prompt goes back to the form with the typed values',
+      async (button) => {
+        const onClose = jest.fn();
+        renderEdit(onClose);
+        typeName('Bière blonde');
+        fireEvent.click(screen.getByRole('button', { name: 'close' }));
+        await screen.findByText('unsaved_changes.title');
+        fireEvent.click(within(prompt()).getByRole('button', { name: button }));
 
-      expect(onClose).not.toHaveBeenCalled();
-      expect(await screen.findByLabelText(/product_management.form.name/)).toHaveValue(
-        'Bière blonde'
-      );
-    });
+        expect(onClose).not.toHaveBeenCalled();
+        await waitFor(() =>
+          expect(screen.queryByText('unsaved_changes.title')).not.toBeInTheDocument()
+        );
+        expect(screen.getByLabelText(/product_management.form.name/)).toHaveValue('Bière blonde');
+      }
+    );
 
     it('"discard" closes without saving', async () => {
       const onClose = jest.fn();

@@ -27,15 +27,16 @@ const UnsavedChangesModal: React.FC<UnsavedChangesModalProps> = ({
   const { t } = useTranslation();
   const isPhone = isPhoneMode(useLayoutMode());
 
+  // Same weight on the three buttons, whatever the variant (DS-2 of PR #45).
   const buttons = (
     <>
-      <Button variant="default" h={44} onClick={onKeepEditing}>
+      <Button variant="default" h={44} fw={600} onClick={onKeepEditing}>
         {t('cancel')}
       </Button>
-      <Button variant="light" color="red" h={44} onClick={onDiscard}>
+      <Button variant="light" color="red" h={44} fw={600} onClick={onDiscard}>
         {t('unsaved_changes.discard')}
       </Button>
-      <Button h={44} onClick={onSave}>
+      <Button h={44} fw={600} onClick={onSave}>
         {t('actions.save')}
       </Button>
     </>
