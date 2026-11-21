@@ -3,14 +3,15 @@ import { Modal, TextInput, NumberInput, Select, Button, Group, Stack, Text } fro
 import { useForm } from '@mantine/form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
-import type { CatalogIconKey, ProductType } from 'shared-ts';
+import type { CatalogIconKey, CurrencyCode, ProductType } from 'shared-ts';
 import { useCreateProductMutation, useUpdateProductMutation } from '../../services/product';
 import { useGetCategoriesQuery } from '../../services/categories';
-import ConfirmationModal from '../ConfirmationModal';
+import UnsavedChangesModal, { useUnsavedChangesGuard } from '../UnsavedChangesModal';
 import CatalogIconPicker from '../CatalogIcon/CatalogIconPicker';
 import { isCatalogIconKey } from '../../config/catalogIcons';
 import { useCurrency } from '../../hooks/useCurrency';
 import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
+import formClasses from '../../styles/formModal.module.css';
 import {
   fromStoredAmount,
   getDecimalScale,
@@ -38,6 +39,28 @@ interface ProductFormValues {
 const iconOf = (product?: ProductType | null): CatalogIconKey | null =>
   isCatalogIconKey(product?.icon) ? product.icon : null;
 
+/** Values shown when the form opens: the product, or an empty form in creation. */
+const valuesOf = (
+  product: ProductType | null | undefined,
+  defaultCategoryId: number | null | undefined,
+  currency: CurrencyCode
+): ProductFormValues =>
+  product
+    ? {
+        name: product.name,
+        price: fromStoredAmount(product.price, currency),
+        categoryId: product.categoryId,
+        icon: iconOf(product),
+      }
+    : { name: '', price: 0, categoryId: defaultCategoryId || null, icon: null };
+
+/** D-052: "changed" compares the typed price as a number, so "1,50" equals 1.5. */
+const isSameValues = (a: ProductFormValues, b: ProductFormValues): boolean =>
+  a.name === b.name &&
+  Object.is(parseAmountInput(a.price), parseAmountInput(b.price)) &&
+  a.categoryId === b.categoryId &&
+  a.icon === b.icon;
+
 export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   isOpen,
   onClose,
@@ -51,19 +74,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   const [createProduct] = useCreateProductMutation();
   const [updateProduct] = useUpdateProductMutation();
   const { data: categories } = useGetCategoriesQuery();
-  const [showConfirmation, setShowConfirmation] = useState(false);
-  const [formValuesForConfirmation, setFormValuesForConfirmation] =
-    useState<ProductFormValues | null>(null);
+  const [openedValues, setOpenedValues] = useState<ProductFormValues>(() =>
+    valuesOf(product, defaultCategoryId, currency)
+  );
 
   const isEditMode = !!product;
 
   const form = useForm<ProductFormValues>({
-    initialValues: {
-      name: product?.name || '',
-      price: product ? fromStoredAmount(product.price, currency) : 0,
-      categoryId: product?.categoryId || defaultCategoryId || null,
-      icon: iconOf(product),
-    },
+    initialValues: valuesOf(product, defaultCategoryId, currency),
     validate: {
       name: (value) => (value.trim() ? null : t('errors.required')),
       // D-013: negative prices allowed (deposit return). D-010: 2 decimals max in EUR.
@@ -80,23 +98,17 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
   });
 
   useEffect(() => {
-    if (isOpen && product) {
-      form.setValues({
-        name: product.name,
-        price: fromStoredAmount(product.price, currency),
-        categoryId: product.categoryId,
-        icon: iconOf(product),
-      });
-    } else if (isOpen && !product) {
-      form.setValues({
-        name: '',
-        price: 0,
-        categoryId: defaultCategoryId || null,
-        icon: null,
-      });
+    if (isOpen) {
+      const values = valuesOf(product, defaultCategoryId, currency);
+      form.setValues(values);
+      form.clearErrors();
+      setOpenedValues(values);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, product, defaultCategoryId]);
+
+  const hasChanges = () => !isSameValues(form.getValues(), openedValues);
+  const guard = useUnsavedChangesGuard(hasChanges, onClose);
 
   const categoryOptions =
     categories?.map((category) => ({
@@ -104,10 +116,14 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
       label: category.name,
     })) || [];
 
+  // D-052: saved at once, without confirmation; nothing changed in edit mode = just close.
   const handleSubmit = (values: ProductFormValues) => {
     if (isEditMode) {
-      setFormValuesForConfirmation(values);
-      setShowConfirmation(true);
+      if (isSameValues(values, openedValues)) {
+        onClose();
+        return;
+      }
+      void handleUpdate(values);
     } else {
       void handleCreate(values);
     }
@@ -138,20 +154,18 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
     }
   };
 
-  const handleUpdate = async () => {
-    if (!product || !formValuesForConfirmation) return;
+  const handleUpdate = async (values: ProductFormValues) => {
+    if (!product) return;
 
     try {
       await updateProduct({
         id: product.id,
-        name: formValuesForConfirmation.name,
-        price: toStoredAmount(parseAmountInput(formValuesForConfirmation.price), currency),
-        categoryId: formValuesForConfirmation.categoryId!,
-        icon: formValuesForConfirmation.icon,
+        name: values.name,
+        price: toStoredAmount(parseAmountInput(values.price), currency),
+        categoryId: values.categoryId!,
+        icon: values.icon,
       }).unwrap();
       toast.success(t('product_management.updated'));
-      setShowConfirmation(false);
-      setFormValuesForConfirmation(null);
       form.reset();
       onClose();
     } catch (err) {
@@ -165,26 +179,22 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
           ? String(err.data.error)
           : t('errors.unknown');
       toast.error(errorMessage, { autoClose: 5000 });
-      setShowConfirmation(false);
     }
   };
 
-  const handleCancel = () => {
-    setShowConfirmation(false);
-    setFormValuesForConfirmation(null);
-  };
+  const submit = form.onSubmit(handleSubmit);
 
   return (
     <>
       <Modal
-        opened={isOpen && !showConfirmation}
-        onClose={onClose}
+        opened={isOpen && !guard.isPromptOpen}
+        onClose={guard.requestClose}
         title={isEditMode ? t('product_management.edit') : t('product_management.new')}
         centered
         fullScreen={isPhone}
         closeButtonProps={{ size: 44, 'aria-label': t('close') }}
       >
-        <form onSubmit={form.onSubmit(handleSubmit)}>
+        <form onSubmit={submit}>
           <Stack>
             <TextInput
               label={t('product_management.form.name')}
@@ -230,9 +240,10 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
               onChange={(value) => form.setFieldValue('categoryId', value ? Number(value) : null)}
               error={form.errors.categoryId}
             />
-            {/* docs/design/components.md, "Modales": "Annuler" left, main action right, >= 44 px. */}
-            <Group justify="flex-end" gap={8} mt="md" grow={isPhone}>
-              <Button variant="default" h={44} onClick={onClose}>
+            {/* docs/design/components.md, "Modales": "Annuler" left, main action right, >= 44 px.
+                D-052: the bar sticks to the bottom so "Enregistrer" stays visible on short screens. */}
+            <Group justify="flex-end" gap={8} grow={isPhone} className={formClasses.actions}>
+              <Button variant="default" h={44} onClick={guard.requestClose}>
                 {t('cancel')}
               </Button>
               <Button type="submit" h={44}>
@@ -243,16 +254,15 @@ export const ProductFormModal: React.FC<ProductFormModalProps> = ({
         </form>
       </Modal>
 
-      {isEditMode && (
-        <ConfirmationModal
-          isOpen={showConfirmation}
-          onClose={handleCancel}
-          onConfirm={() => void handleUpdate()}
-          title={t('confirmation')}
-        >
-          {t('product_management.edit')} &quot;{product?.name}&quot;?
-        </ConfirmationModal>
-      )}
+      <UnsavedChangesModal
+        isOpen={isOpen && guard.isPromptOpen}
+        onKeepEditing={guard.keepEditing}
+        onDiscard={guard.discard}
+        onSave={() => {
+          guard.keepEditing();
+          submit();
+        }}
+      />
     </>
   );
 };

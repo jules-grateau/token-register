@@ -71,12 +71,23 @@ const VIEWPORTS = {
   'tablet-landscape': { ...devices['iPad (gen 7) landscape'], deviceScaleFactor: 1 },
   mobile: { ...devices['iPhone 13'], deviceScaleFactor: 1 },
   'mobile-landscape': { ...devices['iPhone 13 landscape'], deviceScaleFactor: 1 },
+  // Short desktop, like a 1080p PC zoomed to 150 % (D-052: "Enregistrer" must stay visible).
+  'desktop-short': { viewport: { width: 1280, height: 600 } },
 };
+// Captured only when asked for in ONLY_VIEWPORTS (not in the release smoke check by default).
+const OPT_IN_VIEWPORTS = ['desktop-short'];
 
 // Closes whatever modal, Drawer or menu is open, and lets the transition end. A confirmation
 // opened over another modal (delete an order from the history) needs one Escape per layer.
 async function closeOverlays(page) {
   for (let i = 0; i < 3; i++) {
+    // "Enregistrer les modifications ?" (D-052): Escape goes back to the form, so discard.
+    const discard = page.getByRole('button', { name: 'Ne pas enregistrer' });
+    if (await discard.isVisible().catch(() => false)) {
+      await discard.click();
+      await page.waitForTimeout(300);
+      continue;
+    }
     await page.keyboard.press('Escape');
     await page.waitForTimeout(300);
     if (
@@ -88,6 +99,14 @@ async function closeOverlays(page) {
     )
       return;
   }
+}
+
+// Types in the first field of the open form, then closes it with Escape: as the form has
+// changes, "Enregistrer les modifications ?" opens (D-052). Not saved: closeOverlays discards.
+async function askToCloseWithChanges(page) {
+  await dialog(page).getByRole('textbox').first().fill('Modifié');
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
 }
 
 async function openSettingsItem(page, item) {
@@ -284,6 +303,7 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
         .click();
     },
   ],
+  ['edit-category-unsaved', async (page) => askToCloseWithChanges(page)],
   [
     'edit-product-form',
     async (page) => {
@@ -295,6 +315,7 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
         .click();
     },
   ],
+  ['edit-product-unsaved', async (page) => askToCloseWithChanges(page)],
   [
     'new-product-form',
     async (page) => {
@@ -348,7 +369,9 @@ async function run() {
 
   try {
     const runs = Object.entries(VIEWPORTS)
-      .filter(([viewport]) => !ONLY_VIEWPORTS || ONLY_VIEWPORTS.includes(viewport))
+      .filter(([viewport]) =>
+        ONLY_VIEWPORTS ? ONLY_VIEWPORTS.includes(viewport) : !OPT_IN_VIEWPORTS.includes(viewport)
+      )
       .flatMap(([viewport, options]) =>
         COLOR_SCHEMES.map((colorScheme) => [viewport, colorScheme, options])
       );

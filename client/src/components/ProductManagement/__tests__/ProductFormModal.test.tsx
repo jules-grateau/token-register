@@ -1,4 +1,4 @@
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { ProductFormModal } from '../ProductFormModal';
 import { render } from '../../../utils/testUtils';
 import { useLayoutMode } from '../../../hooks/useLayoutMode';
@@ -33,8 +33,21 @@ const setCurrency = (currency?: string) => {
   window.APP_CONFIG = currency ? { VITE_CURRENCY: currency } : undefined;
 };
 
-const renderForm = () =>
-  render(<ProductFormModal isOpen={true} onClose={jest.fn()} defaultCategoryId={4} />);
+const renderForm = (onClose: () => void = jest.fn()) =>
+  render(<ProductFormModal isOpen={true} onClose={onClose} defaultCategoryId={4} />);
+
+const product = { id: 7, name: 'Bière', price: 3, categoryId: 4, icon: 'beer' } as const;
+
+const renderEdit = (onClose: () => void = jest.fn()) =>
+  render(<ProductFormModal isOpen={true} onClose={onClose} product={{ ...product }} />);
+
+const prompt = () =>
+  screen.getByText('unsaved_changes.message').closest('[role="dialog"]') as HTMLElement;
+
+const typeName = (name: string) =>
+  fireEvent.change(screen.getByLabelText(/product_management.form.name/), {
+    target: { value: name },
+  });
 
 const fillAndSubmit = (name: string, price: string) => {
   fireEvent.change(screen.getByLabelText(/product_management.form.name/), {
@@ -48,6 +61,7 @@ const fillAndSubmit = (name: string, price: string) => {
 
 describe('ProductFormModal', () => {
   beforeEach(() => {
+    mockUpdateProduct.mockReturnValue({ unwrap: () => Promise.resolve(product) });
     mockCreateProduct.mockReturnValue({ unwrap: () => Promise.resolve(1) });
     (useLayoutMode as jest.Mock).mockReturnValue('desktop');
   });
@@ -159,5 +173,143 @@ describe('ProductFormModal', () => {
     const cancel = screen.getByRole('button', { name: 'cancel' });
     const create = screen.getByRole('button', { name: 'actions.create' });
     expect(cancel.compareDocumentPosition(create) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  // D-052: saved at once, closing with changes asks first.
+  describe('saving and closing (D-052)', () => {
+    it('saves a change at once, without confirmation', async () => {
+      const onClose = jest.fn();
+      renderEdit(onClose);
+      typeName('Bière blonde');
+      fireEvent.click(screen.getByRole('button', { name: 'actions.save' }));
+
+      await waitFor(() =>
+        expect(mockUpdateProduct).toHaveBeenCalledWith({
+          id: 7,
+          name: 'Bière blonde',
+          price: 3,
+          categoryId: 4,
+          icon: 'beer',
+        })
+      );
+      expect(screen.queryByText('unsaved_changes.title')).not.toBeInTheDocument();
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+    });
+
+    it('closes without calling the API when nothing changed', () => {
+      const onClose = jest.fn();
+      renderEdit(onClose);
+      fireEvent.click(screen.getByRole('button', { name: 'actions.save' }));
+
+      expect(onClose).toHaveBeenCalled();
+      expect(mockUpdateProduct).not.toHaveBeenCalled();
+    });
+
+    it.each([['cancel'], ['close']])('closes at once with "%s" when nothing changed', (button) => {
+      const onClose = jest.fn();
+      renderEdit(onClose);
+      fireEvent.click(screen.getByRole('button', { name: button }));
+
+      expect(onClose).toHaveBeenCalled();
+      expect(screen.queryByText('unsaved_changes.title')).not.toBeInTheDocument();
+    });
+
+    it.each([['cancel'], ['close']])(
+      'asks before closing with "%s" after a change',
+      async (button) => {
+        const onClose = jest.fn();
+        renderEdit(onClose);
+        typeName('Bière blonde');
+        fireEvent.click(screen.getByRole('button', { name: button }));
+
+        expect(onClose).not.toHaveBeenCalled();
+        expect(await screen.findByText('unsaved_changes.title')).toBeInTheDocument();
+      }
+    );
+
+    it('"cancel" in the prompt goes back to the form with the typed values', async () => {
+      const onClose = jest.fn();
+      renderEdit(onClose);
+      typeName('Bière blonde');
+      fireEvent.click(screen.getByRole('button', { name: 'close' }));
+      await screen.findByText('unsaved_changes.title');
+      fireEvent.click(within(prompt()).getByRole('button', { name: 'cancel' }));
+
+      expect(onClose).not.toHaveBeenCalled();
+      expect(await screen.findByLabelText(/product_management.form.name/)).toHaveValue(
+        'Bière blonde'
+      );
+    });
+
+    it('"discard" closes without saving', async () => {
+      const onClose = jest.fn();
+      renderEdit(onClose);
+      typeName('Bière blonde');
+      fireEvent.click(screen.getByRole('button', { name: 'close' }));
+      await screen.findByText('unsaved_changes.title');
+      fireEvent.click(within(prompt()).getByRole('button', { name: 'unsaved_changes.discard' }));
+
+      expect(onClose).toHaveBeenCalled();
+      expect(mockUpdateProduct).not.toHaveBeenCalled();
+    });
+
+    it('"save" in the prompt saves the changes', async () => {
+      const onClose = jest.fn();
+      renderEdit(onClose);
+      typeName('Bière blonde');
+      fireEvent.click(screen.getByRole('button', { name: 'close' }));
+      await screen.findByText('unsaved_changes.title');
+      fireEvent.click(within(prompt()).getByRole('button', { name: 'actions.save' }));
+
+      await waitFor(() =>
+        expect(mockUpdateProduct).toHaveBeenCalledWith(
+          expect.objectContaining({ name: 'Bière blonde' })
+        )
+      );
+      await waitFor(() => expect(onClose).toHaveBeenCalled());
+    });
+
+    it('"save" in the prompt keeps the form open when it is invalid', async () => {
+      const onClose = jest.fn();
+      renderForm(onClose);
+      fireEvent.change(screen.getByLabelText(/product_management.form.price/), {
+        target: { value: '2' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'close' }));
+      await screen.findByText('unsaved_changes.title');
+      fireEvent.click(within(prompt()).getByRole('button', { name: 'actions.save' }));
+
+      expect(mockCreateProduct).not.toHaveBeenCalled();
+      expect(onClose).not.toHaveBeenCalled();
+      expect(await screen.findByText('errors.required')).toBeInTheDocument();
+    });
+
+    it('asks in creation too, as soon as something was typed', async () => {
+      const onClose = jest.fn();
+      renderForm(onClose);
+      typeName('Bière');
+      fireEvent.click(screen.getByRole('button', { name: 'cancel' }));
+
+      expect(onClose).not.toHaveBeenCalled();
+      expect(await screen.findByText('unsaved_changes.title')).toBeInTheDocument();
+    });
+
+    it('does not ask in creation when nothing was typed', () => {
+      const onClose = jest.fn();
+      renderForm(onClose);
+      fireEvent.click(screen.getByRole('button', { name: 'cancel' }));
+
+      expect(onClose).toHaveBeenCalled();
+    });
+
+    it('a value typed back to the original is not a change', () => {
+      const onClose = jest.fn();
+      renderEdit(onClose);
+      typeName('Autre');
+      typeName('Bière');
+      fireEvent.click(screen.getByRole('button', { name: 'close' }));
+
+      expect(onClose).toHaveBeenCalled();
+    });
   });
 });
