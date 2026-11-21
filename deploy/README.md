@@ -3,10 +3,10 @@
 All instances run on the VPS from its existing `compose.yaml`, behind Traefik.
 The CI never edits that file: it only pushes images and restarts the matching services.
 
-| Merge into | Image tag                            | Compose services                                 | Approval |
-| ---------- | ------------------------------------ | ------------------------------------------------ | -------- |
-| `develop`  | `julesgrateau/token-register:test`   | `token-register` (demo.julesgrateau.dev)         | none     |
-| `main`     | `julesgrateau/token-register:latest` | `token-register-poule`, `token-register-atakora` | required |
+| Merge into | Image tag                            | Compose services                                     | Approval |
+| ---------- | ------------------------------------ | ---------------------------------------------------- | -------- |
+| `develop`  | `julesgrateau/token-register:test`   | `token-register` (demo.julesgrateau.dev)             | none     |
+| `main`     | `julesgrateau/token-register:latest` | `token-register-<instance>` (secret `PROD_SERVICES`) | required |
 
 Flow: `feature/*` → PR into `develop` (CI runs tests) → merge → **auto-deploy to demo/test** →
 PR `develop` → `main` → merge → **approve in GitHub** → deploy to production instances.
@@ -17,7 +17,12 @@ VPS, `docker compose pull` + `up -d --no-deps` of those services only, then chec
 container is still running after the DB migrations).
 
 Adding a new production instance: add its service to the VPS `compose.yaml` with the `:latest`
-image, then add its name to `SERVICES` in the `deploy` job.
+image, then add its name to the `PROD_SERVICES` repository secret (see below).
+
+The list of production services is not written in this repository: the `deploy` job reads it
+from the `PROD_SERVICES` secret, masked in the logs. If it is empty, the production deployment
+fails before connecting to the VPS. The logs never print service or container names (they are
+public): read the `docker compose` output on the VPS. The `production` environment has no URL.
 
 ## One-time setup
 
@@ -40,6 +45,8 @@ Create an access token (Account settings → Personal access tokens, _Read & Wri
   - `VPS_SSH_KEY`: private SSH key (the whole file content)
   - `VPS_DEPLOY_PATH`: absolute path of the directory containing `compose.yaml`
   - `VPS_PORT` (optional, defaults to 22)
+  - `PROD_SERVICES`: production compose services to restart, space-separated
+    (e.g. `token-register-<instance-a> token-register-<instance-b>`)
 - **Settings → Environments → New environment `production`** → _Required reviewers_: yourself.
   Without it, a merge into `main` restarts the production instances immediately.
 - **Settings → Branches** (recommended): protect `main` and `develop` (require PR + the `test` check).
@@ -50,7 +57,7 @@ Each build is also tagged `sha-<commit>`. On the VPS, temporarily set the servic
 `julesgrateau/token-register:sha-1a2b3c4` in `compose.yaml`, then:
 
 ```sh
-docker compose up -d --no-deps token-register-poule
+docker compose up -d --no-deps token-register-<instance>
 ```
 
 Restore the `:latest` image once a fixed version is merged.
@@ -63,9 +70,9 @@ It is shown read-only in the app (⚙️ menu). Amounts are stored as whole numb
 
 - **New EUR instance**: add `CURRENCY=EUR` to the new service before its first start. It starts
   with an empty catalog (D-014) and records EUR in its database.
-- **Production instances**: `token-register-poule` runs in tokens. `token-register-atakora` runs
-  in euros since 2026-11-19 (history converted with the command below, `CURRENCY: EUR` on its
-  service). The demo uses the `CURRENCY` of its service.
+- **Existing production instances**: each one runs in tokens or in euros according to the
+  `CURRENCY` of its service. An instance moved from tokens to euros has its history converted with
+  the command below. The demo uses the `CURRENCY` of its service.
 - **Databases that predate the currency feature**: on their first start, the migration records
   `TOKEN` in them.
 - **Safety check**: on every start, the migration compares `CURRENCY` with the currency recorded
@@ -132,5 +139,5 @@ the database before deploying, as for any schema change. Token instances record 
 
 From 1.3.0, an EUR instance **refuses an order without payment** (D-035), including the format
 sent by older versions of the app. A tab left open on the previous version gets an error until the
-page is reloaded: after deploying an EUR instance (atakora), ask the cashiers to reload the page.
-Token instances (poule) still accept the old format.
+page is reloaded: after deploying an EUR instance, ask the cashiers to reload the page.
+Token instances still accept the old format.
