@@ -17,7 +17,7 @@ if ! files=$(git diff --name-only --no-renames "$range" 2>/dev/null); then
 fi
 [ -z "$files" ] && { echo false; exit 0; }
 
-NON_APP='^(\.claude/|docs/|scripts/design-review/|\.github/workflows/(tech-lead-review|design-review)\.yml$)|\.md$'
+NON_APP='^(\.claude/|docs/|scripts/(design-review|release-qa)/|\.github/workflows/(tech-lead-review|design-review|release-qa)\.yml$)|\.md$'
 # Markdown inside the app workspaces could be imported by the build: it counts.
 APP_DIRS='^(api|client|shared-ts)/'
 
