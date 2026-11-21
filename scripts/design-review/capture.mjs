@@ -1,4 +1,4 @@
-/* global process, Buffer, fetch, console, document, window */
+/* global process, Buffer, fetch, console, document, window, getComputedStyle */
 // Drives a running instance of the app (the demo, in CI) through its main screens
 // and takes screenshots on desktop, tablet and mobile, like a designer testing the
 // real thing. Orders placed during the run are deleted at the end.
@@ -9,7 +9,9 @@
 //      OUT_DIR (default ./design-review-output),
 //      COLOR_SCHEMES (default "light,dark": the app follows the device scheme, D-041),
 //      ONLY_VIEWPORTS / ONLY_STEPS (optional comma lists, to capture only the screens a PR
-//      touches, D-038; e.g. ONLY_VIEWPORTS=mobile,desktop ONLY_STEPS=home,settings-menu)
+//      touches, D-038; e.g. ONLY_VIEWPORTS=mobile,desktop ONLY_STEPS=home,settings-menu),
+//      PHONE_LANDSCAPE_SIZES (optional, e.g. "667x300,740x320": extra phone landscape
+//      viewports "mobile-landscape-667x300"..., to check the short heights of real phones)
 // Output: <OUT_DIR>/<viewport>-<scheme>/<NN-step>.png + <OUT_DIR>/report.json
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
@@ -71,11 +73,102 @@ const VIEWPORTS = {
   'tablet-landscape': { ...devices['iPad (gen 7) landscape'], deviceScaleFactor: 1 },
   mobile: { ...devices['iPhone 13'], deviceScaleFactor: 1 },
   'mobile-landscape': { ...devices['iPhone 13 landscape'], deviceScaleFactor: 1 },
+  // Real phone in landscape: the browser bars leave about 300 px of height (2.2.1: pop-ups
+  // stuck out of the screen there).
+  'mobile-landscape-short': phoneLandscape(667, 300),
   // Short desktop, like a 1080p PC zoomed to 150 % (D-052: "Enregistrer" must stay visible).
   'desktop-short': { viewport: { width: 1280, height: 600 } },
 };
+for (const size of list(process.env.PHONE_LANDSCAPE_SIZES) ?? []) {
+  const [width, height] = size.split('x').map(Number);
+  VIEWPORTS[`mobile-landscape-${size}`] = phoneLandscape(width, height);
+}
 // Captured only when asked for in ONLY_VIEWPORTS (not in the release smoke check by default).
 const OPT_IN_VIEWPORTS = ['desktop-short'];
+
+function phoneLandscape(width, height) {
+  return { ...devices['iPhone 13 landscape'], viewport: { width, height }, deviceScaleFactor: 1 };
+}
+
+// Pop-ups (modal, drawer, menu, list of options) that stick out of the window, or with a
+// control that cannot be reached: the hidden part is lost, the page behind does not scroll
+// (2.2.1, phone in landscape). A pop-up taller than the window must scroll inside instead.
+// Runs in the page; one entry per problem.
+function findPopupOverflow() {
+  const POPUPS = [
+    '.mantine-Modal-content',
+    '.mantine-Drawer-content',
+    '.mantine-Menu-dropdown',
+    '.mantine-Popover-dropdown',
+    '.mantine-Combobox-dropdown',
+  ].join(',');
+  const CONTROLS =
+    'button, input:not([type="hidden"]), textarea, [role="option"], [role="menuitem"]';
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  const TOLERANCE = 1; // sub-pixel rounding
+  const scrolls = (el) => {
+    const { overflowX, overflowY } = getComputedStyle(el);
+    return (
+      (/auto|scroll/.test(overflowY) && el.scrollHeight > el.clientHeight + TOLERANCE) ||
+      (/auto|scroll/.test(overflowX) && el.scrollWidth > el.clientWidth + TOLERANCE)
+    );
+  };
+  const found = [];
+  for (const popup of document.querySelectorAll(POPUPS)) {
+    const r = popup.getBoundingClientRect();
+    if (!r.width || !r.height || getComputedStyle(popup).visibility === 'hidden') continue;
+    const name = (
+      popup.querySelector('h2')?.textContent?.trim() ||
+      [...popup.classList].find((c) => c.startsWith('mantine-')) ||
+      popup.tagName
+    ).slice(0, 40);
+    const sides = [];
+    if (r.top < -TOLERANCE) sides.push(`top ${Math.round(r.top)} < 0`);
+    if (r.bottom > H + TOLERANCE) sides.push(`bottom ${Math.round(r.bottom)} > ${H}`);
+    if (r.left < -TOLERANCE) sides.push(`left ${Math.round(r.left)} < 0`);
+    if (r.right > W + TOLERANCE) sides.push(`right ${Math.round(r.right)} > ${W}`);
+    if (sides.length) found.push(`${name}: ${sides.join(', ')}`);
+
+    // A control outside the visible area (window and clipping parents), with no scrolling
+    // parent in the pop-up to bring it back: it cannot be used.
+    for (const control of popup.querySelectorAll(CONTROLS)) {
+      const c = control.getBoundingClientRect();
+      if (!c.width || !c.height || control.closest('[aria-hidden="true"]')) continue;
+      let visible = { top: 0, bottom: H, left: 0, right: W };
+      let reachable = false;
+      let folded = false; // inside a closed Collapse: hidden on purpose
+      for (let el = control.parentElement; el && el !== document.body; el = el.parentElement) {
+        if (getComputedStyle(el).overflow === 'visible') continue;
+        const e = el.getBoundingClientRect();
+        if (e.height < 1 || e.width < 1) folded = true;
+        if (popup.contains(el) && scrolls(el)) reachable = true;
+        visible = {
+          top: Math.max(visible.top, e.top),
+          bottom: Math.min(visible.bottom, e.bottom),
+          left: Math.max(visible.left, e.left),
+          right: Math.min(visible.right, e.right),
+        };
+      }
+      const inside =
+        c.top >= visible.top - TOLERANCE &&
+        c.bottom <= visible.bottom + TOLERANCE &&
+        c.left >= visible.left - TOLERANCE &&
+        c.right <= visible.right + TOLERANCE;
+      if (inside || reachable || folded) continue;
+      const label = (
+        control.getAttribute('aria-label') ||
+        control.textContent?.trim() ||
+        control.getAttribute('placeholder') ||
+        control.tagName
+      ).slice(0, 30);
+      found.push(
+        `${name}: "${label}" out of reach (${Math.round(c.top)}-${Math.round(c.bottom)} px, window ${H})`
+      );
+    }
+  }
+  return found;
+}
 
 // Closes whatever modal, Drawer or menu is open, and lets the transition end. A confirmation
 // opened over another modal (delete an order from the history) needs one Escape per layer.
@@ -346,6 +439,15 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
     },
   ],
   [
+    // List of options of a Select, over the form (2.2.1: it must stay in the window).
+    'new-product-category-list',
+    async (page) =>
+      dialog(page)
+        .getByLabel(/^Catégorie/)
+        .first()
+        .click(),
+  ],
+  [
     'new-category-form',
     async (page) => {
       await closeOverlays(page);
@@ -366,15 +468,19 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
     },
   ],
   [
-    'discount-modal',
+    // Menu of a cart line (2.2.1: it must stay in the window).
+    'cart-item-menu',
     async (page) => {
       await closeOverlays(page);
       await page.getByRole('button', { name: 'Terminer' }).click();
       await page.getByRole('tabpanel').getByText(first, { exact: true }).first().click();
       await openCartIfCollapsed(page);
       await page.getByRole('button', { name: "Plus d'actions" }).last().click();
-      await page.getByRole('menuitem', { name: 'Appliquer une réduction' }).click();
     },
+  ],
+  [
+    'discount-modal',
+    async (page) => page.getByRole('menuitem', { name: 'Appliquer une réduction' }).click(),
   ],
 ];
 
@@ -444,7 +550,14 @@ async function run() {
         const overflowX = await page.evaluate(
           () => document.documentElement.scrollWidth > window.innerWidth
         );
-        vp.steps.push({ step, screenshot: path.relative(OUT_DIR, file), error, overflowX });
+        const popupOverflow = await page.evaluate(findPopupOverflow);
+        vp.steps.push({
+          step,
+          screenshot: path.relative(OUT_DIR, file),
+          error,
+          overflowX,
+          ...(popupOverflow.length ? { popupOverflow } : {}),
+        });
       }
 
       report.viewports[name] = vp;

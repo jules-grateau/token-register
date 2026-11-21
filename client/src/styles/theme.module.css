@@ -34,11 +34,14 @@
   --overlay-bg: var(--color-overlay);
 }
 
-/* Menus and popovers: surface, warm border, --shadow-pop. */
+/* Menus and popovers: surface, warm border, --shadow-pop. Scrolls when the window is too short
+   for it: its max-height is set by the `size` middleware of the theme (App.tsx, 2.2.1). */
 [data-mantine-color-scheme] .popoverDropdown {
   --popover-border-color: var(--color-border);
   --popover-shadow: var(--shadow-pop);
   background-color: var(--color-surface);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* Inputs: surface 2, strong border (a control, >= 3:1), focus border in the focus color.

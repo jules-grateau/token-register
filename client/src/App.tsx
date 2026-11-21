@@ -117,7 +117,13 @@ const theme = createTheme({
       },
     }),
     Menu: Menu.extend({ classNames: { dropdown: classes.popoverDropdown } }),
-    Popover: Popover.extend({ classNames: { dropdown: classes.popoverDropdown } }),
+    // Also used by Menu and Select / Combobox. `size`: never taller than the room left in the
+    // window (8 px margin), the dropdown scrolls instead (theme.module.css); phone in landscape
+    // has under 300 px of height (2.2.1). No change when the dropdown fits.
+    Popover: Popover.extend({
+      defaultProps: { middlewares: { flip: true, shift: true, size: { padding: 8 } } },
+      classNames: { dropdown: classes.popoverDropdown },
+    }),
     Input: Input.extend({ classNames: { wrapper: classes.inputWrapper } }),
   },
 });
