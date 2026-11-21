@@ -128,9 +128,12 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
         centered
         fullScreen={isPhone}
         closeButtonProps={{ size: 44, 'aria-label': t('close') }}
+        classNames={
+          isPhone ? { content: formClasses.phoneContent, body: formClasses.phoneBody } : undefined
+        }
       >
-        <form onSubmit={submit}>
-          <Stack>
+        <form onSubmit={submit} className={isPhone ? formClasses.phoneForm : undefined}>
+          <Stack className={isPhone ? formClasses.phoneFields : undefined}>
             <TextInput
               label={t('category_management.form.name')}
               placeholder={t('category_management.form.name')}
@@ -143,7 +146,14 @@ export const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
             />
             {/* docs/design/components.md, "Modales": "Annuler" left, main action right, >= 44 px.
                 D-052: the bar sticks to the bottom so "Enregistrer" stays visible on short screens. */}
-            <Group justify="flex-end" gap={8} grow={isPhone} className={formClasses.actions}>
+            <Group
+              justify="flex-end"
+              gap={8}
+              grow={isPhone}
+              className={
+                isPhone ? `${formClasses.actions} ${formClasses.phoneActions}` : formClasses.actions
+              }
+            >
               <Button variant="default" h={44} onClick={guard.requestClose}>
                 {t('cancel')}
               </Button>
