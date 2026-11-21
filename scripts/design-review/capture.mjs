@@ -356,11 +356,22 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
     },
   ],
   [
+    // Scrolled to the bottom (issue #38): the pagination and "Affichage de 20 sur 21" are in
+    // the window. Fails if the pagination is missing, as the history has more than 20 orders.
     'order-history',
     async (page, { currency, createdOrderIds }) => {
       await closeOverlays(page);
       await fillHistory(sample, currency, createdOrderIds);
       await page.getByRole('button', { name: 'Historique' }).first().click();
+      const pagination = dialog(page).locator('.mantine-Pagination-root');
+      await pagination.waitFor({ timeout: 5000 });
+      // The Stack of the pagination and its count; block "end" scrolls every scrolling parent.
+      await pagination.evaluate((el) => el.parentElement.scrollIntoView({ block: 'end' }));
+      await page.waitForTimeout(200);
+      const box = await pagination.boundingBox();
+      const { height } = page.viewportSize();
+      if (!box || box.y < 0 || box.y + box.height > height)
+        throw new Error('History pagination not in the window after scrolling');
     },
   ],
   [
