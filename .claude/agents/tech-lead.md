@@ -44,6 +44,7 @@ Cette revue tourne automatiquement sur chaque nouvelle PR via `.github/workflows
 - Migrations SQL présentes et documentées si le schéma change
 - Choix métier : tout nouveau comportement métier (prix, remises, commandes, catalogue…) doit correspondre à une décision de `docs/business/decisions.md`. Signale 🟠 un choix métier non documenté, 🔴 du code qui contredit une décision active
 - Tests couvrant la logique ajoutée
+- Scénario de QA de release (D-058) : une PR de feature ajoute son scénario, joué sur toute PR vers `main` par `release-qa.yml` (étape de `scripts/design-review/capture.mjs` pour un écran, fichier de `scripts/release-qa/scenarios/` pour le démarrage, l'API ou une commande admin). Signale 🟠 une PR de feature sans scénario
 
 **Process**
 

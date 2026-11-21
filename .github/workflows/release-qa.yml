@@ -1,0 +1,150 @@
+name: Release QA
+
+# QA of a release (D-058), on every PR to main, before anything goes to production. Fixed
+# tests, no AI. Everything runs in this runner, on throwaway containers of the image built
+# from the PR's commit: the demo and the production instances are never touched.
+#   1. scenarios - scripts/release-qa/run.sh: start on a new database (tokens and euros),
+#                  start that must stop (database impossible to create), currency conversion
+#                  admin command (preview, apply, startup check, back to tokens), init and
+#                  migrations run twice without changing the data.
+#   2. screens   - scripts/design-review/capture.mjs + check-report.mjs on a new instance in
+#                  tokens, then in euros (same checks as the demo smoke check).
+#   + comment    - on failure, the problem list is posted on the PR, in French.
+# Always runs on a PR to main, whatever files it touches (no scripts/ci/app-changed.sh): a
+# release is checked as a whole. Each feature PR adds its own scenario (D-058): a step in
+# capture.mjs for a screen, or a file in scripts/release-qa/scenarios/ for the rest.
+#
+# Blocking: "Release QA" is a required check of main (branch protection). Only the repository
+# admin may bypass it for a false alarm, and says so in a comment on the PR (D-058).
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, ready_for_review, synchronize]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    name: Release QA
+    # Skip drafts, and PRs from forks.
+    if: >-
+      !github.event.pull_request.draft &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    # Pinned: Playwright 1.55 does not support ubuntu-latest (26.04). Bump both together.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      QA_IMAGE: token-register:qa
+      OUT: ${{ github.workspace }}/release-qa-output
+    steps:
+      - uses: actions/checkout@v7
+
+      # Throwaway Basic Auth credentials of the QA instances, masked in the logs.
+      - name: Generate the QA credentials
+        run: |
+          pass=$(openssl rand -hex 16)
+          echo "::add-mask::$pass"
+          { echo "BASIC_AUTH_USER=qa"; echo "BASIC_AUTH_PASS=$pass"; } >> "$GITHUB_ENV"
+          mkdir -p "$OUT"
+
+      - name: Build the image of this commit
+        env:
+          GIT_SHA: ${{ github.event.pull_request.head.sha }}
+        run: docker build --build-arg GIT_SHA="$GIT_SHA" -t "$QA_IMAGE" .
+
+      - name: Scenarios (new database, startup, admin commands)
+        working-directory: ${{ env.OUT }}
+        run: bash "$GITHUB_WORKSPACE/scripts/release-qa/run.sh"
+
+      # Only Playwright is needed: install it apart from the repo, like design-review.yml.
+      - name: Install Playwright
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/pw" && cd "$RUNNER_TEMP/pw"
+          npm init -y > /dev/null
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+          cp "$GITHUB_WORKSPACE/scripts/design-review/capture.mjs" .
+
+      - name: Screens in tokens
+        if: ${{ !cancelled() }}
+        run: bash scripts/release-qa/screens.sh TOKEN 3201
+
+      - name: Screens in euros
+        if: ${{ !cancelled() }}
+        run: bash scripts/release-qa/screens.sh EUR 3202
+
+      - name: Stop the QA instances
+        if: always()
+        run: bash scripts/release-qa/lib.sh cleanup
+
+      - name: Upload the report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-qa
+          path: release-qa-output
+          if-no-files-found: warn
+
+      # Problem lists written by run.sh and screens.sh, posted by the comment job.
+      - name: Gather the problem list
+        if: failure()
+        run: cat "$OUT"/release-qa-problems.md "$OUT"/*/smoke-problems.md > release-qa-problems.md 2> /dev/null || true
+
+      - name: Upload the problem list
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-qa-problems
+          path: release-qa-problems.md
+          if-no-files-found: ignore
+
+  # The release is not validated while the QA fails: say it on the PR, in French (D-058).
+  comment:
+    needs: qa
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      # Absent when the run stopped before any check (image build failed, for instance).
+      - name: Download the problem list
+        uses: actions/download-artifact@v7
+        continue-on-error: true
+        with:
+          name: release-qa-problems
+
+      - name: Comment on the PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          {
+            echo "🧪 **QA de release : ❌ échec, la mise en prod est bloquée.**"
+            echo
+            if [ -s release-qa-problems.md ]; then
+              echo "Vérifications en échec :"
+              echo
+              # Capped: a run where everything fails would exceed the comment size limit.
+              head -n 50 release-qa-problems.md
+              total=$(grep -c '^- ' release-qa-problems.md || true)
+              if [ "$total" -gt 50 ]; then
+                echo "- … et $((total - 50)) autre(s) : voir le résumé du run."
+              fi
+            else
+              echo "Le QA s'est arrêté avant les vérifications (construction de l'image, par exemple)."
+            fi
+            echo
+            echo "Rapport complet et captures (artifact) : $RUN_URL"
+            echo
+            echo "Corriger par une PR vers \`develop\` : le push sur \`develop\` relance le QA."
+            echo "Fausse alerte : seul l'admin du dépôt peut passer outre, en le notant dans un commentaire de cette PR (D-058)."
+          } > comment.md
+          gh pr comment "$PR" --repo "$REPO" --body-file comment.md
