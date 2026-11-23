@@ -9,7 +9,9 @@
 #   3. no commit is a merge, and no commit touches a refused path (each commit, renames seen
 #      as delete + add): .github/, .claude/, CLAUDE.md, .mcp.json, scripts/automation/,
 #      scripts/ci/. What runs the automation, the CI or the agents is changed in a local
-#      session, never by an agent.
+#      session, never by an agent;
+#   4. no commit message has a closing keyword ("fixes #12"): commits reach main at the
+#      release, where it would close that issue. Only the workflow writes "Closes #n".
 # Then pushes this exact branch: git push <origin> <commit>:refs/heads/<branch>, no force.
 # Usage: bash apply-bundle.sh <bundle> <branch> <base sha> new|existing
 # Env: PUSH_TOKEN and REPO (push to GitHub), or PUSH_URL (tests: any git remote).
@@ -44,8 +46,18 @@ esac
 
 [ -z "$(git rev-list --merges "$base..$work")" ] || fail "les commits contiennent un merge, ce que l'automatisation ne pousse pas."
 REFUSED='^(\.github/|\.claude/|CLAUDE\.md$|\.mcp\.json$|scripts/automation/|scripts/ci/)'
-touched=$(git log --no-renames --name-only --format= "$base..$work" | grep -E "$REFUSED" | sort -u || true)
+# -z and core.quotePath=false: a non-ASCII path is listed as is, never quoted ("\303\251"),
+# so it cannot slip past the check.
+touched=""
+while IFS= read -r -d '' path; do
+  [[ "$path" =~ $REFUSED ]] && touched+="$path"$'\n'
+done < <(git -c core.quotePath=false log -z --no-renames --name-only --format= "$base..$work")
+touched=$(printf '%s' "$touched" | sort -u)
 [ -z "$touched" ] || fail "les commits touchent des fichiers réservés ($(echo "$touched" | head -3 | tr '\n' ' ')) : workflows, CI, consignes des agents ou automatisation. Ce changement se fait en session locale, pas par un agent."
+# Commit messages: no closing keyword (same words as neutralize in lib.mjs).
+if git log --format=%B "$base..$work" | grep -qiE '\b(close[sd]?|fix(e[sd])?|resolve[sd]?)[[:space:]]*:?[[:space:]]+#[0-9]'; then
+  fail "un message de commit contient un mot-clé de fermeture (« fixes #n »…), qui fermerait une issue à la release. Seul le workflow écrit « Closes #n » : reformuler le message sans ce mot-clé."
+fi
 
 git push -q "$url" "$work:refs/heads/$branch"
 echo "ok $work"

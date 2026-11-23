@@ -5,15 +5,19 @@
 # Usage: bash make-bundle.sh <branch> <base sha> <out file>
 set -euo pipefail
 
+# The working tree and .git/config may have been changed by the agent: no fsmonitor command and
+# no hook from them may run here.
+g() { git -c core.fsmonitor= -c core.hooksPath=/dev/null "$@"; }
+
 branch="${1:?branch}"
 base="${2:?base}"
 out="${3:?out file}"
-git rev-parse -q --verify "refs/heads/$branch^{commit}" > /dev/null || {
+g rev-parse -q --verify "refs/heads/$branch^{commit}" > /dev/null || {
   echo "::error::Branche locale « $branch » introuvable."; exit 1; }
-count=$(git rev-list --count "$base..refs/heads/$branch")
+count=$(g rev-list --count "$base..refs/heads/$branch")
 if [ "$count" -eq 0 ]; then
   echo "Aucun commit sur « $branch » depuis la base : pas de bundle."
   exit 0
 fi
-git bundle create -q "$out" "refs/heads/$branch" "^$base"
+g bundle create -q "$out" "refs/heads/$branch" "^$base"
 echo "$count commit(s) de « $branch » empaquetés."
