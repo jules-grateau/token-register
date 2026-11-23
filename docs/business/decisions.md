@@ -749,7 +749,7 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - Modèles : développeur en Opus, tech-lead et designer en Sonnet (réponse : « Dev Opus, revues Sonnet (Recommandé) »).
   - Captures du designer prises dans le runner, sur des instances temporaires construites depuis le commit de la PR (réponse : « Dans le runner (Recommandé) »).
   - Boucle de correction : les points 🔴/🟠 du tech-lead et du designer suivent la même boucle, 2 tours au total, tech-lead et designer confondus (réponse : « Même boucle (Recommandé) »).
-  - Version : aucune montée ; les nouveaux workflows et scripts d'automatisation sont hors appli (`scripts/ci/app-changed.sh`). Si la modification d'`app-changed.sh` impose quand même une montée, alors PATCH (réponse : « Aucune montée (Recommandé) »).
+  - Version : aucune montée ; les nouveaux workflows et scripts d'automatisation sont hors appli (`scripts/ci/app-changed.sh`). Si la modification d'`app-changed.sh` impose quand même une montée, alors PATCH (réponse : « Aucune montée (Recommandé) »). C'est le cas : la release 2.3.3 est arrivée sur `main` avant ce changement, `version-check` l'exigera donc. Version **2.3.4**, montée dans la PR du socle.
   - PR de release automatique : titre `Release vX.Y.Z` (version de `develop`), créée « prête » ; son corps liste les PR incluses, recalculé à chaque merge, avec une alerte si la version de `develop` n'est pas au-dessus de celle de `main` (réponse : « Titre vX.Y.Z, prête (Recommandé) »).
   - Le déroulé local de `CLAUDE.md` est gardé en secours (réponse : « Gardé en secours (Recommandé) »).
   - 4 labels : `à-faire`, `en-clarification`, `en-cours`, `bloqué` (réponse : « 4 labels (Recommandé) »).
