@@ -124,6 +124,9 @@ jobs:
           persist-credentials: false
       - name: Use develop's agents and settings
         run: bash "$TRUSTED/trusted-claude.sh"
+      # Bash sandbox of the agents: bubblewrap, socat, user namespaces (sandbox-deps.sh).
+      - name: Sandbox dependencies
+        run: bash "$TRUSTED/sandbox-deps.sh"
       - id: tl
         uses: anthropics/claude-code-action@f431adaf77e0fecf918431e75a2b5b45b85af002 # v1
         env:
@@ -268,6 +271,10 @@ jobs:
           PUSH_TOKEN: ${{ steps.push.outputs.token }}
         run: bash scripts/automation/publish-captures.sh "$PR" "$ROUND" "$RUNNER_TEMP/cap"
 
+      # Bash sandbox of the agents: bubblewrap, socat, user namespaces (sandbox-deps.sh).
+      - name: Sandbox dependencies
+        run: bash "$TRUSTED/sandbox-deps.sh"
+
       - id: ds
         uses: anthropics/claude-code-action@f431adaf77e0fecf918431e75a2b5b45b85af002 # v1
         env:
@@ -399,6 +406,10 @@ jobs:
         run: |
           bash "$TRUSTED/trusted-claude.sh"
           bash "$TRUSTED/setup.sh" "${{ steps.app.outputs.app-slug }}" identity
+      # Before npm ci, which runs the PR's code: the trusted copy is still untouched.
+      # Bash sandbox of the agents: bubblewrap, socat, user namespaces (sandbox-deps.sh).
+      - name: Sandbox dependencies
+        run: bash "$TRUSTED/sandbox-deps.sh"
       - uses: actions/setup-node@v7
         with:
           node-version: 22

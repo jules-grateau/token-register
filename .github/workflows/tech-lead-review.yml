@@ -35,6 +35,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      # Bash sandbox of the agent: bubblewrap, socat, user namespaces (sandbox-deps.sh).
+      - name: Sandbox dependencies
+        run: bash scripts/automation/sandbox-deps.sh
+
       # Pinned to a commit SHA: this action receives the Claude token.
       - uses: anthropics/claude-code-action@f431adaf77e0fecf918431e75a2b5b45b85af002 # v1
         with:
