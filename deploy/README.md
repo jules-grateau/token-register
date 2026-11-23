@@ -3,10 +3,18 @@
 All instances run on the VPS from its existing `compose.yaml`, behind Traefik.
 The CI never edits that file: it only pushes images and restarts the matching services.
 
-| Merge into | Image tag                            | Compose services                                     | Approval |
-| ---------- | ------------------------------------ | ---------------------------------------------------- | -------- |
-| `develop`  | `julesgrateau/token-register:test`   | `token-register` (demo.julesgrateau.dev)             | none     |
-| `main`     | `julesgrateau/token-register:latest` | `token-register-<instance>` (secret `PROD_SERVICES`) | required |
+| Merge into | Image tag                            | Compose services                                                                        | Approval |
+| ---------- | ------------------------------------ | --------------------------------------------------------------------------------------- | -------- |
+| `develop`  | `julesgrateau/token-register:test`   | `token-register` (demo.julesgrateau.dev, tokens) + EUR demo (secret `DEMO_EUR_SERVICE`) | none     |
+| `main`     | `julesgrateau/token-register:latest` | `token-register-<instance>` (secret `PROD_SERVICES`)                                    | required |
+
+**EUR demo** (D-059): a second demo, in euros, redeployed with the token demo on every merge
+into `develop`. Its compose service runs the `:test` image with `CURRENCY=EUR`. Its service
+name, URL and Basic Auth are repository secrets, never written in this repository. After the
+deploy, `scripts/demo/seed-eur-catalog.mjs` gives it a demo catalog **only if it has no
+category and no product at all**; it never modifies what exists (D-055) and refuses an instance
+that is not in euros. The token demo gets no catalog from the CI. If the EUR demo does not
+restart or its catalog cannot be created, the deploy fails.
 
 Flow: `feature/*` → PR into `develop` (CI runs tests) → merge → **auto-deploy to demo/test** →
 PR `develop` → `main` → merge → **approve in GitHub** → deploy to production instances.
@@ -47,6 +55,10 @@ Create an access token (Account settings → Personal access tokens, _Read & Wri
   - `VPS_PORT` (optional, defaults to 22)
   - `PROD_SERVICES`: production compose services to restart, space-separated
     (e.g. `token-register-<instance-a> token-register-<instance-b>`)
+  - `DEMO_EUR_SERVICE`: compose service of the EUR demo (`:test` image, `CURRENCY=EUR`)
+  - `DEMO_EUR_URL`: base URL of the EUR demo (e.g. `https://<eur-demo-host>`)
+  - `DEMO_EUR_BASIC_AUTH_USER`, `DEMO_EUR_BASIC_AUTH_PASS`: its Basic Auth (used by the catalog
+    script after the deploy and by the release smoke check)
 - **Settings → Environments → New environment `production`** → _Required reviewers_: yourself.
   Without it, a merge into `main` restarts the production instances immediately.
 - **Settings → Branches** (recommended): protect `main` and `develop` (require PR + the `test` check).

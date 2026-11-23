@@ -1,7 +1,7 @@
 name: CI/CD
 
 # - Pull requests to develop/main: tests only.
-# - Push (= merge) to develop: tests -> image :test   -> redeploy the demo/test instance.
+# - Push (= merge) to develop: tests -> image :test   -> redeploy the demo instances (tokens + EUR).
 # - Push (= merge) to main:    tests -> image :latest -> redeploy production instances
 #   (after manual approval, configured on the "production" GitHub environment).
 # All of it is skipped when the change can't affect the app (agent prompts, docs,
@@ -184,13 +184,33 @@ jobs:
             exit 1
           fi
 
+      # The EUR demo (D-059) runs next to the token demo, on the same :test image. Its compose
+      # service, URL and Basic Auth come from secrets: nothing about it is written here.
+      - name: Check the EUR demo secrets
+        if: github.ref_name != 'main'
+        env:
+          DEMO_EUR_SERVICE: ${{ secrets.DEMO_EUR_SERVICE }}
+          DEMO_EUR_URL: ${{ secrets.DEMO_EUR_URL }}
+          DEMO_EUR_BASIC_AUTH_USER: ${{ secrets.DEMO_EUR_BASIC_AUTH_USER }}
+          DEMO_EUR_BASIC_AUTH_PASS: ${{ secrets.DEMO_EUR_BASIC_AUTH_PASS }}
+        run: |
+          missing=""
+          for var in DEMO_EUR_SERVICE DEMO_EUR_URL DEMO_EUR_BASIC_AUTH_USER DEMO_EUR_BASIC_AUTH_PASS; do
+            [ -z "$(printf '%s' "${!var}" | tr -d '[:space:]')" ] && missing="$missing $var"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Repository secret(s) not set:$missing (EUR demo, see deploy/README.md)."
+            exit 1
+          fi
+
       - name: Pull and restart the services on the VPS
         # Pinned to a commit (not a movable tag): this third-party action receives the SSH key.
         uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
         env:
           # Compose services of the VPS compose.yaml running this image tag.
           # Production: repository secret PROD_SERVICES (space-separated), checked above.
-          SERVICES: ${{ github.ref_name == 'main' && secrets.PROD_SERVICES || 'token-register' }}
+          # Demo: the token demo and the EUR demo (secret DEMO_EUR_SERVICE, checked above).
+          SERVICES: ${{ github.ref_name == 'main' && secrets.PROD_SERVICES || format('token-register {0}', secrets.DEMO_EUR_SERVICE) }}
           DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -235,6 +255,18 @@ jobs:
 
             docker image prune -f > /dev/null
             exit $FAILED
+
+      # D-059: the EUR demo gets a demo catalog when it has none at all. Never modifies what
+      # exists (D-055); the token demo is not touched. A failure fails the deploy.
+      - uses: actions/checkout@v7
+        if: github.ref_name != 'main'
+      - name: Fill the EUR demo catalog if it is empty
+        if: github.ref_name != 'main'
+        env:
+          APP_URL: ${{ secrets.DEMO_EUR_URL }}
+          BASIC_AUTH_USER: ${{ secrets.DEMO_EUR_BASIC_AUTH_USER }}
+          BASIC_AUTH_PASS: ${{ secrets.DEMO_EUR_BASIC_AUTH_PASS }}
+        run: node scripts/demo/seed-eur-catalog.mjs
 
   # Production only, once the deploy succeeded: git tag v<version> + GitHub Release with
   # notes generated from the merged PRs.

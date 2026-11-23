@@ -713,3 +713,24 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - Ajout du 2026-11-23 : la release qui l'emporte touche `scripts/ci/app-changed.sh`, ce qui exige une montée de version (`version-check`). Version **2.3.2**, montée dans la PR qui corrige l'étape « order-history » de la capture, premier échec du QA de release sur la PR #71 (réponse : « PATCH 2.3.2 (Recommandé) »).
 - **Options écartées** : un agent QA Claude qui déduit et exécute un plan de test à chaque release (coût en tokens, résultats variables) ; un mélange tests fixes + relecture par un agent ; écrans seulement ; jetons seulement ; scénario par feature simplement recommandé ; rapport en anglais ; montée PATCH.
 - **Impact** : `.github/workflows/release-qa.yml`, `scripts/release-qa/`, `scripts/ci/app-changed.sh`, `.claude/agents/developpeur.md`, `.claude/agents/tech-lead.md`, `CLAUDE.md`. La protection de `main` est réglée par l'admin du dépôt.
+
+### D-059 — Deux démos tenues à jour par le CI : une en jetons, une en euros
+
+- **Date** : 2026-11-23
+- **Confirmée par** : Jules (responsable produit), 2026-11-21 (deux démos) et 2026-11-23 (modalités)
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : issue #49. Seule la démo en jetons était redéployée par le CI ; l'instance en euros restait sur une ancienne version, et tester les montants en euros (encaissement, parts, rendu de monnaie) demandait une instance locale. Décision de principe du 2026-11-21 : deux démos toujours à jour, une en jetons et une en euros, chacune avec un catalogue adapté à sa monnaie. Restait à dire comment, sans revenir sur D-055.
+- **Décision** :
+  - La démo EUR est l'instance en euros qui existe déjà, redéployée par le CI à chaque déploiement de la démo, avec la même image (réponse : « L'existante (Recommandé) »).
+  - Son catalogue est créé par un script hors de l'appli (`scripts/demo/seed-eur-catalog.mjs`), lancé par le CI après chaque déploiement, seulement si elle n'a aucune catégorie et aucun produit, sans jamais rien modifier (réponse : « Script auto CI (Recommandé) »). L'initialisation de l'appli reste celle de D-055.
+  - Catalogue aux noms réalistes (réponse : « Noms réalistes (Recommandé) »), liste exacte soumise à validation dans la PR : Boissons (Bière pression 3,50 €, Verre de vin 3,00 €, Soda 2,00 €, Eau 1,00 €, Café 1,50 €), Restauration (Sandwich 4,50 €, Hot-dog 3,50 €, Chips 1,50 €, Part de gâteau 2,50 €), Consignes (Eco-cup 1,00 €, Retour eco-cup -1,00 €).
+  - Les données actuelles de l'instance EUR sont gardées telles quelles : si elle a déjà un catalogue, rien n'est ajouté (réponse : « On les garde (Recommandé) »).
+  - La démo en jetons n'est pas touchée : aucun catalogue créé par le CI (réponse : « On n'y touche pas (Recommandé) »).
+  - Le contrôle automatique des releases (`design-review.yml`) parcourt aussi la démo EUR (réponse : « Oui, aussi EUR (Recommandé) »).
+  - L'URL de la démo EUR, son service et ses identifiants sont des secrets GitHub, jamais écrits dans le dépôt (réponse : « Secret GitHub (Recommandé) »).
+  - Si la démo EUR ne redémarre pas ou si son catalogue ne peut pas être créé, le déploiement échoue (réponse : « Le deploy échoue (Recommandé) »).
+  - Version : **2.3.3** (réponse : « PATCH 2.3.3 (Recommandé) »).
+  - Scénario de QA de release : `scripts/release-qa/scenarios/05-catalogue-demo.sh` (réponse : « Scénario 05 (Recommandé) »).
+- **Options écartées** : une nouvelle instance EUR ; script lancé une seule fois à la main ; saisie du catalogue à la main ; copie du catalogue de la démo jetons ; remise à zéro de l'instance EUR ; catalogue aussi pour la démo jetons ; contrôle des releases sur la démo jetons seulement ; URL affichée comme environnement GitHub ; simple avertissement en cas d'échec ; aucune montée de version ; pas de scénario de QA.
+- **Impact** : `.github/workflows/ci-cd.yml` (job `deploy`), `.github/workflows/design-review.yml`, `scripts/demo/seed-eur-catalog.mjs`, `scripts/release-qa/scenarios/05-catalogue-demo.sh`, `deploy/README.md`. Secrets à créer : `DEMO_EUR_SERVICE`, `DEMO_EUR_URL`, `DEMO_EUR_BASIC_AUTH_USER`, `DEMO_EUR_BASIC_AUTH_PASS`.
