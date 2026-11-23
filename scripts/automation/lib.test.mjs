@@ -7,6 +7,7 @@ import {
   followUpAction,
   isWorkBranch,
   lastClarificationRound,
+  neutralize,
   parsePrMarker,
   prMarker,
 } from './lib.mjs';
@@ -62,6 +63,15 @@ test('clarificationComment groups the parts and ends with the marker', () => {
   assert.doesNotMatch(text, /Ajouts du designer/);
   assert.match(text, /<!-- auto:clarification round=1 -->$/);
   assert.match(clarificationComment({ round: 3, dev: 'x' }), /questions restantes \(2\/3\)/);
+});
+
+test('neutralize breaks mentions and closing references only', () => {
+  const zw = String.fromCharCode(0x200b);
+  assert.equal(neutralize('Merci @someone'), `Merci @${zw}someone`);
+  assert.equal(neutralize('Fixes #12, closes: #3'), `Fixes #${zw}12, closes: #${zw}3`);
+  assert.equal(neutralize('voir #12, mail a@b.fr ? @ seul'), `voir #12, mail a@${zw}b.fr ? @ seul`);
+  assert.equal(neutralize(null), '');
+  assert.doesNotMatch(clarificationComment({ round: 1, dev: 'cc @x, fixes #1' }), /@x|fixes #1/);
 });
 
 test('followUpAction: 3 follow-ups at most, then stop', () => {

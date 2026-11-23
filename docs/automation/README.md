@@ -32,24 +32,32 @@ le label `bloqué` est posé et le propriétaire est mentionné.
   compte, le label `à-faire` est retiré avec un commentaire, et rien n'est transmis aux agents.
 - **Aucun jeton en écriture là où tourne un agent qui écrit du code, ou ce code** (`npm ci`,
   `npm test`) : checkout sans identifiants, pas de jeton d'App dans l'environnement. Le
-  développeur ne fait que des commits locaux, sans `git push` ni `gh pr create`.
+  développeur ne fait que des commits locaux, sans `git push` ni `gh pr create`. Ses commandes
+  Bash tournent sans le jeton Claude ni les jetons GitHub (`CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`,
+  nettoyage « au mieux » de l'action).
 - Ses commits sortent du job sous forme de bundle git. Un job suivant, parti de `develop` et
   seul à détenir le jeton, vérifie le bundle (`scripts/automation/apply-bundle.sh`) :
 
   - la branche cible est `feature/*` ou `fix/*` ;
   - les commits descendent de la tête attendue, et la branche distante n'a pas bougé ;
-  - aucun fichier sous `.github/` n'est touché.
+  - aucun merge, et **aucun commit** ne touche un chemin réservé, renommages compris :
+    `.github/`, `.claude/`, `CLAUDE.md`, `.mcp.json`, `scripts/automation/`, `scripts/ci/`.
 
-  Sinon : `bloqué`. Ce job pousse ensuite sur cette branche exacte, sans forcer, puis publie
+  Sinon : `bloqué`. Les workflows, le CI, les consignes des agents et l'automatisation se
+  modifient **en session locale**, jamais par un agent. Ce job pousse ensuite sur cette branche exacte, sans forcer, puis publie
   la PR ou les réponses de revue rédigées par l'agent.
 
 - Ce qui suit un agent tourne dans un autre job, sur un checkout de `develop`. Chaque jeton
   d'App n'a que les permissions de son job.
-- Une seule exécution à la fois par issue et par PR (`concurrency` sans annulation).
+- Une seule exécution à la fois par issue et par PR (`concurrency` sans annulation). Les
+  événements qui ne viennent pas du propriétaire ont leur propre groupe : ils ne remplacent
+  jamais une réponse du propriétaire en attente.
+- Tout texte d'agent publié (commentaires, réponses, corps de PR, motif d'un `bloqué`) est
+  neutralisé : ni mention `@`, ni mot-clé de fermeture. Seul le workflow ajoute `Closes #n`.
 - Plafonds : 60 tours pour le développeur, 25 pour les revues, 45 minutes par job.
 - Modèles : développeur en Opus, tech-lead et designer en Sonnet (D-038).
-- L'App n'a pas la permission « Workflows » : un agent ne peut pas modifier `.github/workflows/`.
-  Une feature qui le demande s'arrête en `bloqué`, à faire à la main.
+- L'App n'a pas la permission « Workflows » : même hors de cette vérification, elle ne peut
+  pas pousser de changement sous `.github/workflows/`.
 
 ## Mise en place (une fois, par le propriétaire)
 

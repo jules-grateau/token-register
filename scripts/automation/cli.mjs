@@ -8,6 +8,7 @@
 //   node cli.mjs work-branch <name>                                  true | false
 //   node cli.mjs max-round                                           last clarification round allowed
 //   node cli.mjs pr-marker <issue> <ui> <screens>
+//   node cli.mjs neutral <file|->                                    agent text safe to publish
 //   node cli.mjs field <file.json> <key>                             one field, raw ("" if absent)
 // comments.json may come from `gh api --paginate --slurp` (an array of pages): it is flattened.
 import fs from 'node:fs';
@@ -18,6 +19,7 @@ import {
   followUpAction,
   isWorkBranch,
   lastClarificationRound,
+  neutralize,
   prMarker,
 } from './lib.mjs';
 
@@ -40,6 +42,7 @@ const commands = {
   'work-branch': ([name]) => String(isWorkBranch(name)),
   'max-round': () => String(MAX_CLARIFICATION_ROUND),
   'pr-marker': ([issue, ui, screens]) => prMarker({ issue, ui, screens }),
+  neutral: ([file]) => neutralize(fs.readFileSync(!file || file === '-' ? 0 : file, 'utf8')),
   field: ([file, key]) => {
     const value = readJson(file)?.[key];
     if (value === undefined || value === null) return '';
