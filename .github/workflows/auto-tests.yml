@@ -1,0 +1,32 @@
+name: Auto - tests
+
+# Tests of the GitHub automation (D-060): helpers in scripts/automation/, the checks of the
+# developer's commits before they are pushed, and the syntax of its shell scripts. No secret, no AI. Kept apart from ci-cd.yml, which only runs for app changes.
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'scripts/automation/**'
+      - '.github/workflows/auto-*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Helpers
+        run: node --test scripts/automation/*.test.mjs
+      - name: Bundle checks (make-bundle.sh, apply-bundle.sh)
+        run: bash scripts/automation/apply-bundle.test.sh
+      - name: Issue follow-up (fake gh)
+        run: bash scripts/automation/follow-up.test.sh
+      - name: After the developer, PR side (fake gh)
+        run: bash scripts/automation/pr-after-dev.test.sh
+      - name: Shell syntax
+        run: for f in scripts/automation/*.sh; do bash -n "$f" || exit 1; done

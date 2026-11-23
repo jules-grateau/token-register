@@ -15,10 +15,15 @@ concurrency:
 
 jobs:
   review:
-    # Skip drafts, and PRs from forks (they don't get repository secrets).
+    # Skip drafts, and PRs from forks (they don't get repository secrets). Skip also a PR of
+    # the automation (D-060, opened by its bot) when it is marked ready: auto-pr.yml did its
+    # last review.
     if: >-
       !github.event.pull_request.draft &&
-      github.event.pull_request.head.repo.full_name == github.repository
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      !(github.event.action == 'ready_for_review' &&
+        github.event.pull_request.user.type == 'Bot' &&
+        contains(github.event.pull_request.body, '<!-- auto:issue='))
     runs-on: ubuntu-latest
     permissions:
       contents: read
