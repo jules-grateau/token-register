@@ -5,15 +5,18 @@ import {
   buildReviewThread,
   buildThread,
   clarificationComment,
+  closedIssues,
   designState,
   followUpAction,
   isWorkBranch,
   lastClarificationRound,
   stillWaiting,
   neutralize,
+  mergedPrNumbers,
   nextStep,
   parsePrMarker,
   prMarker,
+  releasePr,
   publishAnswers,
   reviewAnswers,
 } from './lib.mjs';
@@ -218,6 +221,47 @@ test('nextStep: a failed or silent review stops the loop', () => {
     nextStep({ round: 1, techLead: tl(0), designer: noDs, designBefore: 'pending' }).action,
     'block'
   );
+});
+
+test('mergedPrNumbers reads merge commits and squash titles', () => {
+  assert.deepEqual(
+    mergedPrNumbers([
+      'Merge pull request #73 from owner/feature/demo-eur',
+      'Fix the cart (#70)',
+      'Direct commit',
+      'Merge pull request #73 from owner/feature/demo-eur',
+      'Merge pull request #8 from owner/fix/x',
+    ]),
+    [8, 70, 73]
+  );
+});
+
+test('closedIssues finds the closing keywords only', () => {
+  assert.deepEqual(closedIssues('Closes #12\n- fixes #3, resolved #12. Voir #99'), [12, 3]);
+  assert.deepEqual(closedIssues('Ce correctif fixes #5 en passant'), []);
+  assert.deepEqual(closedIssues(null), []);
+});
+
+test('releasePr lists the PRs and the closed issues, warns when not bumped', () => {
+  const prs = [
+    { number: 70, title: 'QA de release', body: 'Closes #49' },
+    { number: 73, title: 'Démo EUR', body: null },
+    { number: 74, title: 'Merci @someone pour `x`', body: null },
+    { number: 75, title: 'Arrondi, fixes #12', body: null },
+  ];
+  const ok = releasePr({ version: '2.4.0', mainVersion: '2.3.3', bumped: true, prs });
+  assert.equal(ok.title, 'Release v2.4.0');
+  assert.match(ok.body, /- #70 QA de release\n- #73 Démo EUR/);
+  assert.match(ok.body, /- #74 Merci @\u200bsomeone pour 'x'/);
+  assert.match(ok.body, /- #75 Arrondi, fixes\u200b #12/);
+  assert.doesNotMatch(ok.body, /Closes #12/);
+  assert.match(ok.body, /- Closes #49/);
+  assert.doesNotMatch(ok.body, /⚠️/);
+  assert.match(ok.body, /<!-- auto:release -->/);
+  const late = releasePr({ version: '2.3.3', mainVersion: '2.3.3', bumped: false, prs: [] });
+  assert.match(late.body, /⚠️ La version de `develop` \(2\.3\.3\)/);
+  assert.match(late.body, /aucune PR/);
+  assert.doesNotMatch(late.body, /Issues fermées/);
 });
 
 test('buildReviewThread keeps the owner and the bot, with the line comment ids', () => {
