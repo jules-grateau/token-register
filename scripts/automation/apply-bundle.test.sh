@@ -59,6 +59,14 @@ custom() {
   rm -rf "$T/agent" && git clone -q "$T/origin.git" "$T/agent" -b develop 2> /dev/null
   (cd "$T/agent" && git checkout -q -b "$branch" && eval "$*" && bash "$DIR/make-bundle.sh" "$branch" "$BASE" "$T/work.bundle" > /dev/null)
 }
+for path in ".github/workflows/é.yml" ".claude/agents/é.md"; do
+  agent fix/accent "$path"
+  expect_ko "a non-ASCII reserved path ($path) is refused" fix/accent new "réservés"
+done
+custom fix/closes 'echo c > c.txt && git add c.txt && git commit -qm "Corrige l arrondi, fixes #12"'
+expect_ko "a closing keyword in a commit message is refused" fix/closes new "mot-clé de fermeture"
+custom fix/ref 'echo r > r.txt && git add r.txt && git commit -qm "Arrondi (voir #12)"'
+expect_ok "a plain issue reference in a commit message is accepted" fix/ref new
 custom fix/rename 'mkdir -p docs && git mv .github/workflows/ci.yml docs/ci.yml && git commit -qm move'
 expect_ko "a rename out of .github/ is refused" fix/rename new "réservés"
 custom fix/revert 'mkdir -p .claude && echo x > .claude/x.md && git add -A && git commit -qm add && git rm -q .claude/x.md && git commit -qm remove && echo y > y.txt && git add y.txt && git commit -qm y'

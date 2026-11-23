@@ -44,7 +44,8 @@ le label `bloqué` est posé et le propriétaire est mentionné.
     `.github/`, `.claude/`, `CLAUDE.md`, `.mcp.json`, `scripts/automation/`, `scripts/ci/`.
 
   Sinon : `bloqué`. Les workflows, le CI, les consignes des agents et l'automatisation se
-  modifient **en session locale**, jamais par un agent. Ce job pousse ensuite sur cette branche exacte, sans forcer, puis publie
+  modifient **en session locale**, jamais par un agent. Un message de commit avec un mot-clé de fermeture (« fixes #n ») est
+  aussi refusé. Ce job pousse ensuite sur cette branche exacte, sans forcer, puis publie
   la PR ou les réponses de revue rédigées par l'agent.
 
 - Ce qui suit un agent tourne dans un autre job, sur un checkout de `develop`. Chaque jeton
