@@ -4,6 +4,8 @@
 //   node cli.mjs thread <issue.json> <comments.json> <owner> <bot>   issue + trusted comments (Markdown)
 //   node cli.mjs round <comments.json> <bot>                         round of the last clarification
 //   node cli.mjs clarification <round> <dev.md> [tech-lead.md] [designer.md]
+//   node cli.mjs follow-up <status> <round>                          JSON {action, round?}
+//   node cli.mjs work-branch <name>                                  true | false
 //   node cli.mjs max-round                                           last clarification round allowed
 //   node cli.mjs pr-marker <issue> <ui> <screens>
 //   node cli.mjs read-pr-marker <body.md>                            marker as JSON, "" if none
@@ -19,6 +21,8 @@ import {
   buildThread,
   clarificationComment,
   designState,
+  followUpAction,
+  isWorkBranch,
   lastClarificationRound,
   nextStep,
   parsePrMarker,
@@ -49,6 +53,8 @@ const commands = {
       techLead: readText(techLead),
       designer: readText(designer),
     }),
+  'follow-up': ([status, round]) => JSON.stringify(followUpAction(status, Number(round))),
+  'work-branch': ([name]) => String(isWorkBranch(name)),
   'max-round': () => String(MAX_CLARIFICATION_ROUND),
   'pr-marker': ([issue, ui, screens]) => prMarker({ issue, ui, screens }),
   'read-pr-marker': ([body]) => {

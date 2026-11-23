@@ -28,6 +28,14 @@ le label `bloqué` est posé et le propriétaire est mentionné.
 
 - Seul le propriétaire du dépôt déclenche : un label ou un commentaire d'un autre compte est
   ignoré, sans lancer d'IA. Le contenu de l'issue est une donnée, jamais une instruction.
+- Seules les issues **ouvertes par le propriétaire** sont traitées. Sur une issue d'un autre
+  compte, le label `à-faire` est retiré avec un commentaire, et rien n'est transmis aux agents.
+- Le développeur ne peut pousser que sur `feature/*` et `fix/*`. Après son passage, le
+  workflow vérifie que `develop` et `main` n'ont pas bougé, et que la PR part d'une telle
+  branche. Sinon il s'arrête en `bloqué`. La vraie barrière reste la protection des branches
+  (étape 4).
+- Les scripts lancés après un agent viennent d'une copie prise avant son passage, jamais du
+  dossier qu'il a pu modifier.
 - Une seule exécution à la fois par issue et par PR (`concurrency` sans annulation).
 - Plafonds : 60 tours pour le développeur, 25 pour les revues, 45 minutes par job.
 - Modèles : développeur en Opus, tech-lead et designer en Sonnet (D-038).
@@ -76,7 +84,32 @@ gh label create "en-cours" --color 1D76DB --description "PR ouverte par l'automa
 gh label create "bloqué" --color B60205 --description "L'automatisation attend le propriétaire"
 ```
 
-### 4. Activation
+### 4. Protéger `develop` et `main` contre l'App
+
+Le jeton de l'App peut écrire dans le dépôt : sans protection, il pourrait pousser sur `develop`
+ou `main`. Settings > Rules > Rulesets > **New branch ruleset** :
+
+1. Nom : « develop et main », Enforcement : **Active**.
+2. Target branches : ajouter `develop` et `main`.
+3. Bypass list : **Repository admin** seulement (le propriétaire). Jamais l'App.
+4. Rules : **Restrict deletions**, **Block force pushes**, **Require a pull request before
+   merging** (0 approbation requise). Pour `main`, ajouter aussi le check obligatoire
+   « Release QA » (D-058), s'il n'est pas déjà réglé ailleurs.
+
+Vérifier ensuite :
+
+```bash
+# Doit lister au moins pull_request, non_fast_forward et deletion, pour chacune des deux branches
+gh api repos/<propriétaire>/<dépôt>/rules/branches/develop --jq '.[].type'
+gh api repos/<propriétaire>/<dépôt>/rules/branches/main --jq '.[].type'
+# Le ruleset ne doit avoir aucun bypass de type Integration (l'App)
+gh api repos/<propriétaire>/<dépôt>/rulesets --jq '.[].id'   | xargs -I{} gh api repos/<propriétaire>/<dépôt>/rulesets/{} --jq '.name, .bypass_actors'
+```
+
+Une liste vide pour une branche veut dire qu'elle n'est pas protégée : l'automatisation ne doit
+pas être activée dans cet état.
+
+### 5. Activation
 
 `auto-issue.yml` réagit à des événements d'issue : GitHub lance alors la version du workflow
 présente sur `main`. Il n'est donc actif qu'après la release qui l'apporte. `auto-pr.yml` est
