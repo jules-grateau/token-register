@@ -6,20 +6,37 @@
 //   node cli.mjs clarification <round> <dev.md> [tech-lead.md] [designer.md]
 //   node cli.mjs max-round                                           last clarification round allowed
 //   node cli.mjs pr-marker <issue> <ui> <screens>
+//   node cli.mjs read-pr-marker <body.md>                            marker as JSON, "" if none
+//   node cli.mjs max-review-round                                    last review round allowed
+//   node cli.mjs design-state <comments.json> <bot> <ui>              none | pending | ok | ko
+//   node cli.mjs next-step       (env ROUND, TL_RESULT, TL_OUT, DS_RESULT, DS_OUT, DESIGN) -> JSON
 //   node cli.mjs field <file.json> <key>                             one field, raw ("" if absent)
 // comments.json may come from `gh api --paginate --slurp` (an array of pages): it is flattened.
 import fs from 'node:fs';
 import {
   MAX_CLARIFICATION_ROUND,
+  MAX_REVIEW_ROUND,
   buildThread,
   clarificationComment,
+  designState,
   lastClarificationRound,
+  nextStep,
+  parsePrMarker,
   prMarker,
 } from './lib.mjs';
 
 const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 const readText = (file) => (file && fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '');
 const comments = (file) => readJson(file).flat();
+
+// A structured output of claude-code-action, empty when the step did not run.
+const parseOutput = (text) => {
+  try {
+    return text ? JSON.parse(text) : null;
+  } catch {
+    return null;
+  }
+};
 
 const [command, ...args] = process.argv.slice(2);
 const commands = {
@@ -34,6 +51,23 @@ const commands = {
     }),
   'max-round': () => String(MAX_CLARIFICATION_ROUND),
   'pr-marker': ([issue, ui, screens]) => prMarker({ issue, ui, screens }),
+  'read-pr-marker': ([body]) => {
+    const marker = parsePrMarker(readText(body));
+    return marker ? JSON.stringify(marker) : '';
+  },
+  'max-review-round': () => String(MAX_REVIEW_ROUND),
+  'design-state': ([list, bot, ui]) => designState(comments(list), bot, ui === 'true'),
+  'next-step': () => {
+    const env = process.env;
+    return JSON.stringify(
+      nextStep({
+        round: Number(env.ROUND),
+        techLead: { result: env.TL_RESULT, output: parseOutput(env.TL_OUT) },
+        designer: { result: env.DS_RESULT, output: parseOutput(env.DS_OUT) },
+        designBefore: env.DESIGN,
+      })
+    );
+  },
   field: ([file, key]) => {
     const value = readJson(file)?.[key];
     if (value === undefined || value === null) return '';

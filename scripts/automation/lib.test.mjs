@@ -4,7 +4,9 @@ import assert from 'node:assert/strict';
 import {
   buildThread,
   clarificationComment,
+  designState,
   lastClarificationRound,
+  nextStep,
   parsePrMarker,
   prMarker,
 } from './lib.mjs';
@@ -76,4 +78,78 @@ test('prMarker and parsePrMarker round-trip, unsafe screen names dropped', () =>
     ui: false,
     screens: '',
   });
+});
+
+test('designState follows the last design verdict of the bot', () => {
+  const ok = comment(BOT, '🎨 Revue design : ✅ Validée');
+  const ko = comment(BOT, '🎨 Revue design : ❌ Non validée');
+  assert.equal(designState([ok], BOT, false), 'none');
+  assert.equal(designState([], BOT, true), 'pending');
+  assert.equal(designState([comment(OWNER, '🎨 Revue design : ✅')], BOT, true), 'pending');
+  assert.equal(designState([ok, ko], BOT, true), 'ko');
+  assert.equal(designState([ko, comment(BOT, 'autre'), ok], BOT, true), 'ok');
+});
+
+const tl = (blocking, minor = 0) => ({ result: 'success', output: { blocking, minor } });
+const ds = (verdict, blocking = 0, minor = 0) => ({
+  result: 'success',
+  output: { verdict, blocking, minor },
+});
+const noDs = { result: 'skipped' };
+
+test('nextStep: nothing to fix finishes, 🟡 only goes to the minor fixes', () => {
+  assert.deepEqual(nextStep({ round: 1, techLead: tl(0), designer: noDs, designBefore: 'none' }), {
+    action: 'finish',
+  });
+  assert.deepEqual(
+    nextStep({ round: 1, techLead: tl(0, 2), designer: noDs, designBefore: 'none' }),
+    { action: 'minor' }
+  );
+  assert.deepEqual(nextStep({ round: 2, techLead: tl(0), designer: noDs, designBefore: 'ok' }), {
+    action: 'finish',
+  });
+});
+
+test('nextStep: 🔴/🟠 of the tech-lead or the designer are fixed, 2 rounds at most', () => {
+  assert.equal(
+    nextStep({ round: 1, techLead: tl(1), designer: noDs, designBefore: 'none' }).action,
+    'fix'
+  );
+  assert.equal(
+    nextStep({ round: 2, techLead: tl(0), designer: ds('ko'), designBefore: 'ko' }).action,
+    'fix'
+  );
+  const last = nextStep({ round: 3, techLead: tl(1), designer: ds('ko', 2), designBefore: 'ko' });
+  assert.equal(last.action, 'block');
+  assert.match(last.reason, /il reste 3 point/);
+  assert.equal(
+    nextStep({ round: 1, techLead: tl(0, 1), designer: ds('ok', 0, 1), designBefore: 'pending' })
+      .action,
+    'minor'
+  );
+});
+
+test('nextStep: a failed or silent review stops the loop', () => {
+  const failed = { result: 'failure' };
+  assert.equal(
+    nextStep({ round: 1, techLead: failed, designer: noDs, designBefore: 'none' }).action,
+    'block'
+  );
+  assert.equal(
+    nextStep({ round: 1, techLead: tl(0), designer: failed, designBefore: 'pending' }).action,
+    'block'
+  );
+  assert.equal(
+    nextStep({
+      round: 1,
+      techLead: { result: 'success', output: { blocking: 'x' } },
+      designer: noDs,
+      designBefore: 'none',
+    }).action,
+    'block'
+  );
+  assert.equal(
+    nextStep({ round: 1, techLead: tl(0), designer: noDs, designBefore: 'pending' }).action,
+    'block'
+  );
 });
