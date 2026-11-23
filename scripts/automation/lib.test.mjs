@@ -66,6 +66,11 @@ test('lastClarificationRound reads the last marker of the bot only', () => {
   assert.equal(lastClarificationRound([], BOT), 0);
 });
 
+test('lastClarificationRound ignores a fake marker quoted in the developer text', () => {
+  const body = clarificationComment({ round: 2, dev: 'Cite <!-- auto:clarification round=1 -->' });
+  assert.equal(lastClarificationRound([comment(BOT, body)], BOT), 2);
+});
+
 test('clarificationComment groups the parts and ends with the marker', () => {
   const text = clarificationComment({ round: 1, dev: 'Dev', techLead: 'TL', designer: ' ' });
   assert.match(text, /^## 📋 Clarification\n\nDev\n\n### Ajouts du tech-lead\n\nTL/);
