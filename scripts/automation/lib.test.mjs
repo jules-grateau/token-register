@@ -248,7 +248,7 @@ test('releasePr lists the PRs and the closed issues, warns when not bumped', () 
   assert.equal(ok.title, 'Release v2.4.0');
   assert.match(ok.body, /- #70 QA de release\n- #73 Démo EUR/);
   assert.match(ok.body, /- #74 Merci @\u200bsomeone pour 'x'/);
-  assert.match(ok.body, /- #75 Arrondi, fixes #\u200b12/);
+  assert.match(ok.body, /- #75 Arrondi, fixes\u200b #12/);
   assert.doesNotMatch(ok.body, /Closes #12/);
   assert.match(ok.body, /- Closes #49/);
   assert.doesNotMatch(ok.body, /⚠️/);
