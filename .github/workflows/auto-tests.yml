@@ -26,5 +26,7 @@ jobs:
         run: bash scripts/automation/apply-bundle.test.sh
       - name: Issue follow-up (fake gh)
         run: bash scripts/automation/follow-up.test.sh
+      - name: After the developer, PR side (fake gh)
+        run: bash scripts/automation/pr-after-dev.test.sh
       - name: Shell syntax
         run: for f in scripts/automation/*.sh; do bash -n "$f" || exit 1; done

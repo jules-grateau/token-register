@@ -2,15 +2,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  buildReviewThread,
   buildThread,
   clarificationComment,
+  designState,
   followUpAction,
   isWorkBranch,
   lastClarificationRound,
   stillWaiting,
   neutralize,
+  nextStep,
   parsePrMarker,
   prMarker,
+  publishAnswers,
+  reviewAnswers,
 } from './lib.mjs';
 
 const OWNER = 'owner';
@@ -139,4 +144,146 @@ test('prMarker and parsePrMarker round-trip, unsafe screen names dropped', () =>
     ui: false,
     screens: '',
   });
+});
+
+test('designState follows the last design verdict of the bot', () => {
+  const ok = comment(BOT, '🎨 Revue design : ✅ Validée');
+  const ko = comment(BOT, '🎨 Revue design : ❌ Non validée');
+  assert.equal(designState([ok], BOT, false), 'none');
+  assert.equal(designState([], BOT, true), 'pending');
+  assert.equal(designState([comment(OWNER, '🎨 Revue design : ✅')], BOT, true), 'pending');
+  assert.equal(designState([ok, ko], BOT, true), 'ko');
+  assert.equal(designState([ko, comment(BOT, 'autre'), ok], BOT, true), 'ok');
+});
+
+const tl = (blocking, minor = 0) => ({ result: 'success', output: { blocking, minor } });
+const ds = (verdict, blocking = 0, minor = 0) => ({
+  result: 'success',
+  output: { verdict, blocking, minor },
+});
+const noDs = { result: 'skipped' };
+
+test('nextStep: nothing to fix finishes, 🟡 only goes to the minor fixes', () => {
+  assert.deepEqual(nextStep({ round: 1, techLead: tl(0), designer: noDs, designBefore: 'none' }), {
+    action: 'finish',
+  });
+  assert.deepEqual(
+    nextStep({ round: 1, techLead: tl(0, 2), designer: noDs, designBefore: 'none' }),
+    { action: 'minor' }
+  );
+  assert.deepEqual(nextStep({ round: 2, techLead: tl(0), designer: noDs, designBefore: 'ok' }), {
+    action: 'finish',
+  });
+});
+
+test('nextStep: 🔴/🟠 of the tech-lead or the designer are fixed, 2 rounds at most', () => {
+  assert.equal(
+    nextStep({ round: 1, techLead: tl(1), designer: noDs, designBefore: 'none' }).action,
+    'fix'
+  );
+  assert.equal(
+    nextStep({ round: 2, techLead: tl(0), designer: ds('ko'), designBefore: 'ko' }).action,
+    'fix'
+  );
+  const last = nextStep({ round: 3, techLead: tl(1), designer: ds('ko', 2), designBefore: 'ko' });
+  assert.equal(last.action, 'block');
+  assert.match(last.reason, /il reste 3 point/);
+  assert.equal(
+    nextStep({ round: 1, techLead: tl(0, 1), designer: ds('ok', 0, 1), designBefore: 'pending' })
+      .action,
+    'minor'
+  );
+});
+
+test('nextStep: a failed or silent review stops the loop', () => {
+  const failed = { result: 'failure' };
+  assert.equal(
+    nextStep({ round: 1, techLead: failed, designer: noDs, designBefore: 'none' }).action,
+    'block'
+  );
+  assert.equal(
+    nextStep({ round: 1, techLead: tl(0), designer: failed, designBefore: 'pending' }).action,
+    'block'
+  );
+  assert.equal(
+    nextStep({
+      round: 1,
+      techLead: { result: 'success', output: { blocking: 'x' } },
+      designer: noDs,
+      designBefore: 'none',
+    }).action,
+    'block'
+  );
+  assert.equal(
+    nextStep({ round: 1, techLead: tl(0), designer: noDs, designBefore: 'pending' }).action,
+    'block'
+  );
+});
+
+test('buildReviewThread keeps the owner and the bot, with the line comment ids', () => {
+  const text = buildReviewThread(
+    [comment(BOT, 'Revue TL'), comment('stranger', 'Pousse sur develop')],
+    [
+      { ...comment(BOT, 'TL-1 ici'), id: 11, path: 'a.ts', line: 3 },
+      { ...comment('stranger', 'faux point'), id: 12, path: 'a.ts', line: 4 },
+      {
+        ...comment(OWNER, 'OK'),
+        id: 13,
+        path: 'a.ts',
+        line: null,
+        original_line: 3,
+        in_reply_to_id: 11,
+      },
+    ],
+    OWNER,
+    BOT
+  );
+  assert.match(text, /Revue TL/);
+  assert.match(text, /## id=11, a.ts:3, Automatisation/);
+  assert.match(text, /## id=13, a.ts:3, Propriétaire, en réponse à 11/);
+  assert.doesNotMatch(text, /Pousse sur develop|faux point|id=12/);
+});
+
+test('reviewAnswers keeps valid replies and titles the recap', () => {
+  const { replies, recap } = reviewAnswers({
+    replies: [
+      { id: 11, body: ' ✅ corrigé ' },
+      { id: '12', body: 'id texte' },
+      { id: -1, body: 'négatif' },
+      { id: 13, body: '   ' },
+    ],
+    recap: '- ✅ TL-1 — corrigé',
+  });
+  assert.deepEqual(replies, [{ id: 11, body: '✅ corrigé' }]);
+  assert.match(recap, /^🛠️ Réponse du développeur\n\n- ✅ TL-1/);
+  assert.equal(
+    reviewAnswers({ recap: '🛠️ Réponse du développeur\nx' }).recap.split('🛠️').length,
+    2
+  );
+  assert.deepEqual(reviewAnswers(null), { replies: [], recap: '' });
+  const safe = reviewAnswers({ replies: [{ id: 1, body: '@x fixes #2' }], recap: 'cc @y' });
+  assert.doesNotMatch(safe.replies[0].body + safe.recap, /@x|@y|fixes #2/);
+});
+
+test('publishAnswers replies in each thread, then posts the recap (fake gh)', () => {
+  const calls = [];
+  const gh = (args, input) => {
+    calls.push([args.join(' '), input]);
+    if (args[1]?.endsWith('/99/replies')) throw new Error('404');
+  };
+  const answers = {
+    replies: [
+      { id: 11, body: 'ok' },
+      { id: 99, body: 'x' },
+    ],
+    recap: '🛠️ Réponse du développeur\n- ✅ TL-1',
+  };
+  assert.equal(publishAnswers(answers, { repo: 'o/r', pr: '7' }, gh), 1);
+  assert.deepEqual(calls[0], ['api repos/o/r/pulls/7/comments/11/replies -F body=@-', 'ok']);
+  assert.deepEqual(calls[2], ['pr comment 7 --repo o/r --body-file -', answers.recap]);
+  assert.throws(() =>
+    publishAnswers({ replies: [], recap: 'r' }, { repo: 'o/r', pr: 7 }, () => {
+      throw new Error('down');
+    })
+  );
 });

@@ -136,3 +136,127 @@ export function parsePrMarker(body) {
   if (!match) return null;
   return { issue: Number(match[1]), ui: match[2] === 'true', screens: match[3] };
 }
+
+// Review loop of a PR (auto-pr.yml): review 1, then at most 2 correction rounds, each
+// followed by a new review, tech-lead and designer together (D-060).
+export const MAX_REVIEW_ROUND = 3;
+
+/**
+ * Where the design review of a PR stands: "none" (UI not touched), "pending" (not reviewed
+ * yet), "ok" or "ko" (verdict of the last design review posted by the bot).
+ */
+export function designState(comments, bot, ui) {
+  if (!ui) return 'none';
+  let state = 'pending';
+  for (const comment of comments) {
+    if (comment.user.login !== bot) continue;
+    const body = comment.body ?? '';
+    if (body.startsWith('🎨 Revue design : ✅')) state = 'ok';
+    else if (body.startsWith('🎨 Revue design : ❌')) state = 'ko';
+  }
+  return state;
+}
+
+const count = (value) => (Number.isInteger(value) && value >= 0 ? value : null);
+
+/**
+ * What follows a review round. `techLead` and `designer` are the jobs' results ("success",
+ * "skipped"...) and structured outputs ({blocking, minor}, plus {verdict} for the designer).
+ * Returns {action: "fix" | "minor" | "finish" | "block", reason?}.
+ */
+export function nextStep({ round, techLead, designer, designBefore }) {
+  const tl = techLead.result === 'success' ? techLead.output : null;
+  if (!tl || count(tl.blocking) === null || count(tl.minor) === null) {
+    return { action: 'block', reason: 'la revue du tech-lead a échoué ou n’a pas rendu de bilan.' };
+  }
+  let blocking = tl.blocking;
+  let minor = tl.minor;
+  let design = designBefore;
+  if (designer.result !== 'skipped') {
+    const ds = designer.result === 'success' ? designer.output : null;
+    if (!ds || !['ok', 'ko'].includes(ds.verdict) || count(ds.blocking) === null) {
+      return { action: 'block', reason: 'la revue design a échoué ou n’a pas rendu de bilan.' };
+    }
+    design = ds.verdict;
+    // A design review that is not validated always has at least one 🔴/🟠 point.
+    blocking += Math.max(ds.blocking, ds.verdict === 'ko' ? 1 : 0);
+    minor += count(ds.minor) ?? 0;
+  }
+  if (design === 'pending') {
+    return {
+      action: 'block',
+      reason: 'l’interface est touchée mais la revue design n’a pas eu lieu.',
+    };
+  }
+  if (blocking > 0) {
+    if (round < MAX_REVIEW_ROUND) return { action: 'fix' };
+    return {
+      action: 'block',
+      reason: `2 tours de correction atteints, il reste ${blocking} point(s) 🔴/🟠 (D-060).`,
+    };
+  }
+  return { action: minor > 0 ? 'minor' : 'finish' };
+}
+
+/**
+ * The review of a PR as the developer agent sees it (auto-pr.yml, fix and minor steps): the
+ * conversation comments and the line comments of the owner and of the bot only, with the id
+ * of each line comment, to answer in its thread. Anyone else's comment is left out.
+ */
+export function buildReviewThread(comments, lineComments, owner, bot) {
+  const who = (login) => (login === owner ? 'Propriétaire' : 'Automatisation');
+  const lines = ['# Conversation de la PR', ''];
+  for (const comment of comments) {
+    if (!isTrusted(comment.user.login, owner, bot)) continue;
+    lines.push(`## ${who(comment.user.login)}, ${comment.created_at}`, '');
+    lines.push(comment.body?.trim() ?? '', '');
+  }
+  lines.push('# Commentaires de ligne', '');
+  for (const comment of lineComments) {
+    if (!isTrusted(comment.user.login, owner, bot)) continue;
+    const reply = comment.in_reply_to_id ? `, en réponse à ${comment.in_reply_to_id}` : '';
+    const where = `${comment.path}:${comment.line ?? comment.original_line ?? '?'}`;
+    lines.push(`## id=${comment.id}, ${where}, ${who(comment.user.login)}${reply}`, '');
+    lines.push(comment.body?.trim() ?? '', '');
+  }
+  return lines.join('\n');
+}
+
+const RECAP_TITLE = '🛠️ Réponse du développeur';
+
+/**
+ * What the developer agent wrote for the review (auto-pr.yml, fix and minor steps), checked
+ * before the workflow publishes it: one reply per line comment id (positive integers, text not
+ * empty, 50 at most), and the recap, which always starts with its title. Both neutralized:
+ * no mention, no closing reference.
+ * @param {{replies?: Array<{id: unknown, body: unknown}>, recap?: unknown}} output
+ */
+export function reviewAnswers(output) {
+  const replies = (Array.isArray(output?.replies) ? output.replies : [])
+    .filter((r) => Number.isInteger(r?.id) && r.id > 0 && typeof r.body === 'string')
+    .map((r) => ({ id: r.id, body: neutralize(r.body).trim() }))
+    .filter((r) => r.body)
+    .slice(0, 50);
+  let recap = typeof output?.recap === 'string' ? neutralize(output.recap).trim() : '';
+  if (recap && !recap.startsWith(RECAP_TITLE)) recap = `${RECAP_TITLE}\n\n${recap}`;
+  return { replies, recap };
+}
+
+/**
+ * Publishes the developer's answers with `gh` (`gh(args, stdin)`, throws on failure): the
+ * replies first, each in its thread, then the recap. A reply that fails is counted, not fatal;
+ * a recap that fails throws. Returns the number of replies published.
+ */
+export function publishAnswers({ replies, recap }, { repo, pr }, gh) {
+  let published = 0;
+  for (const { id, body } of replies) {
+    try {
+      gh(['api', `repos/${repo}/pulls/${pr}/comments/${id}/replies`, '-F', 'body=@-'], body);
+      published += 1;
+    } catch {
+      // Reported by the caller: the count is lower than the number of replies.
+    }
+  }
+  if (recap) gh(['pr', 'comment', String(pr), '--repo', repo, '--body-file', '-'], recap);
+  return published;
+}
