@@ -406,14 +406,15 @@ jobs:
         run: |
           bash "$TRUSTED/trusted-claude.sh"
           bash "$TRUSTED/setup.sh" "${{ steps.app.outputs.app-slug }}" identity
+      # Before npm ci, which runs the PR's code: the trusted copy is still untouched.
+      # Bash sandbox of the agents: bubblewrap, socat, user namespaces (sandbox-deps.sh).
+      - name: Sandbox dependencies
+        run: bash "$TRUSTED/sandbox-deps.sh"
       - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      # Bash sandbox of the agents: bubblewrap, socat, user namespaces (sandbox-deps.sh).
-      - name: Sandbox dependencies
-        run: bash "$TRUSTED/sandbox-deps.sh"
 
       - id: dev
         uses: anthropics/claude-code-action@f431adaf77e0fecf918431e75a2b5b45b85af002 # v1

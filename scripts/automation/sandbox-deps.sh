@@ -7,7 +7,12 @@
 # Usage: bash scripts/automation/sandbox-deps.sh
 set -euo pipefail
 
-sudo apt-get update -q
+# A flaky mirror should not block an agent: up to 3 tries.
+for try in 1 2 3; do
+  sudo apt-get update -q && break
+  [ "$try" = 3 ] && exit 1
+  sleep 10
+done
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -q --no-install-recommends bubblewrap socat
 
 # The key only exists on kernels with this AppArmor restriction (Ubuntu 23.10+).
