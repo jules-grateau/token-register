@@ -17,7 +17,7 @@ cli() { node "$DIR/cli.mjs" "$@"; }
 
 printf '%s' "$OUT" > "$AUTO/reply.json"
 status=$(cli field "$AUTO/reply.json" status)
-cli field "$AUTO/reply.json" comment > "$AUTO/reply.md"
+cli field "$AUTO/reply.json" comment | cli neutral - > "$AUTO/reply.md"
 cli follow-up "$status" "$ROUND" > "$AUTO/follow-up.json"
 action=$(cli field "$AUTO/follow-up.json" action)
 
@@ -38,13 +38,14 @@ $(cat "$AUTO/reply.md")"
       bash "$DIR/block.sh" "$ISSUE" "commits du développeur refusés : $why"
       exit 0
     fi
-    title=$(cli field "$AUTO/reply.json" title)
+    title=$(cli field "$AUTO/reply.json" title | cli neutral -)
     [ -n "$title" ] || title="Issue #$ISSUE"
     marker=$(cli pr-marker "$ISSUE" "$(cli field "$AUTO/reply.json" ui)" "$(cli field "$AUTO/reply.json" screens)")
     {
-      cli field "$AUTO/reply.json" body
-      # The issue closes at the release (D-060): the keyword must be there, whatever the agent wrote.
-      grep -qiE "^\s*(-\s+)?closes\s+#$ISSUE\b" <(cli field "$AUTO/reply.json" body) || { echo; echo "Closes #$ISSUE"; }
+      cli field "$AUTO/reply.json" body | cli neutral -
+      # The issue closes at the release (D-060): the workflow's own keyword, the agent's are neutralized.
+      echo
+      echo "Closes #$ISSUE"
       echo
       echo "$marker"
     } > "$AUTO/pr-body.md"

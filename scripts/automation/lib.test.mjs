@@ -10,6 +10,7 @@ import {
   followUpAction,
   isWorkBranch,
   lastClarificationRound,
+  neutralize,
   mergedPrNumbers,
   nextStep,
   parsePrMarker,
@@ -70,6 +71,15 @@ test('clarificationComment groups the parts and ends with the marker', () => {
   assert.doesNotMatch(text, /Ajouts du designer/);
   assert.match(text, /<!-- auto:clarification round=1 -->$/);
   assert.match(clarificationComment({ round: 3, dev: 'x' }), /questions restantes \(2\/3\)/);
+});
+
+test('neutralize breaks mentions and closing references only', () => {
+  const zw = String.fromCharCode(0x200b);
+  assert.equal(neutralize('Merci @someone'), `Merci @${zw}someone`);
+  assert.equal(neutralize('Fixes #12, closes: #3'), `Fixes #${zw}12, closes: #${zw}3`);
+  assert.equal(neutralize('voir #12, mail a@b.fr ? @ seul'), `voir #12, mail a@${zw}b.fr ? @ seul`);
+  assert.equal(neutralize(null), '');
+  assert.doesNotMatch(clarificationComment({ round: 1, dev: 'cc @x, fixes #1' }), /@x|fixes #1/);
 });
 
 test('followUpAction: 3 follow-ups at most, then stop', () => {
@@ -272,6 +282,8 @@ test('reviewAnswers keeps valid replies and titles the recap', () => {
     2
   );
   assert.deepEqual(reviewAnswers(null), { replies: [], recap: '' });
+  const safe = reviewAnswers({ replies: [{ id: 1, body: '@x fixes #2' }], recap: 'cc @y' });
+  assert.doesNotMatch(safe.replies[0].body + safe.recap, /@x|@y|fixes #2/);
 });
 
 test('publishAnswers replies in each thread, then posts the recap (fake gh)', () => {

@@ -9,6 +9,7 @@
 //   node cli.mjs work-branch <name>                                  true | false
 //   node cli.mjs max-round                                           last clarification round allowed
 //   node cli.mjs pr-marker <issue> <ui> <screens>
+//   node cli.mjs neutral <file|->                                    agent text safe to publish
 //   node cli.mjs read-pr-marker <body.md>                            marker as JSON, "" if none
 //   node cli.mjs max-review-round                                    last review round allowed
 //   node cli.mjs design-state <comments.json> <bot> <ui>              none | pending | ok | ko
@@ -28,6 +29,7 @@ import {
   followUpAction,
   isWorkBranch,
   lastClarificationRound,
+  neutralize,
   mergedPrNumbers,
   nextStep,
   parsePrMarker,
@@ -65,6 +67,7 @@ const commands = {
   'work-branch': ([name]) => String(isWorkBranch(name)),
   'max-round': () => String(MAX_CLARIFICATION_ROUND),
   'pr-marker': ([issue, ui, screens]) => prMarker({ issue, ui, screens }),
+  neutral: ([file]) => neutralize(fs.readFileSync(!file || file === '-' ? 0 : file, 'utf8')),
   'read-pr-marker': ([body]) => {
     const marker = parsePrMarker(readText(body));
     return marker ? JSON.stringify(marker) : '';

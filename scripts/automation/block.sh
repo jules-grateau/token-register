@@ -8,6 +8,8 @@ set -uo pipefail
 
 number="${1:?number}"
 reason="${2:?reason}"
+# The reason may quote an agent (D-060): no mention, no closing reference from it.
+reason=$(printf '%s' "$reason" | node "$(cd "$(dirname "$0")" && pwd)/cli.mjs" neutral -)
 gh api "repos/$REPO/issues/$number/labels" -f "labels[]=bloqué" > /dev/null || true
 gh api "repos/$REPO/issues/$number/comments" -F body=@- > /dev/null << BODY
 ⛔ @$OWNER, l'automatisation s'arrête ici : $reason
