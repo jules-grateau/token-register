@@ -217,7 +217,9 @@ export function releasePr({ version, mainVersion, bumped, prs }) {
   const plain = (title) =>
     String(title)
       .replace(/@/g, '@' + ZWSP)
-      .replace(/`/g, "'");
+      .replace(/`/g, "'")
+      // "fixes #12" in a title would close that issue at the release: break the reference.
+      .replace(/\b(close[sd]?|fix(?:e[sd])?|resolve[sd]?)(\s+)#(?=\d)/gi, '$1$2#' + ZWSP);
   for (const pr of prs) lines.push(`- #${pr.number} ${plain(pr.title)}`);
   const issues = [...new Set(prs.flatMap((pr) => closedIssues(pr.body)))];
   if (issues.length > 0) {

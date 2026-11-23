@@ -29,6 +29,9 @@ jobs:
         with:
           app-id: ${{ secrets.AUTOMATION_APP_ID }}
           private-key: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
+          # Read the PRs, create or edit the release PR.
+          permission-contents: read
+          permission-pull-requests: write
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0

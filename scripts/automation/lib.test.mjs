@@ -214,11 +214,14 @@ test('releasePr lists the PRs and the closed issues, warns when not bumped', () 
     { number: 70, title: 'QA de release', body: 'Closes #49' },
     { number: 73, title: 'Démo EUR', body: null },
     { number: 74, title: 'Merci @someone pour `x`', body: null },
+    { number: 75, title: 'Arrondi, fixes #12', body: null },
   ];
   const ok = releasePr({ version: '2.4.0', mainVersion: '2.3.3', bumped: true, prs });
   assert.equal(ok.title, 'Release v2.4.0');
   assert.match(ok.body, /- #70 QA de release\n- #73 Démo EUR/);
   assert.match(ok.body, /- #74 Merci @\u200bsomeone pour 'x'/);
+  assert.match(ok.body, /- #75 Arrondi, fixes #\u200b12/);
+  assert.doesNotMatch(ok.body, /Closes #12/);
   assert.match(ok.body, /- Closes #49/);
   assert.doesNotMatch(ok.body, /⚠️/);
   assert.match(ok.body, /<!-- auto:release -->/);
