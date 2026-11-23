@@ -710,5 +710,6 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - Chaque PR de feature ajoute son scénario (une étape de `capture.mjs` pour un écran, un fichier de `scripts/release-qa/scenarios/` pour le reste) ; le tech-lead le vérifie (réponse : « Oui, obligatoire (Recommandé) »).
   - Le rapport et le commentaire d'échec sont en français (réponse : « Français (Recommandé) »).
   - Outillage seulement : pas de montée de version (réponse : « Aucune montée (Recommandé) », D-027).
+  - Ajout du 2026-11-23 : la release qui l'emporte touche `scripts/ci/app-changed.sh`, ce qui exige une montée de version (`version-check`). Version **2.3.2**, montée dans la PR qui corrige l'étape « order-history » de la capture, premier échec du QA de release sur la PR #71 (réponse : « PATCH 2.3.2 (Recommandé) »).
 - **Options écartées** : un agent QA Claude qui déduit et exécute un plan de test à chaque release (coût en tokens, résultats variables) ; un mélange tests fixes + relecture par un agent ; écrans seulement ; jetons seulement ; scénario par feature simplement recommandé ; rapport en anglais ; montée PATCH.
 - **Impact** : `.github/workflows/release-qa.yml`, `scripts/release-qa/`, `scripts/ci/app-changed.sh`, `.claude/agents/developpeur.md`, `.claude/agents/tech-lead.md`, `CLAUDE.md`. La protection de `main` est réglée par l'admin du dépôt.

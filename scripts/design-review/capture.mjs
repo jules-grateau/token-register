@@ -417,15 +417,29 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
       await page.getByRole('button', { name: 'Historique' }).first().click();
       const pagination = dialog(page).locator('.mantine-Pagination-root');
       await pagination.waitFor({ timeout: 5000 });
-      // The Stack of the pagination and its count; block "end" scrolls every scrolling parent.
-      // Instant: done when the call returns, no smooth scrolling to wait for (TL-1 of PR #66).
-      await pagination.evaluate((el) =>
-        el.parentElement.scrollIntoView({ block: 'end', behavior: 'instant' })
+      // The modal opens with a transition, and the focus moves into it once open, which scrolls
+      // its content back to the top: a scroll done before that is lost (release QA of PR #71,
+      // EUR, desktop and tablet). Wait for the end of the transitions, then scroll, and scroll
+      // again for a moment if the content still moved back.
+      await dialog(page).evaluate((el) =>
+        Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished))
       );
-      const box = await pagination.boundingBox();
       const { height } = page.viewportSize();
-      if (!box || box.y < 0 || box.y + box.height > height)
-        throw new Error('History pagination not in the window after scrolling');
+      const scrolledToPagination = async () => {
+        // The Stack of the pagination and its count; block "end" scrolls every scrolling
+        // parent. Instant: done when the call returns, no smooth scrolling (TL-1 of PR #66).
+        await pagination.evaluate((el) =>
+          el.parentElement.scrollIntoView({ block: 'end', behavior: 'instant' })
+        );
+        const box = await pagination.boundingBox();
+        return !!box && box.y >= 0 && box.y + box.height <= height;
+      };
+      let inWindow = await scrolledToPagination();
+      for (let i = 0; i < 5 && !inWindow; i++) {
+        await page.waitForTimeout(200);
+        inWindow = await scrolledToPagination();
+      }
+      if (!inWindow) throw new Error('History pagination not in the window after scrolling');
     },
   ],
   [
