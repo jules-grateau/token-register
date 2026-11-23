@@ -1,0 +1,26 @@
+name: Auto - tests
+
+# Tests of the GitHub automation (D-060): helpers in scripts/automation/ and the syntax of its
+# shell scripts. No secret, no AI. Kept apart from ci-cd.yml, which only runs for app changes.
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'scripts/automation/**'
+      - '.github/workflows/auto-*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Helpers
+        run: node --test scripts/automation/*.test.mjs
+      - name: Shell syntax
+        run: for f in scripts/automation/*.sh; do bash -n "$f" || exit 1; done
