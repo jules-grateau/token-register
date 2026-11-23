@@ -10,7 +10,8 @@ trap 'rm -rf "$T"' EXIT
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@example.com GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@example.com
 git init -q --bare "$T/origin.git"
 git clone -q "$T/origin.git" "$T/seed" 2> /dev/null
-(cd "$T/seed" && git checkout -q -b develop && echo base > a.txt && git add a.txt && git commit -qm base && git push -q origin develop)
+(cd "$T/seed" && git checkout -q -b develop && echo base > a.txt && mkdir -p .github/workflows &&
+  echo wf > .github/workflows/ci.yml && git add -A && git commit -qm base && git push -q origin develop)
 BASE=$(git -C "$T/seed" rev-parse HEAD)
 export PUSH_URL="$T/origin.git"
 
@@ -46,7 +47,24 @@ agent main src/y.ts
 expect_ko "main as target" main new "ni feature"
 
 agent fix/workflow .github/workflows/x.yml
-expect_ko "a .github/ change is refused" fix/workflow new ".github/"
+expect_ko "a .github/ change is refused" fix/workflow new "réservés"
+for path in .claude/agents/dev.md CLAUDE.md .mcp.json scripts/automation/lib.mjs scripts/ci/app-changed.sh; do
+  agent fix/reserved "$path"
+  expect_ko "a change of $path is refused" fix/reserved new "session locale"
+done
+
+# custom <branch> <commands...> : like agent, with any git commands on the new branch.
+custom() {
+  local branch="$1"; shift
+  rm -rf "$T/agent" && git clone -q "$T/origin.git" "$T/agent" -b develop 2> /dev/null
+  (cd "$T/agent" && git checkout -q -b "$branch" && eval "$*" && bash "$DIR/make-bundle.sh" "$branch" "$BASE" "$T/work.bundle" > /dev/null)
+}
+custom fix/rename 'mkdir -p docs && git mv .github/workflows/ci.yml docs/ci.yml && git commit -qm move'
+expect_ko "a rename out of .github/ is refused" fix/rename new "réservés"
+custom fix/revert 'mkdir -p .claude && echo x > .claude/x.md && git add -A && git commit -qm add && git rm -q .claude/x.md && git commit -qm remove && echo y > y.txt && git add y.txt && git commit -qm y'
+expect_ko "a reserved change reverted later is still refused" fix/revert new "réservés"
+custom fix/merge 'git checkout -q -b side && echo s > s.txt && git add s.txt && git commit -qm s && git checkout -q fix/merge && echo m > m.txt && git add m.txt && git commit -qm m && git merge -q --no-edit side'
+expect_ko "a merge commit is refused" fix/merge new "merge"
 
 agent feature/10-y src/y.ts
 mv "$T/work.bundle" "$T/keep.bundle"

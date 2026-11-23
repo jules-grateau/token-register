@@ -24,9 +24,11 @@ on:
   issue_comment:
     types: [created]
 
-# One run at a time per issue, never cancelled: a reply that arrives meanwhile waits.
+# One run at a time per issue, never cancelled: a reply that arrives meanwhile waits. GitHub
+# keeps one waiting run per group: events from anyone else (a third party, the bot's own
+# comments), which start no job, get their own group, so they never replace the owner's.
 concurrency:
-  group: auto-issue-${{ github.event.issue.number }}
+  group: auto-issue-${{ github.event.issue.number }}${{ github.event.sender.login != github.repository_owner && '-other' || '' }}
   cancel-in-progress: false
 
 permissions:
@@ -267,7 +269,10 @@ jobs:
         if: env.PHASE == 'reply'
         uses: anthropics/claude-code-action@f431adaf77e0fecf918431e75a2b5b45b85af002 # v1
         env:
-          GH_TOKEN: ${{ github.token }}
+          # The code the agent writes and tests runs in its Bash commands: they get an
+          # environment without the Claude token nor the GitHub tokens (best effort of the
+          # action, also turns on its subprocess isolation).
+          CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: '1'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ github.token }}
@@ -315,29 +320,31 @@ jobs:
           claude_args: >-
             --model opus --max-turns 60
             --add-dir ${{ runner.temp }}/agent-input
-            --allowedTools "Read,Write,Edit,Grep,Glob,Bash(npm ci),Bash(npm run lint:*),Bash(npm run build:*),Bash(npm run format:*),Bash(npm test:*),Bash(npm version:*),Bash(npx prettier:*),Bash(node --test:*),Bash(bash scripts/ci/app-changed.test.sh),Bash(bash scripts/ci/version-bumped.test.sh),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*),Bash(git switch:*),Bash(git checkout:*),Bash(git branch:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh issue list:*)"
+            --allowedTools "Read,Write,Edit,Grep,Glob,Bash(npm ci),Bash(npm run lint:*),Bash(npm run build:*),Bash(npm run format:*),Bash(npm test:*),Bash(npm version:*),Bash(npx prettier:*),Bash(node --test:*),Bash(bash scripts/ci/app-changed.test.sh),Bash(bash scripts/ci/version-bumped.test.sh),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*),Bash(git switch:*),Bash(git checkout:*),Bash(git branch:*)"
             --json-schema '{"type":"object","properties":{"status":{"type":"string","enum":["questions","pr","blocked"]},"comment":{"type":"string"},"branch":{"type":"string"},"title":{"type":"string"},"body":{"type":"string"},"ui":{"type":"boolean"},"screens":{"type":"string"}},"required":["status","comment"]}'
 
-      # The developer's commits, as a git bundle (base = develop's head at the start). Made by
-      # this step, not by the agent; checked and pushed by follow-up.
+      # Always an artifact for follow-up: the developer's output, plus its commits as a git
+      # bundle when it has some (base = develop's head at the start). Made by this step, not by
+      # the agent; checked and pushed by follow-up.
       - name: Bundle the developer's commits
         if: env.PHASE == 'reply'
         env:
           OUT: ${{ steps.impl.outputs.structured_output }}
           BASE: ${{ steps.ctx.outputs.base }}
         run: |
-          printf '%s' "$OUT" > "$AUTO/reply.json"
           mkdir -p "$RUNNER_TEMP/handoff"
-          [ "$(node "$TRUSTED/cli.mjs" field "$AUTO/reply.json" status)" = pr ] || exit 0
-          branch=$(node "$TRUSTED/cli.mjs" field "$AUTO/reply.json" branch)
-          bash "$TRUSTED/make-bundle.sh" "$branch" "$BASE" "$RUNNER_TEMP/handoff/work.bundle"
+          printf '%s' "$OUT" > "$RUNNER_TEMP/handoff/out.json"
+          [ "$(node "$TRUSTED/cli.mjs" field "$RUNNER_TEMP/handoff/out.json" status)" = pr ] || exit 0
+          branch=$(node "$TRUSTED/cli.mjs" field "$RUNNER_TEMP/handoff/out.json" branch)
+          bash "$TRUSTED/make-bundle.sh" "$branch" "$BASE" "$RUNNER_TEMP/handoff/work.bundle" ||
+            echo "::warning::Pas de bundle : follow-up le signalera."
 
       - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: handoff
           path: ${{ runner.temp }}/handoff
-          if-no-files-found: ignore
+          if-no-files-found: error
           retention-days: 3
 
   # After the agents, on a new runner from develop, with the App token: posts, checks and

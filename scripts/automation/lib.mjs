@@ -8,6 +8,22 @@ const PR_MARKER = /<!-- auto:issue=(\d+) ui=(true|false) screens=([a-z0-9,-]*) -
 // Clarification: the first comment is round 1, then at most 3 follow-ups (D-060).
 export const MAX_CLARIFICATION_ROUND = 4;
 
+const ZERO_WIDTH_SPACE = String.fromCharCode(0x200b);
+
+/**
+ * Agent text made safe to publish (D-060): no mention ("@name" notifies that account) and no
+ * closing reference ("fixes #12" would close that issue). A zero-width space is inserted, the
+ * text reads the same. The automation's own "Closes #n" is added after, never through this.
+ */
+export function neutralize(text) {
+  return String(text ?? '')
+    .replace(/@(?=[A-Za-z0-9])/g, '@' + ZERO_WIDTH_SPACE)
+    .replace(
+      /\b(close[sd]?|fix(?:e[sd])?|resolve[sd]?)(\s*:?\s+)#(?=\d)/gi,
+      '$1$2#' + ZERO_WIDTH_SPACE
+    );
+}
+
 /** True for a comment written by the repository owner or by the automation's own bot. */
 const isTrusted = (login, owner, bot) => login === owner || login === bot;
 
@@ -75,9 +91,9 @@ export function clarificationComment({ round, dev, techLead = '', designer = '' 
     round === 1
       ? '## 📋 Clarification'
       : `## 📋 Clarification, questions restantes (${round - 1}/3)`;
-  const parts = [title, '', dev.trim()];
-  if (techLead.trim()) parts.push('', '### Ajouts du tech-lead', '', techLead.trim());
-  if (designer.trim()) parts.push('', '### Ajouts du designer', '', designer.trim());
+  const parts = [title, '', neutralize(dev).trim()];
+  if (techLead.trim()) parts.push('', '### Ajouts du tech-lead', '', neutralize(techLead).trim());
+  if (designer.trim()) parts.push('', '### Ajouts du designer', '', neutralize(designer).trim());
   parts.push(
     '',
     '---',
@@ -198,16 +214,17 @@ const RECAP_TITLE = '🛠️ Réponse du développeur';
 /**
  * What the developer agent wrote for the review (auto-pr.yml, fix and minor steps), checked
  * before the workflow publishes it: one reply per line comment id (positive integers, text not
- * empty, 50 at most), and the recap, which always starts with its title.
+ * empty, 50 at most), and the recap, which always starts with its title. Both neutralized:
+ * no mention, no closing reference.
  * @param {{replies?: Array<{id: unknown, body: unknown}>, recap?: unknown}} output
  */
 export function reviewAnswers(output) {
   const replies = (Array.isArray(output?.replies) ? output.replies : [])
     .filter((r) => Number.isInteger(r?.id) && r.id > 0 && typeof r.body === 'string')
-    .map((r) => ({ id: r.id, body: r.body.trim() }))
+    .map((r) => ({ id: r.id, body: neutralize(r.body).trim() }))
     .filter((r) => r.body)
     .slice(0, 50);
-  let recap = typeof output?.recap === 'string' ? output.recap.trim() : '';
+  let recap = typeof output?.recap === 'string' ? neutralize(output.recap).trim() : '';
   if (recap && !recap.startsWith(RECAP_TITLE)) recap = `${RECAP_TITLE}\n\n${recap}`;
   return { replies, recap };
 }

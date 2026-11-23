@@ -6,7 +6,10 @@
 #   2. the commits descend from <base> (develop's head for a new branch, the PR's head for a
 #      fix) and the remote branch is still where it was (absent for a new branch, <base> for
 #      a fix);
-#   3. no file under .github/ is touched.
+#   3. no commit is a merge, and no commit touches a refused path (each commit, renames seen
+#      as delete + add): .github/, .claude/, CLAUDE.md, .mcp.json, scripts/automation/,
+#      scripts/ci/. What runs the automation, the CI or the agents is changed in a local
+#      session, never by an agent.
 # Then pushes this exact branch: git push <origin> <commit>:refs/heads/<branch>, no force.
 # Usage: bash apply-bundle.sh <bundle> <branch> <base sha> new|existing
 # Env: PUSH_TOKEN and REPO (push to GitHub), or PUSH_URL (tests: any git remote).
@@ -39,8 +42,10 @@ case "$mode" in
   *) fail "mode inconnu : $mode" ;;
 esac
 
-touched=$(git diff --name-only "$base" "$work" | grep '^\.github/' || true)
-[ -z "$touched" ] || fail "les commits touchent \`.github/\` ($(echo "$touched" | head -3 | tr '\n' ' ')), ce que l'automatisation ne pousse jamais."
+[ -z "$(git rev-list --merges "$base..$work")" ] || fail "les commits contiennent un merge, ce que l'automatisation ne pousse pas."
+REFUSED='^(\.github/|\.claude/|CLAUDE\.md$|\.mcp\.json$|scripts/automation/|scripts/ci/)'
+touched=$(git log --no-renames --name-only --format= "$base..$work" | grep -E "$REFUSED" | sort -u || true)
+[ -z "$touched" ] || fail "les commits touchent des fichiers réservés ($(echo "$touched" | head -3 | tr '\n' ' ')) : workflows, CI, consignes des agents ou automatisation. Ce changement se fait en session locale, pas par un agent."
 
 git push -q "$url" "$work:refs/heads/$branch"
 echo "ok $work"
