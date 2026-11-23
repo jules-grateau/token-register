@@ -9,6 +9,7 @@ import {
   followUpAction,
   isWorkBranch,
   lastClarificationRound,
+  stillWaiting,
   neutralize,
   nextStep,
   parsePrMarker,
@@ -73,10 +74,27 @@ test('clarificationComment groups the parts and ends with the marker', () => {
 test('neutralize breaks mentions and closing references only', () => {
   const zw = String.fromCharCode(0x200b);
   assert.equal(neutralize('Merci @someone'), `Merci @${zw}someone`);
-  assert.equal(neutralize('Fixes #12, closes: #3'), `Fixes #${zw}12, closes: #${zw}3`);
+  assert.equal(neutralize('Fixes #12, closes: #3'), `Fixes${zw} #12, closes${zw}: #3`);
+  for (const ref of [
+    'owner/repo#12',
+    'GH-12',
+    'https://github.com/o/r/issues/12',
+    'https://github.com/o/r/pull/3',
+  ]) {
+    assert.equal(neutralize(`fixes ${ref}`), `fixes${zw} ${ref}`, ref);
+  }
+  assert.equal(neutralize('fixes the cart, see #12'), 'fixes the cart, see #12');
   assert.equal(neutralize('voir #12, mail a@b.fr ? @ seul'), `voir #12, mail a@${zw}b.fr ? @ seul`);
   assert.equal(neutralize(null), '');
   assert.doesNotMatch(clarificationComment({ round: 1, dev: 'cc @x, fixes #1' }), /@x|fixes #1/);
+});
+
+test('stillWaiting: en-clarification without bloqué only', () => {
+  const issue = (...names) => ({ labels: names.map((name) => ({ name })) });
+  assert.equal(stillWaiting(issue('en-clarification')), true);
+  assert.equal(stillWaiting(issue('en-clarification', 'bloqué')), false);
+  assert.equal(stillWaiting(issue('en-cours')), false);
+  assert.equal(stillWaiting({}), false);
 });
 
 test('followUpAction: 3 follow-ups at most, then stop', () => {

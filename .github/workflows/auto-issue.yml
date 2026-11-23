@@ -80,6 +80,7 @@ jobs:
       issues: read
       pull-requests: read
     outputs:
+      go: ${{ steps.ctx.outputs.go }}
       round: ${{ steps.ctx.outputs.round }}
       base: ${{ steps.ctx.outputs.base }}
       out: ${{ steps.impl.outputs.structured_output }}
@@ -117,12 +118,20 @@ jobs:
           node "$TRUSTED/cli.mjs" thread "$AUTO/issue.json" "$AUTO/comments.json" "$OWNER" "$BOT" > "$INPUT/issue.md"
           echo "round=$(node "$TRUSTED/cli.mjs" round "$AUTO/comments.json" "$BOT")" >> "$GITHUB_OUTPUT"
           echo "base=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          # The event's labels are those of when it happened, and runs wait in a queue: on a
+          # reply, the issue must still be waiting for it (en-clarification, not bloqué).
+          go=true
+          if [ "$PHASE" = reply ] && [ "$(node "$TRUSTED/cli.mjs" still-waiting "$AUTO/issue.json")" != true ]; then
+            echo "::notice::L'issue n'attend plus de réponse (PR ouverte ou bloquée) : rien à faire."
+            go=false
+          fi
+          echo "go=$go" >> "$GITHUB_OUTPUT"
 
       # ---------------------------------------------------------------- clarification ------
 
       - name: Developer, clarification
         id: dev
-        if: env.PHASE == 'clarify'
+        if: env.PHASE == 'clarify' && steps.ctx.outputs.go == 'true'
         uses: anthropics/claude-code-action@f431adaf77e0fecf918431e75a2b5b45b85af002 # v1
         env:
           GH_TOKEN: ${{ github.token }}
@@ -164,7 +173,7 @@ jobs:
 
       - name: Keep the developer's draft
         id: draft
-        if: env.PHASE == 'clarify'
+        if: env.PHASE == 'clarify' && steps.ctx.outputs.go == 'true'
         env:
           OUT: ${{ steps.dev.outputs.structured_output }}
         run: |
@@ -175,7 +184,7 @@ jobs:
 
       - name: Tech-lead, clarification
         id: tl
-        if: env.PHASE == 'clarify'
+        if: env.PHASE == 'clarify' && steps.ctx.outputs.go == 'true'
         uses: anthropics/claude-code-action@f431adaf77e0fecf918431e75a2b5b45b85af002 # v1
         env:
           GH_TOKEN: ${{ github.token }}
@@ -204,7 +213,7 @@ jobs:
             --json-schema '{"type":"object","properties":{"additions":{"type":"string"}},"required":["additions"]}'
 
       - name: Keep the tech-lead's additions
-        if: env.PHASE == 'clarify'
+        if: env.PHASE == 'clarify' && steps.ctx.outputs.go == 'true'
         env:
           OUT: ${{ steps.tl.outputs.structured_output }}
         run: |
@@ -213,7 +222,7 @@ jobs:
 
       - name: Designer, clarification
         id: ds
-        if: env.PHASE == 'clarify' && steps.draft.outputs.ui == 'true'
+        if: env.PHASE == 'clarify' && steps.ctx.outputs.go == 'true' && steps.draft.outputs.ui == 'true'
         uses: anthropics/claude-code-action@f431adaf77e0fecf918431e75a2b5b45b85af002 # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -241,7 +250,7 @@ jobs:
 
       # The comment is posted by follow-up (this job cannot write).
       - name: Assemble the clarification
-        if: env.PHASE == 'clarify'
+        if: env.PHASE == 'clarify' && steps.ctx.outputs.go == 'true'
         env:
           OUT: ${{ steps.ds.outputs.structured_output }}
         run: |
@@ -255,18 +264,18 @@ jobs:
       # ------------------------------------------------------------------------ reply ------
 
       - uses: actions/setup-node@v7
-        if: env.PHASE == 'reply'
+        if: env.PHASE == 'reply' && steps.ctx.outputs.go == 'true'
         with:
           node-version: 22
           cache: npm
 
       - name: Install dependencies
-        if: env.PHASE == 'reply'
+        if: env.PHASE == 'reply' && steps.ctx.outputs.go == 'true'
         run: npm ci
 
       - name: Developer, answers then implementation
         id: impl
-        if: env.PHASE == 'reply'
+        if: env.PHASE == 'reply' && steps.ctx.outputs.go == 'true'
         uses: anthropics/claude-code-action@f431adaf77e0fecf918431e75a2b5b45b85af002 # v1
         env:
           # The code the agent writes and tests runs in its Bash commands: they get an
@@ -327,7 +336,7 @@ jobs:
       # bundle when it has some (base = develop's head at the start). Made by this step, not by
       # the agent; checked and pushed by follow-up.
       - name: Bundle the developer's commits
-        if: env.PHASE == 'reply'
+        if: env.PHASE == 'reply' && steps.ctx.outputs.go == 'true'
         env:
           OUT: ${{ steps.impl.outputs.structured_output }}
           BASE: ${{ steps.ctx.outputs.base }}
@@ -340,7 +349,7 @@ jobs:
             echo "::warning::Pas de bundle : follow-up le signalera."
 
       - uses: actions/upload-artifact@v7
-        if: always()
+        if: always() && steps.ctx.outputs.go == 'true'
         with:
           name: handoff
           path: ${{ runner.temp }}/handoff
@@ -351,7 +360,7 @@ jobs:
   # pushes the developer's commits, opens the PR. Nothing the agents changed runs here.
   follow-up:
     needs: run
-    if: always() && (needs.run.result == 'success' || needs.run.result == 'failure')
+    if: always() && (needs.run.result == 'failure' || (needs.run.result == 'success' && needs.run.outputs.go == 'true'))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

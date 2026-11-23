@@ -15,13 +15,25 @@ const ZERO_WIDTH_SPACE = String.fromCharCode(0x200b);
  * closing reference ("fixes #12" would close that issue). A zero-width space is inserted, the
  * text reads the same. The automation's own "Closes #n" is added after, never through this.
  */
+// A closing keyword followed by what GitHub reads as an issue: #12, owner/repo#12, GH-12 or an
+// issue / PR URL. The zero-width space goes right after the keyword.
+const CLOSING =
+  /\b(close[sd]?|fix(?:e[sd])?|resolve[sd]?)(?=\s*:?\s+(?:#\d|[\w.-]+\/[\w.-]+#\d|GH-\d|https?:\/\/github\.com\/[\w.-]+\/[\w.-]+\/(?:issues|pull)\/\d))/gi;
+
 export function neutralize(text) {
   return String(text ?? '')
     .replace(/@(?=[A-Za-z0-9])/g, '@' + ZERO_WIDTH_SPACE)
-    .replace(
-      /\b(close[sd]?|fix(?:e[sd])?|resolve[sd]?)(\s*:?\s+)#(?=\d)/gi,
-      '$1$2#' + ZERO_WIDTH_SPACE
-    );
+    .replace(CLOSING, '$1' + ZERO_WIDTH_SPACE);
+}
+
+/**
+ * Is the issue still waiting for the owner's answers (auto-issue.yml, reply phase)? Its labels
+ * are read when the run starts: a run queued behind another one must not act on an issue that
+ * already has its PR ("en-cours") or was stopped ("bloqué").
+ */
+export function stillWaiting(issue) {
+  const names = (issue?.labels ?? []).map((label) => label?.name);
+  return names.includes('en-clarification') && !names.includes('bloqué');
 }
 
 /** True for a comment written by the repository owner or by the automation's own bot. */
