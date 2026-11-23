@@ -10,7 +10,7 @@
 //
 // Env: APP_URL, BASIC_AUTH_USER, BASIC_AUTH_PASS,
 //      WAIT_SECONDS (optional, default 90: how long to wait for the API after a restart).
-// Never prints the URL: it is a secret, and the Actions logs are public.
+// Never prints the URL nor the host: they are secrets, and the Actions logs are public.
 
 const APP_URL = (process.env.APP_URL ?? '').replace(/\/$/, '');
 const USER = process.env.BASIC_AUTH_USER;
@@ -129,4 +129,10 @@ async function main() {
   }
 }
 
-await main();
+// Any other error (network, unexpected answer): only its message, never its cause nor its
+// stack, which can hold the host name (e.g. "getaddrinfo ENOTFOUND <host>") (TL-1, PR #73).
+try {
+  await main();
+} catch (error) {
+  fail(`EUR demo catalog: ${error instanceof Error ? error.message : 'unexpected error'}.`);
+}
