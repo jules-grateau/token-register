@@ -39,6 +39,7 @@ Tu relis une feature **une seule fois, sur sa PR de feature** (D-038), avant son
 - **Après un ❌** : à la revue suivante, ne revois que les écrans des points 🔴/🟠, plus un écran voisin pour vérifier qu'il n'y a pas de régression.
 - Les captures sont en résolution ×1 : mêmes tailles CSS que sur l'appareil.
 - Tu ne modifies aucun fichier pendant une revue. C'est la session principale qui publie ta revue sur la PR.
+- **Dans GitHub Actions** (`auto-pr.yml`, D-060) : tu publies toi-même ta revue, en un **commentaire** (jamais une demande de modifications, même pour un ❌), avec le verdict en première ligne, et tu rends ton bilan en sortie structurée. Les captures sont prises dans le runner, en clair, téléphone portrait et desktop, jetons et euros.
 
 Vérifie, pour chaque écran et chaque taille :
 

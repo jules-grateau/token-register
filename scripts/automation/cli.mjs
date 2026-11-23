@@ -10,6 +10,8 @@
 //   node cli.mjs max-review-round                                    last review round allowed
 //   node cli.mjs design-state <comments.json> <bot> <ui>              none | pending | ok | ko
 //   node cli.mjs next-step       (env ROUND, TL_RESULT, TL_OUT, DS_RESULT, DS_OUT, DESIGN) -> JSON
+//   node cli.mjs merged-prs <subjects.txt>                           PR numbers, one per line
+//   node cli.mjs release-pr <prs.json> <version> <main version> <bumped> -> JSON {title, body}
 //   node cli.mjs field <file.json> <key>                             one field, raw ("" if absent)
 // comments.json may come from `gh api --paginate --slurp` (an array of pages): it is flattened.
 import fs from 'node:fs';
@@ -20,9 +22,11 @@ import {
   clarificationComment,
   designState,
   lastClarificationRound,
+  mergedPrNumbers,
   nextStep,
   parsePrMarker,
   prMarker,
+  releasePr,
 } from './lib.mjs';
 
 const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -68,6 +72,11 @@ const commands = {
       })
     );
   },
+  'merged-prs': ([file]) => mergedPrNumbers(readText(file).split(/\r?\n/)).join('\n'),
+  'release-pr': ([prs, version, mainVersion, bumped]) =>
+    JSON.stringify(
+      releasePr({ version, mainVersion, bumped: bumped === 'true', prs: readJson(prs) })
+    ),
   field: ([file, key]) => {
     const value = readJson(file)?.[key];
     if (value === undefined || value === null) return '';

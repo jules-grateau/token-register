@@ -4,11 +4,14 @@ import assert from 'node:assert/strict';
 import {
   buildThread,
   clarificationComment,
+  closedIssues,
   designState,
   lastClarificationRound,
+  mergedPrNumbers,
   nextStep,
   parsePrMarker,
   prMarker,
+  releasePr,
 } from './lib.mjs';
 
 const OWNER = 'owner';
@@ -152,4 +155,39 @@ test('nextStep: a failed or silent review stops the loop', () => {
     nextStep({ round: 1, techLead: tl(0), designer: noDs, designBefore: 'pending' }).action,
     'block'
   );
+});
+
+test('mergedPrNumbers reads merge commits and squash titles', () => {
+  assert.deepEqual(
+    mergedPrNumbers([
+      'Merge pull request #73 from owner/feature/demo-eur',
+      'Fix the cart (#70)',
+      'Direct commit',
+      'Merge pull request #73 from owner/feature/demo-eur',
+      'Merge pull request #8 from owner/fix/x',
+    ]),
+    [8, 70, 73]
+  );
+});
+
+test('closedIssues finds the closing keywords only', () => {
+  assert.deepEqual(closedIssues('Closes #12\nfixes #3, resolved #12. Voir #99'), [12, 3]);
+  assert.deepEqual(closedIssues(null), []);
+});
+
+test('releasePr lists the PRs and the closed issues, warns when not bumped', () => {
+  const prs = [
+    { number: 70, title: 'QA de release', body: 'Closes #49' },
+    { number: 73, title: 'Démo EUR', body: null },
+  ];
+  const ok = releasePr({ version: '2.4.0', mainVersion: '2.3.3', bumped: true, prs });
+  assert.equal(ok.title, 'Release v2.4.0');
+  assert.match(ok.body, /- #70 QA de release\n- #73 Démo EUR/);
+  assert.match(ok.body, /- Closes #49/);
+  assert.doesNotMatch(ok.body, /⚠️/);
+  assert.match(ok.body, /<!-- auto:release -->/);
+  const late = releasePr({ version: '2.3.3', mainVersion: '2.3.3', bumped: false, prs: [] });
+  assert.match(late.body, /⚠️ La version de `develop` \(2\.3\.3\)/);
+  assert.match(late.body, /aucune PR/);
+  assert.doesNotMatch(late.body, /Issues fermées/);
 });

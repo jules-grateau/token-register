@@ -1,0 +1,40 @@
+name: Auto - release PR
+
+# After each merge into develop, creates the release PR develop -> main, or updates the open
+# one (D-060): title "Release v<version>", the PRs it brings, the issues it closes, and a
+# warning when the version was not bumped. The owner always merges it himself.
+# Secrets: AUTOMATION_APP_ID / AUTOMATION_APP_PRIVATE_KEY (a PR created with GITHUB_TOKEN would
+# not start the release QA).
+on:
+  push:
+    branches: [develop]
+
+# Each run recomputes everything: only the last one matters.
+concurrency:
+  group: auto-release-pr
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  release-pr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Pinned to a commit SHA: this action receives the App's private key.
+      - id: app
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          app-id: ${{ secrets.AUTOMATION_APP_ID }}
+          private-key: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Create or update the release PR
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          export AUTO="$RUNNER_TEMP/auto" && mkdir -p "$AUTO"
+          bash scripts/automation/release-pr.sh

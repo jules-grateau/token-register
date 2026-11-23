@@ -144,3 +144,59 @@ export function nextStep({ round, techLead, designer, designBefore }) {
   }
   return { action: minor > 0 ? 'minor' : 'finish' };
 }
+
+// Release PR develop -> main (auto-release-pr.yml).
+
+/** PR numbers in the first-parent subjects of develop: merge commits, or "title (#n)". */
+export function mergedPrNumbers(subjects) {
+  const numbers = [];
+  for (const subject of subjects) {
+    const match = /^Merge pull request #(\d+) /.exec(subject) ?? /\(#(\d+)\)$/.exec(subject);
+    if (match && !numbers.includes(Number(match[1]))) numbers.push(Number(match[1]));
+  }
+  return numbers.sort((a, b) => a - b);
+}
+
+/** Issues a PR description closes ("Closes #12", "fixes #3"...), in order, without repeats. */
+export function closedIssues(body) {
+  const numbers = [];
+  for (const match of (body ?? '').matchAll(
+    /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?) #(\d+)\b/gi
+  )) {
+    if (!numbers.includes(Number(match[1]))) numbers.push(Number(match[1]));
+  }
+  return numbers;
+}
+
+/**
+ * Title and body of the release PR: the PRs it brings, the issues it closes once merged in
+ * main (D-060), and a warning when the version of develop is not above main's (D-027).
+ * @param {{version: string, mainVersion: string, bumped: boolean,
+ *          prs: Array<{number: number, title: string, body: string|null}>}} release
+ */
+export function releasePr({ version, mainVersion, bumped, prs }) {
+  const lines = [`Mise en prod de \`develop\` vers \`main\`, version **${version}**.`, ''];
+  if (!bumped) {
+    lines.push(
+      `> ⚠️ La version de \`develop\` (${version}) n'est pas au-dessus de celle de \`main\` (${mainVersion}) : \`version-check\` échouera si la release touche l'appli. Monter la version dans une PR vers \`develop\` (D-027).`,
+      ''
+    );
+  }
+  lines.push('## PR incluses', '');
+  if (prs.length === 0) lines.push('_(aucune PR trouvée depuis `main`)_');
+  for (const pr of prs) lines.push(`- #${pr.number} ${pr.title}`);
+  const issues = [...new Set(prs.flatMap((pr) => closedIssues(pr.body)))];
+  if (issues.length > 0) {
+    lines.push('', '## Issues fermées à la mise en prod', '');
+    for (const issue of issues) lines.push(`- Closes #${issue}`);
+  }
+  lines.push(
+    '',
+    '---',
+    'Description recalculée à chaque merge dans `develop` (D-060) : une modification à la main sera remplacée.',
+    '<!-- auto:release -->',
+    '',
+    '🤖 Generated with [Claude Code](https://claude.com/claude-code)'
+  );
+  return { title: `Release v${version}`, body: lines.join('\n') };
+}
