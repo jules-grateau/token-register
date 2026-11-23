@@ -2,17 +2,18 @@ name: Release smoke check
 
 # Free smoke check on release PRs (develop -> main), no AI (D-038). The visual design
 # review is done once, by the designer agent, on the feature PR, targeted on the screens
-# that PR changes. Here we only check that the real demo still works:
-#   1. capture - wait for the demo deploy of the PR's commit, drive the demo with
+# that PR changes. Here we only check that the real demos (tokens, then EUR) still work:
+#   1. capture - wait for the demo deploy of the PR's commit, drive each demo with
 #                Playwright (desktop / tablet / mobile / mobile landscape), then
 #                scripts/design-review/check-report.mjs fails on any failed step,
 #                console/JS error or horizontal overflow. Screenshots are kept as a
-#                workflow artifact (not published, not reviewed).
+#                workflow artifact, token demo only (not published, not reviewed).
 #   + failure  - if anything fails, say so on the PR, with the problem list
 #                (smoke-problems.md, written by check-report.mjs) when there is one.
 # Skipped entirely when no app file changed (scripts/ci/app-changed.sh).
 #
-# Secrets: DEMO_BASIC_AUTH_USER / DEMO_BASIC_AUTH_PASS (demo Basic Auth).
+# Secrets: DEMO_BASIC_AUTH_USER / DEMO_BASIC_AUTH_PASS (token demo Basic Auth),
+#          DEMO_EUR_URL / DEMO_EUR_BASIC_AUTH_USER / DEMO_EUR_BASIC_AUTH_PASS (EUR demo, D-059).
 on:
   pull_request:
     branches: [main]
@@ -84,33 +85,80 @@ jobs:
           done
           echo "::error::Timed out waiting for the demo deploy of $HEAD_SHA"; exit 1
 
-      - name: Capture screenshots on the demo
-        env:
-          APP_URL: ${{ env.DEMO_URL }}
-          BASIC_AUTH_USER: ${{ secrets.DEMO_BASIC_AUTH_USER }}
-          BASIC_AUTH_PASS: ${{ secrets.DEMO_BASIC_AUTH_PASS }}
-          OUT_DIR: ${{ github.workspace }}/design-review-output
+      # Only Playwright is needed (no app build): install it apart from the repo.
+      - name: Install Playwright
         run: |
-          if [ -z "$BASIC_AUTH_USER" ] || [ -z "$BASIC_AUTH_PASS" ]; then
-            echo "::error::DEMO_BASIC_AUTH_USER / DEMO_BASIC_AUTH_PASS secrets are not set"; exit 1
-          fi
-          # Only Playwright is needed (no app build): install it apart from the repo.
           mkdir -p "$RUNNER_TEMP/pw" && cd "$RUNNER_TEMP/pw"
           npm init -y > /dev/null
           npm install playwright@1.55.0
           npx playwright install --with-deps chromium
           cp "$GITHUB_WORKSPACE/scripts/design-review/capture.mjs" .
-          node capture.mjs
 
-      - name: Check the run (failed steps, JS errors, overflow)
-        run: node scripts/design-review/check-report.mjs design-review-output/report.json
+      # check-report.mjs writes smoke-problems.md in the current folder: one folder per demo,
+      # each problem prefixed with its demo, gathered below for the PR comment.
+      - name: Capture and check the token demo
+        env:
+          APP_URL: ${{ env.DEMO_URL }}
+          BASIC_AUTH_USER: ${{ secrets.DEMO_BASIC_AUTH_USER }}
+          BASIC_AUTH_PASS: ${{ secrets.DEMO_BASIC_AUTH_PASS }}
+          OUT_DIR: ${{ github.workspace }}/design-review-output/jetons
+        run: |
+          if [ -z "$BASIC_AUTH_USER" ] || [ -z "$BASIC_AUTH_PASS" ]; then
+            echo "::error::DEMO_BASIC_AUTH_USER / DEMO_BASIC_AUTH_PASS secrets are not set"; exit 1
+          fi
+          mkdir -p "$OUT_DIR"
+          status=0
+          (cd "$RUNNER_TEMP/pw" && node capture.mjs) || status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "- démo jetons : la capture s'est arrêtée" > "$OUT_DIR/smoke-problems.md"; exit 1
+          fi
+          cd "$OUT_DIR"
+          node "$GITHUB_WORKSPACE/scripts/design-review/check-report.mjs" report.json || status=$?
+          if [ -s smoke-problems.md ]; then sed -i 's/^- /- démo jetons : /' smoke-problems.md; fi
+          exit $status
 
+      # The EUR demo (D-059). Its URL is a secret and the instance may show an association
+      # name: its screenshots and report.json are not uploaded (the artifacts of this public
+      # repository can be downloaded), and the URL is masked in the summary and problem list.
+      - name: Capture and check the EUR demo
+        if: ${{ !cancelled() }}
+        env:
+          APP_URL: ${{ secrets.DEMO_EUR_URL }}
+          BASIC_AUTH_USER: ${{ secrets.DEMO_EUR_BASIC_AUTH_USER }}
+          BASIC_AUTH_PASS: ${{ secrets.DEMO_EUR_BASIC_AUTH_PASS }}
+          OUT_DIR: ${{ runner.temp }}/smoke-eur
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$BASIC_AUTH_USER" ] || [ -z "$BASIC_AUTH_PASS" ]; then
+            echo "::error::DEMO_EUR_URL / DEMO_EUR_BASIC_AUTH_USER / DEMO_EUR_BASIC_AUTH_PASS secrets are not set"; exit 1
+          fi
+          problems="$GITHUB_WORKSPACE/design-review-output/eur/smoke-problems.md"
+          mkdir -p "$OUT_DIR" "$(dirname "$problems")"
+          status=0
+          (cd "$RUNNER_TEMP/pw" && node capture.mjs > "$OUT_DIR/capture.log" 2>&1) || status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "- démo EUR : la capture s'est arrêtée" > "$problems"; exit 1
+          fi
+          url=${APP_URL%/}
+          mask() { local text; text=$(cat "$1"); printf '%s\n' "${text//"$url"/<démo EUR>}"; }
+          cd "$OUT_DIR"
+          GITHUB_STEP_SUMMARY="" node "$GITHUB_WORKSPACE/scripts/design-review/check-report.mjs" report.json \
+            > summary.md || status=$?
+          sed -i 's/^### Release smoke check/### Release smoke check, démo EUR/' summary.md
+          mask summary.md | tee -a "$GITHUB_STEP_SUMMARY"
+          if [ -s smoke-problems.md ]; then mask smoke-problems.md | sed 's/^- /- démo EUR : /' > "$problems"; fi
+          exit $status
+
+      - name: Gather the problem list
+        if: failure()
+        run: cat design-review-output/*/smoke-problems.md > smoke-problems.md 2> /dev/null || true
+
+      # Token demo only (see the EUR step).
       - name: Upload screenshots
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: design-review-screenshots
-          path: design-review-output
+          path: design-review-output/jetons
           if-no-files-found: warn
 
       # Written by check-report.mjs only when it finds problems; posted by the failure job.
@@ -149,7 +197,7 @@ jobs:
             echo "🧪 **Contrôle automatique de la release : ❌ échec.**"
             echo
             if [ -s smoke-problems.md ]; then
-              echo "Problèmes détectés sur la démo :"
+              echo "Problèmes détectés sur les démos :"
               echo
               # Capped: a run where every step fails would exceed the comment size limit.
               head -n 50 smoke-problems.md
@@ -160,7 +208,7 @@ jobs:
               echo
               echo "Résumé et captures (artifact) : $RUN_URL"
             else
-              echo "La démo n'a pas pu être déployée ou jointe, ou la capture s'est arrêtée avant le contrôle. Détails : $RUN_URL"
+              echo "Les démos n'ont pas pu être déployées ou jointes, ou la capture s'est arrêtée avant le contrôle. Détails : $RUN_URL"
             fi
             echo
             echo "Corriger puis pousser sur \`develop\` relance la revue."
