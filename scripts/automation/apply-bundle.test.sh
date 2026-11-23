@@ -48,7 +48,8 @@ expect_ko "main as target" main new "ni feature"
 
 agent fix/workflow .github/workflows/x.yml
 expect_ko "a .github/ change is refused" fix/workflow new "réservés"
-for path in .claude/agents/dev.md CLAUDE.md .mcp.json scripts/automation/lib.mjs scripts/ci/app-changed.sh; do
+for path in .claude/agents/dev.md CLAUDE.md .mcp.json scripts/automation/lib.mjs scripts/ci/app-changed.sh \
+  client/CLAUDE.md api/.claude/settings.json client/.mcp.json; do
   agent fix/reserved "$path"
   expect_ko "a change of $path is refused" fix/reserved new "session locale"
 done
@@ -69,6 +70,8 @@ for msg in "fixes owner/repo#12" "Resolves GH-12" "closes https://github.com/o/r
   custom fix/closes2 "echo c > c.txt && git add c.txt && git commit -qm 'Arrondi, $msg'"
   expect_ko "closing keyword in a message: $msg" fix/closes2 new "mot-clé de fermeture"
 done
+agent fix/notes docs/CLAUDE.md.notes
+expect_ok "a file only named like a reserved one is accepted" fix/notes new
 custom fix/ref 'echo r > r.txt && git add r.txt && git commit -qm "Arrondi (voir #12)"'
 expect_ok "a plain issue reference in a commit message is accepted" fix/ref new
 custom fix/rename 'mkdir -p docs && git mv .github/workflows/ci.yml docs/ci.yml && git commit -qm move'
