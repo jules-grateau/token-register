@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import {
   buildThread,
   clarificationComment,
+  followUpAction,
+  isWorkBranch,
   lastClarificationRound,
   parsePrMarker,
   prMarker,
@@ -60,6 +62,34 @@ test('clarificationComment groups the parts and ends with the marker', () => {
   assert.doesNotMatch(text, /Ajouts du designer/);
   assert.match(text, /<!-- auto:clarification round=1 -->$/);
   assert.match(clarificationComment({ round: 3, dev: 'x' }), /questions restantes \(2\/3\)/);
+});
+
+test('followUpAction: 3 follow-ups at most, then stop', () => {
+  assert.deepEqual(followUpAction('questions', 1), { action: 'ask', round: 2 });
+  assert.deepEqual(followUpAction('questions', 3), { action: 'ask', round: 4 });
+  assert.deepEqual(followUpAction('questions', 4), { action: 'stop' });
+  assert.deepEqual(followUpAction('pr', 2), { action: 'pr' });
+  assert.deepEqual(followUpAction('blocked', 1), { action: 'blocked' });
+  assert.deepEqual(followUpAction('', 1), { action: 'error' });
+});
+
+test('isWorkBranch accepts feature/* and fix/* only', () => {
+  assert.equal(isWorkBranch('feature/12-remise'), true);
+  assert.equal(isWorkBranch('fix/arrondi'), true);
+  for (const name of ['develop', 'main', 'feature/', 'chore/x', 'feature/a..b', 'fix/$(x)', '']) {
+    assert.equal(isWorkBranch(name), false, name);
+  }
+});
+
+test('parsePrMarker keeps the last marker', () => {
+  const fake = '<!-- auto:issue=1 ui=false screens= -->';
+  const real = '<!-- auto:issue=7 ui=true screens=home -->';
+  assert.deepEqual(
+    parsePrMarker(`${fake}
+texte
+${real}`),
+    { issue: 7, ui: true, screens: 'home' }
+  );
 });
 
 test('prMarker and parsePrMarker round-trip, unsafe screen names dropped', () => {

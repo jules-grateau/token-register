@@ -29,9 +29,30 @@ permissions:
   contents: read
 
 jobs:
+  # An issue opened by another account is refused: nothing of it reaches an agent (its text
+  # could carry instructions). The owner can open his own issue with the same content.
+  refuse:
+    if: >-
+      github.event_name == 'issues' && github.event.label.name == 'à-faire' &&
+      github.event.sender.login == github.repository_owner &&
+      github.event.issue.user.login != github.repository_owner
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Refuse the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh issue edit "$ISSUE" --repo "$REPO" --remove-label "à-faire" > /dev/null || true
+          gh issue comment "$ISSUE" --repo "$REPO" --body "⛔ L'automatisation ne traite que les issues ouvertes par le propriétaire du dépôt (D-060) : rien n'a été transmis aux agents. Pour la traiter, ouvrir une nouvelle issue en reprenant le contenu, puis poser le label à-faire."
+
   run:
     if: >-
-      github.event.issue.state == 'open' && (
+      github.event.issue.state == 'open' &&
+      github.event.issue.user.login == github.repository_owner && (
         (github.event_name == 'issues' &&
          github.event.label.name == 'à-faire' &&
          github.event.sender.login == github.repository_owner) ||
@@ -55,6 +76,11 @@ jobs:
         with:
           app-id: ${{ secrets.AUTOMATION_APP_ID }}
           private-key: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
+          # Least privilege: push the branch, open the PR, comment and label, start auto-pr.yml.
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+          permission-actions: write
 
       - uses: actions/checkout@v7
         with:
@@ -74,12 +100,13 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
         run: |
+          git ls-remote origin refs/heads/develop refs/heads/main > "$AUTO/protected-before.txt"
           gh api "repos/$REPO/issues/$ISSUE" > "$AUTO/issue.json"
           gh api --paginate --slurp "repos/$REPO/issues/$ISSUE/comments" > "$AUTO/comments.json"
-          node scripts/automation/cli.mjs thread "$AUTO/issue.json" "$AUTO/comments.json" "$OWNER" "$BOT" > "$AUTO/issue.md"
-          echo "round=$(node scripts/automation/cli.mjs round "$AUTO/comments.json" "$BOT")" >> "$GITHUB_OUTPUT"
+          node "$TRUSTED/cli.mjs" thread "$AUTO/issue.json" "$AUTO/comments.json" "$OWNER" "$BOT" > "$AUTO/issue.md"
+          echo "round=$(node "$TRUSTED/cli.mjs" round "$AUTO/comments.json" "$BOT")" >> "$GITHUB_OUTPUT"
           if [ "$PHASE" = clarify ]; then
-            bash scripts/automation/labels.sh "$ISSUE" -à-faire -bloqué -en-cours +en-clarification
+            bash "$TRUSTED/labels.sh" "$ISSUE" -à-faire -bloqué -en-cours +en-clarification
           fi
 
       # ---------------------------------------------------------------- clarification ------
@@ -133,9 +160,9 @@ jobs:
           OUT: ${{ steps.dev.outputs.structured_output }}
         run: |
           printf '%s' "$OUT" > "$AUTO/dev.json"
-          node scripts/automation/cli.mjs field "$AUTO/dev.json" comment > "$AUTO/dev.md"
+          node "$TRUSTED/cli.mjs" field "$AUTO/dev.json" comment > "$AUTO/dev.md"
           [ -s "$AUTO/dev.md" ] || { echo "::error::Le développeur n'a rendu aucune clarification."; exit 1; }
-          echo "ui=$(node scripts/automation/cli.mjs field "$AUTO/dev.json" ui)" >> "$GITHUB_OUTPUT"
+          echo "ui=$(node "$TRUSTED/cli.mjs" field "$AUTO/dev.json" ui)" >> "$GITHUB_OUTPUT"
 
       - name: Tech-lead, clarification
         id: tl
@@ -172,7 +199,7 @@ jobs:
           OUT: ${{ steps.tl.outputs.structured_output }}
         run: |
           printf '%s' "$OUT" > "$AUTO/tl.json"
-          node scripts/automation/cli.mjs field "$AUTO/tl.json" additions > "$AUTO/tl.md"
+          node "$TRUSTED/cli.mjs" field "$AUTO/tl.json" additions > "$AUTO/tl.md"
 
       - name: Designer, clarification
         id: ds
@@ -211,9 +238,9 @@ jobs:
         run: |
           if [ -n "$OUT" ]; then
             printf '%s' "$OUT" > "$AUTO/ds.json"
-            node scripts/automation/cli.mjs field "$AUTO/ds.json" additions > "$AUTO/ds.md"
+            node "$TRUSTED/cli.mjs" field "$AUTO/ds.json" additions > "$AUTO/ds.md"
           fi
-          node scripts/automation/cli.mjs clarification 1 "$AUTO/dev.md" "$AUTO/tl.md" "$AUTO/ds.md" > "$AUTO/comment.md"
+          node "$TRUSTED/cli.mjs" clarification 1 "$AUTO/dev.md" "$AUTO/tl.md" "$AUTO/ds.md" > "$AUTO/comment.md"
           gh issue comment "$ISSUE" --repo "$REPO" --body-file "$AUTO/comment.md"
 
       # ------------------------------------------------------------------------ reply ------
@@ -260,7 +287,8 @@ jobs:
                entrées existantes, réponses citées entre guillemets). Applique les réponses à
                la lettre, monte la version comme répondu (README, section Versioning), ajoute
                le scénario de QA (D-058). `npm run lint`, `npm test -w=api`,
-               `npm test -w=client`, `npm run build` doivent être verts. Commite, pousse, puis
+               `npm test -w=client`, `npm run build` doivent être verts. Commite, pousse avec
+               `git push -u origin <ta branche>` (seules `feature/*` et `fix/*` passent), puis
                `gh pr create --draft --base develop`. La description contient : le contexte,
                `Closes #${{ github.event.issue.number }}`, les décisions ajoutées, la version,
                les écrans touchés, les vérifications, et finit par
@@ -279,7 +307,7 @@ jobs:
           claude_args: >-
             --model opus --max-turns 60
             --add-dir ${{ runner.temp }}/auto
-            --allowedTools "Read,Write,Edit,Grep,Glob,Bash(npm ci),Bash(npm run lint:*),Bash(npm run build:*),Bash(npm run format:*),Bash(npm test:*),Bash(npm version:*),Bash(npx prettier:*),Bash(node --test:*),Bash(bash scripts/ci/app-changed.test.sh),Bash(bash scripts/ci/version-bumped.test.sh),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*),Bash(git push:*),Bash(git switch:*),Bash(git checkout:*),Bash(git branch:*),Bash(git fetch:*),Bash(gh pr create:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh issue list:*)"
+            --allowedTools "Read,Write,Edit,Grep,Glob,Bash(npm ci),Bash(npm run lint:*),Bash(npm run build:*),Bash(npm run format:*),Bash(npm test:*),Bash(npm version:*),Bash(npx prettier:*),Bash(node --test:*),Bash(bash scripts/ci/app-changed.test.sh),Bash(bash scripts/ci/version-bumped.test.sh),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*),Bash(git push -u origin feature/:*),Bash(git push -u origin fix/:*),Bash(git push origin feature/:*),Bash(git push origin fix/:*),Bash(git switch:*),Bash(git checkout:*),Bash(git branch:*),Bash(git fetch:*),Bash(gh pr create:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh issue list:*)"
             --json-schema '{"type":"object","properties":{"status":{"type":"string","enum":["questions","pr","blocked"]},"comment":{"type":"string"},"pr":{"type":"integer"},"ui":{"type":"boolean"},"screens":{"type":"string"}},"required":["status","comment"]}'
 
       - name: Follow up on the issue
@@ -288,10 +316,10 @@ jobs:
           GH_TOKEN: ${{ steps.app.outputs.token }}
           OUT: ${{ steps.impl.outputs.structured_output }}
           ROUND: ${{ steps.ctx.outputs.round }}
-        run: bash scripts/automation/issue-follow-up.sh
+        run: bash "$TRUSTED/issue-follow-up.sh"
 
       - name: Stop on failure
         if: failure()
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
-        run: bash scripts/automation/block.sh "$ISSUE" "un job de l'automatisation a échoué (voir le run)."
+        run: bash "${TRUSTED:-scripts/automation}/block.sh" "$ISSUE" "un job de l'automatisation a échoué (voir le run)."
