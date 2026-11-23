@@ -4,8 +4,7 @@
 # develop opened by the bot from a feature/* or fix/* branch of this repository, with the
 # automation's marker, not "bloqué". Otherwise it says why and stops quietly: the owner may
 # have taken the PR over.
-# Writes to $GITHUB_OUTPUT: ok, issue, ui, screens, design (none|pending|ok|ko), head, sha,
-# protected (develop and main now, checked again after the developer).
+# Writes to $GITHUB_OUTPUT: ok, issue, ui, screens, design (none|pending|ok|ko), head, sha.
 # Env: GH_TOKEN, REPO, OWNER, BOT, AUTO, PR, STEP, ROUND, ACTOR.
 set -euo pipefail
 
@@ -49,5 +48,4 @@ out screens "$(cli field "$AUTO/marker.json" screens)"
 out design "$(cli design-state "$AUTO/comments.json" "$BOT" "$ui")"
 out head "$head"
 out sha "$(cli field "$AUTO/pr.json" headRefOid)"
-out protected "$(git ls-remote origin refs/heads/develop refs/heads/main | tr '\n\t' '  ')"
 echo "PR #$PR, étape $STEP, tour $ROUND."

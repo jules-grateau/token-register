@@ -3,13 +3,13 @@
 # ($OUT) says what to do (decision in lib.mjs, followUpAction):
 #   questions -> post only the missing questions as the next clarification round, or stop
 #                ("bloqué") after 3 follow-ups;
-#   pr        -> check the draft PR (bot author, feature/* or fix/* branch, develop and main
-#                untouched), add the marker read by auto-pr.yml, move the issue to "en-cours"
-#                and start the review loop if auto-pr.yml is on develop;
+#   pr        -> check and push the developer's commits (apply-bundle.sh), open the draft
+#                PR with the marker read by auto-pr.yml, move the issue to "en-cours" and
+#                start the review loop if auto-pr.yml is on develop;
 #   blocked   -> stop, with the developer's reason.
 # Runs in its own job, on a checkout of develop: never in the tree the agent changed.
-# Env: OUT, ROUND (round of the last clarification), PROTECTED (develop and main before the
-#      agent, from git ls-remote), AUTO, ISSUE, REPO, OWNER, RUN_URL, GH_TOKEN.
+# Env: OUT, ROUND (round of the last clarification), BASE (develop's head when the agent
+#      started), BUNDLE (its commits), AUTO, ISSUE, REPO, OWNER, RUN_URL, GH_TOKEN, PUSH_TOKEN.
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -32,26 +32,24 @@ case "$action" in
 $(cat "$AUTO/reply.md")"
     ;;
   pr)
-    # develop and main must not have moved during the run: the App only pushes work branches.
-    now=$(git ls-remote origin refs/heads/develop refs/heads/main | tr '\n\t' '  ')
-    if [ -z "$PROTECTED" ] || [ "$now" != "$PROTECTED" ]; then
-      bash "$DIR/block.sh" "$ISSUE" "\`develop\` ou \`main\` a changé pendant le run : vérifier les derniers commits de ces branches avant toute suite."
+    # The agent did not push: its commits come as a bundle, checked then pushed here.
+    branch=$(cli field "$AUTO/reply.json" branch)
+    if ! why=$(bash "$DIR/apply-bundle.sh" "$BUNDLE" "$branch" "$BASE" new); then
+      bash "$DIR/block.sh" "$ISSUE" "commits du développeur refusés : $why"
       exit 0
     fi
-    pr=$(cli field "$AUTO/reply.json" pr)
-    gh pr view "$pr" --repo "$REPO" --json state,isDraft,baseRefName,headRefName,author,body,isCrossRepository > "$AUTO/pr.json"
-    head=$(cli field "$AUTO/pr.json" headRefName)
-    ok=$(node -e '
-      const p = require(process.argv[1]);
-      console.log(p.state === "OPEN" && p.isDraft && p.baseRefName === "develop" && p.author.is_bot && !p.isCrossRepository);
-    ' "$AUTO/pr.json")
-    if [ "$ok" != true ] || [ "$(cli work-branch "$head")" != true ]; then
-      bash "$DIR/block.sh" "$ISSUE" "la PR #$pr annoncée par le développeur n'est pas un brouillon ouvert par l'automatisation depuis une branche \`feature/*\` ou \`fix/*\` vers \`develop\`."
-      exit 0
-    fi
+    title=$(cli field "$AUTO/reply.json" title)
+    [ -n "$title" ] || title="Issue #$ISSUE"
     marker=$(cli pr-marker "$ISSUE" "$(cli field "$AUTO/reply.json" ui)" "$(cli field "$AUTO/reply.json" screens)")
-    { cli field "$AUTO/pr.json" body; echo; echo "$marker"; } > "$AUTO/pr-body.md"
-    gh pr edit "$pr" --repo "$REPO" --body-file "$AUTO/pr-body.md" > /dev/null
+    {
+      cli field "$AUTO/reply.json" body
+      # The issue closes at the release (D-060): the keyword must be there, whatever the agent wrote.
+      grep -qiE "^\s*(-\s+)?closes\s+#$ISSUE\b" <(cli field "$AUTO/reply.json" body) || { echo; echo "Closes #$ISSUE"; }
+      echo
+      echo "$marker"
+    } > "$AUTO/pr-body.md"
+    url=$(gh pr create --repo "$REPO" --draft --base develop --head "$branch" --title "$title" --body-file "$AUTO/pr-body.md")
+    pr="${url##*/}"
     bash "$DIR/labels.sh" "$ISSUE" -en-clarification +en-cours
     # auto-pr.yml arrives with a later PR of the automation: without it, say so (not "bloqué").
     has_loop=false

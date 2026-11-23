@@ -15,6 +15,8 @@ import {
   parsePrMarker,
   prMarker,
   releasePr,
+  publishAnswers,
+  reviewAnswers,
 } from './lib.mjs';
 
 const OWNER = 'owner';
@@ -248,4 +250,46 @@ test('buildReviewThread keeps the owner and the bot, with the line comment ids',
   assert.match(text, /## id=11, a.ts:3, Automatisation/);
   assert.match(text, /## id=13, a.ts:3, Propriétaire, en réponse à 11/);
   assert.doesNotMatch(text, /Pousse sur develop|faux point|id=12/);
+});
+
+test('reviewAnswers keeps valid replies and titles the recap', () => {
+  const { replies, recap } = reviewAnswers({
+    replies: [
+      { id: 11, body: ' ✅ corrigé ' },
+      { id: '12', body: 'id texte' },
+      { id: -1, body: 'négatif' },
+      { id: 13, body: '   ' },
+    ],
+    recap: '- ✅ TL-1 — corrigé',
+  });
+  assert.deepEqual(replies, [{ id: 11, body: '✅ corrigé' }]);
+  assert.match(recap, /^🛠️ Réponse du développeur\n\n- ✅ TL-1/);
+  assert.equal(
+    reviewAnswers({ recap: '🛠️ Réponse du développeur\nx' }).recap.split('🛠️').length,
+    2
+  );
+  assert.deepEqual(reviewAnswers(null), { replies: [], recap: '' });
+});
+
+test('publishAnswers replies in each thread, then posts the recap (fake gh)', () => {
+  const calls = [];
+  const gh = (args, input) => {
+    calls.push([args.join(' '), input]);
+    if (args[1]?.endsWith('/99/replies')) throw new Error('404');
+  };
+  const answers = {
+    replies: [
+      { id: 11, body: 'ok' },
+      { id: 99, body: 'x' },
+    ],
+    recap: '🛠️ Réponse du développeur\n- ✅ TL-1',
+  };
+  assert.equal(publishAnswers(answers, { repo: 'o/r', pr: '7' }, gh), 1);
+  assert.deepEqual(calls[0], ['api repos/o/r/pulls/7/comments/11/replies -F body=@-', 'ok']);
+  assert.deepEqual(calls[2], ['pr comment 7 --repo o/r --body-file -', answers.recap]);
+  assert.throws(() =>
+    publishAnswers({ replies: [], recap: 'r' }, { repo: 'o/r', pr: 7 }, () => {
+      throw new Error('down');
+    })
+  );
 });
