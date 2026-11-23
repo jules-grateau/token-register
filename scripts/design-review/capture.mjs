@@ -421,18 +421,28 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
       // its content back to the top: a scroll done before that is lost (release QA of PR #71,
       // EUR, desktop and tablet). Wait for the end of the transitions, then scroll, and scroll
       // again for a moment if the content still moved back.
+      // Infinite animations (loaders) never finish, and a cancelled one rejects: neither must
+      // stop the step (TL-1 of PR #72).
       await dialog(page).evaluate((el) =>
-        Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished))
+        Promise.all(
+          el
+            .getAnimations({ subtree: true })
+            .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+            .map((a) => a.finished.catch(() => {}))
+        )
       );
       const { height } = page.viewportSize();
+      const paginationInWindow = async () => {
+        const box = await pagination.boundingBox();
+        return !!box && box.y >= 0 && box.y + box.height <= height;
+      };
       const scrolledToPagination = async () => {
         // The Stack of the pagination and its count; block "end" scrolls every scrolling
         // parent. Instant: done when the call returns, no smooth scrolling (TL-1 of PR #66).
         await pagination.evaluate((el) =>
           el.parentElement.scrollIntoView({ block: 'end', behavior: 'instant' })
         );
-        const box = await pagination.boundingBox();
-        return !!box && box.y >= 0 && box.y + box.height <= height;
+        return paginationInWindow();
       };
       let inWindow = await scrolledToPagination();
       for (let i = 0; i < 5 && !inWindow; i++) {
@@ -440,6 +450,11 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
         inWindow = await scrolledToPagination();
       }
       if (!inWindow) throw new Error('History pagination not in the window after scrolling');
+      // Checked again after the same pause as before the screenshot: nothing scrolled it back
+      // in the meantime (TL-2 of PR #72).
+      await page.waitForTimeout(300);
+      if (!(await paginationInWindow()))
+        throw new Error('History pagination scrolled out of the window before the screenshot');
     },
   ],
   [
