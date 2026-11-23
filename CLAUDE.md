@@ -38,7 +38,18 @@ TypeScript 5.8.3: Follow standard conventions
 - `developpeur` : features, bugs, tests. `designer` : direction artistique (`docs/design/`), icônes, avis UI. `tech-lead` : relecture, ne modifie pas le code.
 - Les choix métier ne sont jamais décidés par un agent : ils sont confirmés par l'utilisateur et consignés dans `docs/business/decisions.md`.
 
-### Déroulé d'une feature avec le développeur
+### Voie principale : workflow autonome sur GitHub (D-060)
+
+L'utilisateur crée une issue et pose le label `à-faire`, puis ne fait plus que répondre, relire et merger. Tout tourne dans GitHub Actions (`docs/automation/README.md`) :
+
+- `auto-issue.yml` : un seul commentaire de clarification groupé (développeur, tech-lead, designer si l'interface est touchée, avec la version et le scénario de QA). La réponse de l'utilisateur relance le développeur, qui repose ce qui manque (3 relances au plus) ou consigne les décisions, code et ouvre la PR en brouillon.
+- `auto-pr.yml` : revue du tech-lead, et du designer une fois si l'interface est touchée. Ensuite, 2 tours de correction au plus, 🟡 corrigés ou ⏸️. La PR passe en « prête » quand tout est traité et vert.
+- `auto-release-pr.yml` : la PR `develop` → `main` est créée ou mise à jour à chaque merge dans `develop`.
+- Seul le propriétaire du dépôt déclenche. Un blocage (choix métier, plafond atteint, job en échec) pose le label `bloqué` et le mentionne.
+
+Le déroulé local ci-dessous reste valable **en secours** (D-060). Ne pas lancer d'agent local sur une issue ou une PR que l'automatisation traite (labels `en-clarification` / `en-cours`, sans `bloqué`).
+
+### Déroulé d'une feature avec le développeur (en local, en secours)
 
 1. Lancer `developpeur` en **phase 1 (clarification)** : il analyse sans coder et renvoie ses questions métier groupées + son plan.
 2. Poser **toutes** ces questions à l'utilisateur en une fois (AskUserQuestion, avec la recommandation de l'agent en premier), et lui montrer le plan.

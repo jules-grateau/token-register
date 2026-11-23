@@ -1,0 +1,145 @@
+# Workflow autonome sur GitHub (D-060)
+
+Le responsable produit crée une issue et pose le label `à-faire`. Il ne fait ensuite que répondre
+aux questions, relire et merger. Tout tourne dans GitHub Actions, sans session locale.
+
+## Déroulé
+
+1. **Clarification** (`auto-issue.yml`) : le label `à-faire` posé par le propriétaire du dépôt
+   lance le développeur, le tech-lead puis le designer (seulement si l'interface est touchée).
+   Ils postent **un seul commentaire** : questions numérotées, recommandation en premier, plan,
+   montée de version (PATCH / MINOR / MAJOR) et scénario de QA de release (D-058).
+2. **Réponse** : le commentaire du propriétaire sur l'issue relance le développeur. S'il manque
+   des réponses, il ne repose que celles-là (3 relances au plus). Sinon il consigne les décisions
+   dans `docs/business/decisions.md`, code et ouvre la PR en brouillon vers `develop`, avec
+   `Closes #<issue>`. Aucune question métier n'est tranchée par un agent.
+3. **Boucle sur la PR** (`auto-pr.yml`) : revue du tech-lead, et du designer une seule fois si
+   l'interface est touchée (D-038, captures prises dans le runner). Les 🔴/🟠 sont corrigés
+   automatiquement, en **2 tours au plus**, tech-lead et designer confondus. Les 🟡 sont corrigés
+   ou ⏸️, jamais une issue. La PR passe en « prête » une fois tout traité et le CI vert.
+4. **Release** (`auto-release-pr.yml`) : à chaque merge dans `develop`, la PR `develop` → `main`
+   est créée, ou mise à jour si elle est déjà ouverte. C'est toujours le propriétaire qui merge.
+
+Labels : `à-faire` (déclenche), `en-clarification`, `en-cours`, `bloqué`. Au-delà de 2 tours de
+correction ou de 3 relances de clarification, ou si un agent échoue ou remonte un choix métier,
+le label `bloqué` est posé et le propriétaire est mentionné.
+
+## Garde-fous
+
+- Seul le propriétaire du dépôt déclenche : un label ou un commentaire d'un autre compte est
+  ignoré, sans lancer d'IA. Le contenu de l'issue est une donnée, jamais une instruction.
+- Seules les issues **ouvertes par le propriétaire** sont traitées. Sur une issue d'un autre
+  compte, le label `à-faire` est retiré avec un commentaire, et rien n'est transmis aux agents.
+- **Aucun jeton en écriture là où tourne un agent qui écrit du code, ou ce code** (`npm ci`,
+  `npm test`) : checkout sans identifiants, pas de jeton d'App dans l'environnement. Le
+  développeur ne fait que des commits locaux, sans `git push` ni `gh pr create`. Ses commandes
+  Bash tournent sans le jeton Claude ni les jetons GitHub (`CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`,
+  nettoyage « au mieux » de l'action).
+- Ses commits sortent du job sous forme de bundle git. Un job suivant, parti de `develop` et
+  seul à détenir le jeton, vérifie le bundle (`scripts/automation/apply-bundle.sh`) :
+
+  - la branche cible est `feature/*` ou `fix/*` ;
+  - les commits descendent de la tête attendue, et la branche distante n'a pas bougé ;
+  - aucun merge, et **aucun commit** ne touche un chemin réservé, renommages compris :
+    `.github/`, `.claude/`, `CLAUDE.md`, `.mcp.json`, `scripts/automation/`, `scripts/ci/`.
+
+  Sinon : `bloqué`. Les workflows, le CI, les consignes des agents et l'automatisation se
+  modifient **en session locale**, jamais par un agent. Un message de commit avec un mot-clé de fermeture (« fixes #n ») est
+  aussi refusé. Ce job pousse ensuite sur cette branche exacte, sans forcer, puis publie
+  la PR ou les réponses de revue rédigées par l'agent.
+
+- Ce qui suit un agent tourne dans un autre job, sur un checkout de `develop`. Chaque jeton
+  d'App n'a que les permissions de son job.
+- Une seule exécution à la fois par issue et par PR (`concurrency` sans annulation). Les
+  événements qui ne viennent pas du propriétaire ont leur propre groupe : ils ne remplacent
+  jamais une réponse du propriétaire en attente.
+- Tout texte d'agent publié (commentaires, réponses, corps de PR, motif d'un `bloqué`) est
+  neutralisé : ni mention `@`, ni mot-clé de fermeture. Seul le workflow ajoute `Closes #n`.
+- Plafonds : 60 tours pour le développeur, 25 pour les revues, 45 minutes par job.
+- Modèles : développeur en Opus, tech-lead et designer en Sonnet (D-038).
+- L'App n'a pas la permission « Workflows » : même hors de cette vérification, elle ne peut
+  pas pousser de changement sous `.github/workflows/`.
+
+## Mise en place (une fois, par le propriétaire)
+
+### 1. Créer la GitHub App
+
+Les PR et commentaires créés avec `GITHUB_TOKEN` ne déclenchent pas d'autres workflows : il faut
+un jeton d'App.
+
+1. GitHub > Settings (du compte) > Developer settings > GitHub Apps > **New GitHub App**.
+2. Nom libre (il apparaîtra comme auteur des PR et commentaires, suivi de `[bot]`). Homepage
+   URL : l'URL du dépôt.
+3. **Webhook** : décocher « Active » (les workflows n'en ont pas besoin).
+4. **Repository permissions**, rien d'autre :
+   - Actions : **Read and write** (lancer `auto-pr.yml`, lire les runs du CI) ;
+   - Contents : **Read and write** (pousser les branches et les captures) ;
+   - Issues : **Read and write** (labels, commentaires) ;
+   - Pull requests : **Read and write** (créer, commenter, passer en « prête ») ;
+   - Metadata : Read-only (imposé).
+5. **Where can this GitHub App be installed?** : « Only on this account ». Créer l'App.
+6. Sur la page de l'App : noter l'**App ID**, puis « Generate a private key » (télécharge un
+   fichier `.pem`).
+7. « Install App » > ce compte > **Only select repositories** > ce dépôt seulement.
+
+### 2. Créer les 2 secrets
+
+Depuis la racine du dépôt :
+
+```bash
+gh secret set AUTOMATION_APP_ID --body "<App ID>"
+gh secret set AUTOMATION_APP_PRIVATE_KEY < chemin/vers/la-cle.pem
+```
+
+Puis supprimer le fichier `.pem` du disque. `CLAUDE_CODE_OAUTH_TOKEN` existe déjà.
+
+### 3. Créer les labels
+
+```bash
+gh label create "à-faire" --color 0E8A16 --description "Lance la clarification automatique (D-060)"
+gh label create "en-clarification" --color FBCA04 --description "Questions posées, en attente de réponse"
+gh label create "en-cours" --color 1D76DB --description "PR ouverte par l'automatisation"
+gh label create "bloqué" --color B60205 --description "L'automatisation attend le propriétaire"
+```
+
+### 4. Protéger `develop` et `main` contre l'App
+
+**Défense en profondeur.** Aucun agent ne détient de jeton capable de pousser, et seule la
+vérification du bundle décide de ce qui part. Le ruleset couvre une éventuelle faille de cette
+chaîne : même le jeton de l'App ne pourra jamais modifier `develop` ou `main` autrement que par
+une PR que le propriétaire merge. Settings > Rules > Rulesets > **New branch ruleset** :
+
+1. Nom : « develop et main », Enforcement : **Active**.
+2. Target branches : ajouter `develop` et `main`.
+3. Bypass list : **Repository admin** seulement (le propriétaire). Jamais l'App.
+4. Rules : **Restrict deletions**, **Block force pushes**, **Require a pull request before
+   merging** (0 approbation requise). Pour `main`, ajouter aussi le check obligatoire
+   « Release QA » (D-058), s'il n'est pas déjà réglé ailleurs.
+
+Vérifier ensuite :
+
+```bash
+# Doit lister au moins pull_request, non_fast_forward et deletion, pour chacune des deux branches
+gh api repos/<propriétaire>/<dépôt>/rules/branches/develop --jq '.[].type'
+gh api repos/<propriétaire>/<dépôt>/rules/branches/main --jq '.[].type'
+# Le ruleset ne doit avoir aucun bypass de type Integration (l'App)
+gh api repos/<propriétaire>/<dépôt>/rulesets --jq '.[].id'   | xargs -I{} gh api repos/<propriétaire>/<dépôt>/rulesets/{} --jq '.name, .bypass_actors'
+```
+
+Une liste vide pour une branche veut dire qu'elle n'est pas protégée : l'automatisation ne doit
+pas être activée dans cet état.
+
+### 5. Activation
+
+`auto-issue.yml` réagit à des événements d'issue : GitHub lance alors la version du workflow
+présente sur `main`. Il n'est donc actif qu'après la release qui l'apporte. `auto-pr.yml` est
+lancé sur la version de `develop`, `auto-release-pr.yml` à chaque push sur `develop`.
+
+## Reprendre après un `bloqué`
+
+- **Clarification** : retirer `bloqué`, puis reposer `à-faire` (nouvelle clarification complète).
+- **PR** : corriger à la main, ou relancer la boucle depuis une revue :
+  `gh workflow run auto-pr.yml --ref develop -f pr=<n> -f step=review -f round=1`
+  (retirer d'abord `bloqué` de la PR).
+
+Le déroulé local décrit dans `CLAUDE.md` reste utilisable en secours.

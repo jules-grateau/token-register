@@ -28,6 +28,9 @@ check "agent prompt only"            false .claude/agents/dev.md
 check "docs + root markdown"         false docs/x.md CLAUDE.md
 check "review-only workflow/script"  false .github/workflows/tech-lead-review.yml scripts/design-review/capture.mjs
 check "release QA workflow/scripts"  false .github/workflows/release-qa.yml scripts/release-qa/run.sh scripts/release-qa/scenarios/01-x.sh
+check "automation workflows/scripts" false .github/workflows/auto-issue.yml .github/workflows/auto-pr.yml .github/workflows/auto-release-pr.yml .github/workflows/auto-tests.yml scripts/automation/lib.mjs
+check "other auto-* workflow"        true  .github/workflows/auto-deploy.yml
+check "workflow named like auto"     true  .github/workflows/autodeploy.yml
 check "app code"                     true  api/src/y.ts
 check "docs + app code"              true  docs/y.md client/z.tsx
 check "markdown inside the app"      true  client/notes.md
