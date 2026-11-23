@@ -45,7 +45,8 @@ case "$mode" in
 esac
 
 [ -z "$(git rev-list --merges "$base..$work")" ] || fail "les commits contiennent un merge, ce que l'automatisation ne pousse pas."
-REFUSED='^(\.github/|\.claude/|CLAUDE\.md$|\.mcp\.json$|scripts/automation/|scripts/ci/)'
+# Agent instructions are refused at any depth: a nested CLAUDE.md or .claude/ is read too.
+REFUSED='^(\.github/|scripts/automation/|scripts/ci/)|(^|/)\.claude/|(^|/)(CLAUDE\.md|\.mcp\.json)$'
 # -z and core.quotePath=false: a non-ASCII path is listed as is, never quoted ("\303\251"),
 # so it cannot slip past the check.
 touched=""

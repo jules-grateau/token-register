@@ -2,7 +2,7 @@
 // auto-*.yml workflows through cli.mjs. No network, no file access: tested by lib.test.mjs.
 
 // Hidden markers written by the automation, read back to know where an issue or a PR stands.
-const CLARIFICATION_MARKER = /<!-- auto:clarification round=(\d+) -->/;
+const CLARIFICATION_MARKER = /<!-- auto:clarification round=(\d+) -->/g;
 const PR_MARKER = /<!-- auto:issue=(\d+) ui=(true|false) screens=([a-z0-9,-]*) -->/g;
 
 // Clarification: the first comment is round 1, then at most 3 follow-ups (D-060).
@@ -68,7 +68,8 @@ export function lastClarificationRound(comments, bot) {
   let round = 0;
   for (const comment of comments) {
     if (comment.user.login !== bot) continue;
-    const match = CLARIFICATION_MARKER.exec(comment.body ?? '');
+    // Last marker of the comment: the real one closes it, after the developer's text.
+    const match = [...(comment.body ?? '').matchAll(CLARIFICATION_MARKER)].at(-1);
     if (match) round = Number(match[1]);
   }
   return round;
