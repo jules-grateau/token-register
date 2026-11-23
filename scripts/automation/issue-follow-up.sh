@@ -7,8 +7,9 @@
 #                untouched), add the marker read by auto-pr.yml, move the issue to "en-cours"
 #                and start the review loop if auto-pr.yml is on develop;
 #   blocked   -> stop, with the developer's reason.
-# Run from the trusted copy ($TRUSTED, setup.sh), never from the tree the agent changed.
-# Env: OUT, ROUND (round of the last clarification), AUTO, ISSUE, REPO, OWNER, RUN_URL, GH_TOKEN.
+# Runs in its own job, on a checkout of develop: never in the tree the agent changed.
+# Env: OUT, ROUND (round of the last clarification), PROTECTED (develop and main before the
+#      agent, from git ls-remote), AUTO, ISSUE, REPO, OWNER, RUN_URL, GH_TOKEN.
 set -euo pipefail
 
 DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -32,8 +33,8 @@ $(cat "$AUTO/reply.md")"
     ;;
   pr)
     # develop and main must not have moved during the run: the App only pushes work branches.
-    git ls-remote origin refs/heads/develop refs/heads/main > "$AUTO/protected-after.txt"
-    if ! cmp -s "$AUTO/protected-before.txt" "$AUTO/protected-after.txt"; then
+    now=$(git ls-remote origin refs/heads/develop refs/heads/main | tr '\n\t' '  ')
+    if [ -z "$PROTECTED" ] || [ "$now" != "$PROTECTED" ]; then
       bash "$DIR/block.sh" "$ISSUE" "\`develop\` ou \`main\` a changé pendant le run : vérifier les derniers commits de ces branches avant toute suite."
       exit 0
     fi

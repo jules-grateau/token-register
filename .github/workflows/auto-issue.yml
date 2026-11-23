@@ -28,6 +28,13 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  ISSUE: ${{ github.event.issue.number }}
+  REPO: ${{ github.repository }}
+  OWNER: ${{ github.repository_owner }}
+  RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  PHASE: ${{ github.event_name == 'issues' && 'clarify' || 'reply' }}
+
 jobs:
   # An issue opened by another account is refused: nothing of it reaches an agent (its text
   # could carry instructions). The owner can open his own issue with the same content.
@@ -43,8 +50,6 @@ jobs:
       - name: Refuse the issue
         env:
           GH_TOKEN: ${{ github.token }}
-          ISSUE: ${{ github.event.issue.number }}
-          REPO: ${{ github.repository }}
         run: |
           gh issue edit "$ISSUE" --repo "$REPO" --remove-label "à-faire" > /dev/null || true
           gh issue comment "$ISSUE" --repo "$REPO" --body "⛔ L'automatisation ne traite que les issues ouvertes par le propriétaire du dépôt (D-060) : rien n'a été transmis aux agents. Pour la traiter, ouvrir une nouvelle issue en reprenant le contenu, puis poser le label à-faire."
@@ -63,12 +68,10 @@ jobs:
          !contains(github.event.issue.labels.*.name, 'bloqué')))
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    env:
-      ISSUE: ${{ github.event.issue.number }}
-      REPO: ${{ github.repository }}
-      OWNER: ${{ github.repository_owner }}
-      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-      PHASE: ${{ github.event_name == 'issues' && 'clarify' || 'reply' }}
+    outputs:
+      round: ${{ steps.ctx.outputs.round }}
+      protected: ${{ steps.ctx.outputs.protected }}
+      out: ${{ steps.impl.outputs.structured_output }}
     steps:
       # Pinned to a commit SHA: this action receives the App's private key.
       - id: app
@@ -100,7 +103,8 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
         run: |
-          git ls-remote origin refs/heads/develop refs/heads/main > "$AUTO/protected-before.txt"
+          # develop and main before the agents: follow-up checks that they did not move.
+          echo "protected=$(git ls-remote origin refs/heads/develop refs/heads/main | tr '\n\t' '  ')" >> "$GITHUB_OUTPUT"
           gh api "repos/$REPO/issues/$ISSUE" > "$AUTO/issue.json"
           gh api --paginate --slurp "repos/$REPO/issues/$ISSUE/comments" > "$AUTO/comments.json"
           node "$TRUSTED/cli.mjs" thread "$AUTO/issue.json" "$AUTO/comments.json" "$OWNER" "$BOT" > "$AUTO/issue.md"
@@ -310,16 +314,43 @@ jobs:
             --allowedTools "Read,Write,Edit,Grep,Glob,Bash(npm ci),Bash(npm run lint:*),Bash(npm run build:*),Bash(npm run format:*),Bash(npm test:*),Bash(npm version:*),Bash(npx prettier:*),Bash(node --test:*),Bash(bash scripts/ci/app-changed.test.sh),Bash(bash scripts/ci/version-bumped.test.sh),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*),Bash(git push -u origin feature/:*),Bash(git push -u origin fix/:*),Bash(git push origin feature/:*),Bash(git push origin fix/:*),Bash(git switch:*),Bash(git checkout:*),Bash(git branch:*),Bash(git fetch:*),Bash(gh pr create:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh issue list:*)"
             --json-schema '{"type":"object","properties":{"status":{"type":"string","enum":["questions","pr","blocked"]},"comment":{"type":"string"},"pr":{"type":"integer"},"ui":{"type":"boolean"},"screens":{"type":"string"}},"required":["status","comment"]}'
 
+  # After the agents, on a new runner from develop: nothing the developer changed (files,
+  # git config, the copy in $TRUSTED) can run here with the App token.
+  follow-up:
+    needs: run
+    if: always() && (needs.run.result == 'failure' || (needs.run.result == 'success' && github.event_name == 'issue_comment'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Pinned to a commit SHA: this action receives the App's private key.
+      - id: app
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
+        with:
+          app-id: ${{ secrets.AUTOMATION_APP_ID }}
+          private-key: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
+          # Comment and label, edit the PR body, start auto-pr.yml.
+          permission-contents: read
+          permission-pull-requests: write
+          permission-issues: write
+          permission-actions: write
+      - uses: actions/checkout@v7
+        with:
+          ref: develop
+          persist-credentials: false
+      - name: Setup
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+        run: bash scripts/automation/setup.sh "${{ steps.app.outputs.app-slug }}"
       - name: Follow up on the issue
-        if: env.PHASE == 'reply'
+        if: needs.run.result == 'success'
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
-          OUT: ${{ steps.impl.outputs.structured_output }}
-          ROUND: ${{ steps.ctx.outputs.round }}
-        run: bash "$TRUSTED/issue-follow-up.sh"
-
+          OUT: ${{ needs.run.outputs.out }}
+          ROUND: ${{ needs.run.outputs.round }}
+          PROTECTED: ${{ needs.run.outputs.protected }}
+        run: bash scripts/automation/issue-follow-up.sh
       - name: Stop on failure
-        if: failure()
+        if: failure() || needs.run.result == 'failure'
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
-        run: bash "${TRUSTED:-scripts/automation}/block.sh" "$ISSUE" "un job de l'automatisation a échoué (voir le run)."
+        run: bash scripts/automation/block.sh "$ISSUE" "un job de l'automatisation a échoué (voir le run)."
