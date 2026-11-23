@@ -35,6 +35,10 @@ le label `bloqué` est posé et le propriétaire est mentionné.
   développeur ne fait que des commits locaux, sans `git push` ni `gh pr create`. Ses commandes
   Bash tournent sans le jeton Claude ni les jetons GitHub (`CLAUDE_CODE_SUBPROCESS_ENV_SCRUB`,
   nettoyage « au mieux » de l'action).
+- Les commandes Bash des agents tournent dans le sandbox de Claude Code, jamais désactivé.
+  Avant chaque agent qui a Bash, `scripts/automation/sandbox-deps.sh` installe ce dont il a
+  besoin sur le runner (`bubblewrap`, `socat`) et lève la restriction AppArmor des user
+  namespaces d'Ubuntu 24.04.
 - Ses commits sortent du job sous forme de bundle git. Un job suivant, parti de `develop` et
   seul à détenir le jeton, vérifie le bundle (`scripts/automation/apply-bundle.sh`) :
 
