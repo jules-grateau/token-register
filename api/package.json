@@ -1,6 +1,6 @@
 {
   "name": "backend",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "Simple and cashless Register software",
   "main": "index.js",
   "scripts": {

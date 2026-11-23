@@ -694,3 +694,22 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - Le jeu est supprimé à la fin du passage, après les commandes de test. S'il n'a pas pu être supprimé, le contrôle (`check-report.mjs`) échoue, comme pour les commandes (réponse : « Le contrôle échoue (Recommandé) »).
 - **Options écartées** : ne rien créer et laisser l'étape « total ≤ 0 » échouer quand seul le produit négatif manque ; ajouter le produit négatif dans une catégorie existante ; noms réalistes (« Café », « Eco-cup ») ; simple avertissement dans le rapport si le nettoyage échoue.
 - **Impact** : `scripts/design-review/capture.mjs`, `scripts/design-review/check-report.mjs`. Outil de revue seulement : pas de montée de version (D-027).
+
+### D-058 — QA de release : tests fixes sur des instances neuves, qui bloquent la mise en prod
+
+- **Date** : 2026-11-21
+- **Confirmée par** : Jules (responsable produit), 2026-11-21
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : plusieurs features peuvent arriver ensemble sur `develop` sans avoir été testées ensemble. Le contrôle des releases (`design-review.yml`) ne parcourait que les écrans de la démo, dans sa seule monnaie : ni base neuve, ni commande admin, ni euros (exemple : la v2.3.1, avec une base neuve vide et la conversion d'une ligne sans prix, n'avait été testée que par Jest).
+- **Décision** :
+  - Toute PR vers `main` passe un QA de release fait de **tests fixes, sans IA** (réponse : « Tests fixes, sans IA (Recommandé) »), dans le runner, sur des instances temporaires construites depuis le commit de la PR. La démo n'est pas touchée.
+  - Périmètre : les écrans, le démarrage sur une base neuve, les commandes admin `convert-currency` et `migrate`, **en jetons et en euros** (réponse : « Tout, jetons + EUR (Recommandé) »).
+  - Le QA bloque la mise en prod : c'est un check obligatoire de `main` (réponse : « Oui, je le configure (Recommandé) »). Pour corriger : une PR vers `develop`, puis le QA se relance.
+  - Fausse alerte : seul l'admin du dépôt peut passer outre, et l'exception est notée dans un commentaire de la PR (réponse : « Toi seul (Recommandé) »).
+  - Chaque PR de feature ajoute son scénario (une étape de `capture.mjs` pour un écran, un fichier de `scripts/release-qa/scenarios/` pour le reste) ; le tech-lead le vérifie (réponse : « Oui, obligatoire (Recommandé) »).
+  - Le rapport et le commentaire d'échec sont en français (réponse : « Français (Recommandé) »).
+  - Outillage seulement : pas de montée de version (réponse : « Aucune montée (Recommandé) », D-027).
+  - Ajout du 2026-11-23 : la release qui l'emporte touche `scripts/ci/app-changed.sh`, ce qui exige une montée de version (`version-check`). Version **2.3.2**, montée dans la PR qui corrige l'étape « order-history » de la capture, premier échec du QA de release sur la PR #71 (réponse : « PATCH 2.3.2 (Recommandé) »).
+- **Options écartées** : un agent QA Claude qui déduit et exécute un plan de test à chaque release (coût en tokens, résultats variables) ; un mélange tests fixes + relecture par un agent ; écrans seulement ; jetons seulement ; scénario par feature simplement recommandé ; rapport en anglais ; montée PATCH.
+- **Impact** : `.github/workflows/release-qa.yml`, `scripts/release-qa/`, `scripts/ci/app-changed.sh`, `.claude/agents/developpeur.md`, `.claude/agents/tech-lead.md`, `CLAUDE.md`. La protection de `main` est réglée par l'admin du dépôt.

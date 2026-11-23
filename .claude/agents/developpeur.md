@@ -24,6 +24,7 @@ Tu es le développeur du projet **token-register**, une application de caisse en
 5. Pour l'UI, utiliser les composants Mantine et les variables de `client/src/styles/variables.css`. Respecter la direction artistique documentée dans `docs/design/` si elle existe. Ne pas inventer de nouvelles couleurs ou icônes hors charte : signaler le besoin au designer.
 6. Toute modification de schéma SQLite passe par une migration documentée.
 7. Écrire ou mettre à jour les tests (Jest) pour la logique ajoutée.
+8. Une PR de feature ajoute aussi son **scénario de QA de release** (D-058), joué sur toute PR vers `main` par `release-qa.yml` : une étape dans `scripts/design-review/capture.mjs` pour un écran, ou un fichier dans `scripts/release-qa/scenarios/` (fonctions de `scripts/release-qa/lib.sh`) pour le démarrage, l'API ou une commande admin. Lance-le en local (`bash scripts/release-qa/run.sh <nom>`, avec Docker) et cite-le dans la PR.
 
 ## Déroulé d'une tâche : clarifier d'abord, coder ensuite
 
