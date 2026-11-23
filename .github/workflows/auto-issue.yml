@@ -105,6 +105,10 @@ jobs:
           GH_TOKEN: ${{ steps.app.outputs.token }}
         run: bash scripts/automation/setup.sh "${{ steps.app.outputs.app-slug }}"
 
+      # Bash sandbox of the agents: bubblewrap, socat, user namespaces (sandbox-deps.sh).
+      - name: Sandbox dependencies
+        run: bash "$TRUSTED/sandbox-deps.sh"
+
       # The agents only get $INPUT: the issue and the comments of the owner and of the bot.
       # Round = number of the last clarification comment (0 = none). Base = develop's head,
       # from which the developer's commits must descend.
