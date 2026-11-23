@@ -34,8 +34,9 @@ le label `bloqué` est posé et le propriétaire est mentionné.
   workflow vérifie que `develop` et `main` n'ont pas bougé, et que la PR part d'une telle
   branche. Sinon il s'arrête en `bloqué`. La vraie barrière reste la protection des branches
   (étape 4).
-- Les scripts lancés après un agent viennent d'une copie prise avant son passage, jamais du
-  dossier qu'il a pu modifier.
+- Ce qui suit un agent qui modifie des fichiers tourne dans un autre job, sur un checkout de
+  `develop` : rien de ce qu'il a changé ne s'exécute avec le jeton de l'App. Chaque jeton n'a
+  que les permissions de son job.
 - Une seule exécution à la fois par issue et par PR (`concurrency` sans annulation).
 - Plafonds : 60 tours pour le développeur, 25 pour les revues, 45 minutes par job.
 - Modèles : développeur en Opus, tech-lead et designer en Sonnet (D-038).
