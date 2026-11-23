@@ -24,7 +24,14 @@ first=true
 for n in $(cli merged-prs "$AUTO/subjects.txt"); do
   $first || echo ',' >> "$AUTO/prs.json"
   first=false
-  gh pr view "$n" --repo "$REPO" --json number,title,body >> "$AUTO/prs.json"
+  # A PR that cannot be read (a "(#n)" in a commit title that is not a PR...) is listed as such,
+  # with a warning: it never stops the update silently.
+  if gh pr view "$n" --repo "$REPO" --json number,title,body > "$AUTO/pr.json" 2> "$AUTO/pr.err"; then
+    cat "$AUTO/pr.json" >> "$AUTO/prs.json"
+  else
+    echo "::warning::PR #$n illisible : $(head -c 200 "$AUTO/pr.err")"
+    printf '{"number":%s,"title":"(PR illisible, à vérifier)","body":""}' "$n" >> "$AUTO/prs.json"
+  fi
 done
 echo ']' >> "$AUTO/prs.json"
 

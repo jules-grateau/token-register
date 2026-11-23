@@ -9,10 +9,11 @@ on:
   push:
     branches: [develop]
 
-# Each run recomputes everything: only the last one matters.
+# Each run recomputes everything from develop. Not cancelled midway (the PR could be left
+# half-edited): a newer push waits, and the latest one replaces any other waiting run.
 concurrency:
   group: auto-release-pr
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read

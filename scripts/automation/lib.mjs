@@ -181,11 +181,15 @@ export function mergedPrNumbers(subjects) {
   return numbers.sort((a, b) => a - b);
 }
 
-/** Issues a PR description closes ("Closes #12", "fixes #3"...), in order, without repeats. */
+/**
+ * Issues a PR description closes, in order, without repeats: a closing keyword at the start
+ * of a line ("Closes #12", "- fixes #3"), as the automation writes it. A keyword in the
+ * middle of a sentence is not counted.
+ */
 export function closedIssues(body) {
   const numbers = [];
   for (const match of (body ?? '').matchAll(
-    /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?) #(\d+)\b/gi
+    /^\s*(?:[-*]\s+)?(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)\b/gim
   )) {
     if (!numbers.includes(Number(match[1]))) numbers.push(Number(match[1]));
   }
@@ -208,7 +212,13 @@ export function releasePr({ version, mainVersion, bumped, prs }) {
   }
   lines.push('## PR incluses', '');
   if (prs.length === 0) lines.push('_(aucune PR trouvée depuis `main`)_');
-  for (const pr of prs) lines.push(`- #${pr.number} ${pr.title}`);
+  const ZWSP = String.fromCharCode(0x200b); // after an @, prevents the mention
+  // A PR title is shown as text: no mention (@name) and no code span from a title.
+  const plain = (title) =>
+    String(title)
+      .replace(/@/g, '@' + ZWSP)
+      .replace(/`/g, "'");
+  for (const pr of prs) lines.push(`- #${pr.number} ${plain(pr.title)}`);
   const issues = [...new Set(prs.flatMap((pr) => closedIssues(pr.body)))];
   if (issues.length > 0) {
     lines.push('', '## Issues fermées à la mise en prod', '');
