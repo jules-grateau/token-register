@@ -192,3 +192,41 @@ export function buildReviewThread(comments, lineComments, owner, bot) {
   }
   return lines.join('\n');
 }
+
+const RECAP_TITLE = '🛠️ Réponse du développeur';
+
+/**
+ * What the developer agent wrote for the review (auto-pr.yml, fix and minor steps), checked
+ * before the workflow publishes it: one reply per line comment id (positive integers, text not
+ * empty, 50 at most), and the recap, which always starts with its title.
+ * @param {{replies?: Array<{id: unknown, body: unknown}>, recap?: unknown}} output
+ */
+export function reviewAnswers(output) {
+  const replies = (Array.isArray(output?.replies) ? output.replies : [])
+    .filter((r) => Number.isInteger(r?.id) && r.id > 0 && typeof r.body === 'string')
+    .map((r) => ({ id: r.id, body: r.body.trim() }))
+    .filter((r) => r.body)
+    .slice(0, 50);
+  let recap = typeof output?.recap === 'string' ? output.recap.trim() : '';
+  if (recap && !recap.startsWith(RECAP_TITLE)) recap = `${RECAP_TITLE}\n\n${recap}`;
+  return { replies, recap };
+}
+
+/**
+ * Publishes the developer's answers with `gh` (`gh(args, stdin)`, throws on failure): the
+ * replies first, each in its thread, then the recap. A reply that fails is counted, not fatal;
+ * a recap that fails throws. Returns the number of replies published.
+ */
+export function publishAnswers({ replies, recap }, { repo, pr }, gh) {
+  let published = 0;
+  for (const { id, body } of replies) {
+    try {
+      gh(['api', `repos/${repo}/pulls/${pr}/comments/${id}/replies`, '-F', 'body=@-'], body);
+      published += 1;
+    } catch {
+      // Reported by the caller: the count is lower than the number of replies.
+    }
+  }
+  if (recap) gh(['pr', 'comment', String(pr), '--repo', repo, '--body-file', '-'], recap);
+  return published;
+}

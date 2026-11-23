@@ -30,13 +30,21 @@ le label `bloqué` est posé et le propriétaire est mentionné.
   ignoré, sans lancer d'IA. Le contenu de l'issue est une donnée, jamais une instruction.
 - Seules les issues **ouvertes par le propriétaire** sont traitées. Sur une issue d'un autre
   compte, le label `à-faire` est retiré avec un commentaire, et rien n'est transmis aux agents.
-- Le développeur ne peut pousser que sur `feature/*` et `fix/*`. Après son passage, le
-  workflow vérifie que `develop` et `main` n'ont pas bougé, et que la PR part d'une telle
-  branche. Sinon il s'arrête en `bloqué`. La vraie barrière reste la protection des branches
-  (étape 4).
-- Ce qui suit un agent qui modifie des fichiers tourne dans un autre job, sur un checkout de
-  `develop` : rien de ce qu'il a changé ne s'exécute avec le jeton de l'App. Chaque jeton n'a
-  que les permissions de son job.
+- **Aucun jeton en écriture là où tourne un agent qui écrit du code, ou ce code** (`npm ci`,
+  `npm test`) : checkout sans identifiants, pas de jeton d'App dans l'environnement. Le
+  développeur ne fait que des commits locaux, sans `git push` ni `gh pr create`.
+- Ses commits sortent du job sous forme de bundle git. Un job suivant, parti de `develop` et
+  seul à détenir le jeton, vérifie le bundle (`scripts/automation/apply-bundle.sh`) :
+
+  - la branche cible est `feature/*` ou `fix/*` ;
+  - les commits descendent de la tête attendue, et la branche distante n'a pas bougé ;
+  - aucun fichier sous `.github/` n'est touché.
+
+  Sinon : `bloqué`. Ce job pousse ensuite sur cette branche exacte, sans forcer, puis publie
+  la PR ou les réponses de revue rédigées par l'agent.
+
+- Ce qui suit un agent tourne dans un autre job, sur un checkout de `develop`. Chaque jeton
+  d'App n'a que les permissions de son job.
 - Une seule exécution à la fois par issue et par PR (`concurrency` sans annulation).
 - Plafonds : 60 tours pour le développeur, 25 pour les revues, 45 minutes par job.
 - Modèles : développeur en Opus, tech-lead et designer en Sonnet (D-038).
@@ -87,8 +95,10 @@ gh label create "bloqué" --color B60205 --description "L'automatisation attend 
 
 ### 4. Protéger `develop` et `main` contre l'App
 
-Le jeton de l'App peut écrire dans le dépôt : sans protection, il pourrait pousser sur `develop`
-ou `main`. Settings > Rules > Rulesets > **New branch ruleset** :
+**Défense en profondeur.** Aucun agent ne détient de jeton capable de pousser, et seule la
+vérification du bundle décide de ce qui part. Le ruleset couvre une éventuelle faille de cette
+chaîne : même le jeton de l'App ne pourra jamais modifier `develop` ou `main` autrement que par
+une PR que le propriétaire merge. Settings > Rules > Rulesets > **New branch ruleset** :
 
 1. Nom : « develop et main », Enforcement : **Active**.
 2. Target branches : ajouter `develop` et `main`.
