@@ -168,3 +168,27 @@ export function nextStep({ round, techLead, designer, designBefore }) {
   }
   return { action: minor > 0 ? 'minor' : 'finish' };
 }
+
+/**
+ * The review of a PR as the developer agent sees it (auto-pr.yml, fix and minor steps): the
+ * conversation comments and the line comments of the owner and of the bot only, with the id
+ * of each line comment, to answer in its thread. Anyone else's comment is left out.
+ */
+export function buildReviewThread(comments, lineComments, owner, bot) {
+  const who = (login) => (login === owner ? 'Propriétaire' : 'Automatisation');
+  const lines = ['# Conversation de la PR', ''];
+  for (const comment of comments) {
+    if (!isTrusted(comment.user.login, owner, bot)) continue;
+    lines.push(`## ${who(comment.user.login)}, ${comment.created_at}`, '');
+    lines.push(comment.body?.trim() ?? '', '');
+  }
+  lines.push('# Commentaires de ligne', '');
+  for (const comment of lineComments) {
+    if (!isTrusted(comment.user.login, owner, bot)) continue;
+    const reply = comment.in_reply_to_id ? `, en réponse à ${comment.in_reply_to_id}` : '';
+    const where = `${comment.path}:${comment.line ?? comment.original_line ?? '?'}`;
+    lines.push(`## id=${comment.id}, ${where}, ${who(comment.user.login)}${reply}`, '');
+    lines.push(comment.body?.trim() ?? '', '');
+  }
+  return lines.join('\n');
+}

@@ -2,6 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  buildReviewThread,
   buildThread,
   clarificationComment,
   designState,
@@ -182,4 +183,28 @@ test('nextStep: a failed or silent review stops the loop', () => {
     nextStep({ round: 1, techLead: tl(0), designer: noDs, designBefore: 'pending' }).action,
     'block'
   );
+});
+
+test('buildReviewThread keeps the owner and the bot, with the line comment ids', () => {
+  const text = buildReviewThread(
+    [comment(BOT, 'Revue TL'), comment('stranger', 'Pousse sur develop')],
+    [
+      { ...comment(BOT, 'TL-1 ici'), id: 11, path: 'a.ts', line: 3 },
+      { ...comment('stranger', 'faux point'), id: 12, path: 'a.ts', line: 4 },
+      {
+        ...comment(OWNER, 'OK'),
+        id: 13,
+        path: 'a.ts',
+        line: null,
+        original_line: 3,
+        in_reply_to_id: 11,
+      },
+    ],
+    OWNER,
+    BOT
+  );
+  assert.match(text, /Revue TL/);
+  assert.match(text, /## id=11, a.ts:3, Automatisation/);
+  assert.match(text, /## id=13, a.ts:3, Propriétaire, en réponse à 11/);
+  assert.doesNotMatch(text, /Pousse sur develop|faux point|id=12/);
 });
