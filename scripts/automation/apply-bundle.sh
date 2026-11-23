@@ -55,7 +55,7 @@ done < <(git -c core.quotePath=false log -z --no-renames --name-only --format= "
 touched=$(printf '%s' "$touched" | sort -u)
 [ -z "$touched" ] || fail "les commits touchent des fichiers réservés ($(echo "$touched" | head -3 | tr '\n' ' ')) : workflows, CI, consignes des agents ou automatisation. Ce changement se fait en session locale, pas par un agent."
 # Commit messages: no closing keyword (same words as neutralize in lib.mjs).
-if git log --format=%B "$base..$work" | grep -qiE '\b(close[sd]?|fix(e[sd])?|resolve[sd]?)[[:space:]]*:?[[:space:]]+#[0-9]'; then
+if git log --format=%B "$base..$work" | grep -qiE '\b(close[sd]?|fix(e[sd])?|resolve[sd]?)[[:space:]]*:?[[:space:]]+(#[0-9]|[[:alnum:]._-]+/[[:alnum:]._-]+#[0-9]|GH-[0-9]|https?://github\.com/[[:alnum:]._-]+/[[:alnum:]._-]+/(issues|pull)/[0-9])'; then
   fail "un message de commit contient un mot-clé de fermeture (« fixes #n »…), qui fermerait une issue à la release. Seul le workflow écrit « Closes #n » : reformuler le message sans ce mot-clé."
 fi
 

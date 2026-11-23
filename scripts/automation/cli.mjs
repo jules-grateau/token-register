@@ -9,6 +9,7 @@
 //   node cli.mjs max-round                                           last clarification round allowed
 //   node cli.mjs pr-marker <issue> <ui> <screens>
 //   node cli.mjs neutral <file|->                                    agent text safe to publish
+//   node cli.mjs still-waiting <issue.json>                          true | false
 //   node cli.mjs field <file.json> <key>                             one field, raw ("" if absent)
 // comments.json may come from `gh api --paginate --slurp` (an array of pages): it is flattened.
 import fs from 'node:fs';
@@ -20,6 +21,7 @@ import {
   isWorkBranch,
   lastClarificationRound,
   neutralize,
+  stillWaiting,
   prMarker,
 } from './lib.mjs';
 
@@ -43,6 +45,7 @@ const commands = {
   'max-round': () => String(MAX_CLARIFICATION_ROUND),
   'pr-marker': ([issue, ui, screens]) => prMarker({ issue, ui, screens }),
   neutral: ([file]) => neutralize(fs.readFileSync(!file || file === '-' ? 0 : file, 'utf8')),
+  'still-waiting': ([issue]) => String(stillWaiting(readJson(issue))),
   field: ([file, key]) => {
     const value = readJson(file)?.[key];
     if (value === undefined || value === null) return '';
