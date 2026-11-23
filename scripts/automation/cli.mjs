@@ -2,8 +2,11 @@
 // Command line of the automation helpers (lib.mjs), for the auto-*.yml workflows (D-060).
 // Usage:
 //   node cli.mjs thread <issue.json> <comments.json> <owner> <bot>   issue + trusted comments (Markdown)
+//   node cli.mjs review-thread <comments.json> <line-comments.json> <owner> <bot>
 //   node cli.mjs round <comments.json> <bot>                         round of the last clarification
 //   node cli.mjs clarification <round> <dev.md> [tech-lead.md] [designer.md]
+//   node cli.mjs follow-up <status> <round>                          JSON {action, round?}
+//   node cli.mjs work-branch <name>                                  true | false
 //   node cli.mjs max-round                                           last clarification round allowed
 //   node cli.mjs pr-marker <issue> <ui> <screens>
 //   node cli.mjs read-pr-marker <body.md>                            marker as JSON, "" if none
@@ -18,9 +21,12 @@ import fs from 'node:fs';
 import {
   MAX_CLARIFICATION_ROUND,
   MAX_REVIEW_ROUND,
+  buildReviewThread,
   buildThread,
   clarificationComment,
   designState,
+  followUpAction,
+  isWorkBranch,
   lastClarificationRound,
   mergedPrNumbers,
   nextStep,
@@ -45,6 +51,8 @@ const parseOutput = (text) => {
 const [command, ...args] = process.argv.slice(2);
 const commands = {
   thread: ([issue, list, owner, bot]) => buildThread(readJson(issue), comments(list), owner, bot),
+  'review-thread': ([list, lines, owner, bot]) =>
+    buildReviewThread(comments(list), comments(lines), owner, bot),
   round: ([list, bot]) => String(lastClarificationRound(comments(list), bot)),
   clarification: ([round, dev, techLead, designer]) =>
     clarificationComment({
@@ -53,6 +61,8 @@ const commands = {
       techLead: readText(techLead),
       designer: readText(designer),
     }),
+  'follow-up': ([status, round]) => JSON.stringify(followUpAction(status, Number(round))),
+  'work-branch': ([name]) => String(isWorkBranch(name)),
   'max-round': () => String(MAX_CLARIFICATION_ROUND),
   'pr-marker': ([issue, ui, screens]) => prMarker({ issue, ui, screens }),
   'read-pr-marker': ([body]) => {
