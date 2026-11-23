@@ -734,3 +734,25 @@ doit être demandé avant d'être implémenté (voir `.claude/agents/developpeur
   - Scénario de QA de release : `scripts/release-qa/scenarios/05-catalogue-demo.sh` (réponse : « Scénario 05 (Recommandé) »).
 - **Options écartées** : une nouvelle instance EUR ; script lancé une seule fois à la main ; saisie du catalogue à la main ; copie du catalogue de la démo jetons ; remise à zéro de l'instance EUR ; catalogue aussi pour la démo jetons ; contrôle des releases sur la démo jetons seulement ; URL affichée comme environnement GitHub ; simple avertissement en cas d'échec ; aucune montée de version ; pas de scénario de QA.
 - **Impact** : `.github/workflows/ci-cd.yml` (job `deploy`), `.github/workflows/design-review.yml`, `scripts/demo/seed-eur-catalog.mjs`, `scripts/release-qa/scenarios/05-catalogue-demo.sh`, `deploy/README.md`. Secrets à créer : `DEMO_EUR_SERVICE`, `DEMO_EUR_URL`, `DEMO_EUR_BASIC_AUTH_USER`, `DEMO_EUR_BASIC_AUTH_PASS`.
+
+### D-060 — Workflow autonome sur GitHub : de l'issue à la PR de release
+
+- **Date** : 2026-11-23
+- **Confirmée par** : Jules (responsable produit), 2026-11-23
+- **Statut** : Active
+- **Domaine** : Autre
+- **Contexte** : le responsable produit veut créer une issue, puis ne plus faire que répondre aux questions, relire et merger. Choix de départ : tout se passe sur GitHub (workflows Actions avec l'action Claude Code, sans session locale) ; un label sur l'issue lance la clarification, avec un seul commentaire groupé du développeur, du tech-lead et du designer (seulement si l'interface est touchée), qui contient toujours la montée de version et le scénario de QA (D-058) ; le commentaire de réponse relance le développeur, qui ne repose que ce qui manque, ou consigne les décisions, code et ouvre la PR en brouillon vers `develop` ; aucune question métier n'est tranchée par un agent ; boucle complète sur la PR, 🟡 corrigés ou ⏸️ ; le designer relit une seule fois (D-038) ; c'est toujours le responsable produit qui merge ; une PR de release `develop` → `main` est créée ou mise à jour à chaque merge dans `develop`.
+- **Décision** :
+  - Jeton : une GitHub App propre au dépôt, secrets `AUTOMATION_APP_ID` et `AUTOMATION_APP_PRIVATE_KEY` (réponse : « GitHub App (Recommandé) »). Les PR et commentaires créés avec `GITHUB_TOKEN` ne déclencheraient pas les workflows suivants.
+  - Déclencheur : seul le propriétaire du dépôt déclenche. Un label ou un commentaire d'un autre auteur est ignoré, sans lancer d'IA, et le contenu de l'issue est traité comme une donnée (réponse : « Toi seul (Recommandé) »).
+  - Plafonds, par issue ou par PR (réponse : « Par issue (Recommandé) ») : une exécution à la fois, sans annulation ; 60 tours pour le développeur, 25 pour les revues ; 45 minutes par job. Au-delà de 2 tours de correction ou de 3 relances de clarification : label `bloqué` et mention du responsable produit.
+  - Modèles : développeur en Opus, tech-lead et designer en Sonnet (réponse : « Dev Opus, revues Sonnet (Recommandé) »).
+  - Captures du designer prises dans le runner, sur des instances temporaires construites depuis le commit de la PR (réponse : « Dans le runner (Recommandé) »).
+  - Boucle de correction : les points 🔴/🟠 du tech-lead et du designer suivent la même boucle, 2 tours au total, tech-lead et designer confondus (réponse : « Même boucle (Recommandé) »).
+  - Version : aucune montée ; les nouveaux workflows et scripts d'automatisation sont hors appli (`scripts/ci/app-changed.sh`). Si la modification d'`app-changed.sh` impose quand même une montée, alors PATCH (réponse : « Aucune montée (Recommandé) »).
+  - PR de release automatique : titre `Release vX.Y.Z` (version de `develop`), créée « prête » ; son corps liste les PR incluses, recalculé à chaque merge, avec une alerte si la version de `develop` n'est pas au-dessus de celle de `main` (réponse : « Titre vX.Y.Z, prête (Recommandé) »).
+  - Le déroulé local de `CLAUDE.md` est gardé en secours (réponse : « Gardé en secours (Recommandé) »).
+  - 4 labels : `à-faire`, `en-clarification`, `en-cours`, `bloqué` (réponse : « 4 labels (Recommandé) »).
+  - L'issue se ferme à la release, via `Closes #n` (réponse : « À la release (Recommandé) »).
+- **Options écartées** : PAT fine-grained ; `GITHUB_TOKEN` avec des `workflow_dispatch` en chaîne ; déclenchement ouvert aux membres du dépôt ; plafond global par jour en plus ; tout en Sonnet ; une démo par PR pour les captures ; alerte directe après un ❌ du designer ; montée PATCH d'office ; titre générique de PR de release ; suppression du déroulé local ; un seul label ; fermeture de l'issue au merge dans `develop`.
+- **Impact** : `.github/workflows/auto-*.yml`, `scripts/automation/`, `scripts/ci/app-changed.sh`, `.github/workflows/tech-lead-review.yml`, `docs/automation/README.md`, `CLAUDE.md`, `.claude/agents/*.md`. Mise en place par le propriétaire : `docs/automation/README.md`.
