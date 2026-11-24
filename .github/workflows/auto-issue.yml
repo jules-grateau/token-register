@@ -175,8 +175,9 @@ jobs:
             --allowedTools "Read,Grep,Glob,Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh issue list:*)"
             --json-schema '{"type":"object","properties":{"comment":{"type":"string"},"ui":{"type":"boolean"},"screens":{"type":"string"}},"required":["comment","ui","screens"]}'
 
-      # Refused tool calls (tool and command only), even after a failed agent (max turns,
-      # timeout): the action's log only counts them. Agent text, so no workflow command is
+      # Refused tool calls (tool and command only), also after a failed agent (max turns,
+      # error), but not after a cancellation or the job's timeout (outcome cancelled): the
+      # action's log only counts them. Agent text, so no workflow command is
       # read from it (stop-commands). Never fails the job.
       - name: Developer, permission denials
         if: always() && (steps.dev.outcome == 'success' || steps.dev.outcome == 'failure')
@@ -350,8 +351,9 @@ jobs:
             --allowedTools "Read,Write,Edit,Grep,Glob,Bash(npm ci),Bash(npm run lint:*),Bash(npm run build:*),Bash(npm run format:*),Bash(npm test:*),Bash(npm version:*),Bash(npx prettier:*),Bash(node --test:*),Bash(bash scripts/ci/app-changed.test.sh),Bash(bash scripts/ci/version-bumped.test.sh),Bash(bash scripts/release-qa/run.sh:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*),Bash(git switch:*),Bash(git checkout:*),Bash(git branch:*)"
             --json-schema '{"type":"object","properties":{"status":{"type":"string","enum":["questions","pr","blocked"]},"comment":{"type":"string"},"branch":{"type":"string"},"title":{"type":"string"},"body":{"type":"string"},"ui":{"type":"boolean"},"screens":{"type":"string"}},"required":["status","comment"]}'
 
-      # Refused tool calls (tool and command only), even after a failed agent (max turns,
-      # timeout): the action's log only counts them. Agent text, so no workflow command is
+      # Refused tool calls (tool and command only), also after a failed agent (max turns,
+      # error), but not after a cancellation or the job's timeout (outcome cancelled): the
+      # action's log only counts them. Agent text, so no workflow command is
       # read from it (stop-commands). Never fails the job.
       - name: Developer, permission denials
         if: always() && (steps.impl.outcome == 'success' || steps.impl.outcome == 'failure')

@@ -63,7 +63,8 @@ le label `bloqué` est posé et le propriétaire est mentionné.
   (60 en clarification), 25 pour les revues ; 180 minutes pour les jobs où il implémente ou
   corrige, 45 minutes au plus pour les autres. Après chaque passage du développeur, l'étape
   « Developer, permission denials » liste dans le log les appels refusés (outil et commande),
-  même après un échec.
+  même après un échec de l'agent, mais pas après une annulation ni un dépassement de la durée
+  du job.
 - Modèles : développeur en Opus, tech-lead et designer en Sonnet (D-038).
 - L'App n'a pas la permission « Workflows » : même hors de cette vérification, elle ne peut
   pas pousser de changement sous `.github/workflows/`.

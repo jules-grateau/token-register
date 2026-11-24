@@ -461,8 +461,9 @@ jobs:
             --allowedTools "Read,Write,Edit,Grep,Glob,Bash(npm run lint:*),Bash(npm run build:*),Bash(npm run format:*),Bash(npm test:*),Bash(npx prettier:*),Bash(node --test:*),Bash(bash scripts/ci/app-changed.test.sh),Bash(bash scripts/ci/version-bumped.test.sh),Bash(bash scripts/release-qa/run.sh:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*)"
             --json-schema '{"type":"object","properties":{"status":{"type":"string","enum":["done","questions","blocked"]},"comment":{"type":"string"},"recap":{"type":"string"},"replies":{"type":"array","items":{"type":"object","properties":{"id":{"type":"integer"},"body":{"type":"string"}},"required":["id","body"]}}},"required":["status","comment"]}'
 
-      # Refused tool calls (tool and command only), even after a failed agent (max turns,
-      # timeout): the action's log only counts them. Agent text, so no workflow command is
+      # Refused tool calls (tool and command only), also after a failed agent (max turns,
+      # error), but not after a cancellation or the job's timeout (outcome cancelled): the
+      # action's log only counts them. Agent text, so no workflow command is
       # read from it (stop-commands). Never fails the job.
       - name: Developer, permission denials
         if: always() && (steps.dev.outcome == 'success' || steps.dev.outcome == 'failure')
