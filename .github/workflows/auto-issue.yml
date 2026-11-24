@@ -74,7 +74,7 @@ jobs:
          contains(github.event.issue.labels.*.name, 'en-clarification') &&
          !contains(github.event.issue.labels.*.name, 'bloqué')))
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 180
     permissions:
       contents: read
       issues: read
@@ -174,6 +174,20 @@ jobs:
             --add-dir ${{ runner.temp }}/agent-input
             --allowedTools "Read,Grep,Glob,Bash(git log:*),Bash(git show:*),Bash(git diff:*),Bash(gh pr list:*),Bash(gh pr view:*),Bash(gh issue list:*)"
             --json-schema '{"type":"object","properties":{"comment":{"type":"string"},"ui":{"type":"boolean"},"screens":{"type":"string"}},"required":["comment","ui","screens"]}'
+
+      # Refused tool calls (tool and command only), even after a failed agent (max turns,
+      # timeout): the action's log only counts them. Agent text, so no workflow command is
+      # read from it (stop-commands). Never fails the job.
+      - name: Developer, permission denials
+        if: always() && (steps.dev.outcome == 'success' || steps.dev.outcome == 'failure')
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.dev.outputs.execution_file }}
+        run: |
+          token="denials-$(openssl rand -hex 16)"
+          echo "::stop-commands::$token"
+          node "$TRUSTED/cli.mjs" denials "${EXECUTION_FILE:-$RUNNER_TEMP/claude-execution-output.json}" || true
+          echo "::$token::"
 
       - name: Keep the developer's draft
         id: draft
@@ -331,10 +345,24 @@ jobs:
             Interdits : merger, créer une issue, toucher à `main` ou à `develop`.
             Repo public : aucun nom d'instance ou de client, aucune IP, aucun chemin serveur.
           claude_args: >-
-            --model opus --max-turns 60
+            --model opus
             --add-dir ${{ runner.temp }}/agent-input
-            --allowedTools "Read,Write,Edit,Grep,Glob,Bash(npm ci),Bash(npm run lint:*),Bash(npm run build:*),Bash(npm run format:*),Bash(npm test:*),Bash(npm version:*),Bash(npx prettier:*),Bash(node --test:*),Bash(bash scripts/ci/app-changed.test.sh),Bash(bash scripts/ci/version-bumped.test.sh),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*),Bash(git switch:*),Bash(git checkout:*),Bash(git branch:*)"
+            --allowedTools "Read,Write,Edit,Grep,Glob,Bash(npm ci),Bash(npm run lint:*),Bash(npm run build:*),Bash(npm run format:*),Bash(npm test:*),Bash(npm version:*),Bash(npx prettier:*),Bash(node --test:*),Bash(bash scripts/ci/app-changed.test.sh),Bash(bash scripts/ci/version-bumped.test.sh),Bash(bash scripts/release-qa/run.sh:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*),Bash(git switch:*),Bash(git checkout:*),Bash(git branch:*)"
             --json-schema '{"type":"object","properties":{"status":{"type":"string","enum":["questions","pr","blocked"]},"comment":{"type":"string"},"branch":{"type":"string"},"title":{"type":"string"},"body":{"type":"string"},"ui":{"type":"boolean"},"screens":{"type":"string"}},"required":["status","comment"]}'
+
+      # Refused tool calls (tool and command only), even after a failed agent (max turns,
+      # timeout): the action's log only counts them. Agent text, so no workflow command is
+      # read from it (stop-commands). Never fails the job.
+      - name: Developer, permission denials
+        if: always() && (steps.impl.outcome == 'success' || steps.impl.outcome == 'failure')
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.impl.outputs.execution_file }}
+        run: |
+          token="denials-$(openssl rand -hex 16)"
+          echo "::stop-commands::$token"
+          node "$TRUSTED/cli.mjs" denials "${EXECUTION_FILE:-$RUNNER_TEMP/claude-execution-output.json}" || true
+          echo "::$token::"
 
       # Always an artifact for follow-up: the developer's output, plus its commits as a git
       # bundle when it has some (base = develop's head at the start). Made by this step, not by

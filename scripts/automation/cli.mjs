@@ -18,6 +18,7 @@
 //   node cli.mjs merged-prs <subjects.txt>                           PR numbers, one per line
 //   node cli.mjs release-pr <prs.json> <version> <main version> <bumped> -> JSON {title, body}
 //   node cli.mjs field <file.json> <key>                             one field, raw ("" if absent)
+//   node cli.mjs denials <execution file>                            permission denials of an agent run
 // comments.json may come from `gh api --paginate --slurp` (an array of pages): it is flattened.
 import fs from 'node:fs';
 import {
@@ -31,6 +32,7 @@ import {
   isWorkBranch,
   lastClarificationRound,
   neutralize,
+  permissionDenials,
   stillWaiting,
   mergedPrNumbers,
   nextStep,
@@ -93,6 +95,21 @@ const commands = {
     JSON.stringify(
       releasePr({ version, mainVersion, bumped: bumped === 'true', prs: readJson(prs) })
     ),
+  // Never fails: it only feeds a log step, also after a failed agent.
+  denials: ([file]) => {
+    if (!file || !fs.existsSync(file) || !fs.statSync(file).size)
+      return "Pas de fichier d'exécution : rien à afficher.";
+    let lines;
+    try {
+      lines = permissionDenials(readJson(file));
+    } catch {
+      return "Fichier d'exécution illisible.";
+    }
+    if (!lines.length) return 'Aucun refus de permission.';
+    return [`${lines.length} refus de permission :`, ...lines.map((line) => `- ${line}`)].join(
+      '\n'
+    );
+  },
   field: ([file, key]) => {
     const value = readJson(file)?.[key];
     if (value === undefined || value === null) return '';
