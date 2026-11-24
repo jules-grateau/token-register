@@ -10,6 +10,7 @@ import logger from '../../utils/logger';
     await db.exec('DROP TABLE IF EXISTS orders');
     await db.exec('DROP TABLE IF EXISTS order_items');
     await db.exec('DROP TABLE IF EXISTS categories');
+    await db.exec('DROP TABLE IF EXISTS cash_days');
     await db.exec('VACUUM');
   } catch (error) {
     logger.error('Error dropping tables: %s', error);

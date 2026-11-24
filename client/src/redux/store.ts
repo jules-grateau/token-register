@@ -1,8 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/query';
 import { productsApi } from '../services/product';
 import { cartReducer, type CartState } from './cartSlice';
 import { ordersApi } from '../services/orders';
 import { categoriesApi } from '../services/categories';
+import { cashDaysApi } from '../services/cashDays';
 import { loadCartFromLocalStorage } from '../utils/localStorageCart';
 import { selectedCategoryReducer } from './selectedCategorySlice';
 import { editModeReducer } from './editModeSlice';
@@ -18,6 +20,7 @@ export const store = configureStore({
     [productsApi.reducerPath]: productsApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,
     [categoriesApi.reducerPath]: categoriesApi.reducer,
+    [cashDaysApi.reducerPath]: cashDaysApi.reducer,
     cart: cartReducer,
     selectedCategory: selectedCategoryReducer,
     editMode: editModeReducer,
@@ -28,13 +31,18 @@ export const store = configureStore({
       .concat(productsApi.middleware)
       .concat(ordersApi.middleware)
       .concat(categoriesApi.middleware)
+      .concat(cashDaysApi.middleware)
       .concat(listenerMiddleware.middleware),
 });
+
+// D-061: queries that opt in (the open cash day) refresh when the tab comes back.
+setupListeners(store.dispatch);
 
 export interface RootState {
   [productsApi.reducerPath]: ReturnType<typeof productsApi.reducer>;
   [ordersApi.reducerPath]: ReturnType<typeof ordersApi.reducer>;
   [categoriesApi.reducerPath]: ReturnType<typeof categoriesApi.reducer>;
+  [cashDaysApi.reducerPath]: ReturnType<typeof cashDaysApi.reducer>;
   cart: CartState;
   editMode: { isEditMode: boolean };
 }

@@ -142,6 +142,17 @@ export type OrderPaymentConversion = {
   cardAfter: number | null;
 };
 
+/** Totals announced at the close of a cash day (D-061), frozen in cash_days. */
+export type CashDayConversion = {
+  id: number;
+  totalBefore: number;
+  totalAfter: number;
+  cashBefore: number | null;
+  cashAfter: number | null;
+  cardBefore: number | null;
+  cardAfter: number | null;
+};
+
 export type CurrencyConversionPlan = {
   from: CurrencyCode;
   to: CurrencyCode;
@@ -158,6 +169,11 @@ export type CurrencyConversionPlan = {
    * cash / card split of these orders (their totals are converted as usual, D-009).
    */
   paymentsCleared: boolean;
+  /**
+   * Closed cash days (D-061): their announced totals are converted like the history; to TOKEN,
+   * their cash / card split is cleared, like the orders' (D-036).
+   */
+  cashDays: CashDayConversion[];
   revenueBefore: number;
   revenueAfter: number;
 };
@@ -236,6 +252,7 @@ export async function planCurrencyConversion(
 
   const orderPayments = await planOrderPaymentConversion(db, from, to);
   const paymentsCleared = to === 'TOKEN' && from !== to && orderPayments.length > 0;
+  const cashDays = await planCashDayConversion(db, from, to);
 
   return {
     from,
@@ -246,6 +263,7 @@ export async function planCurrencyConversion(
     itemsWithoutPrice,
     orderPayments,
     paymentsCleared,
+    cashDays,
     revenueBefore,
     revenueAfter,
   };
@@ -277,6 +295,44 @@ async function planOrderPaymentConversion(
   }));
 }
 
+async function planCashDayConversion(
+  db: Database,
+  from: CurrencyCode,
+  to: CurrencyCode
+): Promise<CashDayConversion[]> {
+  // Run before the cash days migration: no table, nothing to convert.
+  const table = await db.get<{ name: string }>(
+    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'cash_days'"
+  );
+  if (!table) return [];
+
+  const rows = await db.all<
+    {
+      id: number;
+      closed_total: number | null;
+      closed_cash_amount: number | null;
+      closed_card_amount: number | null;
+    }[]
+  >(
+    `SELECT id, closed_total, closed_cash_amount, closed_card_amount FROM cash_days
+     WHERE closed_at IS NOT NULL ORDER BY id`
+  );
+  const convertSplit = (amount: number | null) =>
+    amount === null || to === 'TOKEN' ? null : convertAmount(amount, from, to);
+  return rows.map((row) => {
+    const totalBefore = row.closed_total ?? 0;
+    return {
+      id: row.id,
+      totalBefore,
+      totalAfter: convertAmount(totalBefore, from, to),
+      cashBefore: row.closed_cash_amount,
+      cashAfter: convertSplit(row.closed_cash_amount),
+      cardBefore: row.closed_card_amount,
+      cardAfter: convertSplit(row.closed_card_amount),
+    };
+  });
+}
+
 /**
  * Applies a conversion plan in a single transaction and records the new currency.
  * D-016: if any order line would end up with a discount larger than its total after rounding,
@@ -304,6 +360,13 @@ export async function applyCurrencyConversion(
         payment.cardAfter,
         payment.orderId,
       ]);
+    }
+    for (const day of plan.cashDays) {
+      await db.run(
+        `UPDATE cash_days SET closed_total = ?, closed_cash_amount = ?, closed_card_amount = ?
+         WHERE id = ?`,
+        [day.totalAfter, day.cashAfter, day.cardAfter, day.id]
+      );
     }
     for (const product of plan.products) {
       await db.run('UPDATE products SET price = ? WHERE id = ?', [product.after, product.id]);
@@ -368,6 +431,12 @@ export function describeConversionPlan(plan: CurrencyConversionPlan): string[] {
   }
   if (plan.orderPayments.length > 0) {
     lines.push(`  Recorded payments: ${plan.orderPayments.length} order(s).`);
+  }
+  if (plan.cashDays.length > 0) {
+    lines.push(
+      `  Closed cash days: ${plan.cashDays.length}, announced totals converted` +
+        (plan.to === 'TOKEN' && plan.from !== plan.to ? ', cash / card split cleared.' : '.')
+    );
   }
   if (plan.paymentsCleared) {
     // Wording confirmed by the product owner (D-036).

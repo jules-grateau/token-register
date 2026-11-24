@@ -19,12 +19,17 @@ if ! qa_wait_up "$name" "$port"; then
 fi
 category=$(qa_api "$port" POST /categories '{"name":"Snacks"}' | qa_json 'd.id')
 product=$(qa_api "$port" POST /products "{\"name\":\"Chips\",\"price\":2,\"categoryId\":$category}")
+# D-061 : une journée terminée et une journée ouverte, chacune avec une commande.
+qa_api "$port" POST /cash-days > /dev/null
 qa_api "$port" POST /orders "{\"items\":[{\"product\":$product,\"quantity\":3,\"discountedAmount\":1}]}" > /dev/null
+qa_api "$port" POST /cash-days/current/close > /dev/null
+qa_api "$port" POST /cash-days > /dev/null
+qa_api "$port" POST /orders "{\"items\":[{\"product\":$product,\"quantity\":1,\"discountedAmount\":0}]}" > /dev/null
 qa_stop "$name"
 
 snapshot() {
   local table
-  for table in settings categories products orders order_items; do
+  for table in settings categories products cash_days orders order_items; do
     qa_sql "$volume" "SELECT * FROM $table ORDER BY rowid"
   done
 }

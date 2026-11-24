@@ -1,0 +1,48 @@
+/* docs/design/components.md, "Journée de caisse": modal background --color-bg, cards on surface. */
+.content.content,
+.header.header {
+  background-color: var(--color-bg);
+}
+
+.secondary {
+  color: var(--color-text-2);
+}
+
+.amount {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Header indicator, "no day" and "open since a previous day": the alert is read from the icon,
+   the text and this stronger outline, never from a colour (no warning colour in the palette). */
+.indicator[data-alert] {
+  border-color: var(--color-border-strong);
+}
+
+.indicatorLabel {
+  white-space: nowrap;
+}
+
+/* Portrait: the long label may wrap on two lines, never cut. */
+.indicatorLabel[data-wrap] {
+  white-space: normal;
+  text-align: left;
+}
+
+/* Banner over the cart when no day is open (answer 19 a). */
+.banner {
+  flex: none;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+}
+
+.pastDay {
+  display: block;
+  width: 100%;
+  border-radius: var(--mantine-radius-lg);
+}
+
+.pastDay:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}

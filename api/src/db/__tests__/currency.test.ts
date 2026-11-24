@@ -12,6 +12,7 @@ import {
   verifyInstanceCurrency,
 } from '../currency';
 import { addOrderPaymentColumns, getMissingOrderPaymentColumns } from '../orderPayment';
+import { ensureCashDaysTable } from '../cashDays';
 
 async function createDb(): Promise<Database> {
   const db = await open({ filename: ':memory:', driver: sqlite3.Database });
@@ -282,6 +283,49 @@ describe('currency conversion of recorded payments', () => {
     );
     expect(items.map((item) => item.product_price)).toEqual([3, 3]); // 2,50 EUR -> 3 tokens
     expect(await getStoredCurrency(db)).toBe('TOKEN');
+  });
+
+  describe('announced totals of closed cash days (D-061)', () => {
+    beforeEach(async () => {
+      await ensureCashDaysTable(db);
+      await db.exec(`
+        INSERT INTO cash_days
+          (id, opened_at, closed_at, closed_total, closed_cash_amount, closed_card_amount, closed_order_count)
+        VALUES (1, 1, 2, 400, 150, 250, 1);
+        INSERT INTO cash_days (id, opened_at) VALUES (2, 3);
+      `);
+      await setStoredCurrency(db, 'EUR');
+    });
+
+    it('converts the total and clears the split when converting to tokens', async () => {
+      const plan = await planCurrencyConversion(db, 'TOKEN');
+      expect(plan.cashDays).toEqual([
+        {
+          id: 1,
+          totalBefore: 400,
+          totalAfter: 4,
+          cashBefore: 150,
+          cashAfter: null,
+          cardBefore: 250,
+          cardAfter: null,
+        },
+      ]);
+      expect(describeConversionPlan(plan).join(' ')).toContain(
+        'Closed cash days: 1, announced totals converted, cash / card split cleared.'
+      );
+
+      await applyCurrencyConversion(db, plan);
+      expect(
+        await db.get(
+          'SELECT closed_total, closed_cash_amount, closed_card_amount FROM cash_days WHERE id = 1'
+        )
+      ).toEqual({ closed_total: 4, closed_cash_amount: null, closed_card_amount: null });
+    });
+
+    it('ignores a database without cash days (before the migration)', async () => {
+      await db.exec('DROP TABLE cash_days');
+      expect((await planCurrencyConversion(db, 'TOKEN')).cashDays).toEqual([]);
+    });
   });
 
   describe('order lines without a recorded price (D-056)', () => {

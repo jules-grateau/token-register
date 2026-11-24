@@ -58,6 +58,7 @@ import {
 import ChangeDisplay from './ChangeDisplay';
 import PaymentPartsList from './PaymentPartsList';
 import { dismissSuccessToasts } from '../../utils/toasts';
+import { extractApiErrorCode } from '../../utils/extractApiError';
 import PaymentKeypad from './PaymentKeypad';
 import classes from './CartConfirmationModal.module.css';
 import figures from '../../styles/figures.module.css';
@@ -177,9 +178,13 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
       onOrderPlaced?.();
     } catch (error) {
       // D-035: an EUR instance refuses an order without payment (outdated page).
+      // D-061: the day was closed meanwhile (another register); the banner then shows up.
       const message = isPaymentRequiredError(error)
         ? t('payment_required_reload')
-        : t('error_adding_order', { error: String(error) });
+        : extractApiErrorCode(error) === 'CASH_DAY_REQUIRED'
+          ? t('cash_day.required_error')
+          : t('error_adding_order', { error: String(error) });
+      if (extractApiErrorCode(error) === 'CASH_DAY_REQUIRED') onClose();
       toast.error(message, { autoClose: 5000 });
     }
   };
