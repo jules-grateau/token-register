@@ -322,3 +322,25 @@ export function publishAnswers({ replies, recap }, { repo, pr }, gh) {
   if (recap) gh(['pr', 'comment', String(pr), '--repo', repo, '--body-file', '-'], recap);
   return published;
 }
+
+/**
+ * The permission denials of a claude-code-action run, from its execution file (the SDK's
+ * messages): one line per denial, the tool and its command (or path, pattern), never the rest
+ * of the run. Each line is one log line (newlines shown as ⏎, 300 characters at most).
+ * @param {unknown} messages the parsed execution file (an array of messages, or one message)
+ * @returns {string[]}
+ */
+export function permissionDenials(messages) {
+  const list = Array.isArray(messages) ? messages : [messages];
+  return list
+    .filter((m) => m?.type === 'result' && Array.isArray(m.permission_denials))
+    .flatMap((m) => m.permission_denials)
+    .map((denial) => {
+      const input = denial?.tool_input ?? {};
+      const what = input.command ?? input.file_path ?? input.path ?? input.pattern ?? input.url;
+      const text = String(what ?? '')
+        .replace(/\r?\n/g, ' ⏎ ')
+        .slice(0, 300);
+      return `${denial?.tool_name ?? '?'}${text ? ` : ${text}` : ''}`;
+    });
+}
