@@ -19,6 +19,7 @@ import {
   releasePr,
   publishAnswers,
   reviewAnswers,
+  permissionDenials,
 } from './lib.mjs';
 
 const OWNER = 'owner';
@@ -330,4 +331,52 @@ test('publishAnswers replies in each thread, then posts the recap (fake gh)', ()
       throw new Error('down');
     })
   );
+});
+
+test('permissionDenials lists the tool and its command only', () => {
+  const run = [
+    { type: 'system', subtype: 'init' },
+    { type: 'assistant', message: { content: [{ type: 'text', text: 'secret' }] } },
+    {
+      type: 'result',
+      subtype: 'error_max_turns',
+      result: 'not shown',
+      permission_denials: [
+        {
+          tool_name: 'Bash',
+          tool_use_id: 'a',
+          tool_input: { command: 'bash scripts/x.sh\nrm -rf y' },
+        },
+        {
+          tool_name: 'Write',
+          tool_use_id: 'b',
+          tool_input: { file_path: '.github/a.yml', content: 'c' },
+        },
+        {
+          tool_name: 'WebFetch',
+          tool_use_id: 'c',
+          tool_input: { url: 'https://example.com', prompt: 'p' },
+        },
+        { tool_name: 'Mystery', tool_use_id: 'd' },
+      ],
+    },
+  ];
+  assert.deepEqual(permissionDenials(run), [
+    'Bash : bash scripts/x.sh ⏎ rm -rf y',
+    'Write : .github/a.yml',
+    'WebFetch : https://example.com',
+    'Mystery',
+  ]);
+  assert.equal(
+    permissionDenials([
+      {
+        type: 'result',
+        permission_denials: [{ tool_name: 'Bash', tool_input: { command: 'x'.repeat(500) } }],
+      },
+    ])[0].length,
+    307
+  );
+  assert.deepEqual(permissionDenials({ type: 'result', permission_denials: [] }), []);
+  assert.deepEqual(permissionDenials(null), []);
+  assert.deepEqual(permissionDenials([{ type: 'result' }]), []);
 });

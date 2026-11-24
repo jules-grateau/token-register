@@ -364,7 +364,7 @@ jobs:
     needs: gate
     if: needs.gate.outputs.ok == 'true' && (inputs.step == 'fix' || inputs.step == 'minor')
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 180
     permissions:
       contents: read
       pull-requests: read
@@ -456,10 +456,25 @@ jobs:
             - Sinon `status: done`. `comment` : résumé en 5 lignes au plus.
             Repo public : aucun nom d'instance ou de client, aucune IP, aucun chemin serveur.
           claude_args: >-
-            --model opus --max-turns 60
+            --model opus
             --add-dir ${{ runner.temp }}/agent-input
-            --allowedTools "Read,Write,Edit,Grep,Glob,Bash(npm run lint:*),Bash(npm run build:*),Bash(npm run format:*),Bash(npm test:*),Bash(npx prettier:*),Bash(node --test:*),Bash(bash scripts/ci/app-changed.test.sh),Bash(bash scripts/ci/version-bumped.test.sh),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*)"
+            --allowedTools "Read,Write,Edit,Grep,Glob,Bash(npm run lint:*),Bash(npm run build:*),Bash(npm run format:*),Bash(npm test:*),Bash(npx prettier:*),Bash(node --test:*),Bash(bash scripts/ci/app-changed.test.sh),Bash(bash scripts/ci/version-bumped.test.sh),Bash(bash scripts/release-qa/run.sh:*),Bash(git status:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git add:*),Bash(git commit:*)"
             --json-schema '{"type":"object","properties":{"status":{"type":"string","enum":["done","questions","blocked"]},"comment":{"type":"string"},"recap":{"type":"string"},"replies":{"type":"array","items":{"type":"object","properties":{"id":{"type":"integer"},"body":{"type":"string"}},"required":["id","body"]}}},"required":["status","comment"]}'
+
+      # Refused tool calls (tool and command only), also after a failed agent (max turns,
+      # error), but not after a cancellation or the job's timeout (outcome cancelled): the
+      # action's log only counts them. Agent text, so no workflow command is
+      # read from it (stop-commands). Never fails the job.
+      - name: Developer, permission denials
+        if: always() && (steps.dev.outcome == 'success' || steps.dev.outcome == 'failure')
+        continue-on-error: true
+        env:
+          EXECUTION_FILE: ${{ steps.dev.outputs.execution_file }}
+        run: |
+          token="denials-$(openssl rand -hex 16)"
+          echo "::stop-commands::$token"
+          node "$TRUSTED/cli.mjs" denials "${EXECUTION_FILE:-$RUNNER_TEMP/claude-execution-output.json}" || true
+          echo "::$token::"
 
       # Always an artifact for developer-next: the developer's output, plus the fixes as a git
       # bundle from the PR's head when there are some (made by this step, not by the agent).
