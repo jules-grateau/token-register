@@ -13,7 +13,13 @@
 //      ONLY_VIEWPORTS / ONLY_STEPS (optional comma lists, to capture only the screens a PR
 //      touches, D-038; e.g. ONLY_VIEWPORTS=mobile,desktop ONLY_STEPS=home,settings-menu),
 //      PHONE_LANDSCAPE_SIZES (optional, e.g. "667x300,740x320": extra phone landscape
-//      viewports "mobile-landscape-667x300"..., to check the short heights of real phones)
+//      viewports "mobile-landscape-667x300"..., to check the short heights of real phones),
+//      KEEP_CASH_DAY_OPEN (optional, "1": set by design-review.yml on the public demos). The run
+//      never closes a cash day: it uses the open one, or opens one, and leaves it open at the
+//      end, so that the demo can still sell and "Journées passées" does not fill up with test
+//      days (closed days cannot be deleted, D-061). The steps that close the day or need no
+//      open day (CLOSING_STEPS) are skipped, with skipped: "KEEP_CASH_DAY_OPEN" in report.json.
+//      Without it (PR captures, release QA: throwaway instances), every step runs.
 // Output: <OUT_DIR>/<viewport>-<scheme>/<NN-step>.png + <OUT_DIR>/report.json
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
@@ -33,6 +39,10 @@ const list = (value) =>
 const COLOR_SCHEMES = list(process.env.COLOR_SCHEMES) ?? ['light', 'dark'];
 const ONLY_VIEWPORTS = list(process.env.ONLY_VIEWPORTS);
 const ONLY_STEPS = list(process.env.ONLY_STEPS);
+const KEEP_CASH_DAY_OPEN = process.env.KEEP_CASH_DAY_OPEN === '1';
+// Steps that close the cash day, or need no open day: skipped with KEEP_CASH_DAY_OPEN.
+// "cash-day-close-confirm" stays: it opens the confirmation without confirming it.
+const CLOSING_STEPS = ['cash-day-history', 'cash-day-orders', 'cash-day-none', 'cash-day-start'];
 const AUTH = 'Basic ' + Buffer.from(`${USER}:${PASS}`).toString('base64');
 
 async function api(method, route, body) {
@@ -601,7 +611,8 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
     },
   ],
   // Cash day (D-061), after the other steps so that their numbers stay the same. Each format
-  // starts with an open day (see setCashDay in run()); these steps close it.
+  // starts with an open day (see setCashDay in run()); these steps close it, except with
+  // KEEP_CASH_DAY_OPEN (CLOSING_STEPS are then skipped).
   [
     // The open day after the sales of this run: net total, cash / card in euros, orders.
     'cash-day-summary',
@@ -701,6 +712,8 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
 // reloads the page if that changed anything. Closing a day keeps its orders (deleted at the
 // end through their day, see run()); the closed days stay in "Journées passées".
 async function setCashDay(page, open) {
+  if (!open && KEEP_CASH_DAY_OPEN)
+    throw new Error('KEEP_CASH_DAY_OPEN: the cash day is not closed');
   const { cashDay } = await api('GET', '/cash-days/current');
   if (open === !!cashDay) return;
   await api('POST', open ? '/cash-days' : '/cash-days/current/close');
@@ -787,6 +800,10 @@ async function run() {
           vp.steps.push({ step, skipped: true });
           continue;
         }
+        if (KEEP_CASH_DAY_OPEN && CLOSING_STEPS.includes(step)) {
+          vp.steps.push({ step, skipped: 'KEEP_CASH_DAY_OPEN' });
+          continue;
+        }
         const file = path.join(dir, `${String(i + 1).padStart(2, '0')}-${step}.png`);
         let error = null;
         try {
@@ -825,6 +842,12 @@ async function run() {
       deletedOrders: createdOrders.map(({ id }) => id).filter((id) => !failed.includes(id)),
       failed,
     };
+    // The demo is left with an open day, so that a visitor can sell (never closed by this run).
+    if (KEEP_CASH_DAY_OPEN) {
+      report.cleanup.cashDayOpen = await setCashDay(null, true)
+        .then(() => true)
+        .catch(() => false);
+    }
     // After the orders: deleting the category deletes its products too. Order lines keep
     // the product name and price (order history preservation, spec 002).
     if (testCatalog.categoryId) {
