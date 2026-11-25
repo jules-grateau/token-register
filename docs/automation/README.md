@@ -31,9 +31,9 @@ le label `bloqué` est posé et le propriétaire est mentionné.
 - `claude-code-action` refuse par défaut un run lancé par un bot. Les étapes d'agent de
   `auto-pr.yml`, que le bot de l'App relance (`pr-next.sh`), n'autorisent que ce bot
   (`allowed_bots: ${{ steps.app.outputs.app-slug }}`), jamais `'*'` : un autre bot
-  (dependabot, github-actions) reste refusé. `auto-issue.yml` et `tech-lead-review.yml` n'en
-  ont pas besoin : leurs jobs d'agent ne partent que d'une action du propriétaire, ou ignorent
-  la PR de l'automatisation passée en « prête » par le bot.
+  (dependabot, github-actions) reste refusé. `tech-lead-review.yml` autorise aussi ce bot, en
+  écrivant son slug en dur, car c'est lui qui ouvre les PR de release. `auto-issue.yml` n'en a
+  pas besoin : son job d'agent ne part que d'une action du propriétaire.
 - Seules les issues **ouvertes par le propriétaire** sont traitées. Sur une issue d'un autre
   compte, le label `à-faire` est retiré avec un commentaire, et rien n'est transmis aux agents.
 - **Aucun jeton en écriture là où tourne un agent qui écrit du code, ou ce code** (`npm ci`,
