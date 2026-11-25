@@ -669,6 +669,32 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
         .waitFor({ timeout: 5000 });
     },
   ],
+  [
+    // D-062 (issue #92): "−" at quantity 1 removes the line; no line stays at 0.
+    'cart-quantity-zero',
+    async (page) => {
+      await closeOverlays(page);
+      await openCartIfCollapsed(page);
+      const clear = page.getByRole('button', { name: 'Vider le panier' }).last();
+      if (await clear.isEnabled().catch(() => false)) await clear.click();
+      await closeOverlays(page);
+      await page.getByRole('tabpanel').getByText(first, { exact: true }).first().click();
+      await openCartIfCollapsed(page);
+      const minus = page.getByRole('button', { name: 'Moins', exact: true });
+      if ((await minus.count()) !== 1) {
+        throw new Error(`Expected 1 cart line at quantity 1, got ${await minus.count()}`);
+      }
+      await minus.click();
+      await page.waitForTimeout(300);
+      if ((await minus.count()) !== 0) {
+        throw new Error('The cart line is still there after "−" at quantity 1');
+      }
+      await page
+        .getByText('Votre panier est vide.', { exact: true })
+        .last()
+        .waitFor({ timeout: 5000 });
+    },
+  ],
 ];
 
 // D-061: no sale without an open cash day. Opens or closes the day through the API, then

@@ -89,7 +89,7 @@ Rangée 2 :  [ − ] 2 [ + ]   (ActionIcon size={44}, radius 14, icônes 20 ; qu
 ```
 
 - Ligne : `Stack gap="xs" py="xs"` ; séparateur `Divider` (`--color-border`) entre lignes.
-- Boutons de quantité : **−** = `variant="light"` (fond `--color-primary-tint`, icône `--color-text`) ; **+** = filled encre, icône `--color-on-primary`. Prix en tabulaire.
+- Boutons de quantité : **−** = `variant="light"` (fond `--color-primary-tint`, icône `--color-text`) ; **+** = filled encre, icône `--color-on-primary`. Prix en tabulaire. **−** n'est jamais désactivé : à quantité 1, il retire la ligne du panier, avec sa remise (D-062) ; aucune ligne ne reste à 0.
 - Menu ⋮ : `ActionIcon size={44} variant="subtle" aria-label="Plus d'actions"` ; `Menu width={220} position="bottom-end"` (fond `--color-surface`, `--shadow-pop`, rayon 14) ; items `py="md"` 16 px : « Appliquer une remise » (`IconDiscount`), « Supprimer » (`IconTrash`, `color="red"`).
 - **Lecture seule** (historique D-023, récapitulatif de confirmation D-026) : une seule rangée, nom préfixé de la quantité « 2 × Café long » + prix.
 
@@ -183,7 +183,7 @@ Ce bloc **prime** sur les sous-sections suivantes (écrites pour la 1.3.0, D-028
 5. Le mode de paiement est **obligatoire, sans valeur par défaut**. Moyens : **Espèces** et **Carte** seulement. Choisir un montant d'espèces vaut choix « Espèces » : il n'y a pas de bouton « Espèces » à toucher avant (sauf total ≤ 0, voir plus bas).
 6. **Paiement mixte** : si les espèces reçues sont inférieures au total, l'écran affiche « Il reste 2,50 € » et le bouton principal devient « Reste en carte (2,50 €) », qui enregistre. Seule la part en espèces peut donner lieu à un rendu ; la carte est toujours débitée du montant exact.
 7. À l'ouverture de l'encaissement, **les toasts de succès sont fermés** (celui de la vente précédente recouvrait les boutons en téléphone) ; les toasts d'erreur restent (DS-2).
-8. Après l'enregistrement : la modale se ferme, toast succès « Commande n°12 enregistrée · Espèces » (ou « · Carte », « · Espèces + Carte »), le Drawer du panier se referme en portrait (inchangé). En cas d'erreur API, la modale reste ouverte avec la saisie conservée et un toast d'erreur s'affiche (inchangé). Si l'API refuse une commande sans paiement (code `PAYMENT_REQUIRED`, D-035), le toast d'erreur invite à recharger la page (`payment_required_reload`).
+8. Après l'enregistrement : la modale se ferme, toast succès « Commande n°12 enregistrée · Espèces » (ou « · Carte », « · Espèces + Carte »), le Drawer du panier se referme en portrait (inchangé). En cas d'erreur API, la modale reste ouverte avec la saisie conservée et un toast d'erreur s'affiche (inchangé) : « La commande n'a pas pu être enregistrée. Réessayez. », suivi du texte de l'API entre parenthèses s'il y en a un (`error_adding_order` / `error_adding_order_detail`, D-062), jamais l'objet d'erreur brut. Si l'API refuse une commande sans paiement (code `PAYMENT_REQUIRED`, D-035), le toast d'erreur invite à recharger la page (`payment_required_reload`).
 
 **Inverse (carte partielle, puis espèces avec rendu) : non proposé.** Il faudrait saisir d'abord un montant carte (un pavé et un toucher de plus) pour un cas rare en buvette. Si le client paie une partie en espèces, on part toujours des espèces : le vendeur tape la part d'espèces qu'il garde, puis « Reste en carte ».
 

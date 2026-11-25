@@ -115,6 +115,21 @@ describe('Cart', () => {
     expect(mockDispatch).toHaveBeenCalledWith(updateQuantity({ productId: 1, amount: -1 }));
   });
 
+  it('keeps "−" enabled at quantity 1: it removes the line (D-062)', () => {
+    const single = [{ ...mockCartItems[0], quantity: 1 }];
+    (useSelector as unknown as jest.Mock).mockImplementation((selector: any) => {
+      if (selector.name === 'selectCartItems') return single;
+      if (selector.name === 'selectTotalPrice') return 2;
+      if (selector.name === 'selectTotalItems') return 1;
+      return undefined;
+    });
+    render(<Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} />);
+    const decrementButton = screen.getByRole('button', { name: /minus/i });
+    expect(decrementButton).toBeEnabled();
+    fireEvent.click(decrementButton);
+    expect(mockDispatch).toHaveBeenCalledWith(updateQuantity({ productId: 1, amount: -1 }));
+  });
+
   it('dispatches clearCart when "Clear cart" button is clicked', () => {
     render(<Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} />);
     const clearButton = screen.getByRole('button', { name: /clear_cart/i });

@@ -54,10 +54,25 @@ describe('cartSlice reducers', () => {
     expect(nextState.items[1].quantity).toBe(1);
   });
 
-  it('should not let quantity go below 0', () => {
-    const action = updateQuantity({ productId: 1, amount: -2 });
-    const nextState = cartReducer(initialState, action);
-    expect(nextState.items[0].quantity).toBe(1);
+  it('removes the line with its discount when "−" is pressed at 1 (D-062)', () => {
+    const state = cartReducer(initialState, addDiscount({ productId: 1, discountedAmount: 5 }));
+    const nextState = cartReducer(state, updateQuantity({ productId: 1, amount: -1 }));
+    expect(nextState.items).toEqual([{ product: product2, quantity: 2, discountedAmount: 0 }]);
+  });
+
+  it('removes the line when the quantity would go below 0 (D-062)', () => {
+    const nextState = cartReducer(initialState, updateQuantity({ productId: 1, amount: -2 }));
+    expect(nextState.items.map((item) => item.product.id)).toEqual([2]);
+  });
+
+  it('ignores a non-integer quantity change', () => {
+    const nextState = cartReducer(initialState, updateQuantity({ productId: 2, amount: -0.5 }));
+    expect(nextState).toEqual(initialState);
+  });
+
+  it('ignores an unknown product', () => {
+    const nextState = cartReducer(initialState, updateQuantity({ productId: 99, amount: -1 }));
+    expect(nextState).toEqual(initialState);
   });
 
   it('should handle remove', () => {
