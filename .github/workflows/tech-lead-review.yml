@@ -43,6 +43,9 @@ jobs:
       - uses: anthropics/claude-code-action@f431adaf77e0fecf918431e75a2b5b45b85af002 # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Release PRs are opened by the automation's App (auto-release-pr.yml): allow this bot
+          # only, never '*'. No App token here, so its slug is written as is.
+          allowed_bots: token-register-bot
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
