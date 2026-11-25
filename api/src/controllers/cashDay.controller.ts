@@ -54,7 +54,7 @@ export class CashDayController {
     } else if (error instanceof NotFoundError) {
       res.status(404).json({ error: error.message });
     } else if (error instanceof ValidationError) {
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ error: error.message, ...(error.code ? { code: error.code } : {}) });
     } else {
       next(error);
     }

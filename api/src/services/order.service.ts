@@ -295,7 +295,7 @@ export class OrderService {
       if (!order || (scope && order.cash_day_id !== scope.cashDayId)) {
         throw new NotFoundError(`Order with ID ${orderId} not found`);
       }
-      if (!scope && order.closed_at !== null && order.closed_at !== undefined) {
+      if (!scope && order.closed_at !== null) {
         throw new ConflictError(
           `Order ${orderId} belongs to a closed cash day: delete it from that day.`,
           'CASH_DAY_CLOSED'
