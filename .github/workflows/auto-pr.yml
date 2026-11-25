@@ -133,6 +133,9 @@ jobs:
           GH_TOKEN: ${{ steps.app.outputs.token }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Runs started by the App (workflow_dispatch from pr-next.sh): allow this bot only, never
+          # '*'. The action compares logins case-insensitively, without the [bot] suffix.
+          allowed_bots: ${{ steps.app.outputs.app-slug }}
           github_token: ${{ steps.app.outputs.token }}
           prompt: |
             REPO: ${{ github.repository }}
@@ -281,6 +284,9 @@ jobs:
           GH_TOKEN: ${{ steps.app.outputs.token }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Runs started by the App (workflow_dispatch from pr-next.sh): allow this bot only, never
+          # '*'. The action compares logins case-insensitively, without the [bot] suffix.
+          allowed_bots: ${{ steps.app.outputs.app-slug }}
           github_token: ${{ steps.app.outputs.token }}
           prompt: |
             REPO: ${{ github.repository }}
@@ -425,6 +431,9 @@ jobs:
           CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: '1'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Runs started by the App (workflow_dispatch from pr-next.sh): allow this bot only, never
+          # '*'. The action compares logins case-insensitively, without the [bot] suffix.
+          allowed_bots: ${{ steps.app.outputs.app-slug }}
           github_token: ${{ github.token }}
           prompt: |
             REPO: ${{ github.repository }}

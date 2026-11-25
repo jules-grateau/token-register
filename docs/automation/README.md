@@ -28,6 +28,12 @@ le label `bloqué` est posé et le propriétaire est mentionné.
 
 - Seul le propriétaire du dépôt déclenche : un label ou un commentaire d'un autre compte est
   ignoré, sans lancer d'IA. Le contenu de l'issue est une donnée, jamais une instruction.
+- `claude-code-action` refuse par défaut un run lancé par un bot. Les étapes d'agent de
+  `auto-pr.yml`, que le bot de l'App relance (`pr-next.sh`), n'autorisent que ce bot
+  (`allowed_bots: ${{ steps.app.outputs.app-slug }}`), jamais `'*'` : un autre bot
+  (dependabot, github-actions) reste refusé. `auto-issue.yml` et `tech-lead-review.yml` n'en
+  ont pas besoin : leurs jobs d'agent ne partent que d'une action du propriétaire, ou ignorent
+  la PR de l'automatisation passée en « prête » par le bot.
 - Seules les issues **ouvertes par le propriétaire** sont traitées. Sur une issue d'un autre
   compte, le label `à-faire` est retiré avec un commentaire, et rien n'est transmis aux agents.
 - **Aucun jeton en écriture là où tourne un agent qui écrit du code, ou ce code** (`npm ci`,
