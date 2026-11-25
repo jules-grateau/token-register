@@ -8,7 +8,17 @@ export const loadCartFromLocalStorage = () => {
     if (serializedCartState === null) {
       return undefined;
     }
-    return JSON.parse(serializedCartState) as CartState;
+    const cartState = JSON.parse(serializedCartState) as CartState;
+    // D-062: a cart saved before the fix may hold a line at 0; it is not restored.
+    if (cartState && Array.isArray(cartState.items)) {
+      return {
+        ...cartState,
+        items: cartState.items.filter(
+          (item) => Number.isInteger(item.quantity) && item.quantity >= 1
+        ),
+      };
+    }
+    return cartState;
   } catch (error) {
     console.warn('localStorageCart: Could not load cart state.', error);
     return undefined;

@@ -58,7 +58,7 @@ import {
 import ChangeDisplay from './ChangeDisplay';
 import PaymentPartsList from './PaymentPartsList';
 import { dismissSuccessToasts } from '../../utils/toasts';
-import { extractApiErrorCode } from '../../utils/extractApiError';
+import { extractApiErrorCode, extractApiErrorText } from '../../utils/extractApiError';
 import PaymentKeypad from './PaymentKeypad';
 import classes from './CartConfirmationModal.module.css';
 import figures from '../../styles/figures.module.css';
@@ -160,6 +160,12 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
     return t(payment.cashAmount !== null ? 'payment_cash' : 'payment_card');
   };
 
+  /** D-062: any other failure, a clear message followed by the API text when there is one. */
+  const orderErrorMessage = (error: unknown) => {
+    const detail = extractApiErrorText(error);
+    return detail ? t('error_adding_order_detail', { detail }) : t('error_adding_order');
+  };
+
   /** Token instances record no payment: `payment` is null there. */
   const submit = async (payment: OrderPaymentType | null) => {
     if (isLoading || isEmpty) return;
@@ -183,7 +189,7 @@ const CartConfirmationModal: React.FC<CartConfirmationModalProps> = ({
         ? t('payment_required_reload')
         : extractApiErrorCode(error) === 'CASH_DAY_REQUIRED'
           ? t('cash_day.required_error')
-          : t('error_adding_order', { error: String(error) });
+          : orderErrorMessage(error);
       if (extractApiErrorCode(error) === 'CASH_DAY_REQUIRED') onClose();
       toast.error(message, { autoClose: 5000 });
     }

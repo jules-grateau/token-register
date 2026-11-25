@@ -76,8 +76,8 @@ const CartItem: React.FC<CartItemProps> = ({
                 size={44}
                 radius={14}
                 variant="light"
+                // D-062: at 1, "−" removes the line (with its discount).
                 onClick={() => onQuantityChange(item, -1)}
-                disabled={item.quantity <= 0}
                 aria-label={t('minus')}
               >
                 <IconMinus size={20} />

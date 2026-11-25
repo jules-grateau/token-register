@@ -44,12 +44,14 @@ const cartSlice = createSlice({
       const { productId, amount } = action.payload;
       const itemIndex = state.items.findIndex((item) => item.product.id === productId);
 
-      if (itemIndex !== -1) {
-        const itemToUpdate = state.items[itemIndex];
-        const newQuantity = itemToUpdate.quantity + amount;
-        if (newQuantity >= 0) {
-          itemToUpdate.quantity = newQuantity;
-        }
+      if (itemIndex === -1) return;
+      const newQuantity = state.items[itemIndex].quantity + amount;
+      if (!Number.isInteger(newQuantity)) return;
+      // D-062: a line never stays at 0; it leaves the cart with its discount.
+      if (newQuantity < 1) {
+        state.items.splice(itemIndex, 1);
+      } else {
+        state.items[itemIndex].quantity = newQuantity;
       }
     },
     clear(state) {

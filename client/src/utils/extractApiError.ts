@@ -17,6 +17,26 @@ export function extractApiErrorCode(error: unknown): ApiErrorCode | null {
 }
 
 /**
+ * Text sent by the API (`{ error: "..." }`) in an RTK Query error response, if any. A network
+ * failure, a serialized error or a body without a text string gives null: never `String(error)`.
+ */
+export function extractApiErrorText(error: unknown): string | null {
+  if (
+    error &&
+    typeof error === 'object' &&
+    'data' in error &&
+    error.data &&
+    typeof error.data === 'object' &&
+    'error' in error.data &&
+    typeof error.data.error === 'string' &&
+    error.data.error.trim() !== ''
+  ) {
+    return error.data.error.trim();
+  }
+  return null;
+}
+
+/**
  * Extracts error message from RTK Query error response.
  * Returns the error message from the API response if available,
  * otherwise returns the provided fallback message.

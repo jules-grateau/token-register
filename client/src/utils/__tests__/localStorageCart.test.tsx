@@ -27,6 +27,21 @@ describe('localStorageCart', () => {
     expect(loadCartFromLocalStorage()).toEqual(mockCartState);
   });
 
+  it('drops the lines saved at quantity 0 (D-062)', () => {
+    const saved: CartState = {
+      items: [
+        ...mockCartState.items,
+        {
+          product: { id: 2, name: 'Banana', price: 5, categoryId: 1 },
+          quantity: 0,
+          discountedAmount: 1,
+        },
+      ],
+    };
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(saved));
+    expect(loadCartFromLocalStorage()).toEqual(mockCartState);
+  });
+
   it('returns undefined if nothing in localStorage', () => {
     expect(loadCartFromLocalStorage()).toBeUndefined();
   });
