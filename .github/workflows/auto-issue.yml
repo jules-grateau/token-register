@@ -226,7 +226,7 @@ jobs:
             remarque sur le plan va en liste à puces. Ne répète rien. Rien à ajouter : vide.
             Repo public : aucun nom d'instance ou de client, aucune IP, aucun chemin serveur.
           claude_args: >-
-            --model sonnet --max-turns 25
+            --model sonnet --max-turns 50
             --add-dir ${{ runner.temp }}/agent-input
             --allowedTools "Read,Grep,Glob,Bash(git log:*),Bash(git show:*),Bash(git diff:*)"
             --json-schema '{"type":"object","properties":{"additions":{"type":"string"}},"required":["additions"]}'
@@ -262,7 +262,7 @@ jobs:
             dernière question déjà posée, même format, la recommandation en premier. Ne répète
             rien. Rien à ajouter : vide.
           claude_args: >-
-            --model sonnet --max-turns 25
+            --model sonnet --max-turns 50
             --add-dir ${{ runner.temp }}/agent-input
             --allowedTools "Read,Grep,Glob"
             --json-schema '{"type":"object","properties":{"additions":{"type":"string"}},"required":["additions"]}'

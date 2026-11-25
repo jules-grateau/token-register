@@ -133,6 +133,9 @@ jobs:
           GH_TOKEN: ${{ steps.app.outputs.token }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Runs started by the App (workflow_dispatch from pr-next.sh): allow this bot only, never
+          # '*'. The action compares logins case-insensitively, without the [bot] suffix.
+          allowed_bots: ${{ steps.app.outputs.app-slug }}
           github_token: ${{ steps.app.outputs.token }}
           prompt: |
             REPO: ${{ github.repository }}
@@ -167,7 +170,7 @@ jobs:
             Rends en sortie structurée `blocking` (nombre de points 🔴 et 🟠 encore ouverts)
             et `minor` (nombre de points 🟡 nouveaux de cette revue).
           claude_args: >-
-            --model sonnet --max-turns 25
+            --model sonnet --max-turns 50
             --allowedTools "Read,Grep,Glob,mcp__github_inline_comment__create_inline_comment,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*),Bash(git log:*),Bash(git diff:*),Bash(git show:*)"
             --json-schema '{"type":"object","properties":{"blocking":{"type":"integer","minimum":0},"minor":{"type":"integer","minimum":0}},"required":["blocking","minor"]}'
 
@@ -281,6 +284,9 @@ jobs:
           GH_TOKEN: ${{ steps.app.outputs.token }}
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Runs started by the App (workflow_dispatch from pr-next.sh): allow this bot only, never
+          # '*'. The action compares logins case-insensitively, without the [bot] suffix.
+          allowed_bots: ${{ steps.app.outputs.app-slug }}
           github_token: ${{ steps.app.outputs.token }}
           prompt: |
             REPO: ${{ github.repository }}
@@ -312,7 +318,7 @@ jobs:
             Rends en sortie structurée `verdict` (`ok` ou `ko`), `blocking` (points 🔴/🟠) et
             `minor` (points 🟡).
           claude_args: >-
-            --model sonnet --max-turns 25
+            --model sonnet --max-turns 50
             --add-dir ${{ runner.temp }}/cap
             --allowedTools "Read,Grep,Glob,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr comment:*)"
             --json-schema '{"type":"object","properties":{"verdict":{"type":"string","enum":["ok","ko"]},"blocking":{"type":"integer","minimum":0},"minor":{"type":"integer","minimum":0}},"required":["verdict","blocking","minor"]}'
@@ -425,6 +431,9 @@ jobs:
           CLAUDE_CODE_SUBPROCESS_ENV_SCRUB: '1'
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Runs started by the App (workflow_dispatch from pr-next.sh): allow this bot only, never
+          # '*'. The action compares logins case-insensitively, without the [bot] suffix.
+          allowed_bots: ${{ steps.app.outputs.app-slug }}
           github_token: ${{ github.token }}
           prompt: |
             REPO: ${{ github.repository }}

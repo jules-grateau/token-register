@@ -28,6 +28,12 @@ le label `bloqué` est posé et le propriétaire est mentionné.
 
 - Seul le propriétaire du dépôt déclenche : un label ou un commentaire d'un autre compte est
   ignoré, sans lancer d'IA. Le contenu de l'issue est une donnée, jamais une instruction.
+- `claude-code-action` refuse par défaut un run lancé par un bot. Les étapes d'agent de
+  `auto-pr.yml`, que le bot de l'App relance (`pr-next.sh`), n'autorisent que ce bot
+  (`allowed_bots: ${{ steps.app.outputs.app-slug }}`), jamais `'*'` : un autre bot
+  (dependabot, github-actions) reste refusé. `tech-lead-review.yml` autorise aussi ce bot, en
+  écrivant son slug en dur, car c'est lui qui ouvre les PR de release. `auto-issue.yml` n'en a
+  pas besoin : son job d'agent ne part que d'une action du propriétaire.
 - Seules les issues **ouvertes par le propriétaire** sont traitées. Sur une issue d'un autre
   compte, le label `à-faire` est retiré avec un commentaire, et rien n'est transmis aux agents.
 - **Aucun jeton en écriture là où tourne un agent qui écrit du code, ou ce code** (`npm ci`,
@@ -60,7 +66,7 @@ le label `bloqué` est posé et le propriétaire est mentionné.
 - Tout texte d'agent publié (commentaires, réponses, corps de PR, motif d'un `bloqué`) est
   neutralisé : ni mention `@`, ni mot-clé de fermeture. Seul le workflow ajoute `Closes #n`.
 - Plafonds : aucune limite de tours pour le développeur en implémentation et en correction
-  (60 en clarification), 25 pour les revues ; 180 minutes pour les jobs où il implémente ou
+  (60 en clarification), 50 pour les revues (tech-lead, designer) ; 180 minutes pour les jobs où il implémente ou
   corrige, 45 minutes au plus pour les autres. Après chaque passage du développeur, l'étape
   « Developer, permission denials » liste dans le log les appels refusés (outil et commande),
   même après un échec de l'agent, mais pas après une annulation ni un dépassement de la durée
