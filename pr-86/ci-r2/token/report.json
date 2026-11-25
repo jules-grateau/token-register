@@ -1,0 +1,409 @@
+{
+  "appUrl": "http://localhost:3201",
+  "data": {
+    "category": "Test capture",
+    "products": [
+      "Produit A",
+      "Produit B"
+    ],
+    "sample": {
+      "id": 1,
+      "name": "Produit A",
+      "price": 3,
+      "category_id": 1,
+      "icon": null
+    },
+    "negative": "Retour consigne"
+  },
+  "viewports": {
+    "desktop-light": {
+      "size": {
+        "width": 1440,
+        "height": 900
+      },
+      "steps": [
+        {
+          "step": "home",
+          "screenshot": "desktop-light/01-home.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "category-selected",
+          "skipped": true
+        },
+        {
+          "step": "cart-with-items",
+          "skipped": true
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "skipped": true
+        },
+        {
+          "step": "payment-card-prefilled",
+          "skipped": true
+        },
+        {
+          "step": "payment-cash-suggested-change",
+          "skipped": true
+        },
+        {
+          "step": "payment-mixed-parts",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-mixed-or-tokens",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-card",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-exact",
+          "skipped": true
+        },
+        {
+          "step": "payment-negative-total",
+          "skipped": true
+        },
+        {
+          "step": "order-history",
+          "screenshot": "desktop-light/13-order-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-delete-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cart-cleared-toast",
+          "skipped": true
+        },
+        {
+          "step": "settings-menu",
+          "skipped": true
+        },
+        {
+          "step": "about-modal",
+          "skipped": true
+        },
+        {
+          "step": "edit-mode",
+          "skipped": true
+        },
+        {
+          "step": "edit-category-form",
+          "skipped": true
+        },
+        {
+          "step": "edit-category-unsaved",
+          "skipped": true
+        },
+        {
+          "step": "edit-product-form",
+          "skipped": true
+        },
+        {
+          "step": "edit-product-unsaved",
+          "skipped": true
+        },
+        {
+          "step": "new-product-form",
+          "skipped": true
+        },
+        {
+          "step": "new-product-category-list",
+          "skipped": true
+        },
+        {
+          "step": "new-category-form",
+          "skipped": true
+        },
+        {
+          "step": "product-delete-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cart-item-menu",
+          "skipped": true
+        },
+        {
+          "step": "discount-modal",
+          "skipped": true
+        },
+        {
+          "step": "settings-menu-scrolled",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-summary",
+          "screenshot": "desktop-light/30-cash-day-summary.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cash-day-close-confirm",
+          "screenshot": "desktop-light/31-cash-day-close-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cash-day-history",
+          "screenshot": "desktop-light/32-cash-day-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cash-day-orders",
+          "screenshot": "desktop-light/33-cash-day-orders.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cash-day-none",
+          "screenshot": "desktop-light/34-cash-day-none.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cash-day-start",
+          "screenshot": "desktop-light/35-cash-day-start.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    "mobile-light": {
+      "size": {
+        "width": 390,
+        "height": 664
+      },
+      "steps": [
+        {
+          "step": "home",
+          "screenshot": "mobile-light/01-home.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "category-selected",
+          "skipped": true
+        },
+        {
+          "step": "cart-with-items",
+          "skipped": true
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "skipped": true
+        },
+        {
+          "step": "payment-card-prefilled",
+          "skipped": true
+        },
+        {
+          "step": "payment-cash-suggested-change",
+          "skipped": true
+        },
+        {
+          "step": "payment-mixed-parts",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-mixed-or-tokens",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-card",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-exact",
+          "skipped": true
+        },
+        {
+          "step": "payment-negative-total",
+          "skipped": true
+        },
+        {
+          "step": "order-history",
+          "screenshot": "mobile-light/13-order-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "order-delete-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cart-cleared-toast",
+          "skipped": true
+        },
+        {
+          "step": "settings-menu",
+          "skipped": true
+        },
+        {
+          "step": "about-modal",
+          "skipped": true
+        },
+        {
+          "step": "edit-mode",
+          "skipped": true
+        },
+        {
+          "step": "edit-category-form",
+          "skipped": true
+        },
+        {
+          "step": "edit-category-unsaved",
+          "skipped": true
+        },
+        {
+          "step": "edit-product-form",
+          "skipped": true
+        },
+        {
+          "step": "edit-product-unsaved",
+          "skipped": true
+        },
+        {
+          "step": "new-product-form",
+          "skipped": true
+        },
+        {
+          "step": "new-product-category-list",
+          "skipped": true
+        },
+        {
+          "step": "new-category-form",
+          "skipped": true
+        },
+        {
+          "step": "product-delete-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cart-item-menu",
+          "skipped": true
+        },
+        {
+          "step": "discount-modal",
+          "skipped": true
+        },
+        {
+          "step": "settings-menu-scrolled",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-summary",
+          "screenshot": "mobile-light/30-cash-day-summary.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cash-day-close-confirm",
+          "screenshot": "mobile-light/31-cash-day-close-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cash-day-history",
+          "screenshot": "mobile-light/32-cash-day-history.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cash-day-orders",
+          "screenshot": "mobile-light/33-cash-day-orders.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cash-day-none",
+          "screenshot": "mobile-light/34-cash-day-none.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cash-day-start",
+          "screenshot": "mobile-light/35-cash-day-start.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    }
+  },
+  "cleanup": {
+    "deletedOrders": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42
+    ],
+    "failed": [],
+    "testCatalog": {
+      "category": 1,
+      "products": [
+        1,
+        2,
+        3
+      ],
+      "deleted": true
+    }
+  },
+  "currency": "TOKEN"
+}
