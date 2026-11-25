@@ -66,7 +66,7 @@ le label `bloqué` est posé et le propriétaire est mentionné.
 - Tout texte d'agent publié (commentaires, réponses, corps de PR, motif d'un `bloqué`) est
   neutralisé : ni mention `@`, ni mot-clé de fermeture. Seul le workflow ajoute `Closes #n`.
 - Plafonds : aucune limite de tours pour le développeur en implémentation et en correction
-  (60 en clarification), 25 pour les revues ; 180 minutes pour les jobs où il implémente ou
+  (60 en clarification), 50 pour les revues (tech-lead, designer) ; 180 minutes pour les jobs où il implémente ou
   corrige, 45 minutes au plus pour les autres. Après chaque passage du développeur, l'étape
   « Developer, permission denials » liste dans le log les appels refusés (outil et commande),
   même après un échec de l'agent, mais pas après une annulation ni un dépassement de la durée
