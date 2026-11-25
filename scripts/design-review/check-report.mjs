@@ -61,6 +61,10 @@ if (testCatalog && !testCatalog.deleted) {
     `cleanup: test catalog not deleted: category ${testCatalog.category}, products ${testCatalog.products.join(', ')}`
   );
 }
+// KEEP_CASH_DAY_OPEN (public demos): the run must leave a cash day open, so the demo can sell.
+if (report.cleanup?.cashDayOpen === false) {
+  problems.push('cleanup: no cash day left open on the demo');
+}
 
 const summary = [
   `### Release smoke check: ${problems.length ? '❌' : '✅'}`,

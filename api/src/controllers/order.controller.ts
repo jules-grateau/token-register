@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { OrderService } from '../services/order.service';
 import { CartItemType, CreateOrderRequestType, PaginationParams } from 'shared-ts';
-import { ValidationError, NotFoundError } from '../types/errors';
+import { ValidationError, NotFoundError, ConflictError } from '../types/errors';
 
 export class OrderController {
   public path = '/orders';
@@ -112,6 +112,9 @@ export class OrderController {
       req.log.error(`Controller Error: Error deleting order ${orderIdParam}: %s`, error);
       if (error instanceof NotFoundError) {
         res.status(404).json({ error: error.message });
+      } else if (error instanceof ConflictError) {
+        // D-061: an order of a closed cash day is deleted from that day only.
+        res.status(409).json({ error: error.message, code: error.code });
       } else if (error instanceof ValidationError) {
         res.status(400).json({ error: error.message });
       } else {

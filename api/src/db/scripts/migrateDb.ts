@@ -4,6 +4,7 @@ import { getConfiguredCurrency } from '../../utils/currency';
 import { initInstanceCurrency } from '../currency';
 import { addOrderPaymentColumns } from '../orderPayment';
 import { addCatalogIconColumns } from '../catalogIcons';
+import { migrateCashDays } from '../cashDays';
 
 /**
  * Migration: Add snapshot columns to order_items table
@@ -184,10 +185,33 @@ async function migrateCatalogIcons() {
   }
 }
 
+/**
+ * Migration: cash days (2.4.0, D-061)
+ *
+ * Creates the cash_days table and adds orders.cash_day_id. The orders placed before (no cash
+ * day) are deleted with their lines, once, in the run that adds the column (answer 18 b).
+ * Idempotent, in one transaction. Runs after the currency step, which reads the orders.
+ */
+async function migrateCashDayTables() {
+  logger.info('Checking cash days...');
+  const db = await openDb();
+  try {
+    const { columnAdded, deletedOrders } = await migrateCashDays(db);
+    logger.info(
+      columnAdded
+        ? `Added cash days; ${deletedOrders} order(s) placed before the cash days deleted`
+        : 'Cash days already exist'
+    );
+  } finally {
+    await db.close();
+  }
+}
+
 void migrateOrderItems()
   .then(() => migrateInstanceCurrency())
   .then(() => migrateOrderPayments())
   .then(() => migrateCatalogIcons())
+  .then(() => migrateCashDayTables())
   .then(() => {
     console.log('='.repeat(50));
     console.log('Migration script completed successfully');

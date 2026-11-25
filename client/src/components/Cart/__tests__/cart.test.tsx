@@ -27,6 +27,19 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 
+// D-061: an open cash day by default; tests of the banner set it to "none".
+let mockNoCashDay = false;
+const mockStartCashDay = jest.fn();
+jest.mock('../../../hooks/useCashDay', () => ({
+  useCurrentCashDay: () => ({
+    cashDay: null,
+    isNone: mockNoCashDay,
+    isKnown: true,
+    refetch: jest.fn(),
+  }),
+  useStartCashDay: () => ({ start: mockStartCashDay, isLoading: false }),
+}));
+
 const mockCartItems = [
   {
     product: { id: 1, name: 'Apple', price: 2 },
@@ -98,6 +111,21 @@ describe('Cart', () => {
   it('dispatches updateQuantity with -1 when decrement is clicked', () => {
     render(<Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} />);
     const decrementButton = screen.getByRole('button', { name: /minus/i });
+    fireEvent.click(decrementButton);
+    expect(mockDispatch).toHaveBeenCalledWith(updateQuantity({ productId: 1, amount: -1 }));
+  });
+
+  it('keeps "−" enabled at quantity 1: it removes the line (D-062)', () => {
+    const single = [{ ...mockCartItems[0], quantity: 1 }];
+    (useSelector as unknown as jest.Mock).mockImplementation((selector: any) => {
+      if (selector.name === 'selectCartItems') return single;
+      if (selector.name === 'selectTotalPrice') return 2;
+      if (selector.name === 'selectTotalItems') return 1;
+      return undefined;
+    });
+    render(<Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} />);
+    const decrementButton = screen.getByRole('button', { name: /minus/i });
+    expect(decrementButton).toBeEnabled();
     fireEvent.click(decrementButton);
     expect(mockDispatch).toHaveBeenCalledWith(updateQuantity({ productId: 1, amount: -1 }));
   });
@@ -179,5 +207,43 @@ describe('Cart on a phone in portrait', () => {
     render(<Cart onClickHistory={onClickHistory} onValidateCart={onValidateCart} />);
     expect(screen.getByRole('button', { name: /checkout/i })).toBeDisabled();
     expect(screen.getByText('cart_empty_short')).toBeInTheDocument();
+  });
+});
+
+describe('Cart without an open cash day (D-061, answer 19 a)', () => {
+  beforeEach(() => {
+    mockNoCashDay = true;
+    (useSelector as unknown as jest.Mock).mockImplementation((selector: any) => {
+      if (selector.name === 'selectCartItems') return mockCartItems;
+      if (selector.name === 'selectTotalPrice') return 6;
+      if (selector.name === 'selectTotalItems') return 3;
+      return undefined;
+    });
+  });
+
+  afterEach(() => {
+    mockNoCashDay = false;
+    resetLayoutMode();
+  });
+
+  it.each(['desktop', 'phone-landscape', 'phone-portrait'] as const)(
+    'disables "Valider" and shows the banner that starts the day (%s)',
+    (mode) => {
+      setLayoutMode(mode);
+      render(<Cart onClickHistory={jest.fn()} onValidateCart={jest.fn()} />);
+      expect(screen.getByTestId('no-cash-day-banner')).toHaveTextContent('cash_day.indicator_none');
+      for (const button of screen.getAllByRole('button', { name: /checkout/i })) {
+        expect(button).toBeDisabled();
+      }
+      fireEvent.click(screen.getByRole('button', { name: 'cash_day.start' }));
+      expect(mockStartCashDay).toHaveBeenCalled();
+    }
+  );
+
+  it('has no banner when a day is open', () => {
+    mockNoCashDay = false;
+    render(<Cart onClickHistory={jest.fn()} onValidateCart={jest.fn()} />);
+    expect(screen.queryByTestId('no-cash-day-banner')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /checkout/i })).toBeEnabled();
   });
 });

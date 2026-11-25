@@ -110,6 +110,17 @@ Un produit sans icône affiche son **initiale** (règle de la pastille ci-dessus
 | Thème clair / sombre                            | `IconSun` / `IconMoon` (état courant, avec libellé)                           | `--color-text`                                           |
 | Consigne (pastille)                             | `IconRecycle`                                                                 | `--color-danger`                                         |
 
+### Journée de caisse (D-061, voir [components.md](components.md#journée-de-caisse--cashday))
+
+| Action / information                                                               | Icône                         | Taille                    | Couleur                            |
+| ---------------------------------------------------------------------------------- | ----------------------------- | ------------------------- | ---------------------------------- |
+| Entrée du menu ⚙️, indicateur « Journée ouverte »                                  | `IconCalendarEvent`           | 20                        | texte                              |
+| Indicateur « Aucune journée ouverte » / « Ouverte depuis le … », bandeau du panier | `IconAlertTriangle`           | 20                        | texte (jamais de couleur d'alerte) |
+| Démarrer la journée                                                                | `IconPlayerPlay`              | 22 (modale), 20 (bandeau) | texte du bouton                    |
+| Terminer la journée                                                                | `IconPlayerStop`              | 22                        | texte du bouton                    |
+| Lignes Espèces / Carte de la synthèse, badges des journées passées                 | `IconCash` / `IconCreditCard` | 20 (synthèse), 16 (badge) | texte                              |
+| Journée terminée (récapitulatif)                                                   | `IconCheck`                   | 28                        | `--color-success`                  |
+
 ### Encaissement (voir [components.md](components.md#encaissement--cartconfirmationmodal))
 
 | Action / information                                         | Icône                         | Taille                                | Couleur                                                           |

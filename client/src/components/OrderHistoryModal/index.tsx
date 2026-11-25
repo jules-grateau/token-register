@@ -8,7 +8,10 @@ import ConfirmationModal from '../ConfirmationModal';
 import { useCurrency } from '../../hooks/useCurrency';
 import { isPhoneMode, useLayoutMode } from '../../hooks/useLayoutMode';
 import { IconCash, IconCreditCard, IconTrash } from '@tabler/icons-react';
-import type { OrderPaymentType } from 'shared-ts';
+import type { CashDayType, OrderPaymentType } from 'shared-ts';
+import { useGetCashDayOrdersQuery, useRemoveCashDayOrderMutation } from '../../services/cashDays';
+import { useCurrentCashDay } from '../../hooks/useCashDay';
+import { formatDayDate } from '../../utils/cashDay';
 import classes from './OrderHistoryModal.module.css';
 
 import {
@@ -28,17 +31,32 @@ import {
 interface OrderHistoryModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /**
+   * D-061 (answer 16 a): the orders of this closed day, from "Journées passées", where they can
+   * be deleted. Without it, the history: the open day's orders only (answer 15 a).
+   */
+  cashDay?: CashDayType;
 }
 
-const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }) => {
-  const { t } = useTranslation();
+const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose, cashDay }) => {
+  const { t, i18n } = useTranslation();
   const { currency, format } = useCurrency();
   const isPhone = isPhoneMode(useLayoutMode());
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
-  const ordersQuery = useGetOrdersQuery({ page: currentPage, pageSize });
+  const historyQuery = useGetOrdersQuery({ page: currentPage, pageSize }, { skip: !!cashDay });
+  const dayQuery = useGetCashDayOrdersQuery(
+    { cashDayId: cashDay?.id ?? 0, page: currentPage, pageSize },
+    { skip: !cashDay }
+  );
+  const ordersQuery = cashDay ? dayQuery : historyQuery;
   const { data: ordersData, isFetching, error } = ordersQuery;
-  const [removeOrder, { isLoading: isRemoveLoading }] = useRemoveOrderMutation();
+  const { isNone: noOpenDay } = useCurrentCashDay();
+  const [removeHistoryOrder, { isLoading: isRemoveHistoryLoading }] = useRemoveOrderMutation();
+  const [removeDayOrder, { isLoading: isRemoveDayLoading }] = useRemoveCashDayOrderMutation();
+  const isRemoveLoading = isRemoveHistoryLoading || isRemoveDayLoading;
+  const removeOrder = (id: number) =>
+    cashDay ? removeDayOrder({ cashDayId: cashDay.id, orderId: id }) : removeHistoryOrder(id);
   const [selectedOrder, setSelectedOrder] = useState(0);
   const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
 
@@ -180,6 +198,8 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
       );
     }
 
+    // Answer 15 a: without an open day, the history is empty and says why.
+    if (!cashDay && noOpenDay) return <Text>{t('cash_day.indicator_none')}</Text>;
     return <Text>{t('no_orders')}</Text>;
   };
 
@@ -188,7 +208,11 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({ isOpen, onClose }
       <Modal
         opened={isOpen}
         onClose={onClose}
-        title={t('order_history')}
+        title={
+          cashDay
+            ? t('cash_day.orders_title', { date: formatDayDate(cashDay.openedAt, i18n.language) })
+            : t('order_history')
+        }
         size="lg"
         centered
         fullScreen={isPhone}

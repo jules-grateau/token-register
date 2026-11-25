@@ -10,6 +10,8 @@ describe('OrderService (unit)', () => {
   let mockGet: jest.Mock;
   let mockExec: jest.Mock;
   let mockClose: jest.Mock;
+  let openCashDay: { id: number } | undefined;
+  let orderCashDay: { cash_day_id: number | null; closed_at: number | null } | undefined;
 
   beforeEach(() => {
     mockRun = jest.fn();
@@ -18,10 +20,21 @@ describe('OrderService (unit)', () => {
     mockExec = jest.fn();
     mockClose = jest.fn().mockResolvedValue(undefined);
 
+    openCashDay = { id: 5 };
+    orderCashDay = { cash_day_id: 5, closed_at: null };
+    // Cash day lookups (D-061) answer on their own; every other `get` goes to mockGet.
+    const get = jest.fn((sql: string, params?: unknown[]) => {
+      if (sql.includes('FROM cash_days WHERE closed_at IS NULL')) {
+        return Promise.resolve(openCashDay);
+      }
+      if (sql.includes('LEFT JOIN cash_days')) return Promise.resolve(orderCashDay);
+      return mockGet(sql, params) as Promise<unknown>;
+    });
+
     jest.spyOn(dbModule, 'openDb').mockResolvedValue({
       run: mockRun,
       all: mockAll,
-      get: mockGet,
+      get,
       exec: mockExec,
       close: mockClose,
     } as unknown as MockDb);
@@ -148,10 +161,10 @@ describe('OrderService (unit)', () => {
 
     const result = await service.createOrder(cart);
 
-    expect(mockExec).toHaveBeenCalledWith('BEGIN TRANSACTION');
+    expect(mockExec).toHaveBeenCalledWith('BEGIN IMMEDIATE');
     expect(mockRun).toHaveBeenCalledWith(
-      'INSERT INTO orders (date, cash_amount, card_amount) VALUES (?, ?, ?)',
-      [expect.any(Number), null, null]
+      'INSERT INTO orders (date, cash_amount, card_amount, cash_day_id) VALUES (?, ?, ?, ?)',
+      [expect.any(Number), null, null, 5]
     );
     expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('FROM products p'), [1]);
     expect(mockRun).toHaveBeenCalledWith(
@@ -159,7 +172,7 @@ describe('OrderService (unit)', () => {
       [42, 1, 2, 0, 'A', 10, 'CategoryA']
     );
     expect(mockExec).toHaveBeenCalledWith('COMMIT');
-    expect(result).toEqual({ id: 42 });
+    expect(result).toEqual({ id: 42, cashDayId: 5 });
   });
 
   it('should snapshot name and price from the database, not from the request', async () => {
@@ -307,6 +320,77 @@ describe('OrderService (unit)', () => {
     expect(result.data[1].payment).toBeNull();
   });
 
+  describe('cash days (D-061)', () => {
+    const cart = [
+      { product: { id: 1, name: 'A', price: 10, categoryId: 1 }, quantity: 1, discountedAmount: 0 },
+    ];
+
+    it.each(['TOKEN', 'EUR'] as const)('refuses a sale with no open day (%s)', async (currency) => {
+      openCashDay = undefined;
+      const payment = currency === 'EUR' ? { cashAmount: 10, cardAmount: null } : null;
+      const service = new OrderService(currency);
+      await expect(service.createOrder(cart, payment)).rejects.toMatchObject({
+        code: 'CASH_DAY_REQUIRED',
+      });
+      expect(mockRun).not.toHaveBeenCalled();
+      expect(mockExec).toHaveBeenCalledWith('ROLLBACK');
+    });
+
+    it('returns an empty history when no day is open (answer 15 a)', async () => {
+      openCashDay = undefined;
+      const result = await new OrderService().getAllOrders();
+      expect(result.data).toEqual([]);
+      expect(result.pagination.totalCount).toBe(0);
+      expect(mockAll).not.toHaveBeenCalled();
+    });
+
+    it('lists the orders of the open day only', async () => {
+      mockGet.mockResolvedValue({ count: 0 });
+      mockAll.mockResolvedValue([]);
+      await new OrderService().getAllOrders();
+      expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('WHERE cash_day_id = ?'), [5]);
+      const listSql = expect.stringContaining('WHERE cash_day_id = ?') as string;
+      expect(mockAll).toHaveBeenCalledWith(listSql, [5, 20, 0]);
+    });
+
+    it('lists the orders of a given day', async () => {
+      mockGet.mockResolvedValue({ count: 0 });
+      mockAll.mockResolvedValue([]);
+      await new OrderService().getAllOrders({ page: 2, pageSize: 10 }, { cashDayId: 3 });
+      expect(mockAll).toHaveBeenCalledWith(expect.any(String), [3, 10, 10]);
+    });
+
+    it('refuses to delete an order of a closed day from the history', async () => {
+      orderCashDay = { cash_day_id: 5, closed_at: 1000 };
+      await expect(new OrderService().deleteOrder(1)).rejects.toMatchObject({
+        code: 'CASH_DAY_CLOSED',
+      });
+      expect(mockRun).not.toHaveBeenCalled();
+      expect(mockExec).toHaveBeenCalledWith('ROLLBACK');
+    });
+
+    it('deletes an order of a closed day from that day (answer 16 a)', async () => {
+      orderCashDay = { cash_day_id: 5, closed_at: 1000 };
+      mockRun.mockResolvedValue({ changes: 1 });
+      await new OrderService().deleteOrder(1, { cashDayId: 5 });
+      expect(mockRun).toHaveBeenCalledWith('DELETE FROM orders WHERE id = ?', [1]);
+      expect(mockExec).toHaveBeenCalledWith('COMMIT');
+    });
+
+    it('does not delete an order from another day', async () => {
+      mockRun.mockResolvedValue({ changes: 1 });
+      await expect(new OrderService().deleteOrder(1, { cashDayId: 6 })).rejects.toThrow(
+        NotFoundError
+      );
+      expect(mockRun).not.toHaveBeenCalled();
+    });
+
+    it('answers 404 for an unknown order', async () => {
+      orderCashDay = undefined;
+      await expect(new OrderService().deleteOrder(99)).rejects.toThrow(NotFoundError);
+    });
+  });
+
   describe('payment (D-030 to D-034)', () => {
     const cart = [
       {
@@ -326,7 +410,7 @@ describe('OrderService (unit)', () => {
       const call = mockRun.mock.calls.find(([sql]) =>
         String(sql).startsWith('INSERT INTO orders')
       );
-      return (call?.[1] as unknown[]).slice(1);
+      return (call?.[1] as unknown[]).slice(1, 3);
     };
 
     it.each([

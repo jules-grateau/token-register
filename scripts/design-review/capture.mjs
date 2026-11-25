@@ -13,7 +13,13 @@
 //      ONLY_VIEWPORTS / ONLY_STEPS (optional comma lists, to capture only the screens a PR
 //      touches, D-038; e.g. ONLY_VIEWPORTS=mobile,desktop ONLY_STEPS=home,settings-menu),
 //      PHONE_LANDSCAPE_SIZES (optional, e.g. "667x300,740x320": extra phone landscape
-//      viewports "mobile-landscape-667x300"..., to check the short heights of real phones)
+//      viewports "mobile-landscape-667x300"..., to check the short heights of real phones),
+//      KEEP_CASH_DAY_OPEN (optional, "1": set by design-review.yml on the public demos). The run
+//      never closes a cash day: it uses the open one, or opens one, and leaves it open at the
+//      end, so that the demo can still sell and "Journées passées" does not fill up with test
+//      days (closed days cannot be deleted, D-061). The steps that close the day or need no
+//      open day (CLOSING_STEPS) are skipped, with skipped: "KEEP_CASH_DAY_OPEN" in report.json.
+//      Without it (PR captures, release QA: throwaway instances), every step runs.
 // Output: <OUT_DIR>/<viewport>-<scheme>/<NN-step>.png + <OUT_DIR>/report.json
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
@@ -33,6 +39,10 @@ const list = (value) =>
 const COLOR_SCHEMES = list(process.env.COLOR_SCHEMES) ?? ['light', 'dark'];
 const ONLY_VIEWPORTS = list(process.env.ONLY_VIEWPORTS);
 const ONLY_STEPS = list(process.env.ONLY_STEPS);
+const KEEP_CASH_DAY_OPEN = process.env.KEEP_CASH_DAY_OPEN === '1';
+// Steps that close the cash day, or need no open day: skipped with KEEP_CASH_DAY_OPEN.
+// "cash-day-close-confirm" stays: it opens the confirmation without confirming it.
+const CLOSING_STEPS = ['cash-day-history', 'cash-day-orders', 'cash-day-none', 'cash-day-start'];
 const AUTH = 'Basic ' + Buffer.from(`${USER}:${PASS}`).toString('base64');
 
 async function api(method, route, body) {
@@ -298,13 +308,13 @@ async function waitForToast(page) {
 // The history shows 20 orders per page: past that, the pagination appears (DS-4 of PR #31).
 // Orders created here are deleted at the end with the others.
 const HISTORY_ORDERS = 21;
-async function fillHistory(product, currency, createdOrderIds) {
+async function fillHistory(product, currency, createdOrders) {
   const { pagination } = await api('GET', '/orders?page=1&pageSize=20');
   const items = [{ product, quantity: 1, discountedAmount: 0 }];
   const payment = currency === 'EUR' ? { cashAmount: null, cardAmount: product.price } : undefined;
   for (let n = pagination.totalCount; n < HISTORY_ORDERS; n++) {
     const order = await api('POST', '/orders', { items, payment });
-    if (order?.id) createdOrderIds.push(order.id);
+    if (order?.id) createdOrders.push({ id: order.id, cashDayId: order.cashDayId });
   }
 }
 
@@ -411,9 +421,9 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
     // Scrolled to the bottom (issue #38): the pagination and "Affichage de 20 sur 21" are in
     // the window. Fails if the pagination is missing, as the history has more than 20 orders.
     'order-history',
-    async (page, { currency, createdOrderIds }) => {
+    async (page, { currency, createdOrders }) => {
       await closeOverlays(page);
-      await fillHistory(sample, currency, createdOrderIds);
+      await fillHistory(sample, currency, createdOrders);
       await page.getByRole('button', { name: 'Historique' }).first().click();
       const pagination = dialog(page).locator('.mantine-Pagination-root');
       await pagination.waitFor({ timeout: 5000 });
@@ -581,7 +591,7 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
   [
     // Settings menu scrolled to the bottom (DS-1 of PR #58): on a short phone in landscape it
     // scrolls; "À propos", the last item, must then be in the window and clickable.
-    // Last step, so that the numbers of the other screenshots stay the same.
+    // Added at the end, so that the numbers of the other screenshots stay the same.
     'settings-menu-scrolled',
     async (page) => {
       await closeOverlays(page);
@@ -600,11 +610,120 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
       await about.click({ trial: true, timeout: 5000 });
     },
   ],
+  // Cash day (D-061), after the other steps so that their numbers stay the same. Each format
+  // starts with an open day (see setCashDay in run()); these steps close it, except with
+  // KEEP_CASH_DAY_OPEN (CLOSING_STEPS are then skipped).
+  [
+    // The open day after the sales of this run: net total, cash / card in euros, orders.
+    'cash-day-summary',
+    async (page) => {
+      await closeOverlays(page);
+      await setCashDay(page, true);
+      await openSettingsItem(page, 'Journée de caisse');
+      await dialog(page).getByTestId('cash-day-summary').waitFor({ timeout: 5000 });
+    },
+  ],
+  [
+    // Confirmation with the final totals (D-050): not confirmed yet.
+    'cash-day-close-confirm',
+    async (page) => {
+      await dialog(page).getByRole('button', { name: 'Terminer la journée', exact: true }).click();
+      await page.getByRole('dialog', { name: 'Terminer la journée ?' }).waitFor({ timeout: 5000 });
+    },
+  ],
+  [
+    // Confirmed: the recap of the closed day, then "Journées passées" (at least this day).
+    'cash-day-history',
+    async (page) => {
+      await page
+        .getByRole('dialog', { name: 'Terminer la journée ?' })
+        .getByRole('button', { name: 'Terminer la journée', exact: true })
+        .click();
+      await page.getByText('Journée terminée', { exact: true }).waitFor({ timeout: 5000 });
+      await page.waitForTimeout(400); // the confirmation closes
+      await page
+        .getByRole('button', { name: /^Voir les commandes de la journée/ })
+        .first()
+        .scrollIntoViewIfNeeded();
+    },
+  ],
+  [
+    // Orders of a closed day, where they can be deleted (answer 16 a).
+    'cash-day-orders',
+    async (page) => {
+      await page
+        .getByRole('button', { name: /^Voir les commandes de la journée/ })
+        .first()
+        .click();
+      await page.getByRole('dialog', { name: /^Commandes du / }).waitFor({ timeout: 5000 });
+    },
+  ],
+  [
+    // No day open: the header says so and the banner over the cart starts the day; "Valider"
+    // is disabled (answer 19 a). The cart keeps the product of the previous steps.
+    'cash-day-none',
+    async (page) => {
+      await closeOverlays(page);
+      await setCashDay(page, false);
+      await page.getByTestId('no-cash-day-banner').first().waitFor({ timeout: 5000 });
+    },
+  ],
+  [
+    // "Journée de caisse" without an open day: "Démarrer la journée" (not touched).
+    'cash-day-start',
+    async (page) => {
+      await closeOverlays(page);
+      await setCashDay(page, false);
+      await openSettingsItem(page, 'Journée de caisse');
+      await dialog(page)
+        .getByRole('button', { name: 'Démarrer la journée', exact: true })
+        .waitFor({ timeout: 5000 });
+    },
+  ],
+  [
+    // D-062 (issue #92): "−" at quantity 1 removes the line; no line stays at 0.
+    'cart-quantity-zero',
+    async (page) => {
+      await closeOverlays(page);
+      await openCartIfCollapsed(page);
+      const clear = page.getByRole('button', { name: 'Vider le panier' }).last();
+      if (await clear.isEnabled().catch(() => false)) await clear.click();
+      await closeOverlays(page);
+      await page.getByRole('tabpanel').getByText(first, { exact: true }).first().click();
+      await openCartIfCollapsed(page);
+      const minus = page.getByRole('button', { name: 'Moins', exact: true });
+      if ((await minus.count()) !== 1) {
+        throw new Error(`Expected 1 cart line at quantity 1, got ${await minus.count()}`);
+      }
+      await minus.click();
+      await page.waitForTimeout(300);
+      if ((await minus.count()) !== 0) {
+        throw new Error('The cart line is still there after "−" at quantity 1');
+      }
+      await page
+        .getByText('Votre panier est vide.', { exact: true })
+        .last()
+        .waitFor({ timeout: 5000 });
+    },
+  ],
 ];
+
+// D-061: no sale without an open cash day. Opens or closes the day through the API, then
+// reloads the page if that changed anything. Closing a day keeps its orders (deleted at the
+// end through their day, see run()); the closed days stay in "Journées passées".
+async function setCashDay(page, open) {
+  if (!open && KEEP_CASH_DAY_OPEN)
+    throw new Error('KEEP_CASH_DAY_OPEN: the cash day is not closed');
+  const { cashDay } = await api('GET', '/cash-days/current');
+  if (open === !!cashDay) return;
+  await api('POST', open ? '/cash-days' : '/cash-days/current/close');
+  if (page) await page.reload({ waitUntil: 'networkidle' });
+}
 
 async function run() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  const createdOrderIds = [];
+  // { id, cashDayId }: deleted through their cash day, open or closed (D-061).
+  const createdOrders = [];
   const testCatalog = { categoryId: null, productIds: [] };
 
   const report = { appUrl: APP_URL, data: null, viewports: {}, cleanup: null };
@@ -662,10 +781,12 @@ async function run() {
       page.on('response', async (res) => {
         if (res.request().method() === 'POST' && /\/api\/orders\/?$/.test(res.url()) && res.ok()) {
           const body = await res.json().catch(() => null);
-          if (body?.id) createdOrderIds.push(body.id);
+          if (body?.id) createdOrders.push({ id: body.id, cashDayId: body.cashDayId });
         }
       });
 
+      // D-061: the sales of the first steps need an open cash day.
+      await setCashDay(null, true);
       await page.goto(APP_URL, { waitUntil: 'networkidle' });
       const currency = await page.evaluate(() => window.APP_CONFIG?.VITE_CURRENCY ?? 'TOKEN');
       report.currency = currency;
@@ -679,10 +800,14 @@ async function run() {
           vp.steps.push({ step, skipped: true });
           continue;
         }
+        if (KEEP_CASH_DAY_OPEN && CLOSING_STEPS.includes(step)) {
+          vp.steps.push({ step, skipped: 'KEEP_CASH_DAY_OPEN' });
+          continue;
+        }
         const file = path.join(dir, `${String(i + 1).padStart(2, '0')}-${step}.png`);
         let error = null;
         try {
-          await action(page, { currency, createdOrderIds });
+          await action(page, { currency, createdOrders });
           await page.waitForLoadState('networkidle');
           await page.waitForTimeout(300); // let transitions settle
         } catch (e) {
@@ -709,13 +834,20 @@ async function run() {
   } finally {
     await browser.close();
     const failed = [];
-    for (const id of createdOrderIds) {
-      await api('DELETE', `/orders/${id}`).catch(() => failed.push(id));
+    // Through their cash day (D-061): an order of a closed day cannot be deleted from /orders.
+    for (const { id, cashDayId } of createdOrders) {
+      await api('DELETE', `/cash-days/${cashDayId}/orders/${id}`).catch(() => failed.push(id));
     }
     report.cleanup = {
-      deletedOrders: createdOrderIds.filter((id) => !failed.includes(id)),
+      deletedOrders: createdOrders.map(({ id }) => id).filter((id) => !failed.includes(id)),
       failed,
     };
+    // The demo is left with an open day, so that a visitor can sell (never closed by this run).
+    if (KEEP_CASH_DAY_OPEN) {
+      report.cleanup.cashDayOpen = await setCashDay(null, true)
+        .then(() => true)
+        .catch(() => false);
+    }
     // After the orders: deleting the category deletes its products too. Order lines keep
     // the product name and price (order history preservation, spec 002).
     if (testCatalog.categoryId) {

@@ -13,6 +13,7 @@ jest.mock('react-redux', () => ({
 jest.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, opts?: { name?: string }) => (opts?.name ? `${key}: ${opts.name}` : key),
+    i18n: { language: 'fr' },
   }),
 }));
 jest.mock('../../Catalog', () => () => null);
@@ -21,6 +22,20 @@ jest.mock('../../OrderHistoryModal', () => () => null);
 jest.mock('../../CartConfirmationModal', () => () => null);
 jest.mock('../../AboutModal', () => () => null);
 jest.mock('../../ColorSchemeControl', () => () => <div data-testid="color-scheme-control" />);
+jest.mock(
+  '../../CashDay',
+  () => (props: { isOpen: boolean }) => (props.isOpen ? <div data-testid="cash-day-modal" /> : null)
+);
+// D-061: state of the cash day shown in the header.
+let mockCashDay: { openedAt: number } | null = null;
+jest.mock('../../../hooks/useCashDay', () => ({
+  useCurrentCashDay: () => ({
+    cashDay: mockCashDay,
+    isNone: mockCashDay === null,
+    isKnown: true,
+    refetch: jest.fn(),
+  }),
+}));
 
 const openSettingsMenu = () => fireEvent.click(screen.getByLabelText('edit_mode.toggle'));
 
@@ -137,4 +152,49 @@ describe('Register header: client name (D-040)', () => {
       expect(screen.getAllByText('Caisse Claire')).toHaveLength(1);
     }
   );
+});
+
+describe('Register: cash day (D-061)', () => {
+  afterEach(() => {
+    mockCashDay = null;
+    resetLayoutMode();
+  });
+
+  it.each(['phone-portrait', 'phone-landscape', 'tablet', 'desktop'] as const)(
+    '%s: the header shows the state of the day and opens the cash day modal',
+    (mode) => {
+      setLayoutMode(mode);
+      render(<Register />);
+
+      const indicator = screen.getByTestId('cash-day-indicator');
+      expect(indicator).toHaveAttribute('data-alert');
+      expect(indicator).toHaveTextContent(
+        mode === 'phone-landscape' ? 'cash_day.indicator_none_short' : 'cash_day.indicator_none'
+      );
+      fireEvent.click(indicator);
+      expect(screen.getByTestId('cash-day-modal')).toBeInTheDocument();
+    }
+  );
+
+  it('shows an open day without alert, and flags a day opened on a previous day', () => {
+    mockCashDay = { openedAt: Date.now() };
+    const { unmount } = render(<Register />);
+    expect(screen.getByTestId('cash-day-indicator')).not.toHaveAttribute('data-alert');
+    expect(screen.getByTestId('cash-day-indicator')).toHaveTextContent('cash_day.indicator_open');
+    unmount();
+
+    mockCashDay = { openedAt: Date.now() - 2 * 24 * 3600 * 1000 };
+    render(<Register />);
+    expect(screen.getByTestId('cash-day-indicator')).toHaveAttribute('data-alert');
+    expect(screen.getByTestId('cash-day-indicator')).toHaveTextContent(
+      'cash_day.indicator_open_since'
+    );
+  });
+
+  it('opens the cash day modal from the settings menu', async () => {
+    render(<Register />);
+    openSettingsMenu();
+    fireEvent.click(await screen.findByRole('menuitem', { name: 'cash_day.title' }));
+    expect(screen.getByTestId('cash-day-modal')).toBeInTheDocument();
+  });
 });

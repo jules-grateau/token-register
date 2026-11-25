@@ -157,3 +157,23 @@ From 1.3.0, an EUR instance **refuses an order without payment** (D-035), includ
 sent by older versions of the app. A tab left open on the previous version gets an error until the
 page is reloaded: after deploying an EUR instance, ask the cashiers to reload the page.
 Token instances still accept the old format.
+
+## Cash days (2.4.0)
+
+From 2.4.0, sales happen during a **cash day** (D-061): it is started and ended in the app
+(⚙️ > "Journée de caisse", or the banner over the cart). Without an open day, the app and the API
+refuse every sale, in tokens and in euros. The history only shows the open day's orders; the
+orders of an ended day are listed, and deleted, in "Journées passées".
+
+**The first start of 2.4.0 deletes every existing order** (answer 18 b of D-061): the migration
+adds the `cash_days` table and `orders.cash_day_id`, then deletes the orders placed before the
+cash days, with their lines, in the same transaction. It happens once, in the run that adds the
+column; later starts change nothing. The catalog and the settings are kept. **Back up the
+database before deploying** (see "Fixing a currency mismatch" for the `docker compose cp`
+command) if the old orders must be kept somewhere.
+
+After the deploy, start a day before the first sale. A tab left open on the previous version
+gets an error on its next sale until a day is started and the page is reloaded.
+
+A currency conversion also converts the totals announced at the end of each day; going to
+tokens, their cash / card split is cleared, like the orders' (D-036).

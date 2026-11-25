@@ -45,7 +45,7 @@ describe('getDatabasePath', () => {
 describe('openDb', () => {
   it('calls open with correct arguments', async () => {
     process.env.DATABASE_PATH = './test.sqlite';
-    const mockDb = { some: 'db' };
+    const mockDb = { configure: jest.fn() };
     const openMock = openSqlite as jest.Mock;
     openMock.mockResolvedValue(mockDb);
 
@@ -55,5 +55,7 @@ describe('openDb', () => {
       driver: Database,
     });
     expect(db).toBe(mockDb);
+    // D-061: concurrent writes wait for the lock instead of failing at once.
+    expect(mockDb.configure).toHaveBeenCalledWith('busyTimeout', dbModule.BUSY_TIMEOUT_MS);
   });
 });

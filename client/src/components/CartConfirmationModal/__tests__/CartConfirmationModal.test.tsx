@@ -429,10 +429,7 @@ describe('CartConfirmationModal (Encaissement)', () => {
     fireEvent.click(button('payment_collect'));
 
     await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith(
-        `error_adding_order (${JSON.stringify({ error: String(error) })})`,
-        { autoClose: 5000 }
-      );
+      expect(toast.error).toHaveBeenCalledWith('error_adding_order', { autoClose: 5000 });
     });
     expect(mockDispatch).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
@@ -458,6 +455,39 @@ describe('CartConfirmationModal (Encaissement)', () => {
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith('payment_required_reload', { autoClose: 5000 });
     });
+  });
+
+  // D-062: a clear message, followed by the API text when there is one; never "[object Object]".
+  it.each([
+    [
+      '400 without code',
+      { status: 400, data: { error: 'Invalid product quantity' } },
+      `error_adding_order_detail (${JSON.stringify({ detail: 'Invalid product quantity' })})`,
+    ],
+    [
+      '500 with a text',
+      { status: 500, data: { error: 'An application error occurred' } },
+      `error_adding_order_detail (${JSON.stringify({ detail: 'An application error occurred' })})`,
+    ],
+    ['500 without body', { status: 500, data: 'Internal Server Error' }, 'error_adding_order'],
+    [
+      'network failure',
+      { status: 'FETCH_ERROR', error: 'TypeError: Failed to fetch' },
+      'error_adding_order',
+    ],
+    ['serialized error', { name: 'Error', message: 'boom' }, 'error_adding_order'],
+    ['non-string API text', { status: 400, data: { error: { a: 1 } } }, 'error_adding_order'],
+  ])('shows a readable message on a %s (D-062)', async (_label, error, expected) => {
+    // RTK Query rejects with a plain object; wrapped in an Error for the lint rule.
+    const rejection = Object.assign(new Error('rejected'), error);
+    mockAddOrder.mockReturnValue({ unwrap: () => Promise.reject(rejection) });
+    renderModal();
+    fireEvent.click(button('payment_card'));
+    fireEvent.click(button('payment_collect'));
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith(expected, { autoClose: 5000 });
+    });
+    expect(String((toast.error as jest.Mock).mock.calls[0][0])).not.toContain('[object Object]');
   });
 
   it('disables every action while saving', () => {

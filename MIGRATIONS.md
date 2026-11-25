@@ -107,6 +107,28 @@ Rollback: older versions ignore both columns (they insert products and categorie
 `icon`); they can stay. To drop them (SQLite >= 3.35):
 `ALTER TABLE products DROP COLUMN icon; ALTER TABLE categories DROP COLUMN icon;`
 
+### Cash days (2.4.0)
+
+**Script**: `api/src/db/scripts/migrateDb.ts` (step `migrateCashDayTables`, runs on every start,
+after the currency step; logic in `api/src/db/cashDays.ts`)
+**Schema change**: creates `cash_days (id, opened_at, closed_at, closed_total, closed_cash_amount,
+closed_card_amount, closed_order_count)` (timestamps in ms, UTC; amounts in the smallest unit),
+a unique partial index `cash_days_single_open` (at most one row with `closed_at IS NULL`: one open
+day, enforced by the database), the column `orders.cash_day_id INTEGER REFERENCES cash_days (id)`
+and the index `orders_cash_day_id`. New databases get the table and the column from `initDb.ts`.
+**Data** (D-061, answer 18 b): **the orders placed before the cash days are deleted**, with their
+lines, in the same transaction as the new column. This only happens in the run that adds the
+column: later runs, and new databases, delete nothing. Back up the database before deploying.
+**Conversion**: `convertCurrency.ts` converts the totals announced at the close
+(`closed_total`, `closed_cash_amount`, `closed_card_amount`); going to tokens, the cash / card
+split is cleared (D-036).
+**API**: from 2.4.0, `POST /orders` is refused (400, code `CASH_DAY_REQUIRED`) without an open
+day, and `GET /orders` lists the open day's orders only. New routes under `/cash-days`.
+
+Rollback: older versions ignore the table and the column, but the deleted orders do not come back
+(restore the backup). To drop them (SQLite >= 3.35):
+`DROP INDEX orders_cash_day_id; ALTER TABLE orders DROP COLUMN cash_day_id; DROP TABLE cash_days;`
+
 ## Deployment Workflow
 
 ### Development Environment

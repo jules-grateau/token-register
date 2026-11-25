@@ -30,6 +30,8 @@ import DiscountModal, { type DiscountDetails } from '../DiscountModal';
 import { IconArrowRight, IconChevronUp, IconHistory, IconTrash } from '@tabler/icons-react';
 import { useLayoutMode } from '../../hooks/useLayoutMode';
 import { useClearCartWithUndo } from '../../hooks/useClearCartWithUndo';
+import { useCurrentCashDay } from '../../hooks/useCashDay';
+import NoCashDayBanner from '../CashDay/NoCashDayBanner';
 import classes from './Cart.module.css';
 
 interface CartProps {
@@ -60,6 +62,8 @@ const Cart: React.FC<CartProps> = ({
   const dispatch = useDispatch();
   const clearCartWithUndo = useClearCartWithUndo();
   const isEmpty = cartItems.length === 0;
+  // D-061 (answer 19 a): no sale without an open cash day; the banner starts it.
+  const { isNone: noCashDay } = useCurrentCashDay();
 
   // Phone portrait: the total pulses when an item is added.
   const previousTotalItems = useRef(totalItems);
@@ -113,7 +117,7 @@ const Cart: React.FC<CartProps> = ({
   const checkoutButton = (props: ButtonProps & { style?: React.CSSProperties }) => (
     <Button
       onClick={onValidateCart}
-      disabled={isEmpty}
+      disabled={isEmpty || noCashDay}
       radius={18}
       fz={18}
       fw={800}
@@ -184,6 +188,7 @@ const Cart: React.FC<CartProps> = ({
     const openDrawer = () => onDrawerOpenChange?.(true);
     return (
       <>
+        {noCashDay && <NoCashDayBanner />}
         {/* Ink bar in the page flow, never fixed over the grid (docs/design, "Barre repliée"). */}
         <Paper
           radius={0}
@@ -265,6 +270,7 @@ const Cart: React.FC<CartProps> = ({
               p={0}
               style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
             >
+              {noCashDay && <NoCashDayBanner />}
               {lines}
               {standardFooter}
             </Drawer.Body>
@@ -284,6 +290,7 @@ const Cart: React.FC<CartProps> = ({
         flex={1}
         style={{ borderLeft: BORDER, flexDirection: 'column', minHeight: 0 }}
       >
+        {noCashDay && <NoCashDayBanner compact />}
         {lines}
         {/* Compact footer: one 60 px ink row, like the phone portrait bar. */}
         <Group
@@ -339,6 +346,7 @@ const Cart: React.FC<CartProps> = ({
         </ActionIcon>
         {clearButton(48)}
       </Group>
+      {noCashDay && <NoCashDayBanner />}
       {lines}
       {standardFooter}
       {discountModal}

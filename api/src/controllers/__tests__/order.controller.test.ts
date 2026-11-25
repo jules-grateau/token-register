@@ -75,7 +75,7 @@ describe('OrderController', () => {
 
   describe('createOrder', () => {
     it('should create an order and return 201', async () => {
-      const newOrder = { id: 42 };
+      const newOrder = { id: 42, cashDayId: 1 };
       mockRequest.body = [
         { product: { id: 1, name: 'A', price: 10 }, quantity: 2, discountedAmount: 0 },
       ];
@@ -100,7 +100,7 @@ describe('OrderController', () => {
       ];
       const payment = { cashAmount: 500, cardAmount: 250 };
       mockRequest.body = { items, payment };
-      mockOrderService.createOrder.mockResolvedValue({ id: 7 });
+      mockOrderService.createOrder.mockResolvedValue({ id: 7, cashDayId: 1 });
 
       await controller.createOrder(
         mockRequest as Request,
@@ -114,7 +114,7 @@ describe('OrderController', () => {
 
     it('should pass a null payment when the { items } format has none', async () => {
       mockRequest.body = { items: [] };
-      mockOrderService.createOrder.mockResolvedValue({ id: 8 });
+      mockOrderService.createOrder.mockResolvedValue({ id: 8, cashDayId: 1 });
 
       await controller.createOrder(
         mockRequest as Request,

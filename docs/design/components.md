@@ -89,7 +89,7 @@ Rangée 2 :  [ − ] 2 [ + ]   (ActionIcon size={44}, radius 14, icônes 20 ; qu
 ```
 
 - Ligne : `Stack gap="xs" py="xs"` ; séparateur `Divider` (`--color-border`) entre lignes.
-- Boutons de quantité : **−** = `variant="light"` (fond `--color-primary-tint`, icône `--color-text`) ; **+** = filled encre, icône `--color-on-primary`. Prix en tabulaire.
+- Boutons de quantité : **−** = `variant="light"` (fond `--color-primary-tint`, icône `--color-text`) ; **+** = filled encre, icône `--color-on-primary`. Prix en tabulaire. **−** n'est jamais désactivé : à quantité 1, il retire la ligne du panier, avec sa remise (D-062) ; aucune ligne ne reste à 0.
 - Menu ⋮ : `ActionIcon size={44} variant="subtle" aria-label="Plus d'actions"` ; `Menu width={220} position="bottom-end"` (fond `--color-surface`, `--shadow-pop`, rayon 14) ; items `py="md"` 16 px : « Appliquer une remise » (`IconDiscount`), « Supprimer » (`IconTrash`, `color="red"`).
 - **Lecture seule** (historique D-023, récapitulatif de confirmation D-026) : une seule rangée, nom préfixé de la quantité « 2 × Café long » + prix.
 
@@ -136,6 +136,22 @@ Rangée 2 :  [ − ] 2 [ + ]   (ActionIcon size={44}, radius 14, icônes 20 ; qu
   - « Espèces 5,00 € », `leftSection={<IconCash size={16} />}` ;
   - « Carte 2,50 € », `leftSection={<IconCreditCard size={16} />}`.
   - Montant `nowrap`. Le libellé porte l'information (pas de couleur par mode). Aucun badge pour les anciennes commandes (pas de données de paiement) ni pour les instances en jetons.
+- **Journée de caisse** (D-061) : l'historique ne montre que les commandes de la journée ouverte ; sans journée ouverte, il est vide et affiche « Aucune journée ouverte ». Le même composant liste les commandes d'une journée terminée (titre « Commandes du 23/11 »), ouvert depuis « Journées passées », avec le même « Supprimer ».
+
+## Journée de caisse — `CashDay`
+
+D-061. Les montants gardent le format D-011, `nowrap` et chiffres tabulaires, jamais coupés (pire cas 9 999,99 € à 360 px). Aucun nouveau token ni nouvelle couleur : l'alerte se lit par l'icône, le texte et le contour `--color-border-strong`.
+
+- **Indicateur** (`CashDayIndicator`, en-tête) : `Button variant="default" h={44}` qui ouvre la modale. Journée ouverte : `IconCalendarEvent` 20 + « Journée ouverte · 08:30 » (14 / 600, `nowrap`). Aucune journée : `IconAlertTriangle` 20 + « Aucune journée ouverte » (14 / 700), contour `--color-border-strong`. Ouverte un jour précédent : « Journée ouverte depuis le 22/11 » (texte de la réponse 2), même style. Portrait : sous le nom de l'asso, le texte peut passer sur deux lignes. Paysage : icône + heure ou « Aucune journée », `aria-label` complet. Tablette / desktop : avant les actions, à côté du badge « Édition ». Visible en mode édition.
+- **Bandeau du panier** (`NoCashDayBanner`, réponse 19 a) : sans journée ouverte, au-dessus du panier (au-dessus de la barre repliée en portrait, en tête du tiroir et de la colonne sinon) : `IconAlertTriangle` 20 + « Aucune journée ouverte » 16 / 700, aide 14 `--color-text-2`, bouton encre `h={44}` « Démarrer la journée » (`IconPlayerPlay`), pleine largeur en paysage. « Valider » est désactivé.
+- **Modale** (`CashDay/index.tsx`) : `fullScreen` en téléphone, `size="lg" centered` sinon ; fond `--color-bg`, cartes `--color-surface`.
+  - Sans journée : phrase d'aide 16 `--color-text-2`, `Button fullWidth h={56}` encre 18 / 800 « Démarrer la journée » (`IconPlayerPlay` 22), sans confirmation.
+  - Journée ouverte : « Ouverte le 23/11 à 08:30 » 16 `--color-text-2` ; carte de synthèse ; « Terminer la journée » `variant="default" h={56}` (`IconPlayerStop`), pas rouge.
+  - Carte de synthèse (`CashDaySummaryCard`) : « Total net » 16 + montant 32 / 800 ; en euros, une ligne « Espèces » (`IconCash` 20) et une ligne « Carte » (`IconCreditCard` 20), libellé 16 / 600, montant 18 / 700 ; « N commandes » 16 `--color-text-2`. Jetons : total + commandes, sans place réservée. Hauteur minimale ; `role="status" aria-live="polite"` pour la journée ouverte. Les anciens chiffres restent affichés pendant le rafraîchissement (ouverture de la modale, retour sur l'onglet).
+  - Confirmation de fermeture : `ConfirmationModal` centrée, reprend la synthèse ; « Annuler » à gauche, « Terminer la journée » à droite en encre ; les deux boutons désactivés pendant l'appel (`loading`).
+  - Après la fermeture : `IconCheck` 28 `--color-success` + « Journée terminée » 20 / 800, « Ouverte le … · terminée le … », synthèse figée, seul bouton « Fermer ».
+  - « Journées passées » (50 au plus) : `Card withBorder radius="lg"` cliquable (ouvre ses commandes) : « 23/11 · 08:30 – 22:15 » (ou « 23/11 08:30 → 24/11 01:10 ») 16 / 700, total 18 / 800, badges « Espèces 5,00 € » / « Carte 2,50 € » comme l'historique (aucun sans répartition), « Modifiée après la fermeture (total annoncé : X) » 14 `--color-text-2` après une suppression, « N commandes · Voir les commandes » 14 `--color-text-2`. Vide : « Aucune journée terminée ».
+- **Libellés** : clés `cash_day.*` de `fr.json` / `en.json`. Dates JJ/MM et heures 24 h à l'heure locale de l'appareil.
 
 ## Encaissement — `CartConfirmationModal`
 
@@ -167,7 +183,7 @@ Ce bloc **prime** sur les sous-sections suivantes (écrites pour la 1.3.0, D-028
 5. Le mode de paiement est **obligatoire, sans valeur par défaut**. Moyens : **Espèces** et **Carte** seulement. Choisir un montant d'espèces vaut choix « Espèces » : il n'y a pas de bouton « Espèces » à toucher avant (sauf total ≤ 0, voir plus bas).
 6. **Paiement mixte** : si les espèces reçues sont inférieures au total, l'écran affiche « Il reste 2,50 € » et le bouton principal devient « Reste en carte (2,50 €) », qui enregistre. Seule la part en espèces peut donner lieu à un rendu ; la carte est toujours débitée du montant exact.
 7. À l'ouverture de l'encaissement, **les toasts de succès sont fermés** (celui de la vente précédente recouvrait les boutons en téléphone) ; les toasts d'erreur restent (DS-2).
-8. Après l'enregistrement : la modale se ferme, toast succès « Commande n°12 enregistrée · Espèces » (ou « · Carte », « · Espèces + Carte »), le Drawer du panier se referme en portrait (inchangé). En cas d'erreur API, la modale reste ouverte avec la saisie conservée et un toast d'erreur s'affiche (inchangé). Si l'API refuse une commande sans paiement (code `PAYMENT_REQUIRED`, D-035), le toast d'erreur invite à recharger la page (`payment_required_reload`).
+8. Après l'enregistrement : la modale se ferme, toast succès « Commande n°12 enregistrée · Espèces » (ou « · Carte », « · Espèces + Carte »), le Drawer du panier se referme en portrait (inchangé). En cas d'erreur API, la modale reste ouverte avec la saisie conservée et un toast d'erreur s'affiche (inchangé) : « La commande n'a pas pu être enregistrée. Réessayez. », suivi du texte de l'API entre parenthèses s'il y en a un (`error_adding_order` / `error_adding_order_detail`, D-062), jamais l'objet d'erreur brut. Si l'API refuse une commande sans paiement (code `PAYMENT_REQUIRED`, D-035), le toast d'erreur invite à recharger la page (`payment_required_reload`).
 
 **Inverse (carte partielle, puis espèces avec rendu) : non proposé.** Il faudrait saisir d'abord un montant carte (un pavé et un toucher de plus) pour un cas rare en buvette. Si le client paie une partie en espèces, on part toujours des espèces : le vendeur tape la part d'espèces qu'il garde, puis « Reste en carte ».
 
