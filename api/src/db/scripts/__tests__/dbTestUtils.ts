@@ -60,7 +60,7 @@ export async function listTables(dbPath: string): Promise<string[]> {
 /** Message logged by initDb once the database is closed. */
 export const INIT_DONE_MESSAGES = ['Database initialization complete'];
 
-export const APP_TABLES = ['categories', 'products', 'orders', 'order_items'];
+export const APP_TABLES = ['categories', 'products', 'orders', 'order_items', 'cash_days'];
 
 export async function hasAppTables(dbPath: string): Promise<boolean> {
   const tables = await listTables(dbPath);

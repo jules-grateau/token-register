@@ -136,6 +136,22 @@ Rangée 2 :  [ − ] 2 [ + ]   (ActionIcon size={44}, radius 14, icônes 20 ; qu
   - « Espèces 5,00 € », `leftSection={<IconCash size={16} />}` ;
   - « Carte 2,50 € », `leftSection={<IconCreditCard size={16} />}`.
   - Montant `nowrap`. Le libellé porte l'information (pas de couleur par mode). Aucun badge pour les anciennes commandes (pas de données de paiement) ni pour les instances en jetons.
+- **Journée de caisse** (D-061) : l'historique ne montre que les commandes de la journée ouverte ; sans journée ouverte, il est vide et affiche « Aucune journée ouverte ». Le même composant liste les commandes d'une journée terminée (titre « Commandes du 23/11 »), ouvert depuis « Journées passées », avec le même « Supprimer ».
+
+## Journée de caisse — `CashDay`
+
+D-061. Les montants gardent le format D-011, `nowrap` et chiffres tabulaires, jamais coupés (pire cas 9 999,99 € à 360 px). Aucun nouveau token ni nouvelle couleur : l'alerte se lit par l'icône, le texte et le contour `--color-border-strong`.
+
+- **Indicateur** (`CashDayIndicator`, en-tête) : `Button variant="default" h={44}` qui ouvre la modale. Journée ouverte : `IconCalendarEvent` 20 + « Journée ouverte · 08:30 » (14 / 600, `nowrap`). Aucune journée : `IconAlertTriangle` 20 + « Aucune journée ouverte » (14 / 700), contour `--color-border-strong`. Ouverte un jour précédent : « Journée ouverte depuis le 22/11 » (texte de la réponse 2), même style. Portrait : sous le nom de l'asso, le texte peut passer sur deux lignes. Paysage : icône + heure ou « Aucune journée », `aria-label` complet. Tablette / desktop : avant les actions, à côté du badge « Édition ». Visible en mode édition.
+- **Bandeau du panier** (`NoCashDayBanner`, réponse 19 a) : sans journée ouverte, au-dessus du panier (au-dessus de la barre repliée en portrait, en tête du tiroir et de la colonne sinon) : `IconAlertTriangle` 20 + « Aucune journée ouverte » 16 / 700, aide 14 `--color-text-2`, bouton encre `h={44}` « Démarrer la journée » (`IconPlayerPlay`), pleine largeur en paysage. « Valider » est désactivé.
+- **Modale** (`CashDay/index.tsx`) : `fullScreen` en téléphone, `size="lg" centered` sinon ; fond `--color-bg`, cartes `--color-surface`.
+  - Sans journée : phrase d'aide 16 `--color-text-2`, `Button fullWidth h={56}` encre 18 / 800 « Démarrer la journée » (`IconPlayerPlay` 22), sans confirmation.
+  - Journée ouverte : « Ouverte le 23/11 à 08:30 » 16 `--color-text-2` ; carte de synthèse ; « Terminer la journée » `variant="default" h={56}` (`IconPlayerStop`), pas rouge.
+  - Carte de synthèse (`CashDaySummaryCard`) : « Total net » 16 + montant 32 / 800 ; en euros, une ligne « Espèces » (`IconCash` 20) et une ligne « Carte » (`IconCreditCard` 20), libellé 16 / 600, montant 18 / 700 ; « N commandes » 16 `--color-text-2`. Jetons : total + commandes, sans place réservée. Hauteur minimale ; `role="status" aria-live="polite"` pour la journée ouverte. Les anciens chiffres restent affichés pendant le rafraîchissement (ouverture de la modale, retour sur l'onglet).
+  - Confirmation de fermeture : `ConfirmationModal` centrée, reprend la synthèse ; « Annuler » à gauche, « Terminer la journée » à droite en encre ; les deux boutons désactivés pendant l'appel (`loading`).
+  - Après la fermeture : `IconCheck` 28 `--color-success` + « Journée terminée » 20 / 800, « Ouverte le … · terminée le … », synthèse figée, seul bouton « Fermer ».
+  - « Journées passées » (50 au plus) : `Card withBorder radius="lg"` cliquable (ouvre ses commandes) : « 23/11 · 08:30 – 22:15 » (ou « 23/11 08:30 → 24/11 01:10 ») 16 / 700, total 18 / 800, badges « Espèces 5,00 € » / « Carte 2,50 € » comme l'historique (aucun sans répartition), « Modifiée après la fermeture (total annoncé : X) » 14 `--color-text-2` après une suppression, « N commandes · Voir les commandes » 14 `--color-text-2`. Vide : « Aucune journée terminée ».
+- **Libellés** : clés `cash_day.*` de `fr.json` / `en.json`. Dates JJ/MM et heures 24 h à l'heure locale de l'appareil.
 
 ## Encaissement — `CartConfirmationModal`
 

@@ -17,6 +17,16 @@ export class ValidationError extends AppError {
   }
 }
 
+/** The request conflicts with the current state (e.g. a cash day is already open): HTTP 409. */
+export class ConflictError extends AppError {
+  constructor(
+    message: string,
+    public readonly code?: ApiErrorCode
+  ) {
+    super(message);
+  }
+}
+
 export class NotFoundError extends AppError {
   constructor(message: string) {
     super(message);

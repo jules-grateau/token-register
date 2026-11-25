@@ -4,6 +4,7 @@ import logger from '../../utils/logger';
 import path from 'path';
 import fs from 'fs';
 import { getDatabasePath } from '..';
+import { ensureCashDaysTable } from '../cashDays';
 
 export const dbFilePath = getDatabasePath();
 export const dbDir = path.dirname(dbFilePath);
@@ -73,12 +74,17 @@ async function createTables(db: Database) {
     )
   `);
 
+  // D-061: cash days, before the orders that reference them. On an existing database,
+  // orders.cash_day_id and its index are added by the migration (migrateDb.ts).
+  await ensureCashDaysTable(db);
+
   await db.exec(`
     CREATE TABLE IF NOT EXISTS orders (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       date INTEGER NOT NULL,
       cash_amount INTEGER,
-      card_amount INTEGER
+      card_amount INTEGER,
+      cash_day_id INTEGER REFERENCES cash_days (id)
     )
   `);
 

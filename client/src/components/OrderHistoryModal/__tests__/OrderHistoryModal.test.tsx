@@ -16,6 +16,7 @@ jest.mock('react-i18next', () => ({
             : opts && opts.count !== undefined
               ? `${key} (${opts.count})`
               : key,
+    i18n: { language: 'fr' },
   }),
 }));
 jest.mock('react-toastify', () => ({
@@ -27,6 +28,22 @@ jest.mock('react-toastify', () => ({
 jest.mock('../../../services/orders', () => ({
   useGetOrdersQuery: jest.fn(),
   useRemoveOrderMutation: jest.fn(),
+}));
+
+const mockRemoveDayOrder = jest.fn();
+const mockDayOrdersQuery = jest.fn();
+jest.mock('../../../services/cashDays', () => ({
+  useGetCashDayOrdersQuery: (...args: unknown[]): unknown => mockDayOrdersQuery(...args),
+  useRemoveCashDayOrderMutation: () => [mockRemoveDayOrder, { isLoading: false }],
+}));
+let mockNoOpenDay = false;
+jest.mock('../../../hooks/useCashDay', () => ({
+  useCurrentCashDay: () => ({
+    cashDay: null,
+    isNone: mockNoOpenDay,
+    isKnown: true,
+    refetch: jest.fn(),
+  }),
 }));
 
 const refetch = jest.fn();
@@ -219,6 +236,64 @@ describe('OrderHistoryModal', () => {
       mockQuery(withPayment({ cashAmount: 5, cardAmount: null }));
       render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
       expect(screen.queryByTestId('order-payment')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('cash days (D-061)', () => {
+    const emptyPage = {
+      data: {
+        data: [],
+        pagination: { currentPage: 1, pageSize: 20, totalCount: 0, totalPages: 0 },
+      },
+      isFetching: false,
+      error: undefined,
+      refetch,
+    };
+    const closedDay = {
+      id: 4,
+      openedAt: new Date(2026, 10, 23, 8, 30).getTime(),
+      closedAt: new Date(2026, 10, 23, 22, 15).getTime(),
+      summary: { total: 25, cashAmount: null, cardAmount: null, orderCount: 1 },
+      announced: { total: 25, cashAmount: null, cardAmount: null, orderCount: 1 },
+      modifiedAfterClose: false,
+    };
+
+    afterEach(() => {
+      mockNoOpenDay = false;
+    });
+
+    it('says that no day is open when the history is empty for that reason (answer 15 a)', () => {
+      mockNoOpenDay = true;
+      (useGetOrdersQuery as jest.Mock).mockReturnValue(emptyPage);
+      mockDayOrdersQuery.mockReturnValue(emptyPage);
+      render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} />);
+      expect(screen.getByText('cash_day.indicator_none')).toBeInTheDocument();
+    });
+
+    it('lists the orders of a closed day and deletes them from that day (answer 16 a)', async () => {
+      mockDayOrdersQuery.mockReturnValue({
+        data: mockOrders,
+        isFetching: false,
+        error: undefined,
+        refetch,
+      });
+      mockRemoveDayOrder.mockReturnValue({ unwrap: () => Promise.resolve() });
+      render(<OrderHistoryModal isOpen={true} onClose={jest.fn()} cashDay={closedDay} />);
+
+      expect(mockDayOrdersQuery).toHaveBeenCalledWith(
+        { cashDayId: 4, page: 1, pageSize: 20 },
+        { skip: false }
+      );
+      expect(useGetOrdersQuery).toHaveBeenCalledWith(expect.anything(), { skip: true });
+      expect(screen.getByText(/cash_day.orders_title/)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: /delete/i }));
+      const confirmation = await screen.findByRole('dialog', { name: /confirmation/i });
+      fireEvent.click(within(confirmation).getByRole('button', { name: /delete/i }));
+      await waitFor(() =>
+        expect(mockRemoveDayOrder).toHaveBeenCalledWith({ cashDayId: 4, orderId: 1 })
+      );
+      expect(mockRemoveOrder).not.toHaveBeenCalled();
     });
   });
 });

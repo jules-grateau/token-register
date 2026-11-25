@@ -15,6 +15,8 @@ fi
 category=$(qa_api "$port" POST /categories '{"name":"Boissons"}' | qa_json 'd.id')
 cafe=$(qa_api "$port" POST /products "{\"name\":\"Café\",\"price\":3,\"categoryId\":$category}")
 consigne=$(qa_api "$port" POST /products "{\"name\":\"Retour consigne\",\"price\":-1,\"categoryId\":$category}")
+# D-061 : pas de vente sans journée de caisse ouverte. Elle reste ouverte après la conversion.
+qa_api "$port" POST /cash-days > /dev/null
 qa_api "$port" POST /orders "{\"items\":[{\"product\":$cafe,\"quantity\":2,\"discountedAmount\":0}]}" > /dev/null
 order=$(qa_api "$port" POST /orders \
   "{\"items\":[{\"product\":$cafe,\"quantity\":1,\"discountedAmount\":0},{\"product\":$consigne,\"quantity\":1,\"discountedAmount\":0}]}" |

@@ -16,6 +16,10 @@ interface ConfirmationModalProps {
   destructive?: boolean;
   /** Phone forms (discount): full screen like the other form modals. Confirmations stay centered. */
   fullScreen?: boolean;
+  /** Request in progress: both buttons are disabled, the confirm one shows a loader (no double tap). */
+  loading?: boolean;
+  /** Long labels on a phone: buttons in a column, main action first, full width (never cut). */
+  stacked?: boolean;
 }
 
 // docs/design/components.md, "Modales (hors encaissement)": "Annuler" on the left, the main
@@ -31,12 +35,33 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   extraFooter,
   destructive = false,
   fullScreen = false,
+  loading = false,
+  stacked = false,
 }) => {
   const { t } = useTranslation();
 
   const handleConfirm = () => {
     onConfirm();
   };
+
+  const cancelButton = (
+    <Button onClick={onClose} variant="default" size="md" h={44} disabled={loading}>
+      {cancelButtonText || t('cancel')}
+    </Button>
+  );
+  const confirmButton = (
+    <Button
+      onClick={handleConfirm}
+      size="md"
+      h={44}
+      loading={loading}
+      color={destructive ? 'red' : undefined}
+      data-destructive={destructive || undefined}
+      className={destructive ? classes.destructive : undefined}
+    >
+      {confirmButtonText || t('confirm')}
+    </Button>
+  );
 
   return (
     <Modal
@@ -50,21 +75,17 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       <Stack>
         {children}
         {extraFooter}
-        <Group grow gap={8} mt="md">
-          <Button onClick={onClose} variant="default" size="md" h={44}>
-            {cancelButtonText || t('cancel')}
-          </Button>
-          <Button
-            onClick={handleConfirm}
-            size="md"
-            h={44}
-            color={destructive ? 'red' : undefined}
-            data-destructive={destructive || undefined}
-            className={destructive ? classes.destructive : undefined}
-          >
-            {confirmButtonText || t('confirm')}
-          </Button>
-        </Group>
+        {stacked ? (
+          <Stack gap={8} mt="md">
+            {confirmButton}
+            {cancelButton}
+          </Stack>
+        ) : (
+          <Group grow gap={8} mt="md">
+            {cancelButton}
+            {confirmButton}
+          </Group>
+        )}
       </Stack>
     </Modal>
   );

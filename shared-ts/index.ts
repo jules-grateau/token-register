@@ -78,8 +78,56 @@ export type OrderType = {
   payment: OrderPaymentType | null;
 };
 
-/** Machine-readable error codes returned by the API next to `error`. */
-export type ApiErrorCode = 'PAYMENT_REQUIRED';
+/**
+ * Machine-readable error codes returned by the API next to `error`.
+ * - CASH_DAY_REQUIRED: no cash day is open, the sale is refused (D-061).
+ * - CASH_DAY_ALREADY_OPEN: a day is already open, a second one cannot be started.
+ * - NO_OPEN_CASH_DAY: nothing to close.
+ * - CASH_DAY_CLOSED: the order belongs to a closed day; it is deleted from its day only.
+ */
+export type ApiErrorCode =
+  | 'PAYMENT_REQUIRED'
+  | 'CASH_DAY_REQUIRED'
+  | 'CASH_DAY_ALREADY_OPEN'
+  | 'NO_OPEN_CASH_DAY'
+  | 'CASH_DAY_CLOSED';
+
+/** Body of a successful POST /orders: the new order and the cash day it belongs to (D-061). */
+export type CreateOrderResponseType = {
+  id: number;
+  cashDayId: number;
+};
+
+/**
+ * Totals of a cash day (D-061), in the smallest unit of the currency. `total` is the net total:
+ * refunds and negative orders are deducted. `cashAmount` / `cardAmount` are null on token
+ * instances, which record no payment (D-033), and for days converted to tokens (D-036).
+ */
+export type CashDaySummaryType = {
+  total: number;
+  cashAmount: number | null;
+  cardAmount: number | null;
+  orderCount: number;
+};
+
+/**
+ * A cash day (D-061). Timestamps in ms since the epoch (UTC), shown in the device's local time.
+ * `summary` is always computed from the day's orders. `announced` holds the totals frozen at the
+ * close (null while open); `modifiedAfterClose` is true when an order was deleted afterwards.
+ */
+export type CashDayType = {
+  id: number;
+  openedAt: number;
+  closedAt: number | null;
+  summary: CashDaySummaryType;
+  announced: CashDaySummaryType | null;
+  modifiedAfterClose: boolean;
+};
+
+/** Body of GET /cash-days/current: the open day, or null when none is open. */
+export type CurrentCashDayResponseType = {
+  cashDay: CashDayType | null;
+};
 
 /** Body of POST /orders. `payment` is required on EUR instances and refused on token ones. */
 export type CreateOrderRequestType = {

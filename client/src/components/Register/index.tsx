@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Badge, Box, Button, Flex, Menu, ActionIcon, Group, Stack, Text } from '@mantine/core';
 import {
+  IconCalendarEvent,
   IconCheck,
   IconHistory,
   IconInfoCircle,
@@ -22,6 +23,8 @@ import ColorSchemeControl from '../ColorSchemeControl';
 import { APP_NAME } from '../../config/version';
 import { getClientName } from '../../config/client';
 import BrandLogo from '../BrandLogo';
+import CashDayModal from '../CashDay';
+import CashDayIndicator from '../CashDay/CashDayIndicator';
 import classes from './Register.module.css';
 
 // Layout per mode: docs/design/spacing-layout.md. Header: docs/design/components.md.
@@ -35,6 +38,7 @@ export function Register(): React.ReactElement {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isCartConfirmationModalOpen, setIsCartConfrimationModalOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isCashDayOpen, setIsCashDayOpen] = useState(false);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
 
   const cart = (
@@ -113,8 +117,13 @@ export function Register(): React.ReactElement {
       {clientName ?? APP_NAME}
     </h1>
   );
+  // D-061 (answer 8 a): state of the cash day, opens the "Journée de caisse" modal.
+  const openCashDay = () => setIsCashDayOpen(true);
   const actions = (
     <Group gap="xs" wrap="nowrap" align="center" style={{ flex: 'none' }}>
+      {mode !== 'phone-portrait' && (
+        <CashDayIndicator short={mode === 'phone-landscape'} onClick={openCashDay} />
+      )}
       {isEditMode && !isPhone && (
         <Badge size="lg" tt="none" className={classes.editBadge}>
           {t('edit_mode.badge')}
@@ -153,6 +162,14 @@ export function Register(): React.ReactElement {
             style={{ fontSize: 'var(--mantine-font-size-lg)' }}
           >
             {isEditMode ? t('edit_mode.exit') : t('edit_mode.toggle')}
+          </Menu.Item>
+          <Menu.Item
+            onClick={openCashDay}
+            leftSection={<IconCalendarEvent size={20} />}
+            py="md"
+            style={{ fontSize: 'var(--mantine-font-size-lg)' }}
+          >
+            {t('cash_day.title')}
           </Menu.Item>
           <Menu.Divider />
           <ColorSchemeControl />
@@ -209,6 +226,9 @@ export function Register(): React.ReactElement {
             </Group>
             <Box px={8} pb={8}>
               {title}
+              <Box mt={8}>
+                <CashDayIndicator wrap onClick={openCashDay} />
+              </Box>
             </Box>
           </>
         ) : (
@@ -244,6 +264,7 @@ export function Register(): React.ReactElement {
         onOrderPlaced={() => setIsCartDrawerOpen(false)}
       />
       <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+      <CashDayModal isOpen={isCashDayOpen} onClose={() => setIsCashDayOpen(false)} />
     </Flex>
   );
 }

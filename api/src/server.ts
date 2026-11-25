@@ -5,8 +5,14 @@ import { basicAuthMiddleware } from './middleware/basicAuth';
 import { pinoHttp } from 'pino-http';
 import logger from './utils/logger';
 import path from 'path';
-import { CategoryController, ProductController, OrderController } from './controllers';
-import { AppError, ValidationError, NotFoundError } from './types/errors';
+import {
+  CategoryController,
+  ProductController,
+  OrderController,
+  CashDayController,
+} from './controllers';
+import { AppError, ValidationError, NotFoundError, ConflictError } from './types/errors';
+import { CashDayService } from './services/cashDay.service';
 import { CategoryService } from './services/category.service';
 import { ProductService } from './services/product.service';
 import { OrderService } from './services/order.service';
@@ -37,10 +43,12 @@ app.use(basicAuthMiddleware);
 const categoryController = new CategoryController(new CategoryService(), new ProductService());
 const productController = new ProductController(new ProductService());
 const orderController = new OrderController(new OrderService());
+const cashDayController = new CashDayController(new CashDayService(), new OrderService());
 
 app.use(API_ROUTE + categoryController.path, categoryController.router);
 app.use(API_ROUTE + productController.path, productController.router);
 app.use(API_ROUTE + orderController.path, orderController.router);
+app.use(API_ROUTE + cashDayController.path, cashDayController.router);
 
 // --- Static file serving and config for production ---
 if (process.env.NODE_ENV === 'production') {
@@ -79,6 +87,10 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   }
   if (err instanceof ValidationError) {
     res.status(400).json({ error: err.message });
+    return;
+  }
+  if (err instanceof ConflictError) {
+    res.status(409).json({ error: err.message, code: err.code });
     return;
   }
   if (err instanceof AppError) {
