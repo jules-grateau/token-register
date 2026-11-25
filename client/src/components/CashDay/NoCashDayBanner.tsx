@@ -3,6 +3,7 @@ import { Button, Group, Paper, Stack, Text } from '@mantine/core';
 import { IconAlertTriangle, IconPlayerPlay } from '@tabler/icons-react';
 import { useTranslation } from 'react-i18next';
 import { useStartCashDay } from '../../hooks/useCashDay';
+import { useLayoutMode } from '../../hooks/useLayoutMode';
 import classes from './CashDay.module.css';
 
 interface NoCashDayBannerProps {
@@ -17,6 +18,10 @@ interface NoCashDayBannerProps {
 const NoCashDayBanner: React.FC<NoCashDayBannerProps> = ({ compact = false }) => {
   const { t } = useTranslation();
   const { start, isLoading } = useStartCashDay();
+  // Phone portrait (DS-2): compact banner, title on one line and full-width button under it,
+  // without the help sentence, so the catalogue stays visible.
+  const isPortrait = useLayoutMode() === 'phone-portrait';
+  const stacked = compact || isPortrait;
 
   const text = (
     <Group gap="xs" wrap="nowrap" align="flex-start" style={{ flex: 1, minWidth: 0 }}>
@@ -25,9 +30,11 @@ const NoCashDayBanner: React.FC<NoCashDayBannerProps> = ({ compact = false }) =>
         <Text fz={16} fw={700}>
           {t('cash_day.indicator_none')}
         </Text>
-        <Text fz={14} className={classes.secondary}>
-          {t('cash_day.banner_help')}
-        </Text>
+        {!isPortrait && (
+          <Text fz={14} className={classes.secondary}>
+            {t('cash_day.banner_help')}
+          </Text>
+        )}
       </Stack>
     </Group>
   );
@@ -37,7 +44,7 @@ const NoCashDayBanner: React.FC<NoCashDayBannerProps> = ({ compact = false }) =>
       onClick={() => void start()}
       loading={isLoading}
       leftSection={<IconPlayerPlay size={20} aria-hidden />}
-      fullWidth={compact}
+      fullWidth={stacked}
       style={{ flex: 'none' }}
     >
       {t('cash_day.start')}
@@ -46,7 +53,7 @@ const NoCashDayBanner: React.FC<NoCashDayBannerProps> = ({ compact = false }) =>
 
   return (
     <Paper radius="md" p="sm" m="xs" className={classes.banner} data-testid="no-cash-day-banner">
-      {compact ? (
+      {stacked ? (
         <Stack gap="xs">
           {text}
           {button}

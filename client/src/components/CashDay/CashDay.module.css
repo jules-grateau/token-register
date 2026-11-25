@@ -4,6 +4,11 @@
   background-color: var(--color-bg);
 }
 
+/* DS-3: the first line is not stuck under the header (Mantine sets no top padding). */
+.body.body {
+  padding-top: 12px;
+}
+
 .secondary {
   color: var(--color-text-2);
 }

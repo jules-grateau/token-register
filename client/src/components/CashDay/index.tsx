@@ -160,7 +160,7 @@ const CashDayModal: React.FC<CashDayModalProps> = ({ isOpen, onClose }) => {
         centered
         fullScreen={isPhone}
         closeButtonProps={{ size: 44, 'aria-label': t('close') }}
-        classNames={{ content: classes.content, header: classes.header }}
+        classNames={{ content: classes.content, header: classes.header, body: classes.body }}
         scrollAreaComponent={ScrollArea.Autosize}
       >
         <Stack gap="lg">
@@ -176,6 +176,7 @@ const CashDayModal: React.FC<CashDayModalProps> = ({ isOpen, onClose }) => {
         title={t('cash_day.close_confirm_title')}
         confirmButtonText={t('cash_day.close')}
         loading={isClosing}
+        stacked={isPhone}
       >
         <Stack gap="sm">
           <Text fz={16}>{t('cash_day.close_confirm_text')}</Text>
