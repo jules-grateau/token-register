@@ -12,6 +12,11 @@ name: Release smoke check
 #                (smoke-problems.md, written by check-report.mjs) when there is one.
 # Skipped entirely when no app file changed (scripts/ci/app-changed.sh).
 #
+# KEEP_CASH_DAY_OPEN=1 on both demos: capture.mjs never closes their cash day (closed days
+# cannot be deleted, D-061, and a demo without an open day cannot sell). It uses the open
+# day or opens one, leaves it open, and skips the steps that close the day; those run in
+# the PR captures (auto-pr.yml) and the release QA, on throwaway instances.
+#
 # Secrets: DEMO_BASIC_AUTH_USER / DEMO_BASIC_AUTH_PASS (token demo Basic Auth),
 #          DEMO_EUR_URL / DEMO_EUR_BASIC_AUTH_USER / DEMO_EUR_BASIC_AUTH_PASS (EUR demo, D-059).
 on:
@@ -99,6 +104,7 @@ jobs:
       - name: Capture and check the token demo
         env:
           APP_URL: ${{ env.DEMO_URL }}
+          KEEP_CASH_DAY_OPEN: '1'
           BASIC_AUTH_USER: ${{ secrets.DEMO_BASIC_AUTH_USER }}
           BASIC_AUTH_PASS: ${{ secrets.DEMO_BASIC_AUTH_PASS }}
           OUT_DIR: ${{ github.workspace }}/design-review-output/jetons
@@ -124,6 +130,7 @@ jobs:
         if: ${{ !cancelled() }}
         env:
           APP_URL: ${{ secrets.DEMO_EUR_URL }}
+          KEEP_CASH_DAY_OPEN: '1'
           BASIC_AUTH_USER: ${{ secrets.DEMO_EUR_BASIC_AUTH_USER }}
           BASIC_AUTH_PASS: ${{ secrets.DEMO_EUR_BASIC_AUTH_PASS }}
           OUT_DIR: ${{ runner.temp }}/smoke-eur
