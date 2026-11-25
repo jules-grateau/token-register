@@ -1,0 +1,350 @@
+{
+  "appUrl": "http://localhost:3201",
+  "data": {
+    "category": "Test capture",
+    "products": [
+      "Produit A",
+      "Produit B"
+    ],
+    "sample": {
+      "id": 1,
+      "name": "Produit A",
+      "price": 3,
+      "category_id": 1,
+      "icon": null
+    },
+    "negative": "Retour consigne"
+  },
+  "viewports": {
+    "desktop-light": {
+      "size": {
+        "width": 1440,
+        "height": 900
+      },
+      "steps": [
+        {
+          "step": "home",
+          "skipped": true
+        },
+        {
+          "step": "category-selected",
+          "skipped": true
+        },
+        {
+          "step": "cart-with-items",
+          "skipped": true
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "screenshot": "desktop-light/05-payment-modal.png",
+          "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.",
+          "overflowX": false
+        },
+        {
+          "step": "payment-card-prefilled",
+          "skipped": true
+        },
+        {
+          "step": "payment-cash-suggested-change",
+          "skipped": true
+        },
+        {
+          "step": "payment-mixed-parts",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-mixed-or-tokens",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-card",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-exact",
+          "skipped": true
+        },
+        {
+          "step": "payment-negative-total",
+          "skipped": true
+        },
+        {
+          "step": "order-history",
+          "skipped": true
+        },
+        {
+          "step": "order-delete-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cart-cleared-toast",
+          "skipped": true
+        },
+        {
+          "step": "settings-menu",
+          "skipped": true
+        },
+        {
+          "step": "about-modal",
+          "skipped": true
+        },
+        {
+          "step": "edit-mode",
+          "skipped": true
+        },
+        {
+          "step": "edit-category-form",
+          "skipped": true
+        },
+        {
+          "step": "edit-category-unsaved",
+          "skipped": true
+        },
+        {
+          "step": "edit-product-form",
+          "skipped": true
+        },
+        {
+          "step": "edit-product-unsaved",
+          "skipped": true
+        },
+        {
+          "step": "new-product-form",
+          "skipped": true
+        },
+        {
+          "step": "new-product-category-list",
+          "skipped": true
+        },
+        {
+          "step": "new-category-form",
+          "skipped": true
+        },
+        {
+          "step": "product-delete-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cart-item-menu",
+          "skipped": true
+        },
+        {
+          "step": "discount-modal",
+          "skipped": true
+        },
+        {
+          "step": "settings-menu-scrolled",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-summary",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-close-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-history",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-orders",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-none",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-start",
+          "skipped": true
+        },
+        {
+          "step": "cart-quantity-zero",
+          "screenshot": "desktop-light/36-cart-quantity-zero.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    },
+    "mobile-light": {
+      "size": {
+        "width": 390,
+        "height": 664
+      },
+      "steps": [
+        {
+          "step": "home",
+          "skipped": true
+        },
+        {
+          "step": "category-selected",
+          "skipped": true
+        },
+        {
+          "step": "cart-with-items",
+          "skipped": true
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "screenshot": "mobile-light/05-payment-modal.png",
+          "error": "TimeoutError: locator.click: Timeout 30000ms exceeded.",
+          "overflowX": false
+        },
+        {
+          "step": "payment-card-prefilled",
+          "skipped": true
+        },
+        {
+          "step": "payment-cash-suggested-change",
+          "skipped": true
+        },
+        {
+          "step": "payment-mixed-parts",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-mixed-or-tokens",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-card",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-exact",
+          "skipped": true
+        },
+        {
+          "step": "payment-negative-total",
+          "skipped": true
+        },
+        {
+          "step": "order-history",
+          "skipped": true
+        },
+        {
+          "step": "order-delete-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cart-cleared-toast",
+          "skipped": true
+        },
+        {
+          "step": "settings-menu",
+          "skipped": true
+        },
+        {
+          "step": "about-modal",
+          "skipped": true
+        },
+        {
+          "step": "edit-mode",
+          "skipped": true
+        },
+        {
+          "step": "edit-category-form",
+          "skipped": true
+        },
+        {
+          "step": "edit-category-unsaved",
+          "skipped": true
+        },
+        {
+          "step": "edit-product-form",
+          "skipped": true
+        },
+        {
+          "step": "edit-product-unsaved",
+          "skipped": true
+        },
+        {
+          "step": "new-product-form",
+          "skipped": true
+        },
+        {
+          "step": "new-product-category-list",
+          "skipped": true
+        },
+        {
+          "step": "new-category-form",
+          "skipped": true
+        },
+        {
+          "step": "product-delete-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cart-item-menu",
+          "skipped": true
+        },
+        {
+          "step": "discount-modal",
+          "skipped": true
+        },
+        {
+          "step": "settings-menu-scrolled",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-summary",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-close-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-history",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-orders",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-none",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-start",
+          "skipped": true
+        },
+        {
+          "step": "cart-quantity-zero",
+          "screenshot": "mobile-light/36-cart-quantity-zero.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [],
+      "pageErrors": []
+    }
+  },
+  "cleanup": {
+    "deletedOrders": [],
+    "failed": [],
+    "testCatalog": {
+      "category": 1,
+      "products": [
+        1,
+        2,
+        3
+      ],
+      "deleted": true
+    }
+  },
+  "currency": "TOKEN"
+}

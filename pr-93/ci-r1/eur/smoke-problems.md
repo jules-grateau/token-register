@@ -1,0 +1,2 @@
+- écrans (EUR) : desktop-light · payment-modal: step failed (`TimeoutError: locator.click: Timeout 30000ms exceeded.`)
+- écrans (EUR) : mobile-light · payment-modal: step failed (`TimeoutError: locator.click: Timeout 30000ms exceeded.`)

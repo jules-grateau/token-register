@@ -1,0 +1,2 @@
+- écrans (TOKEN) : desktop-light · payment-modal: step failed (`TimeoutError: locator.click: Timeout 30000ms exceeded.`)
+- écrans (TOKEN) : mobile-light · payment-modal: step failed (`TimeoutError: locator.click: Timeout 30000ms exceeded.`)
