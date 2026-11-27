@@ -2,6 +2,8 @@ import { randomBytes, scrypt, timingSafeEqual, type ScryptOptions } from 'crypto
 
 /** Point 8 of D-063: 6 characters minimum, no complexity rule. */
 export const PASSWORD_MIN_LENGTH = 6;
+/** TL-2 of PR #97: longer is refused before scrypt (no useless hashing of huge inputs). */
+export const PASSWORD_MAX_LENGTH = 256;
 
 // scrypt cost (N, r, p): the Node defaults, ~50 ms and 16 MB per hash. Stored with each hash,
 // so that they can be raised later without invalidating the existing passwords.
@@ -22,6 +24,9 @@ function derive(password: string, salt: Buffer, options: ScryptOptions): Promise
 export function validatePassword(password: unknown): string | null {
   if (typeof password !== 'string' || password.length < PASSWORD_MIN_LENGTH) {
     return `The password must be at least ${PASSWORD_MIN_LENGTH} characters long.`;
+  }
+  if (password.length > PASSWORD_MAX_LENGTH) {
+    return `The password must be at most ${PASSWORD_MAX_LENGTH} characters long.`;
   }
   return null;
 }

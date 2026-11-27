@@ -344,6 +344,35 @@ describe('API behind the login (development settings)', () => {
     expect((await login()).reply.status).toBe(200);
   });
 
+  it('blocks an IP trying many usernames (TL-1), with the same message', async () => {
+    const ipService = new AuthService(new LoginRateLimiter());
+    for (let i = 0; i < 49; i++) {
+      await expect(
+        ipService.login(`essai${i}`, 'wrong-password', '10.9.9.9')
+      ).rejects.toMatchObject({
+        code: 'INVALID_CREDENTIALS',
+      });
+    }
+    await expect(ipService.login('essai-50', 'wrong-password', '10.9.9.9')).rejects.toMatchObject({
+      code: 'TOO_MANY_ATTEMPTS',
+      retryAfterSeconds: 60,
+    });
+    // Even a right password, from that IP, waits; another IP does not.
+    await expect(ipService.login(ADMIN, PASSWORD, '10.9.9.9')).rejects.toMatchObject({
+      code: 'TOO_MANY_ATTEMPTS',
+    });
+    await expect(ipService.login(ADMIN, PASSWORD, '10.9.9.8')).resolves.toMatchObject({
+      user: { username: ADMIN },
+    });
+    // 50 scrypt checks: more than the 5 s default.
+  }, 60000);
+
+  it('refuses a password over 256 characters like a wrong one (TL-2)', async () => {
+    const reply = await login(ADMIN, 'x'.repeat(10_000));
+    expect(reply.reply.status).toBe(401);
+    expect(reply.reply.body).toMatchObject({ code: 'INVALID_CREDENTIALS' });
+  });
+
   it('refuses a write from another origin, accepts FRONTEND_URL and no Origin (answer 11 a)', async () => {
     const { cookie } = await login();
     const body = { name: 'Origine' };

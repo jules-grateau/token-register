@@ -203,7 +203,8 @@ table, read again on every request: a new role, or a disabled account, applies a
   origin is refused (403).
 - **`TRUST_PROXY_HOPS`**: number of reverse proxies in front of the container, **`1` behind
   Traefik**, `0` by default. It gives the real client IP to the login limiter (5 failures for a
-  username and an IP: 1 minute of wait). Never more than the real number of proxies: a client could
+  username and an IP: 1 minute of wait; 50 failures from one IP, whatever the usernames: 1 minute
+  too). Never more than the real number of proxies: a client could
   then choose its IP. The failure counts are kept in memory: a restart resets them.
 
 ### Before deploying 3.0.0

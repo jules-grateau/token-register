@@ -1,9 +1,9 @@
 import { createHash, randomBytes } from 'crypto';
 import type { AuthUserType, Permission, UserRole } from 'shared-ts';
 import { openDb } from '../db';
-import { verifyAgainstDummy, verifyPassword } from '../utils/password';
+import { PASSWORD_MAX_LENGTH, verifyAgainstDummy, verifyPassword } from '../utils/password';
 import { normalizeUsername, usernameKey } from '../utils/username';
-import { LoginRateLimiter } from '../utils/loginRateLimiter';
+import { IP_LIMITS, LoginRateLimiter, type LimiterState } from '../utils/loginRateLimiter';
 import { AppError } from '../types/errors';
 import logger from '../utils/logger';
 
@@ -56,13 +56,18 @@ const toUser = (row: UserRow): AuthUserType => ({
   mustChangePassword: row.must_change_password === 1,
 });
 
+/** The longer of two waits (or no wait). */
+const longest = (a: LimiterState, b: LimiterState): LimiterState =>
+  !a.blocked ? b : !b.blocked ? a : a.retryAfterSeconds >= b.retryAfterSeconds ? a : b;
+
 const PERMISSIONS_SQL =
   '(SELECT group_concat(permission) FROM role_permissions WHERE role_permissions.role = users.role)';
 
 export class AuthService {
   constructor(
     private readonly limiter: LoginRateLimiter = new LoginRateLimiter(),
-    private readonly now: () => number = Date.now
+    private readonly now: () => number = Date.now,
+    private readonly ipLimiter: LoginRateLimiter = new LoginRateLimiter(Date.now, IP_LIMITS)
   ) {}
 
   /**
@@ -76,7 +81,9 @@ export class AuthService {
     ip: string | undefined
   ): Promise<{ user: AuthUserType; token: string }> {
     const key = LoginRateLimiter.key(usernameKey(rawUsername), ip);
-    const state = this.limiter.check(key);
+    // Per username and IP (point 7), and per IP alone (TL-1 of PR #97): same answer.
+    const ipKey = ip ?? '';
+    const state = longest(this.limiter.check(key), this.ipLimiter.check(ipKey));
     if (state.blocked) throw new TooManyAttemptsError(state.retryAfterSeconds);
 
     const username = normalizeUsername(rawUsername);
@@ -91,12 +98,15 @@ export class AuthService {
             [username]
           )
         : undefined;
+      // Over PASSWORD_MAX_LENGTH: refused before scrypt, with the same answer (TL-2).
       const valid =
-        row && row.active === 1
-          ? await verifyPassword(pass, row.password_hash)
-          : await verifyAgainstDummy(pass);
+        pass.length > PASSWORD_MAX_LENGTH
+          ? false
+          : row && row.active === 1
+            ? await verifyPassword(pass, row.password_hash)
+            : await verifyAgainstDummy(pass);
       if (!row || !valid) {
-        const after = this.limiter.recordFailure(key);
+        const after = longest(this.limiter.recordFailure(key), this.ipLimiter.recordFailure(ipKey));
         if (after.blocked) throw new TooManyAttemptsError(after.retryAfterSeconds);
         throw new InvalidCredentialsError('Invalid username or password.');
       }

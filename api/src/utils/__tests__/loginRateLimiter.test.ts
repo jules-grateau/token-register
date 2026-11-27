@@ -1,4 +1,4 @@
-import { BLOCK_MS, LoginRateLimiter, MAX_FAILURES } from '../loginRateLimiter';
+import { BLOCK_MS, IP_LIMITS, LoginRateLimiter, MAX_FAILURES } from '../loginRateLimiter';
 
 describe('LoginRateLimiter (D-063, point 7)', () => {
   let now = 1_000_000;
@@ -28,6 +28,22 @@ describe('LoginRateLimiter (D-063, point 7)', () => {
     for (let i = 0; i < MAX_FAILURES; i++) l.recordFailure(key);
     expect(l.check(LoginRateLimiter.key('marie', '10.0.0.2'))).toEqual({ blocked: false });
     expect(l.check(LoginRateLimiter.key('paul', '10.0.0.1'))).toEqual({ blocked: false });
+  });
+
+  it('per IP alone: 50 failures without a 1-minute pause wait 1 minute (TL-1)', () => {
+    const l = new LoginRateLimiter(() => now, IP_LIMITS);
+    for (let i = 1; i < 50; i++) {
+      now += 1000;
+      expect(l.recordFailure('10.0.0.1')).toEqual({ blocked: false });
+    }
+    expect(l.recordFailure('10.0.0.1')).toEqual({ blocked: true, retryAfterSeconds: 60 });
+    now += 60_000;
+    expect(l.check('10.0.0.1')).toEqual({ blocked: false });
+
+    // A pause of more than 1 minute forgets the failures.
+    for (let i = 1; i < 50; i++) l.recordFailure('10.0.0.2');
+    now += 61_000;
+    expect(l.recordFailure('10.0.0.2')).toEqual({ blocked: false });
   });
 
   it('starts again after a success', () => {

@@ -2,14 +2,29 @@
  * Failed logins (D-063, point 7): after 5 failures for the same username and IP, that pair
  * waits 1 minute. A success, or the end of the wait, starts the count again.
  *
+ * A second limiter, per IP alone (TL-1 of PR #97), stops one address trying a password on many
+ * usernames: IP_LIMITS, far above what a register ever does.
+ *
  * Kept in memory: a restart of the API resets every count (documented in deploy/README.md).
- * The table is bounded: entries without a failure for IDLE_MS are dropped, and past
+ * The table is bounded: entries without a failure for idleMs are dropped, and past
  * MAX_ENTRIES the oldest ones go first.
  */
 export const MAX_FAILURES = 5;
 export const BLOCK_MS = 60_000;
 const IDLE_MS = 15 * 60_000;
 const MAX_ENTRIES = 10_000;
+
+export type LimiterOptions = { maxFailures: number; blockMs: number; idleMs: number };
+
+/** Per username and IP (point 7). */
+export const USER_IP_LIMITS: LimiterOptions = {
+  maxFailures: MAX_FAILURES,
+  blockMs: BLOCK_MS,
+  idleMs: IDLE_MS,
+};
+
+/** Per IP alone: 50 failures, without a pause of 1 minute between them, wait 1 minute. */
+export const IP_LIMITS: LimiterOptions = { maxFailures: 50, blockMs: 60_000, idleMs: 60_000 };
 
 type Entry = { failures: number; lastFailureAt: number; blockedUntil: number };
 
@@ -18,7 +33,10 @@ export type LimiterState = { blocked: false } | { blocked: true; retryAfterSecon
 export class LoginRateLimiter {
   private readonly entries = new Map<string, Entry>();
 
-  constructor(private readonly now: () => number = Date.now) {}
+  constructor(
+    private readonly now: () => number = Date.now,
+    private readonly options: LimiterOptions = USER_IP_LIMITS
+  ) {}
 
   static key(usernameKey: string, ip: string | undefined): string {
     return `${usernameKey}\n${ip ?? ''}`;
@@ -29,7 +47,7 @@ export class LoginRateLimiter {
     if (!entry) return undefined;
     const now = this.now();
     const blockOver = entry.blockedUntil !== 0 && entry.blockedUntil <= now;
-    if (blockOver || now - entry.lastFailureAt > IDLE_MS) {
+    if (blockOver || now - entry.lastFailureAt > this.options.idleMs) {
       this.entries.delete(key);
       return undefined;
     }
@@ -49,13 +67,15 @@ export class LoginRateLimiter {
     return this.stateOf(this.live(key));
   }
 
-  /** Records a failure; the 5th one starts the wait (returned as blocked). */
+  /** Records a failure; the last allowed one (5th by default) starts the wait (blocked). */
   recordFailure(key: string): LimiterState {
     const now = this.now();
     const entry = this.live(key) ?? { failures: 0, lastFailureAt: now, blockedUntil: 0 };
     entry.failures += 1;
     entry.lastFailureAt = now;
-    if (entry.failures >= MAX_FAILURES) entry.blockedUntil = now + BLOCK_MS;
+    if (entry.failures >= this.options.maxFailures) {
+      entry.blockedUntil = now + this.options.blockMs;
+    }
     // Re-inserted last: the Map order is the order of the last failure.
     this.entries.delete(key);
     this.entries.set(key, entry);

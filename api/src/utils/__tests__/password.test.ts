@@ -14,6 +14,8 @@ describe('passwords (D-063, point 8)', () => {
     expect(validatePassword('abcde')).toMatch('at least 6');
     expect(validatePassword(undefined)).toMatch('at least 6');
     expect(validatePassword(123456)).toMatch('at least 6');
+    expect(validatePassword('a'.repeat(256))).toBeNull();
+    expect(validatePassword('a'.repeat(257))).toMatch('at most 256');
   });
 
   it('hashes with scrypt and a random salt, never the password itself', async () => {
