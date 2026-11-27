@@ -175,7 +175,8 @@ describe('CashDayService (EUR)', () => {
     const list = await days.listClosed();
     expect(list).toHaveLength(MAX_CLOSED_CASH_DAYS);
     expect(list[0].id).toBe(MAX_CLOSED_CASH_DAYS + 2);
-  });
+    // 104 transactions on a real file: over the 5 s default when the suites run in parallel.
+  }, 30000);
 });
 
 describe('Authors (D-063, point 14)', () => {
