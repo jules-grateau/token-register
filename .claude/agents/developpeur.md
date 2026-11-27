@@ -135,10 +135,11 @@ gh issue create --label suivi --label <tech|design> \
   mkdir -p "$S/pw" && cd "$S/pw" && npm init -y >/dev/null && npm install playwright@1.55.0 \
     && npx playwright install chromium
 
-  # 2. Capturer (script copié à côté de Playwright ; identifiants lus dans api/.env)
+  # 2. Capturer (script copié à côté de Playwright ; un compte de l'instance, ici le premier
+  #    admin lu dans api/.env, D-063 : la capture se connecte par l'API)
   cp "$R/scripts/design-review/capture.mjs" . \
-    && export BASIC_AUTH_USER=$(grep '^BASIC_AUTH_USER=' "$R/api/.env" | cut -d= -f2- | sed 's/ *#.*//' | tr -d '\r') \
-              BASIC_AUTH_PASS=$(grep '^BASIC_AUTH_PASS=' "$R/api/.env" | cut -d= -f2- | sed 's/ *#.*//' | tr -d '\r') \
+    && export LOGIN_USER=$(grep '^INITIAL_ADMIN_USERNAME=' "$R/api/.env" | cut -d= -f2- | sed 's/ *#.*//' | tr -d '\r') \
+              LOGIN_PASS=$(grep '^INITIAL_ADMIN_PASSWORD=' "$R/api/.env" | cut -d= -f2- | sed 's/ *#.*//' | tr -d '\r') \
     && export COLOR_SCHEMES=light ONLY_VIEWPORTS=mobile,desktop ONLY_STEPS=<étapes touchées> \
     && APP_URL=<instance jetons> OUT_DIR="$S/cap/local" node capture.mjs \
     && APP_URL=<instance EUR> OUT_DIR="$S/cap/local-eur" node capture.mjs
