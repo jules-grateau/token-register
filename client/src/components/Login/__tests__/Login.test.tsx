@@ -64,6 +64,17 @@ describe('Login screen (D-063)', () => {
     expect(password).toHaveAttribute('type', 'password');
   });
 
+  it('gives both fields 48 px and 16 px text (DS-2 of PR #97)', () => {
+    renderLogin();
+    for (const label of ['auth.username', 'auth.password']) {
+      expect(screen.getByLabelText(label)).toHaveStyle({ height: '48px', fontSize: '16px' });
+    }
+    expect(screen.getByRole('button', { name: 'auth.show_password' })).toHaveStyle({
+      width: '44px',
+      height: '44px',
+    });
+  });
+
   it('shows the password on demand, with a labelled eye button (answer 13 a)', () => {
     renderLogin();
     // Mantine toggles on mouse down (touch end and keyboard too).

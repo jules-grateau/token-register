@@ -234,6 +234,7 @@ export function Register(): React.ReactElement {
           >
             {t('about.menu')}
           </Menu.Item>
+          <Menu.Divider />
           {/* Last, not red: nothing is lost, the cart stays on the device (point 5). */}
           <Menu.Item
             onClick={logOut}

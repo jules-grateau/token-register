@@ -17,6 +17,13 @@ import { APP_NAME } from '../../config/version';
 import BrandLogo from '../BrandLogo';
 import classes from './Login.module.css';
 
+// docs/design/components.md: fields 48 px high, text 16 px (no iOS zoom). Inline on the input:
+// Mantine's size variables (inline too) win over the theme class.
+const FIELD = { height: 48, minHeight: 48, fontSize: 16 };
+const FIELD_STYLES = { input: FIELD, innerInput: FIELD };
+// Eye of the password field: 44 x 44 touch target.
+const EYE_STYLES = { width: 44, height: 44, minWidth: 44, minHeight: 44 };
+
 type Message = { tone: 'error' | 'info'; text: string } | null;
 
 /**
@@ -114,6 +121,7 @@ export const Login: React.FC = () => {
             autoCapitalize="none"
             autoCorrect="off"
             spellCheck={false}
+            styles={FIELD_STYLES}
             disabled={submitting}
           />
           <PasswordInput
@@ -129,6 +137,7 @@ export const Login: React.FC = () => {
             visible={visible}
             onVisibilityChange={setVisible}
             rightSectionWidth={48}
+            styles={{ ...FIELD_STYLES, visibilityToggle: EYE_STYLES }}
             classNames={{ visibilityToggle: classes.eye }}
             visibilityToggleIcon={({ reveal }) =>
               reveal ? <IconEyeOff size={20} aria-hidden /> : <IconEye size={20} aria-hidden />
