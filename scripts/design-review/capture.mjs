@@ -1,4 +1,4 @@
-/* global process, fetch, console, document, window, getComputedStyle */
+/* global process, fetch, console, document, window, getComputedStyle, URL */
 // Drives a running instance of the app (the demo, in CI) through its main screens
 // and takes screenshots on desktop, tablet and mobile, like a designer testing the
 // real thing. Orders placed during the run are deleted at the end.
@@ -850,10 +850,22 @@ async function run() {
         consoleErrors: [],
         pageErrors: [],
       };
-      page.on('console', (m) => m.type() === 'error' && vp.consoleErrors.push(m.text()));
+      // D-063: before the session is given to the browser, GET /auth/me (no session yet) and the
+      // refused login of "login-error" answer 401 on purpose, and the browser logs each one as a
+      // console error. Those are kept apart (expectedLoginErrors), only while every 401 of that
+      // phase comes from these two routes; anything else stays a console error.
+      let loginPhase = true;
+      const login401 = [];
+      const loginConsole401 = [];
+      page.on('console', (m) => {
+        if (m.type() !== 'error') return;
+        if (loginPhase && /status of 401/.test(m.text())) loginConsole401.push(m.text());
+        else vp.consoleErrors.push(m.text());
+      });
       page.on('pageerror', (e) => vp.pageErrors.push(String(e)));
       // Track the orders this run creates, to delete exactly those afterwards.
       page.on('response', async (res) => {
+        if (loginPhase && res.status() === 401) login401.push(new URL(res.url()).pathname);
         if (res.request().method() === 'POST' && /\/api\/orders\/?$/.test(res.url()) && res.ok()) {
           const body = await res.json().catch(() => null);
           if (body?.id) createdOrders.push({ id: body.id, cashDayId: body.cashDayId });
@@ -865,6 +877,11 @@ async function run() {
       // D-063: the login screen first (no session yet), then the session of the API calls.
       await page.goto(APP_URL, { waitUntil: 'networkidle' });
       await captureLoginSteps(page, dir, vp);
+      loginPhase = false;
+      const expected = login401.every((p) => /\/api\/auth\/(me|login)$/.test(p));
+      if (expected) vp.expectedLoginErrors = loginConsole401.length;
+      else
+        vp.consoleErrors.push(...loginConsole401, `401 outside the login: ${login401.join(', ')}`);
       await context.addCookies([
         {
           name: SESSION_COOKIE,
