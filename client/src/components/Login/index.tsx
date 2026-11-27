@@ -37,9 +37,15 @@ export const Login: React.FC = () => {
   const [visible, setVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [waiting, setWaiting] = useState(false);
+  // Bumped after a refusal: the password field gets the focus once it is enabled again.
+  const [refusals, setRefusals] = useState(0);
   const [message, setMessage] = useState<Message>(
     notice === 'expired' ? { tone: 'info', text: t('auth.expired') } : null
   );
+
+  useEffect(() => {
+    if (refusals > 0) passwordRef.current?.focus();
+  }, [refusals]);
 
   const waitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(
@@ -63,7 +69,7 @@ export const Login: React.FC = () => {
       // Only the password is cleared, and the focus goes back to it.
       setPassword('');
       setMessage({ tone: 'error', text: t('auth.invalid') });
-      setTimeout(() => passwordRef.current?.focus(), 0);
+      setRefusals((n) => n + 1);
     } else if (result.reason === 'too_many') {
       setMessage({ tone: 'error', text: t('auth.too_many') });
       setWaiting(true);
