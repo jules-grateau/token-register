@@ -84,13 +84,23 @@ export type OrderType = {
  * - CASH_DAY_ALREADY_OPEN: a day is already open, a second one cannot be started.
  * - NO_OPEN_CASH_DAY: nothing to close.
  * - CASH_DAY_CLOSED: the order belongs to a closed day; it is deleted from its day only.
+ * - UNAUTHENTICATED: no valid session (missing, expired or revoked cookie): HTTP 401.
+ * - FORBIDDEN: the account's role lacks the permission of the route: HTTP 403.
+ * - ORIGIN_REFUSED: a write request sent from another site (Origin header): HTTP 403.
+ * - INVALID_CREDENTIALS: wrong username or password, or disabled account (same answer): 401.
+ * - TOO_MANY_ATTEMPTS: 5 failed logins for this username and IP, wait 1 minute: HTTP 429.
  */
 export type ApiErrorCode =
   | 'PAYMENT_REQUIRED'
   | 'CASH_DAY_REQUIRED'
   | 'CASH_DAY_ALREADY_OPEN'
   | 'NO_OPEN_CASH_DAY'
-  | 'CASH_DAY_CLOSED';
+  | 'CASH_DAY_CLOSED'
+  | 'UNAUTHENTICATED'
+  | 'FORBIDDEN'
+  | 'ORIGIN_REFUSED'
+  | 'INVALID_CREDENTIALS'
+  | 'TOO_MANY_ATTEMPTS';
 
 /** Body of a successful POST /orders: the new order and the cash day it belongs to (D-061). */
 export type CreateOrderResponseType = {
@@ -166,3 +176,43 @@ export type PaginatedOrdersResponse = PaginatedResponse<OrderType>;
 /** Currency of an instance. Amounts are always stored as integers in the smallest unit:
  * 1 token for TOKEN, 1 cent for EUR. */
 export type CurrencyCode = 'TOKEN' | 'EUR';
+
+/**
+ * Role of a user account. The rights of a role come from the role -> permissions table
+ * (api/src/db/auth.ts), never from the role name in the code.
+ */
+export type UserRole = 'admin' | 'manager' | 'cashier';
+
+/**
+ * What a role may do. Every protected API route requires one of them; a role without it gets
+ * 403. Today the three roles have all of them, except `users` (account management): admin only.
+ */
+export type Permission = 'sale' | 'catalog' | 'cash_day' | 'order_delete' | 'users';
+
+/** The logged-in user, as returned by POST /auth/login and GET /auth/me. */
+export type AuthUserType = {
+  id: number;
+  username: string;
+  role: UserRole;
+  permissions: Permission[];
+  /** Set by an admin reset (temporary password): to be changed at the next login (PR 2). */
+  mustChangePassword: boolean;
+};
+
+/** Body of POST /auth/login. */
+export type LoginRequestType = {
+  username: string;
+  password: string;
+};
+
+/** Body of a successful POST /auth/login and of GET /auth/me. */
+export type AuthResponseType = {
+  user: AuthUserType;
+};
+
+/** Body of a refused POST /auth/login (429): seconds to wait before the next try. */
+export type TooManyAttemptsResponseType = {
+  error: string;
+  code: 'TOO_MANY_ATTEMPTS';
+  retryAfterSeconds: number;
+};

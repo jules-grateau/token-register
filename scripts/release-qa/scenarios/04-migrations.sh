@@ -29,9 +29,11 @@ qa_stop "$name"
 
 snapshot() {
   local table
-  for table in settings categories products cash_days orders order_items; do
+  for table in settings categories products cash_days orders order_items roles role_permissions; do
     qa_sql "$volume" "SELECT * FROM $table ORDER BY rowid"
   done
+  # Comptes (D-063) : jamais le hash du mot de passe dans une sortie.
+  qa_sql "$volume" 'SELECT id, role, active, must_change_password FROM users ORDER BY id'
 }
 before=$(snapshot)
 for run in 1 2; do

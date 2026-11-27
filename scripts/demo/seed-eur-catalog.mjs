@@ -1,4 +1,4 @@
-/* global process, Buffer, fetch, console, setTimeout */
+/* global process, fetch, console, setTimeout */
 // Demo catalog of the EUR demo instance (D-059), run by ci-cd.yml after each demo deploy.
 // Lives outside the app on purpose: a new database starts empty and the app itself never
 // creates a catalog (D-055). This script only talks to the API of a running instance, and:
@@ -8,15 +8,17 @@
 // A creation failing half-way deletes what this run created, so that the next run starts
 // again from an empty catalog, then exits 1.
 //
-// Env: APP_URL, BASIC_AUTH_USER, BASIC_AUTH_PASS,
+// Env: APP_URL, LOGIN_USER, LOGIN_PASS (an account of the instance, D-063: on the EUR demo,
+//      its dedicated cashier account; logged in through POST /api/auth/login, session cookie),
 //      WAIT_SECONDS (optional, default 90: how long to wait for the API after a restart).
 // Never prints the URL nor the host: they are secrets, and the Actions logs are public.
 
 const APP_URL = (process.env.APP_URL ?? '').replace(/\/$/, '');
-const USER = process.env.BASIC_AUTH_USER;
-const PASS = process.env.BASIC_AUTH_PASS;
+const USER = process.env.LOGIN_USER;
+const PASS = process.env.LOGIN_PASS;
 const WAIT_SECONDS = Number(process.env.WAIT_SECONDS ?? 90);
-const AUTH = 'Basic ' + Buffer.from(`${USER}:${PASS}`).toString('base64');
+// Session cookie ("cc_session=..."), set by logIn(). Never printed.
+let SESSION = '';
 
 // Prices in cents (D-010). Icons from the closed list (D-046, D-047, docs/design/icons.md).
 const EUR_DEMO_CATALOG = [
@@ -59,35 +61,58 @@ const fail = (message) => {
 async function api(method, route, body) {
   const res = await fetch(`${APP_URL}/api${route}`, {
     method,
-    headers: { Authorization: AUTH, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    headers: { Cookie: SESSION, ...(body ? { 'Content-Type': 'application/json' } : {}) },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) throw new Error(`${method} ${route} -> ${res.status}`);
   return res.status === 204 ? null : res.json();
 }
 
+class LoginRefused extends Error {}
+
+// Opens a session. Wrong credentials (401) or the wait after 5 failures (429): stop at once,
+// retrying would only extend the wait.
+async function logIn() {
+  const res = await fetch(`${APP_URL}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: USER, password: PASS }),
+  });
+  if (res.status === 401 || res.status === 429) {
+    throw new LoginRefused(`Login refused (${res.status}): check LOGIN_USER / LOGIN_PASS.`);
+  }
+  if (!res.ok) throw new Error(`POST /auth/login -> ${res.status}`);
+  SESSION =
+    res.headers
+      .getSetCookie()
+      .map((c) => c.split(';')[0])
+      .find((c) => c.startsWith('cc_session=')) ?? '';
+  if (!SESSION) throw new Error('POST /auth/login: no session cookie');
+}
+
 // The container was just restarted: its migrations may still be running.
 async function waitForApi() {
   for (let i = 0; i < WAIT_SECONDS; i += 1) {
     try {
+      await logIn();
       return await api('GET', '/categories');
-    } catch {
+    } catch (error) {
+      if (error instanceof LoginRefused) return fail(error.message);
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
   }
   return fail(`The EUR demo API did not answer within ${WAIT_SECONDS} s.`);
 }
 
-// Same source as capture.mjs: the runtime config the client reads before it starts.
+// Same source as capture.mjs: the runtime config the client reads before it starts (public).
 async function readCurrency() {
-  const res = await fetch(`${APP_URL}/config.js`, { headers: { Authorization: AUTH } });
+  const res = await fetch(`${APP_URL}/config.js`);
   if (!res.ok) throw new Error(`GET /config.js -> ${res.status}`);
   return /"VITE_CURRENCY"\s*:\s*"(\w+)"/.exec(await res.text())?.[1] ?? null;
 }
 
 async function main() {
-  if (!APP_URL || !USER || !PASS)
-    fail('APP_URL, BASIC_AUTH_USER and BASIC_AUTH_PASS are required.');
+  if (!APP_URL || !USER || !PASS) fail('APP_URL, LOGIN_USER and LOGIN_PASS are required.');
 
   const categories = await waitForApi();
   const currency = await readCurrency();
@@ -133,6 +158,8 @@ async function main() {
 // stack, which can hold the host name (e.g. "getaddrinfo ENOTFOUND <host>") (TL-1, PR #73).
 try {
   await main();
+  // Closes the session opened for this run.
+  await api('POST', '/auth/logout').catch(() => {});
 } catch (error) {
   fail(`EUR demo catalog: ${error instanceof Error ? error.message : 'unexpected error'}.`);
 }

@@ -4,6 +4,7 @@ import { ProductService } from '../services/product.service';
 import { CategoryType } from 'shared-ts';
 import { NotFoundError } from '../types/errors';
 import { INVALID_ICON_MESSAGE, isValidIconField } from '../utils/catalogIcons';
+import { requirePermission } from '../middleware/auth';
 
 export class CategoryController {
   public path = '/categories';
@@ -18,11 +19,12 @@ export class CategoryController {
   }
 
   private initializeRoutes() {
-    this.router.get('/', this.getAllCategories);
-    this.router.get('/:categoryId/products', this.getProductsByCategory);
-    this.router.post('/', this.addCategory);
-    this.router.put('/:categoryId', this.updateCategory);
-    this.router.delete('/:categoryId', this.deleteCategory);
+    // D-063: reading the catalog is part of the sale; changing it needs "catalog".
+    this.router.get('/', requirePermission('sale'), this.getAllCategories);
+    this.router.get('/:categoryId/products', requirePermission('sale'), this.getProductsByCategory);
+    this.router.post('/', requirePermission('catalog'), this.addCategory);
+    this.router.put('/:categoryId', requirePermission('catalog'), this.updateCategory);
+    this.router.delete('/:categoryId', requirePermission('catalog'), this.deleteCategory);
   }
 
   public getAllCategories = async (

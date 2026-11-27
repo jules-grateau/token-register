@@ -163,14 +163,21 @@ describe('OrderService (unit)', () => {
 
     expect(mockExec).toHaveBeenCalledWith('BEGIN IMMEDIATE');
     expect(mockRun).toHaveBeenCalledWith(
-      'INSERT INTO orders (date, cash_amount, card_amount, cash_day_id) VALUES (?, ?, ?, ?)',
-      [expect.any(Number), null, null, 5]
+      expect.stringContaining(
+        'INSERT INTO orders (date, cash_amount, card_amount, cash_day_id, created_by)'
+      ),
+      [expect.any(Number), null, null, 5, null]
     );
     expect(mockGet).toHaveBeenCalledWith(expect.stringContaining('FROM products p'), [1]);
-    expect(mockRun).toHaveBeenCalledWith(
-      expect.stringContaining('INSERT INTO order_items'),
-      [42, 1, 2, 0, 'A', 10, 'CategoryA']
-    );
+    expect(mockRun).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO order_items'), [
+      42,
+      1,
+      2,
+      0,
+      'A',
+      10,
+      'CategoryA',
+    ]);
     expect(mockExec).toHaveBeenCalledWith('COMMIT');
     expect(result).toEqual({ id: 42, cashDayId: 5 });
   });
@@ -190,10 +197,15 @@ describe('OrderService (unit)', () => {
 
     await service.createOrder(tamperedCart);
 
-    expect(mockRun).toHaveBeenCalledWith(
-      expect.stringContaining('INSERT INTO order_items'),
-      [7, 1, 2, 0, 'Bière', 3, 'Boissons']
-    );
+    expect(mockRun).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO order_items'), [
+      7,
+      1,
+      2,
+      0,
+      'Bière',
+      3,
+      'Boissons',
+    ]);
   });
 
   it('should reject a discount that is not a whole number of units (D-010)', async () => {
@@ -252,10 +264,15 @@ describe('OrderService (unit)', () => {
 
     await service.createOrder(cart);
 
-    expect(mockRun).toHaveBeenCalledWith(
-      expect.stringContaining('INSERT INTO order_items'),
-      [1, 1, 1, 0, 'A', 10, 'Unknown Category']
-    );
+    expect(mockRun).toHaveBeenCalledWith(expect.stringContaining('INSERT INTO order_items'), [
+      1,
+      1,
+      1,
+      0,
+      'A',
+      10,
+      'Unknown Category',
+    ]);
   });
 
   it('should rollback and throw if db.run fails during order creation', async () => {
@@ -407,9 +424,7 @@ describe('OrderService (unit)', () => {
     });
 
     const insertedPayment = () => {
-      const call = mockRun.mock.calls.find(([sql]) =>
-        String(sql).startsWith('INSERT INTO orders')
-      );
+      const call = mockRun.mock.calls.find(([sql]) => String(sql).startsWith('INSERT INTO orders'));
       return (call?.[1] as unknown[]).slice(1, 3);
     };
 
@@ -451,7 +466,11 @@ describe('OrderService (unit)', () => {
     ])('stores a single mode for %s (D-032)', async (_label, price, payment, expected) => {
       mockGet.mockResolvedValue({ name: 'Retour Eco-cup', price, category_name: 'Consigne' });
       const refundCart = [
-        { product: { id: 2, name: 'Retour Eco-cup', price, categoryId: 1 }, quantity: 1, discountedAmount: 0 },
+        {
+          product: { id: 2, name: 'Retour Eco-cup', price, categoryId: 1 },
+          quantity: 1,
+          discountedAmount: 0,
+        },
       ];
       await new OrderService('EUR').createOrder(refundCart, payment);
       expect(insertedPayment()).toEqual(expected);
@@ -460,7 +479,11 @@ describe('OrderService (unit)', () => {
     it('rejects two modes for a negative total (D-032)', async () => {
       mockGet.mockResolvedValue({ name: 'Retour Eco-cup', price: -100, category_name: 'Consigne' });
       const refundCart = [
-        { product: { id: 2, name: 'Retour Eco-cup', price: -100, categoryId: 1 }, quantity: 1, discountedAmount: 0 },
+        {
+          product: { id: 2, name: 'Retour Eco-cup', price: -100, categoryId: 1 },
+          quantity: 1,
+          discountedAmount: 0,
+        },
       ];
       await expect(
         new OrderService('EUR').createOrder(refundCart, { cashAmount: -50, cardAmount: -50 })

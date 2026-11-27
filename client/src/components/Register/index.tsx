@@ -6,8 +6,10 @@ import {
   IconHistory,
   IconInfoCircle,
   IconLock,
+  IconLogout,
   IconPencil,
   IconSettings,
+  IconUser,
 } from '@tabler/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +27,7 @@ import { getClientName } from '../../config/client';
 import BrandLogo from '../BrandLogo';
 import CashDayModal from '../CashDay';
 import CashDayIndicator from '../CashDay/CashDayIndicator';
+import { useAuth } from '../../hooks/useAuth';
 import classes from './Register.module.css';
 
 // Layout per mode: docs/design/spacing-layout.md. Header: docs/design/components.md.
@@ -40,6 +43,7 @@ export function Register(): React.ReactElement {
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isCashDayOpen, setIsCashDayOpen] = useState(false);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
+  const { user, logOut } = useAuth();
 
   const cart = (
     <Cart
@@ -155,6 +159,35 @@ export function Register(): React.ReactElement {
           </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown p="xs">
+          {/* D-063 (answer 8 a): who is logged in, information only. */}
+          {user && (
+            <>
+              <Group
+                gap="sm"
+                px="sm"
+                py="xs"
+                wrap="nowrap"
+                align="flex-start"
+                data-testid="current-user"
+              >
+                <IconUser size={20} aria-hidden style={{ flex: 'none', marginTop: 2 }} />
+                <Stack gap={2} style={{ minWidth: 0 }}>
+                  <Text
+                    fz={16}
+                    fw={700}
+                    className={classes.userName}
+                    data-testid="current-user-name"
+                  >
+                    {user.username}
+                  </Text>
+                  <Text fz={14} className={classes.userRole}>
+                    {t(`auth.roles.${user.role}`)}
+                  </Text>
+                </Stack>
+              </Group>
+              <Menu.Divider />
+            </>
+          )}
           <Menu.Item
             onClick={() => dispatch(toggleEditMode())}
             leftSection={<IconPencil size={20} />}
@@ -200,6 +233,15 @@ export function Register(): React.ReactElement {
             style={{ fontSize: 'var(--mantine-font-size-lg)' }}
           >
             {t('about.menu')}
+          </Menu.Item>
+          {/* Last, not red: nothing is lost, the cart stays on the device (point 5). */}
+          <Menu.Item
+            onClick={logOut}
+            leftSection={<IconLogout size={20} />}
+            py="md"
+            style={{ fontSize: 'var(--mantine-font-size-lg)' }}
+          >
+            {t('auth.logout')}
           </Menu.Item>
         </Menu.Dropdown>
       </Menu>

@@ -88,7 +88,7 @@ describe('OrderController', () => {
       );
 
       // Bare array (clients before 1.3.0): passed without payment; the service decides (D-035).
-      expect(mockOrderService.createOrder).toHaveBeenCalledWith(mockRequest.body, undefined);
+      expect(mockOrderService.createOrder).toHaveBeenCalledWith(mockRequest.body, undefined, null);
       expect(mockResponse.status).toHaveBeenCalledWith(201);
       expect(mockResponse.json).toHaveBeenCalledWith(newOrder);
       expect(nextFunction).not.toHaveBeenCalled();
@@ -108,7 +108,7 @@ describe('OrderController', () => {
         nextFunction as NextFunction
       );
 
-      expect(mockOrderService.createOrder).toHaveBeenCalledWith(items, payment);
+      expect(mockOrderService.createOrder).toHaveBeenCalledWith(items, payment, null);
       expect(mockResponse.status).toHaveBeenCalledWith(201);
     });
 
@@ -122,7 +122,21 @@ describe('OrderController', () => {
         nextFunction as NextFunction
       );
 
-      expect(mockOrderService.createOrder).toHaveBeenCalledWith([], null);
+      expect(mockOrderService.createOrder).toHaveBeenCalledWith([], null, null);
+    });
+
+    it('should record the logged-in user as the author (D-063, point 14)', async () => {
+      mockRequest.body = { items: [] };
+      mockResponse.locals = { user: { id: 7 } };
+      mockOrderService.createOrder.mockResolvedValue({ id: 1, cashDayId: 1 });
+
+      await controller.createOrder(
+        mockRequest as Request,
+        mockResponse as Response,
+        nextFunction as NextFunction
+      );
+
+      expect(mockOrderService.createOrder).toHaveBeenCalledWith([], null, 7);
     });
 
     it('should return 400 if cartItems is not an array', async () => {

@@ -37,7 +37,40 @@ jest.mock('../../../hooks/useCashDay', () => ({
   }),
 }));
 
+// D-063: logged-in user and "Se déconnecter" in the ⚙️ menu.
+const mockLogOut = jest.fn();
+let mockUser: { username: string; role: string } | null = null;
+jest.mock('../../../hooks/useAuth', () => ({
+  useAuth: () => ({ user: mockUser, logOut: mockLogOut }),
+}));
+
 const openSettingsMenu = () => fireEvent.click(screen.getByLabelText('edit_mode.toggle'));
+
+describe('Register settings menu: account (D-063, answer 8 a)', () => {
+  afterEach(() => {
+    mockUser = null;
+  });
+
+  it('shows who is logged in, with the role, as information', async () => {
+    mockUser = { username: 'marie.d', role: 'cashier' };
+    render(<Register />);
+    openSettingsMenu();
+    const info = await screen.findByTestId('current-user');
+    expect(info).toHaveTextContent('marie.d');
+    expect(info).toHaveTextContent('auth.roles.cashier');
+    expect(info.closest('[role="menuitem"]')).toBeNull();
+  });
+
+  it('logs out from the last item, without confirmation', async () => {
+    mockUser = { username: 'marie.d', role: 'cashier' };
+    render(<Register />);
+    openSettingsMenu();
+    const items = await screen.findAllByRole('menuitem');
+    expect(items[items.length - 1]).toHaveTextContent('auth.logout');
+    fireEvent.click(items[items.length - 1]);
+    expect(mockLogOut).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe('Register settings menu: currency (D-008)', () => {
   afterEach(() => {

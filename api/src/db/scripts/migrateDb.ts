@@ -5,6 +5,8 @@ import { initInstanceCurrency } from '../currency';
 import { addOrderPaymentColumns } from '../orderPayment';
 import { addCatalogIconColumns } from '../catalogIcons';
 import { migrateCashDays } from '../cashDays';
+import { migrateAuth } from '../auth';
+import { ensureInitialAdmin } from '../accounts';
 
 /**
  * Migration: Add snapshot columns to order_items table
@@ -207,11 +209,54 @@ async function migrateCashDayTables() {
   }
 }
 
+/**
+ * Migration: user accounts (3.0.0, D-063)
+ *
+ * Creates users, roles, role_permissions and sessions, seeds the roles and their permissions,
+ * and adds the nullable author columns orders.created_by, cash_days.opened_by and
+ * cash_days.closed_by (existing rows keep NULL, D-055). Idempotent, in one transaction.
+ * Runs after the cash days step, which creates cash_days.
+ */
+async function migrateAccounts() {
+  logger.info('Checking user accounts...');
+  const db = await openDb();
+  try {
+    const { tablesCreated, columnsAdded } = await migrateAuth(db);
+    logger.info(
+      tablesCreated || columnsAdded.length > 0
+        ? `Added user accounts${columnsAdded.length ? ` and ${columnsAdded.join(', ')}` : ''}`
+        : 'User accounts already exist'
+    );
+  } finally {
+    await db.close();
+  }
+}
+
+/**
+ * First admin (D-063, answers 3 a and 10 a): while the users table is empty, an admin is
+ * created from INITIAL_ADMIN_USERNAME / INITIAL_ADMIN_PASSWORD. Missing or invalid, the
+ * migration fails, which stops the container before the app starts (entrypoint, set -e).
+ * The password is never logged.
+ */
+async function createInitialAdmin() {
+  const db = await openDb();
+  try {
+    const result = await ensureInitialAdmin(db);
+    logger.info(
+      result.created ? 'First admin account created' : 'User accounts: at least one exists'
+    );
+  } finally {
+    await db.close();
+  }
+}
+
 void migrateOrderItems()
   .then(() => migrateInstanceCurrency())
   .then(() => migrateOrderPayments())
   .then(() => migrateCatalogIcons())
   .then(() => migrateCashDayTables())
+  .then(() => migrateAccounts())
+  .then(() => createInitialAdmin())
   .then(() => {
     console.log('='.repeat(50));
     console.log('Migration script completed successfully');
@@ -222,7 +267,8 @@ void migrateOrderItems()
     process.exit(0);
   })
   .catch((error) => {
-    console.error('Migration script failed:', error);
+    // Message only (no stack): the start refusal names the variable to set (D-009).
+    console.error('Migration script failed:', error instanceof Error ? error.message : error);
     logger.error('Migration script failed:', error);
     process.exit(1);
   });

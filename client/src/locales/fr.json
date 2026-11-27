@@ -247,5 +247,23 @@
       "EUR": "Euros (€)"
     },
     "instance_config": "Définie par la configuration de l'instance"
+  },
+  "auth": {
+    "form_label": "Connexion",
+    "username": "Identifiant",
+    "password": "Mot de passe",
+    "submit": "Se connecter",
+    "show_password": "Afficher le mot de passe",
+    "hide_password": "Masquer le mot de passe",
+    "invalid": "Identifiant ou mot de passe incorrect",
+    "too_many": "Trop de tentatives, réessayez dans 1 minute",
+    "expired": "Votre session a expiré, reconnectez-vous",
+    "loading": "Chargement",
+    "logout": "Se déconnecter",
+    "roles": {
+      "admin": "Admin",
+      "manager": "Gérant",
+      "cashier": "Caissier"
+    }
   }
 }

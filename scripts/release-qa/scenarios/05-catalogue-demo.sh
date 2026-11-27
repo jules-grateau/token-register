@@ -4,7 +4,11 @@
 # jamais ce qui existe (D-055). Sourcé par run.sh : les fonctions de lib.sh sont disponibles.
 
 seed_script="$(cd "$DIR/../demo" && { pwd -W 2> /dev/null || pwd; })/seed-eur-catalog.mjs"
-seed() { APP_URL="http://localhost:$1" WAIT_SECONDS=10 node "$seed_script" 2>&1; }
+# Avec le premier admin de l'instance (D-063) ; sur la démo, le compte caissier dédié.
+seed() {
+  APP_URL="http://localhost:$1" LOGIN_USER="$INITIAL_ADMIN_USERNAME" LOGIN_PASS="$INITIAL_ADMIN_PASSWORD" \
+    WAIT_SECONDS=10 node "$seed_script" 2>&1
+}
 snapshot() { qa_sql "$1" 'SELECT c.name, c.icon, p.name, p.price, p.icon FROM categories c LEFT JOIN products p ON p.category_id = c.id ORDER BY c.id, p.id'; }
 
 # 1. Base neuve en euros : le catalogue est créé, au centime, avec une consigne négative.

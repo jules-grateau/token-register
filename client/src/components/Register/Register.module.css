@@ -52,3 +52,13 @@
   color: var(--color-text);
   border-color: var(--color-primary);
 }
+
+/* Logged-in user, head of the ⚙️ menu (D-063): a long name wraps, never truncated. */
+.userName {
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.userRole {
+  color: var(--color-text-2);
+}
