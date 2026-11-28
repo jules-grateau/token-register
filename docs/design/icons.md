@@ -110,6 +110,13 @@ Un produit sans icône affiche son **initiale** (règle de la pastille ci-dessus
 | Se connecter / Se déconnecter (D-063)           | `IconLogin` / `IconLogout`                                                    | `--color-text` (sur encre : texte du bouton)             |
 | Utilisateur connecté (menu ⚙️)                  | `IconUser`                                                                    | `--color-text`                                           |
 | Afficher / masquer le mot de passe              | `IconEye` / `IconEyeOff`                                                      | `--color-text`                                           |
+| Comptes (menu ⚙️, admin, D-064)                 | `IconUsers`                                                                   | `--color-text`                                           |
+| Nouveau compte                                  | `IconUserPlus`                                                                | texte du bouton                                          |
+| Changer le rôle                                 | `IconUserCog`                                                                 | `--color-text`                                           |
+| Réinitialiser / changer le mot de passe         | `IconKey`                                                                     | `--color-text` (sur encre : texte du bouton)             |
+| Désactiver un compte                            | `IconUserOff`                                                                 | `--color-danger` (bouton `light` rouge)                  |
+| Réactiver un compte                             | `IconUserCheck`                                                               | texte du bouton (encre)                                  |
+| Compte désactivé (badge)                        | `IconBan`                                                                     | `--color-text`                                           |
 | Thème clair / sombre                            | `IconSun` / `IconMoon` (état courant, avec libellé)                           | `--color-text`                                           |
 | Consigne (pastille)                             | `IconRecycle`                                                                 | `--color-danger`                                         |
 

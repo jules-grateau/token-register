@@ -45,6 +45,15 @@ const authSlice = createSlice({
       state.user = null;
       state.notice = 'expired';
     },
+    /** D-064: the password was changed; the API sends the user back (temporary flag cleared). */
+    passwordChanged: (state, action: PayloadAction<AuthUserType>) => {
+      if (state.status !== 'authenticated') return;
+      state.user = action.payload;
+    },
+    /** D-064: a request got 403 PASSWORD_CHANGE_REQUIRED (password reset meanwhile). */
+    passwordChangeRequired: (state) => {
+      if (state.status === 'authenticated' && state.user) state.user.mustChangePassword = true;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -60,10 +69,13 @@ const authSlice = createSlice({
   },
 });
 
-export const { loggedIn, sessionExpired } = authSlice.actions;
+export const { loggedIn, sessionExpired, passwordChanged, passwordChangeRequired } =
+  authSlice.actions;
 export const authReducer = authSlice.reducer;
 
 type WithAuth = { auth: AuthState };
 export const selectAuthStatus = (state: WithAuth) => state.auth.status;
 export const selectAuthUser = (state: WithAuth) => state.auth.user;
 export const selectAuthNotice = (state: WithAuth) => state.auth.notice;
+export const selectMustChangePassword = (state: WithAuth) =>
+  state.auth.user?.mustChangePassword === true;

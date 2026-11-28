@@ -88,7 +88,19 @@ export type OrderType = {
  * - FORBIDDEN: the account's role lacks the permission of the route: HTTP 403.
  * - ORIGIN_REFUSED: a write request sent from another site (Origin header): HTTP 403.
  * - INVALID_CREDENTIALS: wrong username or password, or disabled account (same answer): 401.
- * - TOO_MANY_ATTEMPTS: 5 failed logins for this username and IP, wait 1 minute: HTTP 429.
+ * - TOO_MANY_ATTEMPTS: 5 failed logins for this username and IP, wait 1 minute: HTTP 429. Also
+ *   5 wrong current passwords for this account and IP on POST /auth/password (D-064).
+ * Accounts and passwords (D-064):
+ * - PASSWORD_CHANGE_REQUIRED: the password is temporary; everything but GET /auth/me,
+ *   POST /auth/logout and POST /auth/password answers 403 until it is changed.
+ * - USERNAME_INVALID / PASSWORD_INVALID / ROLE_INVALID: the value breaks the rules (400).
+ * - USERNAME_TAKEN: another account has this username, case ignored (409).
+ * - SELF_ACCOUNT_CHANGE: an admin cannot deactivate nor change the role of their own account.
+ * - SELF_PASSWORD_RESET: an admin cannot reset their own password from the accounts (409).
+ * - LAST_ACTIVE_ADMIN: the change would leave no active admin (409).
+ * - ACCOUNT_DISABLED: the password of a disabled account cannot be reset (409).
+ * - WRONG_PASSWORD: the current password given to POST /auth/password is wrong (400).
+ * - SAME_PASSWORD: the new password is the current (or temporary) one (400).
  */
 export type ApiErrorCode =
   | 'PAYMENT_REQUIRED'
@@ -100,7 +112,18 @@ export type ApiErrorCode =
   | 'FORBIDDEN'
   | 'ORIGIN_REFUSED'
   | 'INVALID_CREDENTIALS'
-  | 'TOO_MANY_ATTEMPTS';
+  | 'TOO_MANY_ATTEMPTS'
+  | 'PASSWORD_CHANGE_REQUIRED'
+  | 'USERNAME_INVALID'
+  | 'PASSWORD_INVALID'
+  | 'ROLE_INVALID'
+  | 'USERNAME_TAKEN'
+  | 'SELF_ACCOUNT_CHANGE'
+  | 'SELF_PASSWORD_RESET'
+  | 'LAST_ACTIVE_ADMIN'
+  | 'ACCOUNT_DISABLED'
+  | 'WRONG_PASSWORD'
+  | 'SAME_PASSWORD';
 
 /** Body of a successful POST /orders: the new order and the cash day it belongs to (D-061). */
 export type CreateOrderResponseType = {
@@ -195,7 +218,10 @@ export type AuthUserType = {
   username: string;
   role: UserRole;
   permissions: Permission[];
-  /** Set by an admin reset (temporary password): to be changed at the next login (PR 2). */
+  /**
+   * Temporary password (set by the admin at the creation or at a reset, D-064): to be changed
+   * before anything else; the API refuses the rest with PASSWORD_CHANGE_REQUIRED.
+   */
   mustChangePassword: boolean;
 };
 
@@ -215,4 +241,40 @@ export type TooManyAttemptsResponseType = {
   error: string;
   code: 'TOO_MANY_ATTEMPTS';
   retryAfterSeconds: number;
+};
+
+/**
+ * An account, as listed on the admin screen "Comptes" (D-064). Never any password nor hash.
+ * GET /users: active accounts first, then by username (case ignored).
+ */
+export type UserAccountType = {
+  id: number;
+  username: string;
+  role: UserRole;
+  active: boolean;
+  mustChangePassword: boolean;
+};
+
+/** Body of POST /users. The password is temporary: changed at the first login (D-064). */
+export type CreateUserRequestType = {
+  username: string;
+  password: string;
+  role: UserRole;
+};
+
+/** Body of PATCH /users/:id: the role, or the state (deactivate / reactivate). */
+export type UpdateUserRequestType = {
+  role?: UserRole;
+  active?: boolean;
+};
+
+/** Body of POST /users/:id/reset-password: the temporary password typed by the admin. */
+export type ResetPasswordRequestType = {
+  password: string;
+};
+
+/** Body of POST /auth/password: one's own password (D-064). Answer: AuthResponseType. */
+export type ChangePasswordRequestType = {
+  currentPassword: string;
+  newPassword: string;
 };

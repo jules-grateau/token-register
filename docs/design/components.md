@@ -24,7 +24,8 @@ Le **nom de l'association est le titre** ; le logo et « Caisse Claire » resten
 **Menu réglages** (⚙️, `Menu` ou page) : voir « Bascule clair/sombre » et « À propos » plus bas ; éléments `py="md"` (16 px), icône + texte.
 
 - **Utilisateur connecté** (D-063) : en tête, ligne d'information non cliquable : `IconUser` 20 px, nom 16 / 700 `--color-text`, rôle en texte en dessous 14 `--color-text-2` (« Caissier »). Un nom long passe à la ligne, jamais tronqué. Un `Menu.Divider` la sépare du reste.
-- **« Se déconnecter »** : dernière entrée, après « À propos ». `py="md"`, `IconLogout` 20 px, `--color-text`, pas de rouge (non destructif : le panier est conservé), sans confirmation.
+- **« Se déconnecter »** : dernière entrée, après « Changer mon mot de passe ». `py="md"`, `IconLogout` 20 px, `--color-text`, pas de rouge (non destructif : le panier est conservé), sans confirmation.
+- **Ordre** (D-064) : utilisateur, « Comptes » (admin seulement, `IconUsers` 20), mode édition, « Journée de caisse », thème, monnaie, « À propos », « Changer mon mot de passe » (`IconKey` 20), « Se déconnecter ».
 
 **Mode édition** (tous modes) : l'icône historique disparaît ; un `Button` « Terminer » (`leftSection={<IconCheck size={20} />}`, encre filled → texte `--color-on-primary`, `h={44}`, `radius={14}`) apparaît à gauche des réglages et quitte le mode édition en 1 toucher ; bordure basse de l'en-tête 2 px `--color-text`. En tablette/desktop, ajouter avant le bouton un `Badge size="lg"` « Édition » : clair fond `--color-primary` texte `--color-on-primary`, sombre fond `--color-surface` contour 1 px `--color-primary` texte `--color-text`, `variant` custom, `tt="none"`. Le texte du bouton et du badge porte l'information, pas la couleur seule.
 
@@ -43,6 +44,41 @@ D-063. Aucun nouveau token ni nouvelle couleur ; clair et sombre.
   - Session expirée (réponse 7 a) : « Votre session a expiré, reconnectez-vous », même bloc en ton neutre : `IconInfoCircle`, fond `--color-surface-2`, contour `--color-border`, `role="status"`.
 - **Chargement initial** : pendant `GET /auth/me`, écran neutre `--color-bg` avec le logo. La caisse n'apparaît jamais avant d'être remplacée par la connexion.
 - **Libellés** : clés `auth.*` de `fr.json` / `en.json`.
+
+## Comptes — `Accounts`
+
+D-064, admin seulement. Aucun nouveau token ni nouvelle couleur.
+
+- **Conteneur** : comme « Journée de caisse » : modale `fullScreen` sur téléphone, `size="lg" centered` sinon, fond `--color-bg`. La liste défile seule ; « Nouveau compte » (encre, `h={56}`, `IconUserPlus` 22) reste en pied, `padding-bottom` avec `env(safe-area-inset-bottom)`.
+- **Carte** : `Card withBorder radius="lg"`, `--color-surface` (`--shadow-card` en clair). Nom 16 / 700 `--color-text`, passe à la ligne (`overflow-wrap: anywhere`, 32 caractères au plus), rôle en texte dessous 14 `--color-text-2`. Badges `variant="default" tt="none"` : « Vous », et « Désactivé » avec `IconBan` 16 (jamais le rouge seul). Compte désactivé : carte `--color-surface-2`, nom toujours `--color-text`, sans opacité réduite.
+- **Tri** : actifs d'abord, puis par nom (casse ignorée), trié par l'API.
+- **Actions** : boutons visibles, `h={44}`, icône + texte, `aria-label` avec le nom du compte (« Désactiver alice »). « Changer le rôle » (`IconUserCog`), « Réinitialiser le mot de passe » (`IconKey`), « Désactiver » (`IconUserOff`, `color="red" variant="light"`), « Réactiver » (`IconUserCheck`, encre). Une action impossible n'est pas rendue :
+  - carte « Vous » : aucune action, ligne d'aide 14 `--color-text-2` vers ⚙️ « Changer mon mot de passe » ;
+  - dernier admin actif : ni « Désactiver » ni le rôle, ligne d'aide « Dernier administrateur actif » ;
+  - compte désactivé : « Réactiver » et le rôle, pas de réinitialisation (réponse 13 b).
+- **Rôle** : petite modale centrée, `Radio.Group` en colonne. Le toucher applique le rôle, sans confirmation ; toast de succès ; un refus (409) dans un toast d'erreur.
+- **Désactivation** : `ConfirmationModal` D-050, « Annuler » à gauche, « Désactiver » rouge à droite, texte avec le nom et la fermeture des sessions, boutons `loading` pendant l'appel. La réactivation se fait d'un toucher.
+- **Nouveau compte** : « Identifiant » (`autocomplete="off"`, aide « 3 à 32 caractères : lettres, chiffres, . _ - »), « Mot de passe » (`new-password`, aide « 6 caractères au moins », œil) avec une ligne qui dit qu'il est temporaire, « Rôle » en `Radio` sans présélection. Bouton « Créer le compte » encre `h={56}` `fullWidth` 18 / 800. Erreurs écrites sous le champ (`IconAlertTriangle` + texte), « Cet identifiant est déjà pris » sous l'identifiant. Fermeture d'un formulaire modifié : D-052.
+- **Réinitialisation** : le nom du compte, un champ « Mot de passe temporaire » avec l'œil, le texte « Le compte devra choisir un nouveau mot de passe à sa prochaine connexion. Ses sessions seront fermées. » avant le bouton « Réinitialiser » (encre `h={56}`). Le toast ne répète jamais le mot de passe.
+- **Libellés** : clés `accounts.*`.
+
+## Changer mon mot de passe — `ChangePassword`
+
+D-064. Modale depuis ⚙️ (plein écran sur téléphone, centrée sinon).
+
+- Trois champs, même base que `Login` (hauteur 48, texte 16, libellés au-dessus, œil 44 × 44 indépendant par champ, masqués par défaut) : « Mot de passe actuel » (`current-password`), « Nouveau mot de passe » (`new-password`, aide « 6 caractères au moins ») et « Confirmer » (`new-password`).
+- Erreurs sous le champ, en texte + `IconAlertTriangle` : longueur, « Le nouveau mot de passe doit être différent de l'actuel », « Les deux mots de passe ne correspondent pas » (sous « Confirmer »).
+- Mot de passe actuel erroné : bloc `role="alert"` générique en haut, seul ce champ est vidé et reprend le focus. « Trop de tentatives, réessayez dans 1 minute » : bouton désactivé pendant l'attente.
+- Bouton « Enregistrer » encre `h={56}` `fullWidth`, `IconCheck` 22. Succès : toast « Mot de passe modifié », la modale se ferme, la session reste ouverte.
+
+## Mot de passe temporaire — `ForcedPasswordChange`
+
+D-064. Après une création ou une réinitialisation par l'admin, à la place de la caisse (aussi après un rechargement : `GET /auth/me` donne le drapeau).
+
+- Mise en page de `Login` (plein écran, bloc en haut en portrait, deux colonnes en paysage). Ni croix ni Échap ; la caisse n'apparaît jamais derrière.
+- Bloc neutre `role="status"` (`IconInfoCircle`, `--color-surface-2`) : « Votre mot de passe est temporaire. Choisissez-en un nouveau pour continuer. »
+- Même formulaire que « Changer mon mot de passe », premier champ « Mot de passe temporaire », bouton « Enregistrer et continuer ». Au succès, la caisse s'ouvre directement.
+- « Se déconnecter » en `Button variant="subtle" h={44}` `IconLogout`, toujours visible, sans confirmation.
 
 ## Onglets catégorie — `Catalog/index.tsx`
 

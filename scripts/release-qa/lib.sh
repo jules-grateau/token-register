@@ -177,6 +177,17 @@ qa_status() {
   curl "${args[@]}" "http://localhost:$port/api$route"
 }
 
+# qa_send <port> <METHOD> <route> '<js expression of the body>' [jar]: like qa_status, but the
+# JSON body is built by Node from the environment and sent on stdin, so that a password never
+# appears on a command line (D-064). Prints « <body> <HTTP code> ». Example:
+#   QA_PASS="$pass" qa_send 3191 POST /users/2/reset-password '({ password: process.env.QA_PASS })'
+qa_send() {
+  local port="$1" method="$2" route="$3" expr="$4" jar="${5:-$(qa_jar "$1")}"
+  node -e 'process.stdout.write(JSON.stringify(eval(process.argv[1])))' "$expr" |
+    curl -sS -X "$method" -w ' %{http_code}' -b "$jar" -H 'Content-Type: application/json' \
+      --data-binary @- "http://localhost:$port/api$route"
+}
+
 # qa_json '<js expression on d>': reads JSON on stdin, prints the expression's value (strings
 # unquoted). Example: qa_api 3101 GET /categories | qa_json 'd.length'
 qa_json() {

@@ -264,6 +264,91 @@
       "admin": "Admin",
       "manager": "Manager",
       "cashier": "Cashier"
+    },
+    "change_password": {
+      "menu": "Change my password",
+      "title": "Change my password",
+      "current": "Current password",
+      "temporary": "Temporary password",
+      "new": "New password",
+      "confirm": "Confirm",
+      "new_help": "At least 6 characters",
+      "submit": "Save",
+      "forced_submit": "Save and continue",
+      "forced_label": "New password",
+      "forced_notice": "Your password is temporary. Choose a new one to continue.",
+      "mismatch": "The two passwords do not match",
+      "too_short": "The password must be at least 6 characters long",
+      "too_long": "The password must be at most 256 characters long",
+      "wrong_current": "Incorrect current password",
+      "wrong_temporary": "Incorrect temporary password",
+      "same": "The new password must differ from the current one",
+      "same_temporary": "The new password must differ from the temporary one",
+      "done": "Password changed"
+    }
+  },
+  "accounts": {
+    "menu": "Accounts",
+    "title": "Accounts",
+    "list_label": "List of accounts",
+    "you": "You",
+    "disabled": "Disabled",
+    "new": "New account",
+    "change_role": "Change the role",
+    "reset_password": "Reset the password",
+    "deactivate": "Deactivate",
+    "reactivate": "Reactivate",
+    "aria": {
+      "change_role": "Change the role of {{name}}",
+      "reset_password": "Reset the password of {{name}}",
+      "deactivate": "Deactivate {{name}}",
+      "reactivate": "Reactivate {{name}}"
+    },
+    "self_help": "Your password is changed from ⚙️ “Change my password”.",
+    "last_admin_help": "Last active administrator",
+    "load_error": "The accounts could not be loaded.",
+    "retry": "Try again",
+    "create": {
+      "title": "New account",
+      "username": "Username",
+      "username_help": "3 to 32 characters: letters, digits, . _ -",
+      "password": "Password",
+      "password_help": "At least 6 characters",
+      "temporary_help": "This password is temporary: the account will choose a new one at its first login.",
+      "role": "Role",
+      "role_required": "Choose a role",
+      "submit": "Create the account",
+      "done": "Account {{name}} created"
+    },
+    "reset": {
+      "title": "Reset the password",
+      "account": "Account: {{name}}",
+      "password": "Temporary password",
+      "help": "The account will have to choose a new password at its next login. Its sessions will be closed.",
+      "submit": "Reset",
+      "done": "Password of {{name}} reset"
+    },
+    "role": {
+      "title": "Role of {{name}}",
+      "label": "Role",
+      "done": "Role of {{name}}: {{role}}"
+    },
+    "deactivate_confirm": {
+      "title": "Deactivate {{name}}?",
+      "text": "The account {{name}} will no longer be able to log in, and its open sessions will be closed. It can be reactivated."
+    },
+    "deactivated": "Account {{name}} deactivated",
+    "reactivated": "Account {{name}} reactivated",
+    "errors": {
+      "USERNAME_TAKEN": "This username is already taken",
+      "USERNAME_INVALID": "3 to 32 characters: letters, digits, . _ -",
+      "PASSWORD_INVALID": "The password must be 6 to 256 characters long",
+      "ROLE_INVALID": "Choose a role",
+      "SELF_ACCOUNT_CHANGE": "You can neither deactivate nor change the role of your own account",
+      "SELF_PASSWORD_RESET": "Your password is changed from ⚙️ “Change my password”",
+      "LAST_ACTIVE_ADMIN": "At least one active administrator must remain",
+      "ACCOUNT_DISABLED": "This account is disabled: reactivate it first",
+      "generic": "The action could not be saved. Try again."
     }
   }
 }

@@ -49,8 +49,19 @@ const unauthenticated = (res: Response) =>
   res.status(401).json({ error: 'Authentication required.', code: 'UNAUTHENTICATED' });
 
 /**
+ * D-064: with a temporary password, only these routes (method + exact path) are allowed; any
+ * other one, present or future, answers 403 PASSWORD_CHANGE_REQUIRED (fails closed).
+ */
+export const PASSWORD_CHANGE_ALLOWED_ROUTES: ReadonlySet<string> = new Set([
+  'GET /api/auth/me',
+  'POST /api/auth/logout',
+  'POST /api/auth/password',
+]);
+
+/**
  * Every /api route goes through here, except POST /api/auth/login: a future route is protected
- * by default. The session is read from the database on each request (point 15).
+ * by default. The session is read from the database on each request (point 15). A temporary
+ * password (D-064) blocks everything but PASSWORD_CHANGE_ALLOWED_ROUTES, before any permission.
  */
 export function requireAuth(authService: AuthService, options: CookieOptions): RequestHandler {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -64,6 +75,16 @@ export function requireAuth(authService: AuthService, options: CookieOptions): R
       res.locals.user = session.user;
       // Sliding expiry: the browser's copy lasts 7 days from the last use too.
       if (session.touched) setSessionCookie(res, token, options);
+      if (
+        session.user.mustChangePassword &&
+        !PASSWORD_CHANGE_ALLOWED_ROUTES.has(`${req.method} ${req.baseUrl}${req.path}`)
+      ) {
+        res.status(403).json({
+          error: 'Change your temporary password first.',
+          code: 'PASSWORD_CHANGE_REQUIRED',
+        });
+        return;
+      }
       next();
     } catch (error) {
       next(error);

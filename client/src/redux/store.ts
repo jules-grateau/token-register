@@ -5,6 +5,7 @@ import { cartReducer, type CartState } from './cartSlice';
 import { ordersApi } from '../services/orders';
 import { categoriesApi } from '../services/categories';
 import { cashDaysApi } from '../services/cashDays';
+import { usersApi } from '../services/users';
 import { loadCartFromLocalStorage } from '../utils/localStorageCart';
 import { selectedCategoryReducer } from './selectedCategorySlice';
 import { editModeReducer } from './editModeSlice';
@@ -22,6 +23,7 @@ export const store = configureStore({
     [ordersApi.reducerPath]: ordersApi.reducer,
     [categoriesApi.reducerPath]: categoriesApi.reducer,
     [cashDaysApi.reducerPath]: cashDaysApi.reducer,
+    [usersApi.reducerPath]: usersApi.reducer,
     cart: cartReducer,
     selectedCategory: selectedCategoryReducer,
     editMode: editModeReducer,
@@ -34,6 +36,7 @@ export const store = configureStore({
       .concat(ordersApi.middleware)
       .concat(categoriesApi.middleware)
       .concat(cashDaysApi.middleware)
+      .concat(usersApi.middleware)
       .concat(listenerMiddleware.middleware),
 });
 
@@ -45,6 +48,7 @@ export interface RootState {
   [ordersApi.reducerPath]: ReturnType<typeof ordersApi.reducer>;
   [categoriesApi.reducerPath]: ReturnType<typeof categoriesApi.reducer>;
   [cashDaysApi.reducerPath]: ReturnType<typeof cashDaysApi.reducer>;
+  [usersApi.reducerPath]: ReturnType<typeof usersApi.reducer>;
   cart: CartState;
   editMode: { isEditMode: boolean };
   auth: AuthState;

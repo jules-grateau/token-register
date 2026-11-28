@@ -5,11 +5,13 @@ import {
   IconCheck,
   IconHistory,
   IconInfoCircle,
+  IconKey,
   IconLock,
   IconLogout,
   IconPencil,
   IconSettings,
   IconUser,
+  IconUsers,
 } from '@tabler/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +30,8 @@ import BrandLogo from '../BrandLogo';
 import CashDayModal from '../CashDay';
 import CashDayIndicator from '../CashDay/CashDayIndicator';
 import { useAuth } from '../../hooks/useAuth';
+import AccountsModal from '../Accounts';
+import ChangePasswordModal from '../ChangePassword';
 import classes from './Register.module.css';
 
 // Layout per mode: docs/design/spacing-layout.md. Header: docs/design/components.md.
@@ -44,6 +48,9 @@ export function Register(): React.ReactElement {
   const [isCashDayOpen, setIsCashDayOpen] = useState(false);
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const { user, logOut } = useAuth();
+  const [isAccountsOpen, setIsAccountsOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const canManageAccounts = user?.permissions?.includes('users') ?? false;
 
   const cart = (
     <Cart
@@ -188,6 +195,17 @@ export function Register(): React.ReactElement {
               <Menu.Divider />
             </>
           )}
+          {/* D-064 (answer 1 a): account management, admin only (permission "users"). */}
+          {canManageAccounts && (
+            <Menu.Item
+              onClick={() => setIsAccountsOpen(true)}
+              leftSection={<IconUsers size={20} />}
+              py="md"
+              style={{ fontSize: 'var(--mantine-font-size-lg)' }}
+            >
+              {t('accounts.menu')}
+            </Menu.Item>
+          )}
           <Menu.Item
             onClick={() => dispatch(toggleEditMode())}
             leftSection={<IconPencil size={20} />}
@@ -234,6 +252,17 @@ export function Register(): React.ReactElement {
           >
             {t('about.menu')}
           </Menu.Item>
+          {/* D-064: one's own password, the current one first. */}
+          {user && (
+            <Menu.Item
+              onClick={() => setIsChangePasswordOpen(true)}
+              leftSection={<IconKey size={20} />}
+              py="md"
+              style={{ fontSize: 'var(--mantine-font-size-lg)' }}
+            >
+              {t('auth.change_password.menu')}
+            </Menu.Item>
+          )}
           <Menu.Divider />
           {/* Last, not red: nothing is lost, the cart stays on the device (point 5). */}
           <Menu.Item
@@ -308,6 +337,13 @@ export function Register(): React.ReactElement {
       />
       <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
       <CashDayModal isOpen={isCashDayOpen} onClose={() => setIsCashDayOpen(false)} />
+      {canManageAccounts && (
+        <AccountsModal isOpen={isAccountsOpen} onClose={() => setIsAccountsOpen(false)} />
+      )}
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </Flex>
   );
 }

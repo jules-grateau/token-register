@@ -1,7 +1,14 @@
 import { createHash, randomBytes } from 'crypto';
 import type { AuthUserType, Permission, UserRole } from 'shared-ts';
 import { openDb } from '../db';
-import { PASSWORD_MAX_LENGTH, verifyAgainstDummy, verifyPassword } from '../utils/password';
+import { rollbackQuietly } from '../db/cashDays';
+import {
+  hashPassword,
+  PASSWORD_MAX_LENGTH,
+  validatePassword,
+  verifyAgainstDummy,
+  verifyPassword,
+} from '../utils/password';
 import { normalizeUsername, usernameKey } from '../utils/username';
 import { IP_LIMITS, LoginRateLimiter, type LimiterState } from '../utils/loginRateLimiter';
 import { AppError } from '../types/errors';
@@ -22,6 +29,21 @@ export class TooManyAttemptsError extends AppError {
   readonly code = 'TOO_MANY_ATTEMPTS';
   constructor(public readonly retryAfterSeconds: number) {
     super('Too many failed attempts: try again in 1 minute.');
+  }
+}
+
+/** POST /auth/password: the current password is wrong (D-064). Generic message. */
+export class WrongPasswordError extends AppError {
+  readonly code = 'WRONG_PASSWORD';
+}
+
+/** POST /auth/password: the new password breaks a rule (length, or same as the current one). */
+export class NewPasswordError extends AppError {
+  constructor(
+    message: string,
+    readonly code: 'PASSWORD_INVALID' | 'SAME_PASSWORD'
+  ) {
+    super(message);
   }
 }
 
@@ -67,7 +89,10 @@ export class AuthService {
   constructor(
     private readonly limiter: LoginRateLimiter = new LoginRateLimiter(),
     private readonly now: () => number = Date.now,
-    private readonly ipLimiter: LoginRateLimiter = new LoginRateLimiter(Date.now, IP_LIMITS)
+    private readonly ipLimiter: LoginRateLimiter = new LoginRateLimiter(Date.now, IP_LIMITS),
+    // D-064: wrong current passwords, per account id and IP, apart from the login limiters (a
+    // stolen session cannot guess the password; a failed change never blocks a login).
+    private readonly passwordLimiter: LoginRateLimiter = new LoginRateLimiter()
   ) {}
 
   /**
@@ -150,6 +175,81 @@ export class AuthService {
         touched = true;
       }
       return { user: toUser(row), touched };
+    } finally {
+      await db.close();
+    }
+  }
+
+  /**
+   * One's own password (D-063 point 9, D-064). Also the way out of a temporary password.
+   * - The current password is checked first; wrong: WrongPasswordError, counted per account and
+   *   IP (5 failures: TooManyAttemptsError, 1 minute). Over 256 characters: wrong, no scrypt.
+   * - New password: 6 to 256 characters, different from the current one (answer 5 a).
+   * - In one transaction: new hash, must_change_password = 0, and every other session of the
+   *   account closed; the session in use is kept (answer 4 a).
+   */
+  async changePassword(
+    userId: number,
+    sessionToken: string,
+    currentPassword: unknown,
+    newPassword: unknown,
+    ip: string | undefined
+  ): Promise<AuthUserType> {
+    const key = LoginRateLimiter.key(String(userId), ip);
+    const state = this.passwordLimiter.check(key);
+    if (state.blocked) throw new TooManyAttemptsError(state.retryAfterSeconds);
+
+    const current = typeof currentPassword === 'string' ? currentPassword : '';
+    const db = await openDb();
+    try {
+      const row = await db.get<{ password_hash: string }>(
+        'SELECT password_hash FROM users WHERE id = ? AND active = 1',
+        [userId]
+      );
+      const valid =
+        !!row && current.length <= PASSWORD_MAX_LENGTH
+          ? await verifyPassword(current, row.password_hash)
+          : false;
+      if (!valid) {
+        const after = this.passwordLimiter.recordFailure(key);
+        if (after.blocked) throw new TooManyAttemptsError(after.retryAfterSeconds);
+        throw new WrongPasswordError('The current password is wrong.');
+      }
+      this.passwordLimiter.reset(key);
+
+      const newError = validatePassword(newPassword);
+      if (newError) throw new NewPasswordError(newError, 'PASSWORD_INVALID');
+      if (newPassword === current) {
+        throw new NewPasswordError(
+          'The new password must differ from the current one.',
+          'SAME_PASSWORD'
+        );
+      }
+      const hash = await hashPassword(newPassword as string);
+
+      await db.exec('BEGIN IMMEDIATE');
+      try {
+        await db.run(
+          'UPDATE users SET password_hash = ?, must_change_password = 0, updated_at = ? WHERE id = ?',
+          [hash, this.now(), userId]
+        );
+        await db.run('DELETE FROM sessions WHERE user_id = ? AND token_hash <> ?', [
+          userId,
+          hashToken(sessionToken),
+        ]);
+        const user = await db.get<UserRow>(
+          `SELECT id, username, role, must_change_password, ${PERMISSIONS_SQL} AS permissions
+           FROM users WHERE id = ?`,
+          [userId]
+        );
+        await db.exec('COMMIT');
+        if (!user) throw new Error('Account not found after the password change.');
+        logger.info({ userId }, 'Password changed');
+        return toUser(user);
+      } catch (error) {
+        await rollbackQuietly(db);
+        throw error;
+      }
     } finally {
       await db.close();
     }
