@@ -210,7 +210,7 @@ export class AuthService {
         !!row && current.length <= PASSWORD_MAX_LENGTH
           ? await verifyPassword(current, row.password_hash)
           : false;
-      if (!valid) {
+      if (!valid || !row) {
         const after = this.passwordLimiter.recordFailure(key);
         if (after.blocked) throw new TooManyAttemptsError(after.retryAfterSeconds);
         throw new WrongPasswordError('The current password is wrong.');
@@ -229,10 +229,14 @@ export class AuthService {
 
       await db.exec('BEGIN IMMEDIATE');
       try {
-        await db.run(
-          'UPDATE users SET password_hash = ?, must_change_password = 0, updated_at = ? WHERE id = ?',
-          [hash, this.now(), userId]
+        // Only if nothing moved since the check above (scrypt takes a while): an admin reset or a
+        // deactivation in between wins, the old password must not overwrite it.
+        const updated = await db.run(
+          `UPDATE users SET password_hash = ?, must_change_password = 0, updated_at = ?
+           WHERE id = ? AND active = 1 AND password_hash = ?`,
+          [hash, this.now(), userId, row.password_hash]
         );
+        if (!updated.changes) throw new WrongPasswordError('The current password is wrong.');
         await db.run('DELETE FROM sessions WHERE user_id = ? AND token_hash <> ?', [
           userId,
           hashToken(sessionToken),

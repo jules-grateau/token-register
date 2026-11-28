@@ -14,6 +14,7 @@ import { migrateAuth } from '../db/auth';
 import { ensureInitialAdmin } from '../db/accounts';
 import { PASSWORD_CHANGE_ALLOWED_ROUTES } from '../middleware/auth';
 import { createTempDbPath } from '../db/scripts/__tests__/dbTestUtils';
+import * as password from '../utils/password';
 
 // Accounts screen and password change (D-064), end to end through HTTP: real SQLite file, real
 // Express app. Every username and password is generated here (public repository).
@@ -479,6 +480,35 @@ describe('own password (answers 4 a and 5 a)', () => {
       body: { currentPassword: fresh.password, newPassword: fresh.password },
     });
     expect(same.body).toMatchObject({ code: 'SAME_PASSWORD' });
+  });
+
+  it('does not overwrite a reset made by an admin while the new password is hashed', async () => {
+    const account = await readyAccount('cashier');
+    const realHash = password.hashPassword;
+    const resetHash = await realHash(secret());
+    const spy = jest.spyOn(password, 'hashPassword').mockImplementationOnce(async (value) => {
+      // An admin sets another password between the check and the write.
+      await withDb((db) =>
+        db.run('UPDATE users SET password_hash = ? WHERE id = ?', [resetHash, account.id])
+      );
+      return realHash(value);
+    });
+    try {
+      const reply = await call('POST', '/api/auth/password', {
+        cookie: account.cookie,
+        body: { currentPassword: account.password, newPassword: secret() },
+      });
+      expect(spy).toHaveBeenCalledTimes(1);
+      expect(reply.body).toMatchObject({ code: 'WRONG_PASSWORD' });
+    } finally {
+      spy.mockRestore();
+    }
+    const stored = await withDb((db) =>
+      db.get<{ password_hash: string }>('SELECT password_hash FROM users WHERE id = ?', [
+        account.id,
+      ])
+    );
+    expect(stored?.password_hash).toBe(resetHash);
   });
 
   it('waits 1 minute after 5 wrong current passwords, without blocking the login', async () => {
