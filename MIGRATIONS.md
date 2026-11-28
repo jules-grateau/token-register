@@ -129,6 +129,35 @@ Rollback: older versions ignore the table and the column, but the deleted orders
 (restore the backup). To drop them (SQLite >= 3.35):
 `DROP INDEX orders_cash_day_id; ALTER TABLE orders DROP COLUMN cash_day_id; DROP TABLE cash_days;`
 
+### User accounts (3.0.0)
+
+**Script**: `api/src/db/scripts/migrateDb.ts` (steps `migrateAccounts` then `createInitialAdmin`,
+run on every start, after the cash days step; logic in `api/src/db/auth.ts` and
+`api/src/db/accounts.ts`). New databases get the same tables from `initDb.ts` (same function).
+**Schema change** (D-063):
+
+- `roles (name)` and `role_permissions (role, permission)`, seeded with `INSERT OR IGNORE`:
+  `admin` (sale, catalog, cash_day, order_delete, users), `manager` and `cashier` (sale, catalog,
+  cash_day, order_delete);
+- `users (id, username COLLATE NOCASE UNIQUE, password_hash, role, active, must_change_password,
+  created_at, updated_at)`: scrypt hash with its salt and cost; `must_change_password` is created
+  now and used by the next version;
+- `sessions (token_hash, user_id, created_at, last_seen_at)` and the index `sessions_user_id`:
+  SHA-256 of the cookie token, expiry 7 days after `last_seen_at`;
+- nullable columns `orders.created_by`, `cash_days.opened_by`, `cash_days.closed_by`
+  (`REFERENCES users (id)`).
+
+**Data**: existing orders and cash days are not modified (D-055): their author stays `NULL`.
+Then, while `users` is empty, the first admin is created from `INITIAL_ADMIN_USERNAME` /
+`INITIAL_ADMIN_PASSWORD`; without them, or with an invalid value, the migration fails and the
+container stops (see deploy/README.md, "User accounts"). Idempotent, in one transaction.
+**API**: every `/api` route needs a session cookie, except `POST /api/auth/login`.
+
+Rollback: older versions ignore the new tables and columns. To drop them (SQLite >= 3.35):
+`ALTER TABLE orders DROP COLUMN created_by; ALTER TABLE cash_days DROP COLUMN opened_by;
+ALTER TABLE cash_days DROP COLUMN closed_by; DROP TABLE sessions; DROP TABLE users;
+DROP TABLE role_permissions; DROP TABLE roles;`. A 2.x image needs `BASIC_AUTH_*` again.
+
 ## Deployment Workflow
 
 ### Development Environment

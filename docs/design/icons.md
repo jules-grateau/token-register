@@ -107,6 +107,9 @@ Un produit sans icône affiche son **initiale** (règle de la pastille ci-dessus
 | Ouvrir / fermer le panier (portrait)            | `IconChevronUp` / `IconChevronDown`                                           | `--color-on-bar` (barre) / `--color-text`                |
 | Monnaie verrouillée                             | `IconLock`                                                                    | `--color-text-2`                                         |
 | À propos                                        | `IconInfoCircle`                                                              | `--color-text`                                           |
+| Se connecter / Se déconnecter (D-063)           | `IconLogin` / `IconLogout`                                                    | `--color-text` (sur encre : texte du bouton)             |
+| Utilisateur connecté (menu ⚙️)                  | `IconUser`                                                                    | `--color-text`                                           |
+| Afficher / masquer le mot de passe              | `IconEye` / `IconEyeOff`                                                      | `--color-text`                                           |
 | Thème clair / sombre                            | `IconSun` / `IconMoon` (état courant, avec libellé)                           | `--color-text`                                           |
 | Consigne (pastille)                             | `IconRecycle`                                                                 | `--color-danger`                                         |
 

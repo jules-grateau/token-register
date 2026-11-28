@@ -18,6 +18,7 @@ import {
 } from '@mantine/core';
 import { Bounce, ToastContainer } from 'react-toastify';
 import { Register } from './components/Register';
+import AuthGate from './components/AuthGate';
 import { useLayoutMode } from './hooks/useLayoutMode';
 import classes from './styles/theme.module.css';
 import { actionIconVars, buttonVars, paginationVars } from './styles/primaryContrast';
@@ -193,7 +194,10 @@ function App() {
           theme="colored"
           transition={Bounce}
         />
-        <Register />
+        {/* D-063: login screen until a session is open. */}
+        <AuthGate>
+          <Register />
+        </AuthGate>
       </div>
     </MantineProvider>
   );

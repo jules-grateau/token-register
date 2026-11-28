@@ -54,9 +54,19 @@ describe('CashDayController (D-061)', () => {
   it('opens a day (201), ignoring the body', async () => {
     cashDays.open.mockResolvedValue(day);
     await call('open');
-    expect(cashDays.open).toHaveBeenCalledWith();
+    expect(cashDays.open).toHaveBeenCalledWith(null);
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(day);
+  });
+
+  it('records who opens and who closes the day (D-063, point 14)', async () => {
+    res.locals = { user: { id: 4 } };
+    cashDays.open.mockResolvedValue(day);
+    cashDays.closeCurrent.mockResolvedValue(day);
+    await call('open');
+    await call('closeCurrent');
+    expect(cashDays.open).toHaveBeenCalledWith(4);
+    expect(cashDays.closeCurrent).toHaveBeenCalledWith(4);
   });
 
   it('answers 409 with its code when a day is already open', async () => {

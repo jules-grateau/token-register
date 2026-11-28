@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import type {
   CashDayType,
   CurrentCashDayResponseType,
@@ -6,6 +6,7 @@ import type {
   PaginationParams,
 } from 'shared-ts';
 import { BASE_API_URL } from '../config';
+import { authBaseQuery } from './baseQuery';
 
 const API_URL = BASE_API_URL + '/cash-days';
 
@@ -16,7 +17,7 @@ const API_URL = BASE_API_URL + '/cash-days';
 export const cashDaysApi = createApi({
   reducerPath: 'cashDaysApi',
   tagTypes: ['CashDay'],
-  baseQuery: fetchBaseQuery({
+  baseQuery: authBaseQuery({
     baseUrl: API_URL,
     credentials: 'include',
     prepareHeaders: (headers) => {

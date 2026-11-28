@@ -10,7 +10,7 @@ The CI never edits that file: it only pushes images and restarts the matching se
 
 **EUR demo** (D-059): a second demo, in euros, redeployed with the token demo on every merge
 into `develop`. Its compose service runs the `:test` image with `CURRENCY=EUR`. Its service
-name, URL and Basic Auth are repository secrets, never written in this repository. After the
+name, URL and login account (D-063) are repository secrets, never written in this repository. After the
 deploy, `scripts/demo/seed-eur-catalog.mjs` gives it a demo catalog **only if it has no
 category and no product at all**; it never modifies what exists (D-055) and refuses an instance
 that is not in euros. The token demo gets no catalog from the CI. If the EUR demo does not
@@ -57,8 +57,10 @@ Create an access token (Account settings → Personal access tokens, _Read & Wri
     (e.g. `token-register-<instance-a> token-register-<instance-b>`)
   - `DEMO_EUR_SERVICE`: compose service of the EUR demo (`:test` image, `CURRENCY=EUR`)
   - `DEMO_EUR_URL`: base URL of the EUR demo (e.g. `https://<eur-demo-host>`)
-  - `DEMO_EUR_BASIC_AUTH_USER`, `DEMO_EUR_BASIC_AUTH_PASS`: its Basic Auth (used by the catalog
-    script after the deploy and by the release smoke check)
+  - `DEMO_EUR_LOGIN_USER`, `DEMO_EUR_LOGIN_PASS`: its dedicated cashier account (3.0.0, D-063;
+    used by the catalog script after the deploy and by the release smoke check)
+  - `DEMO_LOGIN_USER`, `DEMO_LOGIN_PASS`: the dedicated cashier account of the token demo (used by
+    the release smoke check)
 - **Settings → Environments → New environment `production`** → _Required reviewers_: yourself.
   Without it, a merge into `main` restarts the production instances immediately.
 - **Settings → Branches** (recommended): protect `main` and `develop` (require PR + the `test` check).
@@ -177,3 +179,78 @@ gets an error on its next sale until a day is started and the page is reloaded.
 
 A currency conversion also converts the totals announced at the end of each day; going to
 tokens, their cash / card split is cleared, like the orders' (D-036).
+
+## User accounts (3.0.0)
+
+From 3.0.0, the Basic Auth is gone: each person logs in with their own account on the login
+screen of the app (D-063). Roles: **admin**, **manager** (gérant) and **cashier** (caissier). The
+three have every right of today (sale, catalog, cash day, order deletion); only the account
+management (screen of the next version) is for the admin. Rights come from a role → permissions
+table, read again on every request: a new role, or a disabled account, applies at once.
+
+- **First admin**: `INITIAL_ADMIN_USERNAME` / `INITIAL_ADMIN_PASSWORD` on the service, read
+  **only while the database has no account at all**, whether it holds data or not, then ignored
+  (they can be removed afterwards). Without them on such a database, or with an invalid value, the
+  container stops before the app starts, with a message naming the variable in `docker logs`.
+  Username: 3 to 32 characters, letters, digits, `.`, `_` or `-` (case does not matter:
+  `Marie` = `marie`). Password: 6 characters minimum. The password is never written in the logs.
+- **`BASIC_AUTH_USER` / `BASIC_AUTH_PASS`** are no longer read: a warning is logged at startup
+  while they are set. Remove them from `compose.yaml`.
+- **Session**: an httpOnly, `SameSite=Strict` cookie, `Secure` in production (`COOKIE_SECURE=false`
+  only for a local HTTP instance). It ends after 7 days without any request, or at logout
+  ("Se déconnecter" in ⚙️). The cart stays on the device.
+- **`FRONTEND_URL`** must be the URL the app is opened from: a write request sent from another
+  origin is refused (403).
+- **`TRUST_PROXY_HOPS`**: number of reverse proxies in front of the container, **`1` behind
+  Traefik**, `0` by default. It gives the real client IP to the login limiter (5 failures for a
+  username and an IP: 1 minute of wait; 50 failures from one IP, whatever the usernames: 1 minute
+  too). Never more than the real number of proxies: a client could
+  then choose its IP. The failure counts are kept in memory: a restart resets them.
+
+### Before deploying 3.0.0
+
+For **every** instance (production and both demos), in `compose.yaml`:
+
+1. Add `INITIAL_ADMIN_USERNAME` and `INITIAL_ADMIN_PASSWORD` (the admin of that instance).
+2. Add `TRUST_PROXY_HOPS=1` (behind Traefik).
+3. Remove `BASIC_AUTH_USER` and `BASIC_AUTH_PASS`.
+4. Back up the database (the migration only adds tables and empty columns, see MIGRATIONS.md).
+
+For the demos (no public account, D-063): after the deploy, each demo gets a dedicated account
+for the CI, meant to be a **cashier**. The account screen comes with the next version: until then,
+create it with `reset-admin-password` below (it is then an admin), and make it a cashier once
+the account screen is there. Then, in GitHub
+(**Settings → Secrets and variables → Actions**):
+
+- create `DEMO_LOGIN_USER` / `DEMO_LOGIN_PASS` (token demo) and `DEMO_EUR_LOGIN_USER` /
+  `DEMO_EUR_LOGIN_PASS` (EUR demo);
+- delete `DEMO_BASIC_AUTH_USER`, `DEMO_BASIC_AUTH_PASS`, `DEMO_EUR_BASIC_AUTH_USER` and
+  `DEMO_EUR_BASIC_AUTH_PASS`.
+
+A workflow that runs before these secrets exist (catalog of the EUR demo after the deploy, release
+smoke check) fails at the login: create the secrets first, then re-run it once. Do not re-run it
+in a loop: 5 failed logins make that account wait 1 minute.
+
+### Lost admin access: `reset-admin-password`
+
+```sh
+# The new password is read from the environment, never from the command line: type it without
+# echo, then pass the variable by name only.
+read -rs RESET_ADMIN_PASSWORD && export RESET_ADMIN_PASSWORD
+docker compose run --rm --no-deps --entrypoint "" -e RESET_ADMIN_PASSWORD <service> \
+  npm run prod:db:reset-admin-password -- <username>
+unset RESET_ADMIN_PASSWORD
+```
+
+- Existing account (any case): new password, account reactivated and made admin again, all its
+  sessions closed. Unknown username: a new admin account is created.
+- The password is not temporary in this version, and is never printed.
+- Same rules as above (username, 6 characters); nothing is written if they are not met.
+- No restart needed: the next login uses the new password.
+
+### Rollback
+
+The migration is additive (tables `users`, `roles`, `role_permissions`, `sessions`, columns
+`orders.created_by`, `cash_days.opened_by`, `cash_days.closed_by`): a 2.x image starts on a
+migrated database. **But a 2.x image protects the app with `BASIC_AUTH_*` only**: put them back on
+the service before rolling back, otherwise the instance is unprotected.

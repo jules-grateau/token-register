@@ -247,5 +247,23 @@
       "EUR": "Euros (€)"
     },
     "instance_config": "Set by the instance configuration"
+  },
+  "auth": {
+    "form_label": "Log in",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Log in",
+    "show_password": "Show password",
+    "hide_password": "Hide password",
+    "invalid": "Incorrect username or password",
+    "too_many": "Too many attempts, try again in 1 minute",
+    "expired": "Your session has expired, please log in again",
+    "loading": "Loading",
+    "logout": "Log out",
+    "roles": {
+      "admin": "Admin",
+      "manager": "Manager",
+      "cashier": "Cashier"
+    }
   }
 }

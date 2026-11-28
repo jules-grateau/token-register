@@ -1,4 +1,4 @@
-/* global process, Buffer, fetch, console, document, window, getComputedStyle */
+/* global process, fetch, console, document, window, getComputedStyle, URL */
 // Drives a running instance of the app (the demo, in CI) through its main screens
 // and takes screenshots on desktop, tablet and mobile, like a designer testing the
 // real thing. Orders placed during the run are deleted at the end.
@@ -7,7 +7,9 @@
 // category with 2 positive-priced products or no negative-priced product, the run creates a
 // test catalog ("Test capture", D-057) and deletes it at the end, after its orders.
 //
-// Env: APP_URL (e.g. https://demo.julesgrateau.dev), BASIC_AUTH_USER, BASIC_AUTH_PASS,
+// Env: APP_URL (e.g. https://demo.julesgrateau.dev), LOGIN_USER, LOGIN_PASS (an account of the
+//      instance, D-063: the run logs in through the API, then shares the session cookie with
+//      the browser; never printed, never typed on screen),
 //      OUT_DIR (default ./design-review-output),
 //      COLOR_SCHEMES (default "light,dark": the app follows the device scheme, D-041),
 //      ONLY_VIEWPORTS / ONLY_STEPS (optional comma lists, to capture only the screens a PR
@@ -20,14 +22,18 @@
 //      days (closed days cannot be deleted, D-061). The steps that close the day or need no
 //      open day (CLOSING_STEPS) are skipped, with skipped: "KEEP_CASH_DAY_OPEN" in report.json.
 //      Without it (PR captures, release QA: throwaway instances), every step runs.
+//      HIDE_ACCOUNT (optional, "1": set by design-review.yml on the public demos): the username
+//      shown in the ⚙️ menu is masked on the screenshots (D-063).
+// The login screen is captured first in each format ("login", "login-error": a random
+// username that does not exist, never a real one), before the session is given to the browser.
 // Output: <OUT_DIR>/<viewport>-<scheme>/<NN-step>.png + <OUT_DIR>/report.json
 import { chromium, devices } from 'playwright';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const APP_URL = (process.env.APP_URL ?? 'http://localhost:3000').replace(/\/$/, '');
-const USER = process.env.BASIC_AUTH_USER;
-const PASS = process.env.BASIC_AUTH_PASS;
+const USER = process.env.LOGIN_USER;
+const PASS = process.env.LOGIN_PASS;
 const OUT_DIR = path.resolve(process.env.OUT_DIR ?? 'design-review-output');
 const list = (value) =>
   value
@@ -40,15 +46,44 @@ const COLOR_SCHEMES = list(process.env.COLOR_SCHEMES) ?? ['light', 'dark'];
 const ONLY_VIEWPORTS = list(process.env.ONLY_VIEWPORTS);
 const ONLY_STEPS = list(process.env.ONLY_STEPS);
 const KEEP_CASH_DAY_OPEN = process.env.KEEP_CASH_DAY_OPEN === '1';
+// D-063: the username of the account (⚙️ menu) is hidden on the screenshots of the public demos.
+const HIDE_ACCOUNT = process.env.HIDE_ACCOUNT === '1';
+const shotOptions = (page, file) => ({
+  path: file,
+  fullPage: true,
+  mask: HIDE_ACCOUNT ? [page.getByTestId('current-user-name')] : [],
+});
 // Steps that close the cash day, or need no open day: skipped with KEEP_CASH_DAY_OPEN.
 // "cash-day-close-confirm" stays: it opens the confirmation without confirming it.
 const CLOSING_STEPS = ['cash-day-history', 'cash-day-orders', 'cash-day-none', 'cash-day-start'];
-const AUTH = 'Basic ' + Buffer.from(`${USER}:${PASS}`).toString('base64');
+// Session cookie value, set by logIn() (D-063). Never printed.
+let SESSION = null;
+const SESSION_COOKIE = 'cc_session';
+
+async function logIn() {
+  if (!USER || !PASS) throw new Error('LOGIN_USER and LOGIN_PASS are required');
+  const res = await fetch(`${APP_URL}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: USER, password: PASS }),
+  });
+  // Status only: the body and the headers are not printed.
+  if (!res.ok) throw new Error(`Login refused: POST /auth/login -> ${res.status}`);
+  const cookie = res.headers
+    .getSetCookie()
+    .map((c) => c.split(';')[0])
+    .find((c) => c.startsWith(`${SESSION_COOKIE}=`));
+  if (!cookie) throw new Error('POST /auth/login: no session cookie');
+  SESSION = cookie.slice(SESSION_COOKIE.length + 1);
+}
 
 async function api(method, route, body) {
   const res = await fetch(`${APP_URL}/api${route}`, {
     method,
-    headers: { Authorization: AUTH, ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    headers: {
+      Cookie: `${SESSION_COOKIE}=${SESSION}`,
+      ...(body ? { 'Content-Type': 'application/json' } : {}),
+    },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) throw new Error(`${method} ${route} -> ${res.status} ${await res.text()}`);
@@ -103,7 +138,7 @@ const TEST_PRODUCTS = [
 // Not found: stop rather than guess (TL-1 of PR #64), prices in tokens on a EUR instance
 // would make a wrong test catalog without any error.
 async function readCurrency() {
-  const res = await fetch(`${APP_URL}/config.js`, { headers: { Authorization: AUTH } });
+  const res = await fetch(`${APP_URL}/config.js`); // public (D-063)
   if (!res.ok) throw new Error(`GET /config.js -> ${res.status}`);
   const currency = /"VITE_CURRENCY"\s*:\s*"(\w+)"/.exec(await res.text())?.[1];
   if (!currency) throw new Error('VITE_CURRENCY not found in /config.js');
@@ -590,8 +625,8 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
   ],
   [
     // Settings menu scrolled to the bottom (DS-1 of PR #58): on a short phone in landscape it
-    // scrolls; "À propos", the last item, must then be in the window and clickable.
-    // Added at the end, so that the numbers of the other screenshots stay the same.
+    // scrolls; "Se déconnecter", the last item since 3.0.0 (D-063), must then be in the window
+    // and clickable. Added at the end, so that the numbers of the other screenshots stay the same.
     'settings-menu-scrolled',
     async (page) => {
       await closeOverlays(page);
@@ -601,13 +636,13 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
         .locator('.mantine-Menu-dropdown')
         .evaluate((menu) => menu.scrollTo({ top: menu.scrollHeight }));
       await page.waitForTimeout(200);
-      const about = page.getByRole('menuitem', { name: 'À propos' });
-      const box = await about.boundingBox();
+      const last = page.getByRole('menuitem', { name: 'Se déconnecter' });
+      const box = await last.boundingBox();
       const { height } = page.viewportSize();
       if (!box || box.y < 0 || box.y + box.height > height)
-        throw new Error(`"À propos" not in the window after scrolling the menu`);
-      // Actionability only (visible, enabled, not covered): the menu stays open.
-      await about.click({ trial: true, timeout: 5000 });
+        throw new Error(`"Se déconnecter" not in the window after scrolling the menu`);
+      // Actionability only (visible, enabled, not covered): the menu stays open, no logout.
+      await last.click({ trial: true, timeout: 5000 });
     },
   ],
   // Cash day (D-061), after the other steps so that their numbers stay the same. Each format
@@ -720,6 +755,46 @@ async function setCashDay(page, open) {
   if (page) await page.reload({ waitUntil: 'networkidle' });
 }
 
+// Login screen (D-063), captured before the browser gets the session. Fake values only: a
+// random username that does not exist (one per format, so that the limiter of 5 failures per
+// username and IP never answers instead), and a masked password.
+const LOGIN_STEPS = [
+  ['login', async () => {}],
+  [
+    'login-error',
+    async (page) => {
+      const fake = `exemple-${Math.random().toString(36).slice(2, 8)}`;
+      await page.getByLabel('Identifiant').fill(fake);
+      await page.getByLabel('Mot de passe', { exact: true }).fill('exemple');
+      await page.getByRole('button', { name: 'Se connecter' }).click();
+      await page.getByRole('alert').waitFor({ timeout: 5000 });
+    },
+  ],
+];
+
+async function captureLoginSteps(page, dir, vp) {
+  for (const [i, [step, action]] of LOGIN_STEPS.entries()) {
+    if (ONLY_STEPS && !ONLY_STEPS.includes(step)) {
+      vp.steps.push({ step, skipped: true });
+      continue;
+    }
+    const file = path.join(dir, `00${String.fromCharCode(97 + i)}-${step}.png`);
+    let error = null;
+    try {
+      await page.getByRole('button', { name: 'Se connecter' }).waitFor({ timeout: 10000 });
+      await action(page);
+      await page.waitForTimeout(300);
+    } catch (e) {
+      error = String(e).split('\n')[0];
+    }
+    await page.screenshot(shotOptions(page, file));
+    const overflowX = await page.evaluate(
+      () => document.documentElement.scrollWidth > window.innerWidth
+    );
+    vp.steps.push({ step, screenshot: path.relative(OUT_DIR, file), error, overflowX });
+  }
+}
+
 async function run() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   // { id, cashDayId }: deleted through their cash day, open or closed (D-061).
@@ -730,6 +805,7 @@ async function run() {
   const browser = await chromium.launch();
 
   try {
+    await logIn();
     await ensureTestCatalog(testCatalog);
     const data = await pickData(testCatalog.categoryId);
     report.data = data;
@@ -749,7 +825,6 @@ async function run() {
         ...options,
         colorScheme,
         locale: 'fr-FR',
-        httpCredentials: { username: USER, password: PASS },
       });
       const page = await context.newPage();
       // One retry, then the previous catalog with a warning: a transient API error must not
@@ -775,10 +850,22 @@ async function run() {
         consoleErrors: [],
         pageErrors: [],
       };
-      page.on('console', (m) => m.type() === 'error' && vp.consoleErrors.push(m.text()));
+      // D-063: before the session is given to the browser, GET /auth/me (no session yet) and the
+      // refused login of "login-error" answer 401 on purpose, and the browser logs each one as a
+      // console error. Those are kept apart (expectedLoginErrors), only while every 401 of that
+      // phase comes from these two routes; anything else stays a console error.
+      let loginPhase = true;
+      const login401 = [];
+      const loginConsole401 = [];
+      page.on('console', (m) => {
+        if (m.type() !== 'error') return;
+        if (loginPhase && /status of 401/.test(m.text())) loginConsole401.push(m.text());
+        else vp.consoleErrors.push(m.text());
+      });
       page.on('pageerror', (e) => vp.pageErrors.push(String(e)));
       // Track the orders this run creates, to delete exactly those afterwards.
       page.on('response', async (res) => {
+        if (loginPhase && res.status() === 401) login401.push(new URL(res.url()).pathname);
         if (res.request().method() === 'POST' && /\/api\/orders\/?$/.test(res.url()) && res.ok()) {
           const body = await res.json().catch(() => null);
           if (body?.id) createdOrders.push({ id: body.id, cashDayId: body.cashDayId });
@@ -787,6 +874,24 @@ async function run() {
 
       // D-061: the sales of the first steps need an open cash day.
       await setCashDay(null, true);
+      // D-063: the login screen first (no session yet), then the session of the API calls.
+      await page.goto(APP_URL, { waitUntil: 'networkidle' });
+      await captureLoginSteps(page, dir, vp);
+      loginPhase = false;
+      const expected = login401.every((p) => /\/api\/auth\/(me|login)$/.test(p));
+      if (expected) vp.expectedLoginErrors = loginConsole401.length;
+      else
+        vp.consoleErrors.push(...loginConsole401, `401 outside the login: ${login401.join(', ')}`);
+      await context.addCookies([
+        {
+          name: SESSION_COOKIE,
+          value: SESSION,
+          url: APP_URL,
+          httpOnly: true,
+          sameSite: 'Strict',
+          secure: APP_URL.startsWith('https:'),
+        },
+      ]);
       await page.goto(APP_URL, { waitUntil: 'networkidle' });
       const currency = await page.evaluate(() => window.APP_CONFIG?.VITE_CURRENCY ?? 'TOKEN');
       report.currency = currency;
@@ -813,7 +918,7 @@ async function run() {
         } catch (e) {
           error = String(e).split('\n')[0];
         }
-        await page.screenshot({ path: file, fullPage: true });
+        await page.screenshot(shotOptions(page, file));
         // Horizontal overflow is a common responsive bug: record it explicitly.
         const overflowX = await page.evaluate(
           () => document.documentElement.scrollWidth > window.innerWidth
@@ -860,6 +965,8 @@ async function run() {
         deleted,
       };
     }
+    // Closes the session of this run (D-063).
+    if (SESSION) await api('POST', '/auth/logout').catch(() => {});
     fs.writeFileSync(path.join(OUT_DIR, 'report.json'), JSON.stringify(report, null, 2));
     console.log(JSON.stringify(report, null, 2));
   }

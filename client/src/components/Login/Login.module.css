@@ -1,0 +1,139 @@
+/* Login screen: docs/design/components.md, "Écran de connexion" (D-063). Tokens only. */
+.screen {
+  min-height: 100%;
+  width: 100%;
+  background-color: var(--color-bg);
+  overflow-y: auto;
+  /* Top-aligned, not centred: the phone keyboard takes half of the screen. */
+  padding: 24px 16px;
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Tablet and desktop: a little air above the block. */
+.screen[data-mode='tablet'],
+.screen[data-mode='desktop'] {
+  padding-top: 10vh;
+}
+
+/* Phone landscape: brand on the left, form on the right, no scrolling. */
+.screen[data-mode='phone-landscape'] {
+  padding: 12px 16px;
+}
+
+.screen[data-mode='phone-landscape'] .layout {
+  flex-direction: row;
+  align-items: flex-start;
+  max-width: 760px;
+  gap: 24px;
+}
+
+.screen[data-mode='phone-landscape'] .brand {
+  flex: 1;
+  min-width: 0;
+  align-items: flex-start;
+  text-align: left;
+  padding-top: 8px;
+}
+
+.screen[data-mode='phone-landscape'] .panel {
+  flex: 1;
+  max-width: 400px;
+}
+
+.screen[data-mode='phone-landscape'] .panel :global(.mantine-Stack-root) {
+  --stack-gap: 12px;
+}
+
+.brand {
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+.logo {
+  display: block;
+  flex: none;
+}
+
+/* Same rules as the header title: never truncated (D-021). */
+.title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.appName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-2);
+}
+
+/* Paper: surface (theme), card radius, card shadow in light, border only in dark. */
+.panel {
+  width: 100%;
+  max-width: 400px;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+:where([data-mantine-color-scheme='dark']) .panel {
+  border: 1px solid var(--color-border);
+}
+
+.message {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--radius-control);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Never the red alone: the icon and the text carry the information. */
+.message[data-tone='error'] {
+  background-color: var(--color-danger-tint);
+  border: 1px solid var(--color-danger);
+}
+
+/* An expired session is not the user's fault: neutral tone. */
+.message[data-tone='info'] {
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+}
+
+.messageIcon {
+  flex: none;
+  margin-top: 2px;
+}
+
+/* Eye of the password field: 44 x 44 touch target, text color. */
+.eye {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--color-text);
+}
+
+.splash {
+  min-height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-bg);
+}

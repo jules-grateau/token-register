@@ -1,13 +1,14 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import type { CategoryType, ProductType, PostAPIResponseType } from 'shared-ts';
 import { BASE_API_URL } from '../config';
+import { authBaseQuery } from './baseQuery';
 import { ApiProductType, mapProduct } from './mappers';
 
 const API_URL = BASE_API_URL + '/categories';
 
 export const categoriesApi = createApi({
   reducerPath: 'categoriesApi',
-  baseQuery: fetchBaseQuery({ baseUrl: API_URL, credentials: 'include' }),
+  baseQuery: authBaseQuery({ baseUrl: API_URL, credentials: 'include' }),
   tagTypes: ['Categories', 'Products'],
   endpoints: (build) => ({
     getCategories: build.query<CategoryType[], void>({

@@ -159,9 +159,10 @@ export class CashDayService {
 
   /**
    * Opens a day (one tap, no confirmation: answer 7). Refused while a day is open; the unique
-   * index of cash_days also refuses a second open day if two requests race.
+   * index of cash_days also refuses a second open day if two requests race. `openedBy` /
+   * `closedBy` (below): the logged-in user (D-063, point 14), recorded and not shown yet.
    */
-  async open(): Promise<CashDayType> {
+  async open(openedBy: number | null = null): Promise<CashDayType> {
     const db = await openDb();
     try {
       await db.exec('BEGIN IMMEDIATE');
@@ -170,9 +171,10 @@ export class CashDayService {
       }
       let id: number | undefined;
       try {
-        ({ lastID: id } = await db.run('INSERT INTO cash_days (opened_at) VALUES (?)', [
-          Date.now(),
-        ]));
+        ({ lastID: id } = await db.run(
+          'INSERT INTO cash_days (opened_at, opened_by) VALUES (?, ?)',
+          [Date.now(), openedBy]
+        ));
       } catch (error) {
         if (String(error).includes('UNIQUE constraint failed')) throw alreadyOpen();
         throw error;
@@ -195,7 +197,7 @@ export class CashDayService {
    * Closes the open day and freezes its totals (answer 6 a), once: a second call (double tap)
    * finds no open day and is refused.
    */
-  async closeCurrent(): Promise<CashDayType> {
+  async closeCurrent(closedBy: number | null = null): Promise<CashDayType> {
     const db = await openDb();
     try {
       await db.exec('BEGIN IMMEDIATE');
@@ -207,9 +209,17 @@ export class CashDayService {
       const result = await db.run(
         `UPDATE cash_days
          SET closed_at = ?, closed_total = ?, closed_cash_amount = ?, closed_card_amount = ?,
-             closed_order_count = ?
+             closed_order_count = ?, closed_by = ?
          WHERE id = ? AND closed_at IS NULL`,
-        [Date.now(), summary.total, summary.cashAmount, summary.cardAmount, summary.orderCount, id]
+        [
+          Date.now(),
+          summary.total,
+          summary.cashAmount,
+          summary.cardAmount,
+          summary.orderCount,
+          closedBy,
+          id,
+        ]
       );
       if (result.changes !== 1) {
         throw new ConflictError('No cash day is open.', 'NO_OPEN_CASH_DAY');

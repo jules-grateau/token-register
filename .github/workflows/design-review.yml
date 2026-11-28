@@ -17,8 +17,10 @@ name: Release smoke check
 # day or opens one, leaves it open, and skips the steps that close the day; those run in
 # the PR captures (auto-pr.yml) and the release QA, on throwaway instances.
 #
-# Secrets: DEMO_BASIC_AUTH_USER / DEMO_BASIC_AUTH_PASS (token demo Basic Auth),
-#          DEMO_EUR_URL / DEMO_EUR_BASIC_AUTH_USER / DEMO_EUR_BASIC_AUTH_PASS (EUR demo, D-059).
+# Secrets: DEMO_LOGIN_USER / DEMO_LOGIN_PASS (cashier account of the token demo, D-063),
+#          DEMO_EUR_URL / DEMO_EUR_LOGIN_USER / DEMO_EUR_LOGIN_PASS (EUR demo, D-059, D-063).
+# Before 3.0.0 is deployed on the demos and these secrets exist, the login fails: do not
+# re-run in a loop (deploy/README.md, "User accounts").
 on:
   pull_request:
     branches: [main]
@@ -105,13 +107,16 @@ jobs:
         env:
           APP_URL: ${{ env.DEMO_URL }}
           KEEP_CASH_DAY_OPEN: '1'
-          BASIC_AUTH_USER: ${{ secrets.DEMO_BASIC_AUTH_USER }}
-          BASIC_AUTH_PASS: ${{ secrets.DEMO_BASIC_AUTH_PASS }}
+          HIDE_ACCOUNT: '1'
+          LOGIN_USER: ${{ secrets.DEMO_LOGIN_USER }}
+          LOGIN_PASS: ${{ secrets.DEMO_LOGIN_PASS }}
           OUT_DIR: ${{ github.workspace }}/design-review-output/jetons
         run: |
-          if [ -z "$BASIC_AUTH_USER" ] || [ -z "$BASIC_AUTH_PASS" ]; then
-            echo "::error::DEMO_BASIC_AUTH_USER / DEMO_BASIC_AUTH_PASS secrets are not set"; exit 1
+          if [ -z "$LOGIN_USER" ] || [ -z "$LOGIN_PASS" ]; then
+            echo "::error::DEMO_LOGIN_USER / DEMO_LOGIN_PASS secrets are not set"; exit 1
           fi
+          # The username is not a secret to GitHub by itself: masked as well.
+          echo "::add-mask::$LOGIN_USER"
           mkdir -p "$OUT_DIR"
           status=0
           (cd "$RUNNER_TEMP/pw" && node capture.mjs) || status=$?
@@ -131,13 +136,15 @@ jobs:
         env:
           APP_URL: ${{ secrets.DEMO_EUR_URL }}
           KEEP_CASH_DAY_OPEN: '1'
-          BASIC_AUTH_USER: ${{ secrets.DEMO_EUR_BASIC_AUTH_USER }}
-          BASIC_AUTH_PASS: ${{ secrets.DEMO_EUR_BASIC_AUTH_PASS }}
+          HIDE_ACCOUNT: '1'
+          LOGIN_USER: ${{ secrets.DEMO_EUR_LOGIN_USER }}
+          LOGIN_PASS: ${{ secrets.DEMO_EUR_LOGIN_PASS }}
           OUT_DIR: ${{ runner.temp }}/smoke-eur
         run: |
-          if [ -z "$APP_URL" ] || [ -z "$BASIC_AUTH_USER" ] || [ -z "$BASIC_AUTH_PASS" ]; then
-            echo "::error::DEMO_EUR_URL / DEMO_EUR_BASIC_AUTH_USER / DEMO_EUR_BASIC_AUTH_PASS secrets are not set"; exit 1
+          if [ -z "$APP_URL" ] || [ -z "$LOGIN_USER" ] || [ -z "$LOGIN_PASS" ]; then
+            echo "::error::DEMO_EUR_URL / DEMO_EUR_LOGIN_USER / DEMO_EUR_LOGIN_PASS secrets are not set"; exit 1
           fi
+          echo "::add-mask::$LOGIN_USER"
           problems="$GITHUB_WORKSPACE/design-review-output/eur/smoke-problems.md"
           mkdir -p "$OUT_DIR" "$(dirname "$problems")"
           status=0

@@ -3,6 +3,7 @@ import type { CurrentCashDayResponseType, PaginationParams } from 'shared-ts';
 import { CashDayService } from '../services/cashDay.service';
 import { OrderService } from '../services/order.service';
 import { ConflictError, NotFoundError, ValidationError } from '../types/errors';
+import { getAuthUserId, requirePermission } from '../middleware/auth';
 
 /** Route ids are positive integers only ("12", not "12abc" or "-1"). */
 const parseId = (value: unknown): number | null => {
@@ -40,12 +41,13 @@ export class CashDayController {
   }
 
   private initializeRoutes() {
-    this.router.get('/', this.listClosed);
-    this.router.post('/', this.open);
-    this.router.get('/current', this.getCurrent);
-    this.router.post('/current/close', this.closeCurrent);
-    this.router.get('/:id/orders', this.getOrders);
-    this.router.delete('/:id/orders/:orderId', this.deleteOrder);
+    // D-063: the state of the open day is needed to sell; the rest needs "cash_day".
+    this.router.get('/', requirePermission('cash_day'), this.listClosed);
+    this.router.post('/', requirePermission('cash_day'), this.open);
+    this.router.get('/current', requirePermission('sale'), this.getCurrent);
+    this.router.post('/current/close', requirePermission('cash_day'), this.closeCurrent);
+    this.router.get('/:id/orders', requirePermission('cash_day'), this.getOrders);
+    this.router.delete('/:id/orders/:orderId', requirePermission('order_delete'), this.deleteOrder);
   }
 
   private handleError(error: unknown, res: Response, next: NextFunction) {
@@ -82,7 +84,8 @@ export class CashDayController {
   public open = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     req.log.info('Controller: Opening a cash day');
     try {
-      res.status(201).json(await this.cashDayService.open());
+      // D-063, point 14: who opened and who closed the day are recorded, not shown yet.
+      res.status(201).json(await this.cashDayService.open(getAuthUserId(res)));
     } catch (error) {
       req.log.error('Controller Error: Error opening a cash day: %s', error);
       this.handleError(error, res, next);
@@ -92,7 +95,7 @@ export class CashDayController {
   public closeCurrent = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     req.log.info('Controller: Closing the cash day');
     try {
-      res.json(await this.cashDayService.closeCurrent());
+      res.json(await this.cashDayService.closeCurrent(getAuthUserId(res)));
     } catch (error) {
       req.log.error('Controller Error: Error closing the cash day: %s', error);
       this.handleError(error, res, next);
