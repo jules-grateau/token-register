@@ -24,6 +24,9 @@
 //      Without it (PR captures, release QA: throwaway instances), every step runs.
 //      HIDE_ACCOUNT (optional, "1": set by design-review.yml on the public demos): the username
 //      shown in the ⚙️ menu is masked on the screenshots (D-063).
+// Account steps (D-064, flagged `admin`): they create accounts, which can never be deleted, so
+// they run only with an admin session and never on the public demos (skipped with
+// "NOT_ADMIN" / "PUBLIC_DEMO" in report.json). "change-password" only opens the form.
 // The login screen is captured first in each format ("login", "login-error": a random
 // username that does not exist, never a real one), before the session is given to the browser.
 // Output: <OUT_DIR>/<viewport>-<scheme>/<NN-step>.png + <OUT_DIR>/report.json
@@ -59,13 +62,18 @@ const CLOSING_STEPS = ['cash-day-history', 'cash-day-orders', 'cash-day-none', '
 // Session cookie value, set by logIn() (D-063). Never printed.
 let SESSION = null;
 const SESSION_COOKIE = 'cc_session';
+// D-064: the account steps (`admin` flag) create accounts, which cannot be deleted: skipped on
+// the public demos (KEEP_CASH_DAY_OPEN / HIDE_ACCOUNT), and without an admin session.
+let IS_ADMIN = false;
+const accountStepsSkipped = () =>
+  KEEP_CASH_DAY_OPEN || HIDE_ACCOUNT ? 'PUBLIC_DEMO' : IS_ADMIN ? null : 'NOT_ADMIN';
 
-async function logIn() {
-  if (!USER || !PASS) throw new Error('LOGIN_USER and LOGIN_PASS are required');
+// Value of the session cookie of a login through the API. Never printed.
+async function sessionOf(username, password) {
   const res = await fetch(`${APP_URL}/api/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: USER, password: PASS }),
+    body: JSON.stringify({ username, password }),
   });
   // Status only: the body and the headers are not printed.
   if (!res.ok) throw new Error(`Login refused: POST /auth/login -> ${res.status}`);
@@ -74,8 +82,26 @@ async function logIn() {
     .map((c) => c.split(';')[0])
     .find((c) => c.startsWith(`${SESSION_COOKIE}=`));
   if (!cookie) throw new Error('POST /auth/login: no session cookie');
-  SESSION = cookie.slice(SESSION_COOKIE.length + 1);
+  return cookie.slice(SESSION_COOKIE.length + 1);
 }
+
+async function logIn() {
+  if (!USER || !PASS) throw new Error('LOGIN_USER and LOGIN_PASS are required');
+  SESSION = await sessionOf(USER, PASS);
+  // D-064: the account steps need the "users" permission (admin).
+  const { user } = await api('GET', '/auth/me');
+  IS_ADMIN = user.permissions.includes('users');
+}
+
+// Browser copy of a session cookie (same attributes as the API's).
+const sessionCookie = (value) => ({
+  name: SESSION_COOKIE,
+  value,
+  url: APP_URL,
+  httpOnly: true,
+  sameSite: 'Strict',
+  secure: APP_URL.startsWith('https:'),
+});
 
 async function api(method, route, body) {
   const res = await fetch(`${APP_URL}/api${route}`, {
@@ -741,7 +767,135 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
         .waitFor({ timeout: 5000 });
     },
   ],
+  // Accounts (D-064), after the other steps so that their numbers stay the same. The steps
+  // flagged `admin` need an admin session and create accounts, which can never be deleted
+  // (deactivation only): they run on throwaway instances only (see ACCOUNT_STEPS_SKIPPED).
+  [
+    // List: own account "Vous", a cashier, a disabled account with a 32-character name.
+    'accounts-list',
+    async (page) => {
+      await closeOverlays(page);
+      await openAccounts(page);
+    },
+    { admin: true },
+  ],
+  [
+    'account-create-form',
+    async (page) => {
+      await openAccounts(page);
+      await dialog(page).getByRole('button', { name: 'Nouveau compte', exact: true }).click();
+      await page.getByRole('dialog', { name: 'Nouveau compte' }).waitFor({ timeout: 5000 });
+    },
+    { admin: true },
+  ],
+  [
+    // Username already taken (case ignored): the error under the field. Fake password.
+    'account-create-error',
+    async (page) => {
+      const form = page.getByRole('dialog', { name: 'Nouveau compte' });
+      if (!(await form.isVisible().catch(() => false))) {
+        await openAccounts(page);
+        await dialog(page).getByRole('button', { name: 'Nouveau compte', exact: true }).click();
+        await form.waitFor({ timeout: 5000 });
+      }
+      await form.getByLabel('Identifiant').fill(testAccounts.cashier.toUpperCase());
+      await form.getByLabel('Mot de passe', { exact: true }).fill(fakePassword());
+      await form.getByLabel('Caissier').check();
+      await form.getByRole('button', { name: 'Créer le compte' }).click();
+      await form.getByText('Cet identifiant est déjà pris').waitFor({ timeout: 5000 });
+    },
+    { admin: true },
+  ],
+  [
+    'account-reset-password',
+    async (page) => {
+      await closeOverlays(page);
+      await openAccounts(page);
+      await page
+        .getByRole('button', { name: `Réinitialiser le mot de passe de ${testAccounts.cashier}` })
+        .click();
+      await page
+        .getByRole('dialog', { name: 'Réinitialiser le mot de passe' })
+        .waitFor({ timeout: 5000 });
+    },
+    { admin: true },
+  ],
+  [
+    // Confirmation D-050 in red: not confirmed, the account stays active.
+    'account-deactivate-confirm',
+    async (page) => {
+      await closeOverlays(page);
+      await openAccounts(page);
+      await page.getByRole('button', { name: `Désactiver ${testAccounts.cashier}` }).click();
+      await page
+        .getByRole('dialog', { name: `Désactiver ${testAccounts.cashier} ?` })
+        .waitFor({ timeout: 5000 });
+    },
+    { admin: true },
+  ],
+  [
+    // ⚙️ "Changer mon mot de passe": opened, nothing typed nor sent (any account, demos too).
+    'change-password',
+    async (page) => {
+      await closeOverlays(page);
+      await openSettingsItem(page, 'Mot de passe');
+      await page
+        .getByRole('dialog', { name: 'Changer mon mot de passe' })
+        .waitFor({ timeout: 5000 });
+    },
+  ],
+  [
+    // Screen of a temporary password: an account created just before through the API, whose
+    // session replaces the admin's in the browser. Last step: nothing runs after it in this
+    // format (a new browser context starts the next one).
+    'forced-password-change',
+    async (page) => {
+      await closeOverlays(page);
+      const username = `capture-${Math.random().toString(36).slice(2, 10)}`;
+      const password = fakePassword();
+      await api('POST', '/users', { username, password, role: 'cashier' });
+      testAccounts.created += 1;
+      const session = await sessionOf(username, password);
+      await page.context().addCookies([sessionCookie(session)]);
+      await page.reload({ waitUntil: 'networkidle' });
+      await page.getByTestId('forced-password-change').waitFor({ timeout: 5000 });
+    },
+    { admin: true },
+  ],
 ];
+
+// D-064: accounts used by the account steps, created once per run (never deleted: the run is
+// on a throwaway instance). Generated names and passwords, never printed.
+const testAccounts = { cashier: null, created: 0 };
+const fakePassword = () => `pw-${Math.random().toString(36).slice(2)}-${Date.now() % 1000}`;
+
+async function ensureTestAccounts() {
+  if (testAccounts.cashier) return;
+  const suffix = Math.random().toString(36).slice(2, 8);
+  const cashier = `capture-caisse-${suffix}`;
+  await api('POST', '/users', { username: cashier, password: fakePassword(), role: 'cashier' });
+  testAccounts.created += 1;
+  // 32 characters without a space: it must wrap, never be cut (docs/design/components.md).
+  const long = `capture.compte-desactive-${suffix}`.padEnd(32, 'x').slice(0, 32);
+  const { id } = await api('POST', '/users', {
+    username: long,
+    password: fakePassword(),
+    role: 'manager',
+  });
+  testAccounts.created += 1;
+  await api('PATCH', `/users/${id}`, { active: false });
+  testAccounts.cashier = cashier;
+}
+
+// Opens "Comptes" unless it is open (each account step can also run alone, ONLY_STEPS).
+async function openAccounts(page) {
+  await ensureTestAccounts();
+  const accounts = page.getByRole('dialog', { name: 'Comptes' });
+  if (!(await accounts.isVisible().catch(() => false))) {
+    await openSettingsItem(page, 'Comptes');
+  }
+  await accounts.getByTestId('account-card').first().waitFor({ timeout: 5000 });
+}
 
 // D-061: no sale without an open cash day. Opens or closes the day through the API, then
 // reloads the page if that changed anything. Closing a day keeps its orders (deleted at the
@@ -882,27 +1036,23 @@ async function run() {
       if (expected) vp.expectedLoginErrors = loginConsole401.length;
       else
         vp.consoleErrors.push(...loginConsole401, `401 outside the login: ${login401.join(', ')}`);
-      await context.addCookies([
-        {
-          name: SESSION_COOKIE,
-          value: SESSION,
-          url: APP_URL,
-          httpOnly: true,
-          sameSite: 'Strict',
-          secure: APP_URL.startsWith('https:'),
-        },
-      ]);
+      await context.addCookies([sessionCookie(SESSION)]);
       await page.goto(APP_URL, { waitUntil: 'networkidle' });
       const currency = await page.evaluate(() => window.APP_CONFIG?.VITE_CURRENCY ?? 'TOKEN');
       report.currency = currency;
 
-      for (const [i, [step, action, { only, currency: onlyCurrency } = {}]] of STEPS.entries()) {
+      for (const [i, [step, action, options = {}]] of STEPS.entries()) {
+        const { only, currency: onlyCurrency, admin } = options;
         if (
           (only && !only.includes(viewport)) ||
           (onlyCurrency && onlyCurrency !== currency) ||
           (ONLY_STEPS && !ONLY_STEPS.includes(step))
         ) {
           vp.steps.push({ step, skipped: true });
+          continue;
+        }
+        if (admin && accountStepsSkipped()) {
+          vp.steps.push({ step, skipped: accountStepsSkipped() });
           continue;
         }
         if (KEEP_CASH_DAY_OPEN && CLOSING_STEPS.includes(step)) {
@@ -965,6 +1115,8 @@ async function run() {
         deleted,
       };
     }
+    // D-064: accounts cannot be deleted; only created on throwaway instances (admin steps).
+    report.cleanup.accountsCreated = testAccounts.created;
     // Closes the session of this run (D-063).
     if (SESSION) await api('POST', '/auth/logout').catch(() => {});
     fs.writeFileSync(path.join(OUT_DIR, 'report.json'), JSON.stringify(report, null, 2));

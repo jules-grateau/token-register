@@ -1,6 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import type { AuthUserType } from 'shared-ts';
-import { authReducer, checkSession, loggedIn, logOut, sessionExpired } from '../authSlice';
+import {
+  authReducer,
+  checkSession,
+  loggedIn,
+  logOut,
+  passwordChanged,
+  sessionExpired,
+} from '../authSlice';
 import { cartReducer } from '../cartSlice';
 import { authBaseQuery } from '../../services/baseQuery';
 
@@ -121,10 +128,13 @@ describe('authBaseQuery', () => {
     };
   });
 
-  const run = async (status: number) => {
+  const run = async (
+    status: number,
+    body: unknown = status === 401 ? { code: 'UNAUTHENTICATED' } : []
+  ) => {
     const store = makeStore();
     store.dispatch(loggedIn(user));
-    mockFetch(status, status === 401 ? { code: 'UNAUTHENTICATED' } : []);
+    mockFetch(status, body);
     const query = authBaseQuery({ baseUrl: 'http://api.test/api/products' });
     const result = await query(
       '',
@@ -152,6 +162,27 @@ describe('authBaseQuery', () => {
 
   it('leaves the session alone on other answers', async () => {
     const { store } = await run(200);
+    expect(store.getState().auth.status).toBe('authenticated');
+    const forbidden = await run(403, { code: 'FORBIDDEN' });
+    expect(forbidden.store.getState().auth.user?.mustChangePassword).toBe(false);
+  });
+
+  it('keeps the session on 403 PASSWORD_CHANGE_REQUIRED and asks for a new password (D-064)', async () => {
+    const { store } = await run(403, { code: 'PASSWORD_CHANGE_REQUIRED' });
+    expect(store.getState().auth.status).toBe('authenticated');
+    expect(store.getState().auth.notice).toBeNull();
+    expect(store.getState().auth.user?.mustChangePassword).toBe(true);
+  });
+});
+
+describe('password change state (D-064)', () => {
+  it('replaces the user after a change, only while logged in', () => {
+    const store = makeStore();
+    store.dispatch(passwordChanged({ ...user, mustChangePassword: false }));
+    expect(store.getState().auth.user).toBeNull();
+    store.dispatch(loggedIn({ ...user, mustChangePassword: true }));
+    store.dispatch(passwordChanged({ ...user, mustChangePassword: false }));
+    expect(store.getState().auth.user?.mustChangePassword).toBe(false);
     expect(store.getState().auth.status).toBe('authenticated');
   });
 });

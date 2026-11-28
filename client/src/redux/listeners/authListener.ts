@@ -5,6 +5,7 @@ import { productsApi } from '../../services/product';
 import { categoriesApi } from '../../services/categories';
 import { ordersApi } from '../../services/orders';
 import { cashDaysApi } from '../../services/cashDays';
+import { usersApi } from '../../services/users';
 
 /**
  * After a logout or an expired session (D-063), the data read with the previous session is
@@ -18,6 +19,7 @@ export default function authListener(startListening: AppStartListening) {
       api.dispatch(categoriesApi.util.resetApiState());
       api.dispatch(ordersApi.util.resetApiState());
       api.dispatch(cashDaysApi.util.resetApiState());
+      api.dispatch(usersApi.util.resetApiState());
     },
   });
 }

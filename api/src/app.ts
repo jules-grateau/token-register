@@ -10,7 +10,9 @@ import {
   ProductController,
   OrderController,
   CashDayController,
+  UserController,
 } from './controllers';
+import { UserService } from './services/user.service';
 import { AppError, ValidationError, NotFoundError, ConflictError } from './types/errors';
 import { AuthService } from './services/auth.service';
 import { CashDayService } from './services/cashDay.service';
@@ -55,6 +57,7 @@ export function createApiControllers(): { path: string; router: Router }[] {
     new ProductController(new ProductService()),
     new OrderController(new OrderService()),
     new CashDayController(new CashDayService(), new OrderService()),
+    new UserController(new UserService()),
   ];
 }
 

@@ -1,0 +1,69 @@
+/* "Comptes" (D-064), docs/design/components.md: like "Journée de caisse", background
+   --color-bg, cards on surface. The list scrolls on its own, "Nouveau compte" stays at the foot. */
+.content.content,
+.header.header {
+  background-color: var(--color-bg);
+}
+
+.content.content {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.body.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 12px;
+  padding-bottom: 0;
+}
+
+.list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 12px;
+}
+
+.footer {
+  flex: none;
+  padding-top: 12px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  background-color: var(--color-bg);
+  border-top: 1px solid var(--color-border);
+}
+
+.card {
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+:where([data-mantine-color-scheme='dark']) .card {
+  box-shadow: none;
+}
+
+/* Disabled account: surface-2, the name keeps the text color (no reduced opacity). */
+.card[data-disabled] {
+  background-color: var(--color-surface-2);
+  box-shadow: none;
+}
+
+/* 32 characters without a space wrap, never cut (D-021). */
+.name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.secondary {
+  font-size: 14px;
+  color: var(--color-text-2);
+}
+
+.badge {
+  flex: none;
+}

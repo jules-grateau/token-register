@@ -37,9 +37,20 @@ jest.mock('../../../hooks/useCashDay', () => ({
   }),
 }));
 
+// D-064: "Comptes" (admin) and "Changer mon mot de passe".
+jest.mock(
+  '../../Accounts',
+  () => (props: { isOpen: boolean }) => (props.isOpen ? <div data-testid="accounts-modal" /> : null)
+);
+jest.mock(
+  '../../ChangePassword',
+  () => (props: { isOpen: boolean }) =>
+    props.isOpen ? <div data-testid="change-password-modal" /> : null
+);
+
 // D-063: logged-in user and "Se déconnecter" in the ⚙️ menu.
 const mockLogOut = jest.fn();
-let mockUser: { username: string; role: string } | null = null;
+let mockUser: { username: string; role: string; permissions?: string[] } | null = null;
 jest.mock('../../../hooks/useAuth', () => ({
   useAuth: () => ({ user: mockUser, logOut: mockLogOut }),
 }));
@@ -69,6 +80,34 @@ describe('Register settings menu: account (D-063, answer 8 a)', () => {
     expect(items[items.length - 1]).toHaveTextContent('auth.logout');
     fireEvent.click(items[items.length - 1]);
     expect(mockLogOut).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows "Comptes" to the admin only, right under the user (D-064, answer 1 a)', async () => {
+    mockUser = { username: 'chef', role: 'admin', permissions: ['sale', 'users'] };
+    render(<Register />);
+    openSettingsMenu();
+    const items = await screen.findAllByRole('menuitem');
+    expect(items[0]).toHaveTextContent('accounts.menu');
+    fireEvent.click(items[0]);
+    expect(screen.getByTestId('accounts-modal')).toBeInTheDocument();
+  });
+
+  it('hides "Comptes" without the "users" permission', async () => {
+    mockUser = { username: 'marie.d', role: 'cashier', permissions: ['sale'] };
+    render(<Register />);
+    openSettingsMenu();
+    await screen.findAllByRole('menuitem');
+    expect(screen.queryByRole('menuitem', { name: 'accounts.menu' })).toBeNull();
+  });
+
+  it('opens "Changer mon mot de passe", just before "Se déconnecter"', async () => {
+    mockUser = { username: 'marie.d', role: 'cashier', permissions: ['sale'] };
+    render(<Register />);
+    openSettingsMenu();
+    const items = await screen.findAllByRole('menuitem');
+    expect(items[items.length - 2]).toHaveTextContent('auth.change_password.menu');
+    fireEvent.click(items[items.length - 2]);
+    expect(screen.getByTestId('change-password-modal')).toBeInTheDocument();
   });
 });
 

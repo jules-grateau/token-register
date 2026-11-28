@@ -264,6 +264,91 @@
       "admin": "Admin",
       "manager": "Gérant",
       "cashier": "Caissier"
+    },
+    "change_password": {
+      "menu": "Mot de passe",
+      "title": "Changer mon mot de passe",
+      "current": "Mot de passe actuel",
+      "temporary": "Mot de passe temporaire",
+      "new": "Nouveau mot de passe",
+      "confirm": "Confirmer",
+      "new_help": "6 caractères au moins",
+      "submit": "Enregistrer",
+      "forced_submit": "Enregistrer et continuer",
+      "forced_label": "Nouveau mot de passe",
+      "forced_notice": "Votre mot de passe est temporaire. Choisissez-en un nouveau pour continuer.",
+      "mismatch": "Les deux mots de passe ne correspondent pas",
+      "too_short": "Le mot de passe doit faire 6 caractères au moins",
+      "too_long": "Le mot de passe doit faire 256 caractères au plus",
+      "wrong_current": "Mot de passe actuel incorrect",
+      "wrong_temporary": "Mot de passe temporaire incorrect",
+      "same": "Le nouveau mot de passe doit être différent de l'actuel",
+      "same_temporary": "Le nouveau mot de passe doit être différent du mot de passe temporaire",
+      "done": "Mot de passe modifié"
+    }
+  },
+  "accounts": {
+    "menu": "Comptes",
+    "title": "Comptes",
+    "list_label": "Liste des comptes",
+    "you": "Vous",
+    "disabled": "Désactivé",
+    "new": "Nouveau compte",
+    "change_role": "Changer le rôle",
+    "reset_password": "Réinitialiser le mot de passe",
+    "deactivate": "Désactiver",
+    "reactivate": "Réactiver",
+    "aria": {
+      "change_role": "Changer le rôle de {{name}}",
+      "reset_password": "Réinitialiser le mot de passe de {{name}}",
+      "deactivate": "Désactiver {{name}}",
+      "reactivate": "Réactiver {{name}}"
+    },
+    "self_help": "Votre mot de passe se change depuis Réglages › « Mot de passe ».",
+    "last_admin_help": "Dernier administrateur actif",
+    "load_error": "Les comptes n'ont pas pu être chargés.",
+    "retry": "Réessayer",
+    "create": {
+      "title": "Nouveau compte",
+      "username": "Identifiant",
+      "username_help": "3 à 32 caractères : lettres, chiffres, . _ -",
+      "password": "Mot de passe",
+      "password_help": "6 caractères au moins",
+      "temporary_help": "Ce mot de passe est temporaire : le compte en choisira un nouveau à sa première connexion.",
+      "role": "Rôle",
+      "role_required": "Choisissez un rôle",
+      "submit": "Créer le compte",
+      "done": "Compte {{name}} créé"
+    },
+    "reset": {
+      "title": "Réinitialiser le mot de passe",
+      "account": "Compte : {{name}}",
+      "password": "Mot de passe temporaire",
+      "help": "Le compte devra choisir un nouveau mot de passe à sa prochaine connexion. Ses sessions seront fermées.",
+      "submit": "Réinitialiser",
+      "done": "Mot de passe de {{name}} réinitialisé"
+    },
+    "role": {
+      "title": "Rôle de {{name}}",
+      "label": "Rôle",
+      "done": "Rôle de {{name}} : {{role}}"
+    },
+    "deactivate_confirm": {
+      "title": "Désactiver {{name}} ?",
+      "text": "Le compte {{name}} ne pourra plus se connecter, et ses sessions ouvertes seront fermées. Il pourra être réactivé."
+    },
+    "deactivated": "Compte {{name}} désactivé",
+    "reactivated": "Compte {{name}} réactivé",
+    "errors": {
+      "USERNAME_TAKEN": "Cet identifiant est déjà pris",
+      "USERNAME_INVALID": "3 à 32 caractères : lettres, chiffres, . _ -",
+      "PASSWORD_INVALID": "Le mot de passe doit faire de 6 à 256 caractères",
+      "ROLE_INVALID": "Choisissez un rôle",
+      "SELF_ACCOUNT_CHANGE": "Vous ne pouvez ni désactiver ni changer le rôle de votre propre compte",
+      "SELF_PASSWORD_RESET": "Votre mot de passe se change depuis Réglages › « Mot de passe »",
+      "LAST_ACTIVE_ADMIN": "Il doit rester au moins un administrateur actif",
+      "ACCOUNT_DISABLED": "Ce compte est désactivé : réactivez-le d'abord",
+      "generic": "L'action n'a pas pu être enregistrée. Réessayez."
     }
   }
 }

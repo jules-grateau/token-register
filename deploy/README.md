@@ -185,8 +185,18 @@ tokens, their cash / card split is cleared, like the orders' (D-036).
 From 3.0.0, the Basic Auth is gone: each person logs in with their own account on the login
 screen of the app (D-063). Roles: **admin**, **manager** (gérant) and **cashier** (caissier). The
 three have every right of today (sale, catalog, cash day, order deletion); only the account
-management (screen of the next version) is for the admin. Rights come from a role → permissions
+management (⚙️ « Comptes », D-064) is for the admin. Rights come from a role → permissions
 table, read again on every request: a new role, or a disabled account, applies at once.
+
+- **Accounts screen** (⚙️ « Comptes », admin only, D-064): create an account (username, role and
+  a password typed by the admin), change a role, reset a password, deactivate or reactivate. The
+  password typed at a creation or a reset is **temporary**: the person changes it at the next
+  login, and nothing else works until then. A reset or a deactivation closes every session of
+  the account. Accounts are never deleted. An admin can neither deactivate, demote nor reset
+  their own account (their password is changed from ⚙️ « Changer mon mot de passe »), and the
+  last active admin can be neither deactivated nor demoted.
+- **Own password**: ⚙️ « Changer mon mot de passe », with the current one. The other sessions of
+  the account are closed, the one in use is kept. 5 wrong current passwords: 1 minute of wait.
 
 - **First admin**: `INITIAL_ADMIN_USERNAME` / `INITIAL_ADMIN_PASSWORD` on the service, read
   **only while the database has no account at all**, whether it holds data or not, then ignored
@@ -217,10 +227,14 @@ For **every** instance (production and both demos), in `compose.yaml`:
 4. Back up the database (the migration only adds tables and empty columns, see MIGRATIONS.md).
 
 For the demos (no public account, D-063): after the deploy, each demo gets a dedicated account
-for the CI, meant to be a **cashier**. The account screen comes with the next version: until then,
-create it with `reset-admin-password` below (it is then an admin), and make it a cashier once
-the account screen is there. Then, in GitHub
-(**Settings → Secrets and variables → Actions**):
+for the CI, meant to be a **cashier**. Create it with `reset-admin-password` below (it is then an
+admin), then log in with the admin of the demo and make it a **cashier** in ⚙️ « Comptes »
+(« Changer le rôle », D-064). This account is **not** marked as having a temporary password
+(`reset-admin-password` never does, and a role change keeps it so): the CI can log in with it.
+Never use « Réinitialiser le mot de passe » on it: its password would become temporary and the
+CI would be blocked until it is changed. Its credentials are shared with the CI only (no public
+account): anyone who has them can change its password from ⚙️; then update the secret. Then, in
+GitHub (**Settings → Secrets and variables → Actions**):
 
 - create `DEMO_LOGIN_USER` / `DEMO_LOGIN_PASS` (token demo) and `DEMO_EUR_LOGIN_USER` /
   `DEMO_EUR_LOGIN_PASS` (EUR demo);
@@ -244,7 +258,7 @@ unset RESET_ADMIN_PASSWORD
 
 - Existing account (any case): new password, account reactivated and made admin again, all its
   sessions closed. Unknown username: a new admin account is created.
-- The password is not temporary in this version, and is never printed.
+- The password is not temporary (unlike a reset from the « Comptes » screen), and is never printed.
 - Same rules as above (username, 6 characters); nothing is written if they are not met.
 - No restart needed: the next login uses the new password.
 
