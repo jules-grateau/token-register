@@ -266,7 +266,7 @@
       "cashier": "Caissier"
     },
     "change_password": {
-      "menu": "Changer mon mot de passe",
+      "menu": "Mot de passe",
       "title": "Changer mon mot de passe",
       "current": "Mot de passe actuel",
       "temporary": "Mot de passe temporaire",
@@ -304,7 +304,7 @@
       "deactivate": "Désactiver {{name}}",
       "reactivate": "Réactiver {{name}}"
     },
-    "self_help": "Votre mot de passe se change depuis ⚙️ « Changer mon mot de passe ».",
+    "self_help": "Votre mot de passe se change depuis Réglages › « Mot de passe ».",
     "last_admin_help": "Dernier administrateur actif",
     "load_error": "Les comptes n'ont pas pu être chargés.",
     "retry": "Réessayer",
@@ -345,7 +345,7 @@
       "PASSWORD_INVALID": "Le mot de passe doit faire de 6 à 256 caractères",
       "ROLE_INVALID": "Choisissez un rôle",
       "SELF_ACCOUNT_CHANGE": "Vous ne pouvez ni désactiver ni changer le rôle de votre propre compte",
-      "SELF_PASSWORD_RESET": "Votre mot de passe se change depuis ⚙️ « Changer mon mot de passe »",
+      "SELF_PASSWORD_RESET": "Votre mot de passe se change depuis Réglages › « Mot de passe »",
       "LAST_ACTIVE_ADMIN": "Il doit rester au moins un administrateur actif",
       "ACCOUNT_DISABLED": "Ce compte est désactivé : réactivez-le d'abord",
       "generic": "L'action n'a pas pu être enregistrée. Réessayez."

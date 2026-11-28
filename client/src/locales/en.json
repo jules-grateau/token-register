@@ -266,7 +266,7 @@
       "cashier": "Cashier"
     },
     "change_password": {
-      "menu": "Change my password",
+      "menu": "Password",
       "title": "Change my password",
       "current": "Current password",
       "temporary": "Temporary password",
@@ -304,7 +304,7 @@
       "deactivate": "Deactivate {{name}}",
       "reactivate": "Reactivate {{name}}"
     },
-    "self_help": "Your password is changed from ⚙️ “Change my password”.",
+    "self_help": "Your password is changed from Settings › “Password”.",
     "last_admin_help": "Last active administrator",
     "load_error": "The accounts could not be loaded.",
     "retry": "Try again",
@@ -345,7 +345,7 @@
       "PASSWORD_INVALID": "The password must be 6 to 256 characters long",
       "ROLE_INVALID": "Choose a role",
       "SELF_ACCOUNT_CHANGE": "You can neither deactivate nor change the role of your own account",
-      "SELF_PASSWORD_RESET": "Your password is changed from ⚙️ “Change my password”",
+      "SELF_PASSWORD_RESET": "Your password is changed from Settings › “Password”",
       "LAST_ACTIVE_ADMIN": "At least one active administrator must remain",
       "ACCOUNT_DISABLED": "This account is disabled: reactivate it first",
       "generic": "The action could not be saved. Try again."

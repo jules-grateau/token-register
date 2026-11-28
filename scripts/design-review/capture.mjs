@@ -838,7 +838,7 @@ const buildSteps = ({ category, products: [first, second], negative, sample }) =
     'change-password',
     async (page) => {
       await closeOverlays(page);
-      await openSettingsItem(page, 'Changer mon mot de passe');
+      await openSettingsItem(page, 'Mot de passe');
       await page
         .getByRole('dialog', { name: 'Changer mon mot de passe' })
         .waitFor({ timeout: 5000 });
