@@ -1,0 +1,457 @@
+{
+  "appUrl": "http://localhost:3202",
+  "data": {
+    "category": "Test capture",
+    "products": [
+      "Produit A",
+      "Produit B"
+    ],
+    "sample": {
+      "id": 1,
+      "name": "Produit A",
+      "price": 250,
+      "category_id": 1,
+      "icon": null
+    },
+    "negative": "Retour consigne"
+  },
+  "viewports": {
+    "desktop-light": {
+      "size": {
+        "width": 1440,
+        "height": 900
+      },
+      "steps": [
+        {
+          "step": "login",
+          "skipped": true
+        },
+        {
+          "step": "login-error",
+          "skipped": true
+        },
+        {
+          "step": "home",
+          "skipped": true
+        },
+        {
+          "step": "category-selected",
+          "skipped": true
+        },
+        {
+          "step": "cart-with-items",
+          "skipped": true
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "skipped": true
+        },
+        {
+          "step": "payment-card-prefilled",
+          "skipped": true
+        },
+        {
+          "step": "payment-cash-suggested-change",
+          "skipped": true
+        },
+        {
+          "step": "payment-mixed-parts",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-mixed-or-tokens",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-card",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-exact",
+          "skipped": true
+        },
+        {
+          "step": "payment-negative-total",
+          "skipped": true
+        },
+        {
+          "step": "order-history",
+          "skipped": true
+        },
+        {
+          "step": "order-delete-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cart-cleared-toast",
+          "skipped": true
+        },
+        {
+          "step": "settings-menu",
+          "screenshot": "desktop-light/16-settings-menu.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "about-modal",
+          "skipped": true
+        },
+        {
+          "step": "edit-mode",
+          "skipped": true
+        },
+        {
+          "step": "edit-category-form",
+          "skipped": true
+        },
+        {
+          "step": "edit-category-unsaved",
+          "skipped": true
+        },
+        {
+          "step": "edit-product-form",
+          "skipped": true
+        },
+        {
+          "step": "edit-product-unsaved",
+          "skipped": true
+        },
+        {
+          "step": "new-product-form",
+          "skipped": true
+        },
+        {
+          "step": "new-product-category-list",
+          "skipped": true
+        },
+        {
+          "step": "new-category-form",
+          "skipped": true
+        },
+        {
+          "step": "product-delete-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cart-item-menu",
+          "skipped": true
+        },
+        {
+          "step": "discount-modal",
+          "skipped": true
+        },
+        {
+          "step": "settings-menu-scrolled",
+          "screenshot": "desktop-light/29-settings-menu-scrolled.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cash-day-summary",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-close-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-history",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-orders",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-none",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-start",
+          "skipped": true
+        },
+        {
+          "step": "cart-quantity-zero",
+          "skipped": true
+        },
+        {
+          "step": "accounts-list",
+          "screenshot": "desktop-light/37-accounts-list.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "account-create-form",
+          "screenshot": "desktop-light/38-account-create-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "account-create-error",
+          "screenshot": "desktop-light/39-account-create-error.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "account-reset-password",
+          "screenshot": "desktop-light/40-account-reset-password.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "account-deactivate-confirm",
+          "screenshot": "desktop-light/41-account-deactivate-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "change-password",
+          "screenshot": "desktop-light/42-change-password.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "forced-password-change",
+          "screenshot": "desktop-light/43-forced-password-change.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 409 (Conflict)"
+      ],
+      "pageErrors": [],
+      "expectedLoginErrors": 1
+    },
+    "mobile-light": {
+      "size": {
+        "width": 390,
+        "height": 664
+      },
+      "steps": [
+        {
+          "step": "login",
+          "skipped": true
+        },
+        {
+          "step": "login-error",
+          "skipped": true
+        },
+        {
+          "step": "home",
+          "skipped": true
+        },
+        {
+          "step": "category-selected",
+          "skipped": true
+        },
+        {
+          "step": "cart-with-items",
+          "skipped": true
+        },
+        {
+          "step": "cart-drawer",
+          "skipped": true
+        },
+        {
+          "step": "payment-modal",
+          "skipped": true
+        },
+        {
+          "step": "payment-card-prefilled",
+          "skipped": true
+        },
+        {
+          "step": "payment-cash-suggested-change",
+          "skipped": true
+        },
+        {
+          "step": "payment-mixed-parts",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-mixed-or-tokens",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-card",
+          "skipped": true
+        },
+        {
+          "step": "order-placed-exact",
+          "skipped": true
+        },
+        {
+          "step": "payment-negative-total",
+          "skipped": true
+        },
+        {
+          "step": "order-history",
+          "skipped": true
+        },
+        {
+          "step": "order-delete-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cart-cleared-toast",
+          "skipped": true
+        },
+        {
+          "step": "settings-menu",
+          "screenshot": "mobile-light/16-settings-menu.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "about-modal",
+          "skipped": true
+        },
+        {
+          "step": "edit-mode",
+          "skipped": true
+        },
+        {
+          "step": "edit-category-form",
+          "skipped": true
+        },
+        {
+          "step": "edit-category-unsaved",
+          "skipped": true
+        },
+        {
+          "step": "edit-product-form",
+          "skipped": true
+        },
+        {
+          "step": "edit-product-unsaved",
+          "skipped": true
+        },
+        {
+          "step": "new-product-form",
+          "skipped": true
+        },
+        {
+          "step": "new-product-category-list",
+          "skipped": true
+        },
+        {
+          "step": "new-category-form",
+          "skipped": true
+        },
+        {
+          "step": "product-delete-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cart-item-menu",
+          "skipped": true
+        },
+        {
+          "step": "discount-modal",
+          "skipped": true
+        },
+        {
+          "step": "settings-menu-scrolled",
+          "screenshot": "mobile-light/29-settings-menu-scrolled.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "cash-day-summary",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-close-confirm",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-history",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-orders",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-none",
+          "skipped": true
+        },
+        {
+          "step": "cash-day-start",
+          "skipped": true
+        },
+        {
+          "step": "cart-quantity-zero",
+          "skipped": true
+        },
+        {
+          "step": "accounts-list",
+          "screenshot": "mobile-light/37-accounts-list.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "account-create-form",
+          "screenshot": "mobile-light/38-account-create-form.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "account-create-error",
+          "screenshot": "mobile-light/39-account-create-error.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "account-reset-password",
+          "screenshot": "mobile-light/40-account-reset-password.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "account-deactivate-confirm",
+          "screenshot": "mobile-light/41-account-deactivate-confirm.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "change-password",
+          "screenshot": "mobile-light/42-change-password.png",
+          "error": null,
+          "overflowX": false
+        },
+        {
+          "step": "forced-password-change",
+          "screenshot": "mobile-light/43-forced-password-change.png",
+          "error": null,
+          "overflowX": false
+        }
+      ],
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 409 (Conflict)"
+      ],
+      "pageErrors": [],
+      "expectedLoginErrors": 1
+    }
+  },
+  "cleanup": {
+    "deletedOrders": [],
+    "failed": [],
+    "testCatalog": {
+      "category": 1,
+      "products": [
+        1,
+        2,
+        3
+      ],
+      "deleted": true
+    },
+    "accountsCreated": 4
+  },
+  "currency": "EUR"
+}

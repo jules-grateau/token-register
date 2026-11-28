@@ -1,0 +1,2 @@
+- écrans (EUR) : desktop-light: console error: `Failed to load resource: the server responded with a status of 409 (Conflict)`
+- écrans (EUR) : mobile-light: console error: `Failed to load resource: the server responded with a status of 409 (Conflict)`
