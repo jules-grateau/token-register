@@ -150,6 +150,10 @@ for currency in TOKEN EUR; do
   qa_expect "$tag : la session de l'autre admin reste ouverte" "${out##* }" 200
 
   # 8. 5 échecs : le 5e et le suivant (même bon mot de passe) attendent 1 minute.
+  #    Le refus de l'ancien mot de passe ci-dessus compte déjà un échec pour ce compte :
+  #    une connexion réussie remet le compteur à zéro avant de compter les 5 échecs.
+  qa_expect "$tag : connexion réussie avant les échecs (compteur remis à zéro)" \
+    "$(qa_login "$port" "$second" "$new_pass" "$jar2")" 200
   for attempt in 1 2 3 4; do
     qa_expect "$tag : échec n°$attempt → 401" "$(qa_login "$port" "$second" "mauvais-$attempt" "$jar2")" 401
   done
