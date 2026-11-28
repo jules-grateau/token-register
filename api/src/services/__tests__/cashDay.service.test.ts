@@ -3,6 +3,7 @@ import { open } from 'sqlite';
 import { CashDayService, MAX_CLOSED_CASH_DAYS } from '../cashDay.service';
 import { OrderService } from '../order.service';
 import { ensureCashDaysTable } from '../../db/cashDays';
+import { migrateAuth } from '../../db/auth';
 import { createTempDbPath } from '../../db/scripts/__tests__/dbTestUtils';
 import { ConflictError } from '../../types/errors';
 
@@ -16,7 +17,8 @@ async function resetDb() {
     await db.exec(`
       DROP TABLE IF EXISTS order_items; DROP TABLE IF EXISTS orders;
       DROP TABLE IF EXISTS products; DROP TABLE IF EXISTS categories;
-      DROP TABLE IF EXISTS cash_days;
+      DROP TABLE IF EXISTS cash_days; DROP TABLE IF EXISTS sessions; DROP TABLE IF EXISTS users;
+      DROP TABLE IF EXISTS role_permissions; DROP TABLE IF EXISTS roles;
       CREATE TABLE categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, icon TEXT);
       CREATE TABLE products (
         id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, price INTEGER NOT NULL,
@@ -38,6 +40,11 @@ async function resetDb() {
       INSERT INTO products (id, name, price, category_id) VALUES
         (1, 'Bière', 350, 1), (2, 'Café', 150, 1), (3, 'Retour eco-cup', -100, 1);
     `);
+    // D-063: author columns (orders.created_by, cash_days.opened_by / closed_by).
+    await migrateAuth(db);
+    await db.exec(
+      "INSERT INTO users (id, username, password_hash, role, created_at, updated_at) VALUES (9, 'caisse', 'x', 'cashier', 0, 0)"
+    );
   } finally {
     await db.close();
   }
@@ -168,6 +175,29 @@ describe('CashDayService (EUR)', () => {
     const list = await days.listClosed();
     expect(list).toHaveLength(MAX_CLOSED_CASH_DAYS);
     expect(list[0].id).toBe(MAX_CLOSED_CASH_DAYS + 2);
+    // 104 transactions on a real file: over the 5 s default when the suites run in parallel.
+  }, 30000);
+});
+
+describe('Authors (D-063, point 14)', () => {
+  it('records who placed each order, and who opened and closed the day', async () => {
+    const days = new CashDayService('TOKEN');
+    const orders = new OrderService('TOKEN');
+    const { id: dayId } = await days.open(9);
+    const { id: orderId } = await orders.createOrder([item(2, 150)], null, 9);
+    await days.closeCurrent(9);
+
+    const db = await open({ filename: dbPath, driver: sqlite3.Database });
+    try {
+      expect(
+        await db.get('SELECT opened_by, closed_by FROM cash_days WHERE id = ?', [dayId])
+      ).toEqual({ opened_by: 9, closed_by: 9 });
+      expect(await db.get('SELECT created_by FROM orders WHERE id = ?', [orderId])).toEqual({
+        created_by: 9,
+      });
+    } finally {
+      await db.close();
+    }
   });
 });
 

@@ -23,7 +23,26 @@ Le **nom de l'association est le titre** ; le logo et « Caisse Claire » resten
 
 **Menu réglages** (⚙️, `Menu` ou page) : voir « Bascule clair/sombre » et « À propos » plus bas ; éléments `py="md"` (16 px), icône + texte.
 
+- **Utilisateur connecté** (D-063) : en tête, ligne d'information non cliquable : `IconUser` 20 px, nom 16 / 700 `--color-text`, rôle en texte en dessous 14 `--color-text-2` (« Caissier »). Un nom long passe à la ligne, jamais tronqué. Un `Menu.Divider` la sépare du reste.
+- **« Se déconnecter »** : dernière entrée, après « À propos ». `py="md"`, `IconLogout` 20 px, `--color-text`, pas de rouge (non destructif : le panier est conservé), sans confirmation.
+
 **Mode édition** (tous modes) : l'icône historique disparaît ; un `Button` « Terminer » (`leftSection={<IconCheck size={20} />}`, encre filled → texte `--color-on-primary`, `h={44}`, `radius={14}`) apparaît à gauche des réglages et quitte le mode édition en 1 toucher ; bordure basse de l'en-tête 2 px `--color-text`. En tablette/desktop, ajouter avant le bouton un `Badge size="lg"` « Édition » : clair fond `--color-primary` texte `--color-on-primary`, sombre fond `--color-surface` contour 1 px `--color-primary` texte `--color-text`, `variant` custom, `tt="none"`. Le texte du bouton et du badge porte l'information, pas la couleur seule.
+
+## Écran de connexion — `Login`
+
+D-063. Aucun nouveau token ni nouvelle couleur ; clair et sombre.
+
+- **Mise en page** : une colonne, plein écran, fond `--color-bg`. Au-dessus : `BrandLogo` 28 px, nom de l'association en `<h1>` (mêmes règles que l'en-tête, jamais coupé) et « Caisse Claire » 14 / 700 `--color-text-2`. Dessous : `Paper` `--color-surface` (rayon `--radius-card`, `--shadow-card` en clair, contour seul en sombre), largeur maximale 400 px, centrée.
+  - Téléphone portrait : bloc aligné en haut, pas centré verticalement (le clavier prend la moitié de l'écran) ; le formulaire reste visible sans défiler.
+  - Paysage : logo et nom à gauche, formulaire à droite, sans défilement (champs et bouton dans 320 px de haut).
+- **Champs** : « Identifiant » (`TextInput`) et « Mot de passe » (`PasswordInput`), libellés visibles au-dessus, hauteur 48, texte 16. `autocomplete="username"` / `"current-password"`, `autocapitalize="none"`, `autocorrect="off"`. L'œil est une `ActionIcon` 44 × 44 (`IconEye` / `IconEyeOff` 20, `--color-text`), `aria-label` « Afficher / Masquer le mot de passe » ; le champ est masqué par défaut.
+- **Bouton** « Se connecter » : encre `--color-primary`, texte `--color-on-primary`, `h={56}`, `fullWidth`, 18 / 800, `IconLogin` 22. `Enter` soumet. Pendant l'appel : `loading` et champs désactivés.
+- **Messages** : bloc en haut du formulaire, `IconAlertTriangle` 20 + texte 16 / 600, `role="alert"`, fond `--color-danger-tint`, contour 1 px `--color-danger`, texte `--color-text` (jamais le rouge seul).
+  - « Identifiant ou mot de passe incorrect » (un seul message, réponse 6 a) : seul le mot de passe est vidé, le focus y revient.
+  - « Trop de tentatives, réessayez dans 1 minute » : le bouton est désactivé pendant l'attente, sans compte à rebours.
+  - Session expirée (réponse 7 a) : « Votre session a expiré, reconnectez-vous », même bloc en ton neutre : `IconInfoCircle`, fond `--color-surface-2`, contour `--color-border`, `role="status"`.
+- **Chargement initial** : pendant `GET /auth/me`, écran neutre `--color-bg` avec le logo. La caisse n'apparaît jamais avant d'être remplacée par la connexion.
+- **Libellés** : clés `auth.*` de `fr.json` / `en.json`.
 
 ## Onglets catégorie — `Catalog/index.tsx`
 

@@ -17,7 +17,8 @@ for currency in TOKEN EUR; do
   qa_expect "$currency : aucun produit" "$(qa_api "$port" GET /products | qa_json 'd.length')" 0
   qa_expect "$currency : aucune commande" \
     "$(qa_api "$port" GET '/orders?page=1&pageSize=20' | qa_json 'd.pagination.totalCount')" 0
-  config=$(curl -fsS -u "$BASIC_AUTH_USER:$BASIC_AUTH_PASS" "http://localhost:$port/config.js")
+  # /config.js is public (D-063): read without a session.
+  config=$(curl -fsS "http://localhost:$port/config.js")
   qa_expect_contains "$currency : la monnaie est transmise à l'appli" "$config" "\"VITE_CURRENCY\":\"$currency\""
   qa_expect "$currency : la monnaie est enregistrée dans la base" \
     "$(qa_sql "$name-data" "SELECT value FROM settings WHERE key = 'currency'" | qa_json 'd[0]?.value')" "$currency"

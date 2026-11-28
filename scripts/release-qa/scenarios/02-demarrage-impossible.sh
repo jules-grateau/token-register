@@ -13,7 +13,7 @@ if [ "$code" != running ] && [ "$code" != 0 ]; then
 else
   qa_ko "base impossible à créer : le conteneur s'arrête en erreur" "état : $code ; $(qa_logs "$name")"
 fi
-if curl -fsS -u "$BASIC_AUTH_USER:$BASIC_AUTH_PASS" "http://localhost:$port/api/categories" > /dev/null 2>&1; then
+if curl -fsS "http://localhost:$port/config.js" > /dev/null 2>&1; then
   qa_ko "base impossible à créer : l'appli ne répond pas" "l'API répond"
 else
   qa_ok "base impossible à créer : l'appli ne répond pas"

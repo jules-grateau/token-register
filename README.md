@@ -11,7 +11,7 @@ The technical name stays `token-register` (repository, Docker image, containers,
 - Product and category management (predefined in DB)
 - Cart and order management
 - Order history with deletion
-- Basic authentication for API
+- User accounts (admin, manager, cashier) and a login screen (3.0.0)
 - Modern UI with React, Redux Toolkit, and Vite
 - TypeScript shared types between frontend and backend
 
@@ -93,9 +93,11 @@ npm install
 NODE_ENV= production # Environement
 PORT= 3000 # Port where the server should run
 DATABASE_PATH= /data/database.sqlite # Path to the Database
-BASIC_AUTH_USER= demo 
-BASIC_AUTH_PASS= demo
-FRONTEND_URL= https://your-app # Used for CORS authorization - Should not be used in production
+INITIAL_ADMIN_USERNAME= admin # First admin, read only while there is no account (see deploy/README.md > User accounts)
+INITIAL_ADMIN_PASSWORD= change-me # 6 characters minimum. Never commit a real value.
+FRONTEND_URL= https://your-app # Origin of the app: CORS, and write requests from another origin are refused (403)
+TRUST_PROXY_HOPS= 1 # Reverse proxies in front of the API (0 by default)
+COOKIE_SECURE= false # Only for a local HTTP instance in production mode
 LOG_LEVEL= info # Level of log needed
 RUNTIME_VITE_BASE_API_URL= https://your-app/api # URL to API - Used when the frontend is distributed by the backend.
 RUNTIME_VITE_DEFAULT_LANGUAGE= en # Define the default language. - Used when the frontend is distributed by the backend.
@@ -203,7 +205,9 @@ npm run prod:start
 - Open the frontend in your browser.
 - Use the cart to add products and checkout orders.
 - View and delete order history.
-- All API requests are protected by basic authentication (credentials set in `api/.env`).
+- Log in with an account (3.0.0). The first admin is created from `INITIAL_ADMIN_USERNAME` /
+  `INITIAL_ADMIN_PASSWORD` while there is no account. Every `/api` route needs a session, except
+  the login; the static files and `/config.js` are public. See deploy/README.md > User accounts.
 
 ## Docker
 
@@ -239,8 +243,8 @@ docker run \
   --env=PORT=3000 \
   --env=FRONTEND_URL=localhost:8080 \
   --env=DATABASE_PATH=_your_DB_path \
-  --env=BASIC_AUTH_USER=your_auth_user \
-  --env=BASIC_AUTH_PASS=your_auth_password \
+  --env=INITIAL_ADMIN_USERNAME=admin \
+  --env=INITIAL_ADMIN_PASSWORD=your_admin_password \
   --env=LOG_LEVEL=info \
   --env=NODE_ENV=production \
   --env=RUNTIME_VITE_BASE_API_URL=localhost:8080 \

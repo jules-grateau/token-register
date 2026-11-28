@@ -5,6 +5,7 @@ import orderAddedListener from './orderAddedListener';
 import cartUpdateListener from './cartUpdateListener';
 import productMutationListener from './productMutationListener';
 import cashDayRefreshListener from './cashDayRefreshListener';
+import authListener from './authListener';
 
 const listenerMiddleware = createListenerMiddleware<RootState>();
 export default listenerMiddleware;
@@ -17,3 +18,4 @@ orderAddedListener(startAppListening);
 cartUpdateListener(startAppListening);
 productMutationListener(startAppListening);
 cashDayRefreshListener(startAppListening);
+authListener(startAppListening);

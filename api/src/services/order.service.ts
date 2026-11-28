@@ -73,7 +73,8 @@ export class OrderService {
 
       const totalPages = Math.ceil(totalCount / pageSize);
 
-      const rows = await db.all<OrderItemDbRow[]>(`
+      const rows = await db.all<OrderItemDbRow[]>(
+        `
             SELECT
               orders.id as order_id,
               orders.date,
@@ -93,12 +94,23 @@ export class OrderService {
               ORDER BY date DESC
               LIMIT ? OFFSET ?
             )
-            ORDER BY orders.date DESC;`, [cashDayId, pageSize, offset]);
+            ORDER BY orders.date DESC;`,
+        [cashDayId, pageSize, offset]
+      );
 
       const orders = new Map<number, OrderType>();
 
       for (const row of rows) {
-        const { order_id, date, product_id, product_name, product_price, category_name, quantity, discountedAmount } = row;
+        const {
+          order_id,
+          date,
+          product_id,
+          product_name,
+          product_price,
+          category_name,
+          quantity,
+          discountedAmount,
+        } = row;
 
         if (!orders.has(order_id)) {
           // Older rows (or test doubles) may lack the payment columns: treat as no payment.
@@ -149,9 +161,11 @@ export class OrderService {
     }
   }
 
+  /** `createdBy`: the logged-in user (D-063, point 14); null for a call without a session. */
   async createOrder(
     cartItems: CartItemType[],
-    payment?: OrderPaymentType | null
+    payment?: OrderPaymentType | null,
+    createdBy: number | null = null
   ): Promise<CreateOrderResponseType> {
     if (!cartItems || cartItems.length === 0) {
       throw new ValidationError('No items in the cart');
@@ -231,12 +245,14 @@ export class OrderService {
       const storedPayment = validateOrderPayment(payment, total, this.currency);
 
       const orderResult = await db.run(
-        'INSERT INTO orders (date, cash_amount, card_amount, cash_day_id) VALUES (?, ?, ?, ?)',
+        `INSERT INTO orders (date, cash_amount, card_amount, cash_day_id, created_by)
+         VALUES (?, ?, ?, ?, ?)`,
         [
           Date.now(),
           storedPayment?.cashAmount ?? null,
           storedPayment?.cardAmount ?? null,
           cashDayId,
+          createdBy,
         ]
       );
       const orderId = orderResult.lastID;
@@ -250,7 +266,15 @@ export class OrderService {
           snapshot;
 
         logger.info(
-          { orderId, productId, productName, productPrice, categoryName, quantity, discountedAmount },
+          {
+            orderId,
+            productId,
+            productName,
+            productPrice,
+            categoryName,
+            quantity,
+            discountedAmount,
+          },
           'Creating order item with product snapshot'
         );
 

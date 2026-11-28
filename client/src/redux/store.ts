@@ -8,6 +8,7 @@ import { cashDaysApi } from '../services/cashDays';
 import { loadCartFromLocalStorage } from '../utils/localStorageCart';
 import { selectedCategoryReducer } from './selectedCategorySlice';
 import { editModeReducer } from './editModeSlice';
+import { authReducer, type AuthState } from './authSlice';
 import listenerMiddleware from './listeners';
 
 const preloadedCart = loadCartFromLocalStorage();
@@ -24,6 +25,7 @@ export const store = configureStore({
     cart: cartReducer,
     selectedCategory: selectedCategoryReducer,
     editMode: editModeReducer,
+    auth: authReducer,
   },
   preloadedState: preloadedState as RootState,
   middleware: (getDefaultMiddleware) =>
@@ -45,5 +47,6 @@ export interface RootState {
   [cashDaysApi.reducerPath]: ReturnType<typeof cashDaysApi.reducer>;
   cart: CartState;
   editMode: { isEditMode: boolean };
+  auth: AuthState;
 }
 export type AppDispatch = typeof store.dispatch;

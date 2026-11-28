@@ -5,7 +5,8 @@
 # The instance is stopped and its volume deleted at the end.
 #
 # Usage: bash scripts/release-qa/screens.sh <TOKEN|EUR> <port>
-# Env: QA_IMAGE, BASIC_AUTH_USER / BASIC_AUTH_PASS (see lib.sh),
+# Env: QA_IMAGE, INITIAL_ADMIN_USERNAME / INITIAL_ADMIN_PASSWORD (see lib.sh: the capture logs
+#      in with the first admin of the new instance),
 #      PW_DIR (folder with Playwright installed and capture.mjs copied, default $RUNNER_TEMP/pw),
 #      OUT (output folder, default ./release-qa-output): screenshots, report.json and
 #      smoke-problems.md go to <OUT>/<currency>/.
@@ -36,7 +37,8 @@ if ! qa_wait_up "$name" "$port"; then
 fi
 
 summary "$heading"
-(cd "${PW_DIR:-$RUNNER_TEMP/pw}" && APP_URL="http://localhost:$port" OUT_DIR="$(node_path "$out")" node capture.mjs > "$out/capture.log" 2>&1)
+(cd "${PW_DIR:-$RUNNER_TEMP/pw}" && APP_URL="http://localhost:$port" OUT_DIR="$(node_path "$out")" \
+  LOGIN_USER="$INITIAL_ADMIN_USERNAME" LOGIN_PASS="$INITIAL_ADMIN_PASSWORD" node capture.mjs > "$out/capture.log" 2>&1)
 captured=$?
 qa_stop "$name"
 if [ "$captured" -ne 0 ]; then

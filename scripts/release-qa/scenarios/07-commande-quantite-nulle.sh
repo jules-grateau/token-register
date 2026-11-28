@@ -6,13 +6,9 @@
 name=qa-quantite
 port=3171
 
-# api_status <METHOD> <route> [json body] : affiche « <corps> <code HTTP> », sans échouer sur 4xx.
-api_status() {
-  local method="$1" route="$2" body="${3:-}"
-  local args=(-sS -u "$BASIC_AUTH_USER:$BASIC_AUTH_PASS" -X "$method" -w ' %{http_code}')
-  [ -n "$body" ] && args+=(-H 'Content-Type: application/json' --data "$body")
-  curl "${args[@]}" "http://localhost:$port/api$route"
-}
+# api_status <METHOD> <route> [json body] : affiche « <corps> <code HTTP> », sans échouer sur 4xx
+# (avec la session de l'instance, D-063).
+api_status() { qa_status "$port" "$@"; }
 
 qa_start "$name" EUR "$port"
 if ! qa_wait_up "$name" "$port"; then

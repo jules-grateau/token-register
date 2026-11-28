@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import type {
   CreateOrderRequestType,
   PostAPIResponseType,
@@ -6,12 +6,13 @@ import type {
   PaginationParams,
 } from 'shared-ts';
 import { BASE_API_URL } from '../config';
+import { authBaseQuery } from './baseQuery';
 
 const API_URL = BASE_API_URL + '/orders';
 
 export const ordersApi = createApi({
   reducerPath: 'ordersApi',
-  baseQuery: fetchBaseQuery({
+  baseQuery: authBaseQuery({
     baseUrl: API_URL,
     credentials: 'include',
     prepareHeaders: (headers) => {

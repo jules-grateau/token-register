@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { OrderService } from '../services/order.service';
 import { CartItemType, CreateOrderRequestType, PaginationParams } from 'shared-ts';
 import { ValidationError, NotFoundError, ConflictError } from '../types/errors';
+import { getAuthUserId, requirePermission } from '../middleware/auth';
 
 export class OrderController {
   public path = '/orders';
@@ -14,9 +15,9 @@ export class OrderController {
   }
 
   private initializeRoutes() {
-    this.router.get('/', this.getAllOrders);
-    this.router.post('/', this.createOrder);
-    this.router.delete('/:id', this.deleteOrder);
+    this.router.get('/', requirePermission('sale'), this.getAllOrders);
+    this.router.post('/', requirePermission('sale'), this.createOrder);
+    this.router.delete('/:id', requirePermission('order_delete'), this.deleteOrder);
   }
 
   public getAllOrders = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -73,7 +74,11 @@ export class OrderController {
       // Bare array (clients before 1.3.0): no payment. Accepted on token instances only; an
       // EUR instance refuses it with PAYMENT_REQUIRED (D-035).
       if (Array.isArray(body)) {
-        const newOrder = await this.orderService.createOrder(body as CartItemType[], undefined);
+        const newOrder = await this.orderService.createOrder(
+          body as CartItemType[],
+          undefined,
+          getAuthUserId(res)
+        );
         res.status(201).json(newOrder);
         return;
       }
@@ -83,7 +88,12 @@ export class OrderController {
         res.status(400).json({ error: 'Invalid request body: Expected an array of cart items.' });
         return;
       }
-      const newOrder = await this.orderService.createOrder(items, payment ?? null);
+      // D-063, point 14: the author is recorded, not shown yet.
+      const newOrder = await this.orderService.createOrder(
+        items,
+        payment ?? null,
+        getAuthUserId(res)
+      );
       res.status(201).json(newOrder);
     } catch (error) {
       req.log.error('Controller Error: Error creating new order: %s', error);

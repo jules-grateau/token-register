@@ -5,6 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import { getDatabasePath } from '..';
 import { ensureCashDaysTable } from '../cashDays';
+import { migrateAuth } from '../auth';
 
 export const dbFilePath = getDatabasePath();
 export const dbDir = path.dirname(dbFilePath);
@@ -99,6 +100,9 @@ async function createTables(db: Database) {
       PRIMARY KEY (order_id, product_id)
     )
   `);
+
+  // D-063: account tables, roles and author columns (same code as the migration).
+  await migrateAuth(db);
 
   logger.info('Tables created');
 }

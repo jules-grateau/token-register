@@ -192,12 +192,15 @@ jobs:
           ref: ${{ needs.gate.outputs.sha }}
           persist-credentials: false
 
-      # Throwaway Basic Auth credentials of the capture instances, masked in the logs.
+      # Throwaway first admin of the capture instances (D-063, INITIAL_ADMIN_*), generated for
+      # this run and masked in the logs.
       - name: Generate the instance credentials
         run: |
+          user="qa-$(openssl rand -hex 4)"
           pass=$(openssl rand -hex 16)
+          echo "::add-mask::$user"
           echo "::add-mask::$pass"
-          { echo "BASIC_AUTH_USER=qa"; echo "BASIC_AUTH_PASS=$pass"; } >> "$GITHUB_ENV"
+          { echo "INITIAL_ADMIN_USERNAME=$user"; echo "INITIAL_ADMIN_PASSWORD=$pass"; } >> "$GITHUB_ENV"
 
       - name: Build the image of this commit
         run: docker build --build-arg GIT_SHA="${{ needs.gate.outputs.sha }}" -t "$QA_IMAGE" .

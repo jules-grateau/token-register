@@ -4,6 +4,7 @@ import { ProductType } from 'shared-ts';
 import { NotFoundError } from '../types/errors';
 import { isValidStoredAmount } from '../utils/currency';
 import { INVALID_ICON_MESSAGE, isValidIconField } from '../utils/catalogIcons';
+import { requirePermission } from '../middleware/auth';
 
 // D-010 / D-012: prices are whole numbers in the smallest unit (tokens or cents).
 const INVALID_PRICE_MESSAGE =
@@ -20,10 +21,11 @@ export class ProductController {
   }
 
   private initializeRoutes() {
-    this.router.get('/', this.getAllProducts);
-    this.router.post('/', this.createProduct);
-    this.router.put('/:productId', this.updateProduct);
-    this.router.delete('/:productId', this.deleteProduct);
+    // D-063: reading the catalog is part of the sale; changing it needs "catalog".
+    this.router.get('/', requirePermission('sale'), this.getAllProducts);
+    this.router.post('/', requirePermission('catalog'), this.createProduct);
+    this.router.put('/:productId', requirePermission('catalog'), this.updateProduct);
+    this.router.delete('/:productId', requirePermission('catalog'), this.deleteProduct);
   }
 
   public getAllProducts = async (

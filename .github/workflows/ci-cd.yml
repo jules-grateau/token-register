@@ -185,17 +185,17 @@ jobs:
           fi
 
       # The EUR demo (D-059) runs next to the token demo, on the same :test image. Its compose
-      # service, URL and Basic Auth come from secrets: nothing about it is written here.
+      # service, URL and login account (D-063) come from secrets: nothing about it is written here.
       - name: Check the EUR demo secrets
         if: github.ref_name != 'main'
         env:
           DEMO_EUR_SERVICE: ${{ secrets.DEMO_EUR_SERVICE }}
           DEMO_EUR_URL: ${{ secrets.DEMO_EUR_URL }}
-          DEMO_EUR_BASIC_AUTH_USER: ${{ secrets.DEMO_EUR_BASIC_AUTH_USER }}
-          DEMO_EUR_BASIC_AUTH_PASS: ${{ secrets.DEMO_EUR_BASIC_AUTH_PASS }}
+          DEMO_EUR_LOGIN_USER: ${{ secrets.DEMO_EUR_LOGIN_USER }}
+          DEMO_EUR_LOGIN_PASS: ${{ secrets.DEMO_EUR_LOGIN_PASS }}
         run: |
           missing=""
-          for var in DEMO_EUR_SERVICE DEMO_EUR_URL DEMO_EUR_BASIC_AUTH_USER DEMO_EUR_BASIC_AUTH_PASS; do
+          for var in DEMO_EUR_SERVICE DEMO_EUR_URL DEMO_EUR_LOGIN_USER DEMO_EUR_LOGIN_PASS; do
             [ -z "$(printf '%s' "${!var}" | tr -d '[:space:]')" ] && missing="$missing $var"
           done
           if [ -n "$missing" ]; then
@@ -245,7 +245,7 @@ jobs:
               RESTARTS=$(docker inspect -f '{{.RestartCount}}' "$CONTAINER" 2>/dev/null || echo unknown)
               if [ "$STATE" != "running" ] || [ "$RESTARTS" != "0" ]; then
                 # Do not print container logs here: Actions logs are public on this repo and
-                # request logs contain Basic Auth headers. Read them on the VPS instead.
+                # the logs of an instance are not meant to be public. Read them on the VPS instead.
                 echo "::error::Service #$INDEX failed: state=$STATE restarts=$RESTARTS. On the VPS: docker compose logs --tail=100 <service>"
                 FAILED=1
               else
@@ -264,9 +264,11 @@ jobs:
         if: github.ref_name != 'main'
         env:
           APP_URL: ${{ secrets.DEMO_EUR_URL }}
-          BASIC_AUTH_USER: ${{ secrets.DEMO_EUR_BASIC_AUTH_USER }}
-          BASIC_AUTH_PASS: ${{ secrets.DEMO_EUR_BASIC_AUTH_PASS }}
-        run: node scripts/demo/seed-eur-catalog.mjs
+          LOGIN_USER: ${{ secrets.DEMO_EUR_LOGIN_USER }}
+          LOGIN_PASS: ${{ secrets.DEMO_EUR_LOGIN_PASS }}
+        run: |
+          echo "::add-mask::$LOGIN_USER"
+          node scripts/demo/seed-eur-catalog.mjs
 
   # Production only, once the deploy succeeded: git tag v<version> + GitHub Release with
   # notes generated from the merged PRs.
